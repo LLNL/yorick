@@ -1,0 +1,67 @@
+If you have MacOS X 10.3 (Panther), upgrade to version 10.3.4 or
+better.  Versions 10.3, 10.3.1, 10.3.2, and 10.3.3 all contain bugs in
+the system library /usr/lib/LibSystem.dylib (which includes libc,
+libm, and more) which cause yorick to malfunction.  Yorick will run
+out-of-the-box on MacOS X 10.2 or earlier, although 10.3 has far
+better support for X11 programs like yorick than earlier versions.
+
+Apple provides the 10.3.4 update free of charge to owners of any prior
+version 10.3, at http://www.apple.com/downloads/macosx/apple/.
+
+If you are too powerless or stupid to get the update, here is how you
+can build a functional but slightly crippled yorick on a 10.3 - 10.3.3
+system:
+
+Define one of two possible environment variables when you run the
+configure script (or do make config):
+
+HACK103=yes
+  This is my recommendation.  It builds private versions of sqrt,
+  sinh, and tanh, which correct the bug, and arranges for all
+  references in yorick (and yorick-based) codes to call those
+  non-buggy versions.  However, if you try to link against third
+  party libraries which use sqrt (or sinh or tanh), you may have
+  problems with incorrect SIGFPE.
+
+FPU_IGNORE=yes
+  This allows SIGFPE to remain masked, so that the CPU will not
+  generate floating point exceptions.  Exceptional conditions, such
+  as zero divide, overflow, or invalid operation will run normally
+  but return non-numbers, specifically Inf or Nan.  This is very
+  dangerous behavior for any numerical program, since you will get
+  no indication of any problem until you examine the final result
+  an see a bunch of Nan or Inf values.  Needless to say, it can be
+  exceedingly difficult to track back to the point the error actually
+  occurred.  Nevertheless, if you are linking against third party
+  libraries that call sqrt (say), you may need to build yorick
+  with this crippling defect.
+
+A typical command line to build a relocatable yorick tarball is:
+
+   env HACK103=yes make relocatable
+
+or
+
+   env FPU_IGNORE=yes make relocatable
+
+See the README file for other possibilities.  Remember that the
+HACK103 (or FPU_IGNORE) environment variables only affect the
+configuration step (make config); once Make.cfg is built, they will
+have no effect.
+
+Here is a quick description of the bug, which is in Libm-47:
+
+The functions sqrt, sinh, tanh, asinh, acosh, and atanh may
+malfunction when floating point exceptions are unmasked.  Yorick is
+one of the few (perhaps the only) code which unmasks SIGFPE, so that
+the CPU will actually generate SIGFPE signals.  Yorick does not use
+asinh, acosh, or atanh.  For tanh, the buggy system library causes
+SIGFPE for any argument, e.g.- tanh(2).  For sqrt, the situation is
+more complicated: The system library calls the hardware fsqrt
+instruction for CPUs which have it, which gives correct results, but
+for CPUs which do not have the fsqrt instruction, the system library
+calls a buggy software sqrt, which causes SIGFPE for any argument,
+e.g.- sqrt(2).  Thus, yorick's sqrt works on G5 machines, but fails on
+G4 machines and earlier architectures.  (In fact, yorick will not even
+start on a G4 under 10.3 <= MacOS <= 10.3.3, since there are a couple
+of sqrt calls during startup.)

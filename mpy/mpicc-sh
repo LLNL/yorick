@@ -1,0 +1,14 @@
+#!/bin/sh
+# mpicc command for LAM, just hcc with -lmpi if no -c option
+args=$*
+load=yes
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -c)     load=no;;
+    *)      ;;
+  esac
+  shift
+done
+if test "$load" = yes; then args="$args -lmpi"; fi
+hcc $args

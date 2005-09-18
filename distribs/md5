@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# freebsd distinfo file needs line formatted by md5 program
+# but some systems (e.g.- linux) have md5sum instead
+# this script finds either one
+
+base=`basename $1`
+if md5 $1 2>/dev/null; then
+  :
+else
+  echo "MD5 ($base) = "`md5sum -b $1 | cut -f 1 -d ' '`
+fi
+
+# recent ports versions want file size as well as md5 checksum
+#echo "SIZE ($base) = "`wc -c < $1`

@@ -1,0 +1,181 @@
+
+     The following include files contain Yorick code built from the
+     basic Yorick functions.  These are part of the Yorick distribution,
+     and are located in the directory Y_SITE/include.
+
+   Special functions:
+   ------------------
+
+   bessel.i   - integer order Bessel functions
+     Functions: bessj, bessy, bessi, bessk
+   gamma.i    - gamma and beta functions (erfc in dawson.i better)
+     Functions: ln_gamma, beta, bico (binomial coefficients), erfc
+   gammp.i    - incomplete gamma and beta functions
+     Functions: gammp, gammq, betai
+   dawson.i   - Dawson's integral, error functions
+     Functions: dawson, erf, erfc
+   ellipse.i  - complete elliptic integrals (deprecated, elliptic.i better)
+     Functions: EllipticE, EllipticK
+   elliptic.i - elliptic functions
+     Functions: elliptic, ell_am, ell_f, ell_e, dn_, ellip_k, ellip_e
+   legndr.i   - Legendre polynomials, associated Legendre functions
+     Function:  legndr
+   fermi.i    - Fermi-Dirac integrals and their inverses
+     Functions: fdm12, fd12, fd32, fd52, ifdm12, ifd12, ifd32, ifd52
+   fermii.i   - incomplete Fermi-Dirac integrals
+     Functions: fdim12, fdi12, fdi32, fdi52
+   series.i   - geometric series solvers
+     Functions: series_s (sum a series), series_r (find ratio given
+                sum and number of terms), series_n (find number of
+		terms given sum and ratio)
+
+   Data fitting and interpolation:
+   -------------------------------
+
+   fitlsq.i   - least squares fit a piecewise linear function to data
+     Function: fitlsq
+   fitrat.i   - rational function and polynomial fits
+     Functions: fitrat, fitpol
+   spline.i   - cubic spline and tensioned spline interpolation
+     Functions: spline, tspline
+   digit2.i   - 2D equivalents for digitize and interp
+     Functions: digit2, interp2
+   cheby.i    - Chebyshev fitting and evaluation routines
+     Functions: cheby_fit, cheby_eval, cheby_integ, cheby_deriv, cheby_poly
+   regress.i  - Linear regression (least squares fitting)
+     Functions: regress, regress_cov
+
+   Numerical integration:
+   ----------------------
+
+   romberg.i  - Romberg and Simpson adaptive integrators
+     Functions: romberg, simpson
+   rkutta.i   - Runge-Kutta and Bulirsch-Stoer ODE integrators
+     Functions: rkutta, rk_integrate, bstoer, bs_integrate, rkdumb
+
+   I/O functions:
+   --------------
+
+   netcdf.i   - read and write netcdf binary files
+     Functions: nc_open, nc_create, nc_vardef, nc_enddef, nc_addrec
+                (if you only need to read a netcdf file, just use openb
+		 -- netcdf.i will be included automatically)
+   fits.i     - read and write FITS files (IAU astronomical data)
+     Functions: fits_open, fits_read, fits_create, fits_write, <others>
+   pnm.i      - read and write PBM, PGM, and PBM files made by the
+                pbmplus or netpbm packages
+     Functions: pnm_read, pnm_write, <others>
+   idlsave.i  - read IDL save files (RSI, see comment in idlsave.i)
+     Functions: idl_open, f2z, l2ll
+   copyb.i    - copy a binary file
+     Function: copyb
+   prefix.i   - read lists of numbers tagged by a "prefix" at the
+                beginning of each line
+     Functions: prefix_find, prefix_read, prefix_write
+   silo.i     - read silo files
+     Functions: silo_open, silo_close, silo_cd, silo_ls, silo_var
+   hydra.i    - read hydra dump files
+     Functions: h_openb, h_data, h_array, h_jt, <others>
+
+   Graphics:
+   ---------
+
+   movie.i    - assistance for animation (see demo2.i and demo3.i)
+     Functions: movie, movie_stats
+   button.i   - implement mouse pushbuttons in a Yorick graphics window
+                (see rezone.i for usage examples)
+     Functions: Button, button_plot, button_test, button_build
+   plwf.i     - 3-D wire frame plots (painter's algorithm)
+     Function:  plwf
+   slice3.i   - 3-D mesh slicing functions, plus plotting functions
+     Functions: mesh3, slice3, slice2, pl3tree, split_palette, <more>
+   pl3d.i     - first cut at 3-D graphics command line interface,
+                defines common lighting, rotation and perspective
+                transforms, gnomon (axis orientation indicator)
+                plwf.i, slice3.i, and demo5.i contain usage examples
+     Functions: rot3, light3, aim3, draw3, gnomon, <more>
+   pixels.i   - crude attempt to force Yorick to plot cell arrays at
+                one cell per X window pixel
+     Functions: pixels, pix_window
+   color.i    - palette adjustment, HSV<->RGB transforms
+                (study split_palette, split_bytscl in slice3.i for more
+                 color table ideas)
+     Functions: brighten, to_hsv, to_rgb, dump_palette
+   style.i    - low level peek and poke into graphics style sheets
+     Functions: get_style, set_style, read_style, write_style
+
+   Miscellaneous:
+   --------------
+
+   mkdoc.i    - extract and alphabetize DOCUMENT comments from include files
+     Function: mkdoc
+   msort.i    - multiple key sorting functions
+     Functions: msort, msort_rank
+   roots.i    - Newton-Raphson root and inverse, Brent maxima and minima
+     Functions: nraphson, f_inverse, mnbrent, mxbrent
+   zroots.i   - find roots of polynomial
+     Function: zroots
+   filter.i   -- analog signal processing functions
+     Functions: filter, fil_response, fil_butter, fil_bessel, fil_cheby1,
+                fil_cheby2, fil_cauer, fil_make, fil_delay, to_db, to_phase
+   convol.i   - convolution product using fft
+     Functions: convol, fft_good
+   random.i   - gaussian deviates, arbitrary piecewise linear deviates,
+                rejection method, poisson deviates, more
+     Functions: random_x, random_n, random_ipq, random_rej, poisson, ...
+   gcd.i      - GCD, LCM, prime factorization
+     Functions: gcd, lcm, is_prime, factorize
+   ieee.i     - IEEE 754 floating point support (Inf, NaN, denormal)
+     Functions: ieee_test, ieee_set, as_chars
+   md5.i      - compute MD5 checksums (slowly)
+     Functions: md5sum, md5
+   plato.i    - compute Platonic solids and geodesic domes
+     Functions: plato, pt_tet, pt_cube, pt_oct, pt_dodec, pt_ico, bucky
+   string.i   - various utilities (its string facilities mostly superceded)
+     Functions: getdate, reform, scalar, ...
+   sysafe.i   - Replacement for system function (but not $ syntax)
+     Functions: sysafe, system
+   make.i     - automatic Makefile generator for custom version of Yorick
+     Function:  make
+   kepler.i   - simple solar system models
+     Functions: kepler, solar_system, moon
+
+   Demonstration programs:
+   -----------------------
+
+   demo1.i    - a simple 1-D hydro code
+     Functions: demo1, evolve (read the file for more)
+   demo2.i    - fancy movies of a drumhead oscillating
+                (solves 2D wave equation on the fly)
+     Functions: demo2
+   demo3.i    - movie of a chaotic pendulum (way cool)
+                (does Runge-Kutta integration of Lagrangian on the fly)
+     Functions: demo3
+   demo4.i    - movie of flow around an airfoil
+                (solves for flow field on the fly)
+     Functions: demo4
+   demo5.i    - interpreted 3-D graphics, demonstrating plwf, slice3
+     Function:  demo5
+   rezone.i   - point-and-click rezoner for quadrilateral meshes
+     Function:  rezone, toy_mesh
+
+   Test programs:
+   --------------
+
+   testp.i    - reasonably complete Yorick test suite, except graphics
+                Just include it and the tests run immediately, includes:
+     testb.i  - binary file I/O tests
+     test1.i  - shock tracker test, poorly vectorizing
+     test2.i  - radiation escape factor calculation, highly vectorizing
+     test3.i  - scalar arithmetic performance test
+     teststr.i - string manipulation function test
+   testlp.i   - rough Yorick version of Linpack benchmark
+     Function:  testlp
+   testg.i    - a few graphics tests (grtest is a crude tutorial)
+     Functions: testg, lissajous, grtest
+
+Additional functions may be available at your site in the contrib
+directory, which is a sibling of this Y_SITE/i directory.  In
+Yorick, type:
+     Y_SITE
+to print the name of the site directory at your site.

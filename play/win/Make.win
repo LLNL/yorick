@@ -1,0 +1,35 @@
+# Make.cfg built by configure script on Sat Sep 18 21:09:52 PST 2004
+# CYGWIN_NT-5.1 uriah 1.5.10(0.116/4/2) 2004-05-25 22:07 i686 unknown unknown Cygwin
+# Make.cfg built by configure script on Sat Feb  5 09:41:19 PST 2005
+# Linux heep 2.4.18-3 #1 Thu Apr 18 07:37:53 EDT 2002 i686 i686 i386 GNU/Linux
+SHELL=/bin/sh
+PLAY_DIRS=win
+PLAY_INCS=-I../win
+PLAY_CFG=../win
+Y_MAIN_C=win/cygmain.c
+YWIN_LIB=yorapi.def
+YWIN_DEF=$(PKG_DEF)
+EXE_SFX=.exe
+CC=gcc -mno-cygwin
+Y_CFLAGS=
+Y_LDFLAGS=
+COPT_DEFAULT=-O
+RANLIB=ranlib
+AR=ar
+MATHLIB=-lm
+FPELIB=
+FPELIBM=
+DEFAULT_TGT=dll
+DISTRIB_TGT=$(DEFAULT_TGT)
+ALT_LIBS=
+EXTRA_PKGS=
+PLUG_UDL=-DPLUG_WDL
+PLUG_EXPORT=
+PLUG_LIB=
+PLUG_PIC=
+PLUG_SHARED=-shared
+PLUG_SFX=.dll
+PLUG_DEF=
+XINC=
+XLIB=
+X11LIB=-lgdi32 -luser32

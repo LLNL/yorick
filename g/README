@@ -1,0 +1,7 @@
+Here are the "style sheets" *.gs and palettes *.gp that come with this
+distribution.  You can make your own; see work.gs for a description of
+the style sheet format, or earth.gp for the palette format.
+
+The ps.ps PostScript file is the template used by gist; you can also
+print it to test the gist primitives on your printer.  The pscom.ps
+file is the same thing with more comments, but fewer tests.

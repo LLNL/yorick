@@ -1,0 +1,184 @@
+# $Id: Makepkg,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# standard parts of yorick package Makefile
+SHELL=/bin/sh
+MAKE=make
+
+# ------------------------------------------------------------------------
+
+# Any libpkg.a file may require -L and -l linker options in order
+# to be able to load it (a corresponding pkg.so would have already
+# been linked against those when it was built).  Since we want to
+# be able to concoct executable yoricks with any subset of those
+# libpkg.a statically linked, the required -L and -l options, if
+# any, must be recorded in a libpkg.a.dep file kept alongside libpkg.a.
+# The rule that does the static link uses the yorick/libdep.sh script
+# to find and extract the information from these .dep files, in
+# order to create the appropriate linker options.
+
+# beware a subtle feature of Makefile semantics:
+# macros used in targets and their prerequisites take their
+#   "instantaneous" values (make builds dependency tree as it goes)
+# macros used in rules or RHS of assignment take their
+#   "final" values (actions actually happen after entire file parsed)
+
+# these macros are targets or prerequisites:
+#   Makefile must define these _before_ including Makepkg
+# Y_MAKEDIR
+# TGT
+# OBJS
+# PKG_EXE, PKG_LIB, PKG_DLL, PKG_DEF
+# EXE_TARGETS, LIB_TARGETS, DLL_TARGETS
+# CODGER_DEP, H_YWRAP
+# PKG_I_DEPS (same as PKG_I unless PKG_I_DIR)
+# ALL_TARGETS
+
+# these macros are used in rules directly:
+# LD_DLL, DLL_LIBS
+# LD_EXE, Y_MAIN_O, EXE_LIBS, PKG_DEPLIBS (to make .dep file)
+# AR, ARFLAGS, RANLIB
+# CODGER, PKG_NAME, PKG_I, PKG_I_DIR, EXTRA_PKGS
+# Y_EXE, Y_SITE, Y_HOME
+# PKG_CLEAN, Y_BINDIR
+
+# defined in package Makefile (which includes this Makepkg):
+# Y_MAKEDIR  directory containing Make.cfg, Makepkg, Makeexe, Makedll
+# Y_EXE      path to yorick executable
+# Y_EXE_PKGS statically loaded packages in yorick executable
+# Y_EXE_HOME path Y_HOME for yorick executable
+# Y_EXE_SITE path Y_SITE for yorick executable
+# COPT       C optimization flags, COPT_DEFAULT
+# TGT        exe or dll, the target to be built, DEFAULT_TGT
+# PKG_NAME   name of this package
+# PKG_I      startup include file(s) for this package
+# OBJS       list of object files
+# PKG_EXENAME  normally just yorick
+# PKG_DEPLIBS  list of load options (-L, -l) required for this package
+# PKG_CFLAGS   optional additional CFLAGS for this package (e.g. -I...)
+# PKG_LDFLAGS  optional additional LDFLAGS for this package (rare)
+# EXTRA_PKGS   additional static packages if TGT=exe, default Y_EXE_PKGS
+# PKG_CLEAN    optional list of non-standard cleanup files
+# PKG_I_START  optional autoload file(s) for this package
+# PKG_I_EXTRA  optional ordinary yorick include file(s) for this package
+# Y_HOME, Y_SITE  override values in Make.cfg with Y_EXE_HOME, Y_EXE_SITE
+
+# ALL_TARGETS  optional prerequisites for all:
+# EXE_TARGETS  optional prerequisites for executable
+# LIB_TARGETS  optional prerequisites for static library
+# DLL_TARGETS  optional prerequisites for dynamic library
+
+# ------------------------------------------------------------------------
+
+# defined in Make.cfg:
+# CC
+# Y_CFLAGS     non-optimization flags required to compile (rare)
+# Y_LDFLAGS    non-optimization flags required to laod (rare)
+# EXE_SFX      .exe for WIN32, blank for UNIX
+# PLUG_SFX     .dll for WIN32, .so for UNIX, .sl for HPUX
+# PLUG_EXPORT  ld flags for yorick exe that can dlopen packages
+# PLUG_LIB     ld library containing dlopen
+# PLUG_SHARED  ld flags to create a dll (may reference Y_EXE)
+# PLUG_PIC     cc flags unique to modules to go in a dll (-fPIC)
+
+PKG_EXE=$(PKG_EXENAME)$(EXE_SFX)
+PKG_LIB=lib$(PKG_NAME).a
+PKG_DLL=$(PKG_NAME)$(PLUG_SFX)
+PKG_DEF=$(PKG_NAME).def
+
+Y_LIBEXE=$(Y_HOME)/lib
+Y_INCLUDE=$(Y_HOME)/include
+
+CODGER=$(Y_LIBEXE)/codger
+LIBDEP=$(Y_LIBEXE)/libdep.sh
+
+# might want to override these on make command line
+Y_IDIR=-I$(Y_INCLUDE)
+Y_LDIR=-L$(Y_LIBEXE)
+PKG_L_OPT=-L. -l$(PKG_NAME)
+
+# note that PLUG is defined in Makeexe or Makedll
+CFLAGS=$(COPT) $(Y_CFLAGS) $(PKG_CFLAGS) $(PLUG) -I. $(Y_IDIR)
+LDFLAGS=$(COPT) $(Y_LDFLAGS) $(PKG_LDFLAGS)
+ARFLAGS=rc
+
+EXTRA_LIBS=`$(LIBDEP) "$(Y_HOME)" $(EXTRA_PKGS)`
+LD_EXE=$(CC) $(LDFLAGS) $(PLUG_EXPORT)
+EXE_LIBS=$(PKG_L_OPT) $(Y_LDIR) $(PKG_DEPLIBS) $(EXTRA_LIBS) -lyor $(SYS_LIBS)
+Y_MAIN_O=$(Y_LIBEXE)/main.o
+
+LD_DLL=$(CC) $(LDFLAGS) $(PLUG_SHARED)
+DLL_LIBS=$(PKG_DEPLIBS) $(MATHLIB)
+DLL_DEF=$(YWIN_DEF)
+
+SYS_LIBS=$(X11LIB) $(FPELIB) $(MATHLIB) $(PLUG_LIB)
+
+# here are full warning options for gcc (for COPT)
+GCCOPTS=-g -O2 -ansi -pedantic -Wall $(GCCPROTO)
+GCCPROTO=-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
+
+#------------------------------------------------------------------------
+# standard targets
+# macros in target names or dependency lists must be defined above here
+
+all: $(ALL_TARGETS) $(TGT)
+exe: $(PKG_EXE)
+dll: $(PKG_DLL)
+
+# Makeexe or Makedll used to get portable conditional make:
+# contain PLUG macro, PKG_EXE, PKG_LIB, PKG_DLL targets
+$(PKG_DEF):
+	echo IMPORTS >$@
+	sed -e "s/.*/\0 = `basename $(Y_EXE)`.\0/" <$(Y_LIBEXE)/yorapi.def >>$@
+
+ywrap.c: Makefile $(CODGER_DEP) $(PKG_I_DEPS)
+	$(CODGER) w $(PKG_NAME) $(PKG_I_DIR) $(PKG_I)
+
+yinit.c: Makefile $(CODGER_DEP)
+	$(CODGER) i "$(Y_HOME)" "$(Y_SITE)" $(EXTRA_PKGS) $(PKG_NAME)
+
+yinit.o: yinit.c $(H_YWRAP)
+ywrap.o: ywrap.c $(H_YWRAP)
+
+check: check-$(TGT)
+check-exe: $(PKG_EXE) check.i
+	./$(PKG_EXE) -batch check.i
+check-dll: $(PKG_DLL) check.i
+	$(Y_EXE) -batch check.i
+
+dist: distclean
+	D=`pwd`; D=`basename "$$D"`; cd ..; tar cvf - "$$D"|gzip - >"$$D.tgz"
+
+# following have two colons so you can define additional rules elsewhere
+
+Y_GROUP=`cat $(Y_LIBEXE)/install.grp`
+YNSTALL=$(Y_LIBEXE)/install.sh $(Y_GROUP)
+install:: install-$(TGT)
+	$(YNSTALL) $(PKG_I_DEPS) $(Y_SITE)/i0
+	if test -n "$(PKG_I_START)"; then $(YNSTALL) $(PKG_I_START) $(Y_HOME)/i-start; fi
+	if test -n "$(PKG_I_EXTRA)"; then $(YNSTALL) $(PKG_I_EXTRA) $(Y_SITE)/i; fi
+install-exe: $(PKG_EXE)
+	$(YNSTALL) $(PKG_EXE) $(Y_BINDIR)
+	$(YNSTALL) $(PKG_LIB) $(Y_HOME)/lib
+	$(RANLIB) $(Y_HOME)/lib/$(PKG_LIB)
+install-dll: $(PKG_DLL)
+	$(YNSTALL) $(PKG_DLL) $(Y_HOME)/lib
+
+uninstall::
+	if test $(PKG_EXE) != yorick; then rm -f $(Y_BINDIR)/$(PKG_EXE); fi
+	rm -f $(Y_HOME)/lib/$(PKG_LIB) $(Y_HOME)/lib/$(PKG_DLL)
+	cd $(Y_SITE)/i0; rm -f $(PKG_I)
+	if test -n "$(PKG_I_START)"; then cd $(Y_HOME)/i-start; rm -f $(PKG_I_START); fi
+	if test -n "$(PKG_I_EXTRA)"; then cd $(Y_SITE)/i; rm -f $(PKG_I_EXTRA); fi
+
+debug:
+	@$(MAKE) TGT=exe COPT=-g
+
+clean::
+	rm -f *~ '#'* core* a.out yinit.* ywrap.* *.dep so_locations Make.tmp
+	rm -f $(OBJS) $(PKG_EXE) $(PKG_LIB) $(PKG_DLL) $(PKG_DEF) $(PKG_CLEAN)
+distclean:: clean $(Y_DISTMAKE)
+	rm -f Makefile.old
+distmake:
+	if S="s/^Y_MAKEDIR=.*/Y_MAKEDIR=/;s/^Y_EXE=.*/Y_EXE=/;\
+	s/^Y_EXE_PKGS=.*/Y_EXE_PKGS=/;s/^Y_EXE_SITE=.*/Y_EXE_SITE=/;\
+	s/^Y_EXE_HOME=.*/Y_EXE_HOME=/";\
+	sed -e "$$S" Makefile >Make.tmp; then mv Make.tmp Makefile; fi

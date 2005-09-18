@@ -1,0 +1,35 @@
+                      OpenGL package for Yorick
+
+...is now integrated into the play portability layer, see
+playw.h, x11/{README.glx,oglx.c}, win/oglw.c, any/test3d.c.
+
+This package provides a Yorick interpreted interface to the OpenGL
+API.  The drawing routines in OpenGL are standard and platform
+independent.  However, OpenGL does not specify how a drawing context
+is to be created or made current, and a few other necessary controls.
+I have reduced these platform dependent functions to the minimum
+possible set; like play, they are implemented once per platform in the
+subdirectories x11, win, and mac.
+
+The platform dependent interface is declared in playgl.h, and
+described here.  It is designed to interoperate with the play window
+system interface; in particular, an OpenGL window must be created as a
+"child" of an ordinary play window (that behavior should be simulated
+on the Mac, but nothing will ever be drawn "under" it).  All of the
+input events which generate callbacks to the routines specified in the
+p_gui call must continue to be reported to the parent window's
+context.  The routines are:
+
+   p_glwin *p_glcreate(p_win *parent, int width, int height, int x, int y)
+     -creates an OpenGL subwindow within parent
+     -window must be double buffered, rgba color model
+     -also modifies parent's color model to be consistent with OpenGL
+      -implicitly switches to rgb color model
+      -Mesa likes 5x9x5 colormap (225 colors)
+       (note that 8 of the 225 colors are "standard")
+   void p_gldestroy(p_glwin *w)
+     -destroys p_glwin
+   void p_glswap(p_glwin *w)
+     -swaps buffers, so the back buffer becomes front, new back undefined
+   void p_glcurrent(p_glwin *w);
+     -make p_glwin the current OpenGL drawing context

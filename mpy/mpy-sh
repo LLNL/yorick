@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# ------------------------------------------------------------------------
+# Only need to change these two lines to make this script work
+# with any MPY-based program.
+prog=mpy
+maxprocesses=28
+
+# Reverse comments to get LAM or MPICH mpirun
+# These you may need to change as you move from one MPI environment to
+# another, but not from one MPY-derived program to another in a single
+# MPI environment.
+np_option=-np     # MPICH
+sep=              # MPICH
+#np_option="-w -c" # LAM
+#sep=--            # LAM
+
+# ------------------------------------------------------------------------
+
+# This script calls mpirun if the -np option appears on the command line,
+# otherwise, it adds the -nompi argument and just starts mpy.
+# To run with all maxprocesses processors, use the -npx option.
+# If you need to pass other arguments to mpirun, list them all first,
+# and follow them by -- followed by zero or more arguments to mpy.
+
+args=
+mpiargs=
+np=
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -np)    shift; np=$1;;
+    -npx)   np=$maxprocesses;;
+    -nompi) ;;
+    --)     mpiargs="$args"; args=;;
+    *)      args="$args $1";;
+  esac
+  shift
+done
+
+case "X$np" in
+  X)    args="-nompi $args";;
+  *)    args="$np_option $np $mpiargs $prog $sep $args"; prog=mpirun;;
+esac
+
+exec $prog $args

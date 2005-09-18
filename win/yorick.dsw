@@ -1,0 +1,230 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "bench"=".\bench.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name gist
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name play
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "browser"=".\browser.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name gist
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name play
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "codger"=".\codger.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "drat"=".\drat.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "gist"=".\gist.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "hex"=".\hex.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "numfmt"=".\numfmt.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "play"=".\play.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "setup"=".\setup.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "test2d"=".\test2d.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name play
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "test3d"=".\test3d.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name play
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "yflat"=".\yflat.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name codger
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name numfmt
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "yorick"=".\yorick.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name drat
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name gist
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name hex
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name play
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name yorlib
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "yorlib"=".\yorlib.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name numfmt
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name codger
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+

@@ -1,0 +1,3 @@
+This is the source code for the interpreter itself.  It is basically
+the old yorick-1.4 interpreter hacked to sit on top of the play
+portability layer.

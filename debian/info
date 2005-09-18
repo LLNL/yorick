@@ -1,0 +1,15 @@
+# This is a configuration files for installing a .info menu
+# The Description to be placed into the directory
+DESCR="Yorick interpreted language."
+
+# The section this info file should be placed in (Regexp) followed by
+# the new section name to be created if the Regexp does not match
+# (Optional. If not given the .info will be appended to the directory)
+SECTION_MATCH="Math"
+SECTION_NAME="Math"
+
+# The file referred to from the Info directory
+FILE=yorick.info
+
+# Optional. The files to be copied to /usr/info
+#FILES=../Yorick/doc/yorick.info*

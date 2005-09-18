@@ -1,0 +1,121 @@
+Dynamic linking requires four platform/compiler dependent steps:
+
+(1) Compiling the udl.c p_dlopen/p_dlsym dynamic linking functions:
+
+    $(CC) $(CPPFLAGS) $(CFLAGS) $(PLUG_UDL) -c udl.c
+
+(2) Linking the main program which calls p_dlopen/p_dlsym:
+
+    CCPLUG=$(CC) $(LDOPTIONS) $(LDFLAGS) $(PLUG_EXPORT)
+    $(CCPLUG) -o prog $(PROG_OBJS) $(PROG_LIBS) $(PLUG_LIB)
+      PROG_OBJS are the .o files for the program
+      PROG_LIBS are the -l libraries for the program
+
+(3) Compiling position-independent objects to go in a plugin:
+
+    $(CC) $(CPPFLAGS) $(CFLAGS) $(PLUG_PIC) -c udl.c
+
+(4) Linking a plugin:
+
+    LD_PLUGIN=$(CC) $(LDOPTIONS) $(LDFLAGS) $(PLUG_SHARED)
+    $(LD_PLUGIN) -o plugin$(PLUG_SFX) $(PLUGIN_OBJS) $(PLUGIN_LIBS)
+      PLUGIN_OBJS are the .o files for the plugin, built with (3)
+      PLUGIN_LIBS are the -l libraries for the plugin
+
+The flags and other Makefile variables to be determined by config.sh
+have the following meanings:
+
+PLUG_UDL    -DPLUG_... define that selects branch of udl.c for this platform
+          Supported values are currently:
+  -DPLUG_LIBDL   dlopen/dlsym in most UNIX systems
+  -DPLUG_HPUX    shl_load/shl_findsym in HPUX systems
+  -DPLUG_MACOSX  NSLinkModule/NSLookupSymbolInModule in Darwin systems
+  (see play/win/wdl.c for Windows LoadLibrary support)
+  -DPLUG_UNSUPPORTED  non-functional stubs
+
+PLUG_LIB    -ldl or other system library containing functions called by
+          udl.c, or blank if in libc or other default library
+PLUG_EXPORT compiler flag required to allow functions in the plugins to
+          call functions in the main program (yorick plugins always
+          need to do this to get their arguments from the interpreter),
+          corresponding to -export-dynamic libtool flag, often -Wl,-E
+
+PLUG_PIC    -fPIC or other compiler flag required to produce position
+          independent code required for a plugin
+
+PLUG_SHARED -shared or other compiler flag required to link PIC object
+          files into a plugin (that is, a shared library) instead of
+          an ordinary executable, corresponding to -module libtool flag
+PLUG_SFX    native file suffix for plugins, .so for most UNIX platforms,
+          but .sl for HPUX (possibly should use .so everywhere)
+          (must match PLUG_SUFFIX in udl.c)
+
+The config,sh script recognizes several platforms by the uname -s
+command.  The following platforms are recognized and yorick should
+support plugins for at least some versions of the OS:
+
+Linux, FreeBSD, NetBSD, OpenBSD, and other GNU-based systems
+SunOS
+IRIX*
+AIX
+OSF1
+HP-UX
+Darwin
+
+You can look in config.sh to see what values yorick uses on each
+platform.  If your system needs other values, you can either edit
+Make.cfg by hand after the top level make config to set the
+appropriate values, or add a branch to the case statement in config.sh
+before running make config.
+
+There are deeper incompatibilities among the different platforms,
+which have only slight, if any, consequences for yorick plugins.  The
+most significant is that the AIX -bexpall switch in PLUG_EXPORT does not
+export symbol names beginning with underscore "_".  Hence, no variable
+or function in the yorick main program whose name begins with _ will
+be visible to a plugin on AIX.  This is not a significant limitation.
+
+The PLUG_EXPORT flags for SunOS and IRIX are not obvious.  IRIX
+documentation suggests '-Wl,-hidden_symbol,*' may be necessary.  A
+significant worry is that libtool resorts to creating its own list of
+every extern symbol in the program for some platforms.  If this is
+necessary on any platform, the simple system adopted here will not
+work, and yorick plugins will not be available.
+
+On IRIX, can convert any .a file to a .so file like this:
+    ld -shared -all libmine.a -o libmine.so
+
+On HPUX, PLUG_PIC=+z would mostly work, and the -b flag to ld could be
+used instead of the -n flag to cc.
+
+On Linux i86 systems, the above flags work with the Intel icc compiler
+as well as with the GNU gcc compiler.  I don't know about the Portland
+pgcc compiler.
+
+On Mac OS X systems, a plugin is called a "bundle", and PLUG_SHARED is
+-bundle -bundle_loader $(YORICK_EXE), where YORICK_EXE is the path to
+the yorick executable (or whatever program calls p_dlopen).  This is
+the only system for which the LD_PLUGIN command must reference the
+executable that will be loading the plugin.  In principle, this would
+allow the bundle to be statically linked back to the yorick
+executable, so that the plugin would run only with one particular
+executable.  However, experiments prove that is not actually what
+happens on OSX; a plugin linked with -bundle_loader set to one version
+of yorick can in fact be loaded by other yorick executables.  In
+particular, a yorick plugin need not always be upgraded or rebuilt
+when the yorick executable is upgraded, a very useful feature shared
+by all the other operating systems.
+
+Mac OS X features a separate shared library binary type, ".dylib",
+which for versions <=10.2 was not able to link back to the yorick API.
+as of 10.3, this appears to be possible in principal.  There is no
+switch to CC to produce such a binary; you need to use libtool (_not_
+GNU libtool!).  The link command is:
+LD_PLUGIN=MACOSX_DEPLOYMENT_TARGET=10.3 libtool -dynamic -undefined dynamic_lookup
+However, I could not get this to work properly for the
+cerfc function in extend/; libtool fails with a message that cerfc.o
+contains symbols in the wrong segment.  If you force it to produce
+cerfc.dylib, yorick dies when you attempt to call the cerfc function.
+In any event, it appears that -bundle is the intended binary format
+for plugins, so I abandoned my attempts to get .dylib to work for that
+purpose.  Python extensions use -bundle.  I didn't check perl.

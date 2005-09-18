@@ -1,0 +1,183 @@
+.TH YORICK 1 "1994 August 30"
+.UC 4
+.SH NAME
+yorick \- interpreted language for numerical analysis and postprocessing
+.SH SYNOPSIS
+.B yorick
+[ -i
+.I file1.i
+[ -i
+.I file2.i
+[ ... ]]]
+.br
+.B yorick
+-batch
+.I file.i
+.br
+.SH DESCRIPTION
+.I Yorick
+is an interpreted language like Basic or Lisp, but far faster.  It
+features:
+.TP 3
+*
+A C-like language, but without declarative statements.  Operations
+between arrays produce array results, which is one reason for
+Yorick's high speed.
+.TP
+*
+An X window system interactive graphics package.  Concentrates on
+x-y plots and filling and contouring quadrilateral meshes.  Also
+handles cell arrays.  Graphics can be output to binary CGM or
+PostScript files as well.  A separate CGM browser, gist(1), is included.
+.TP
+*
+A binary file package which can read or write floating point formats
+which are foreign to the machine where Yorick is running.  Thus, you
+can share binary files freely on a heterogeneous network.
+.TP
+*
+A library of functions written in the Yorick language.  These
+include Bessel, gamma, and related functions, multiple key sorting,
+spline, rational function, and least squares fitting, and routines
+to read and write netCDF files.
+.TP
+*
+Provisions for embedding compiled subroutines and functions within
+a Yorick interpreter.  A compiled package which solves matrices and
+performs FFTs is supplied.
+.PP
+You cannot learn to program in Yorick by reading this man page.  Instead,
+start Yorick (with no arguments) and type:
+.ti 8
+help
+.br
+This will tell you the name of the Yorick
+.I site directory
+at your site.  The site directory contains a doc/ subdirectory; read
+the README file there to find out about more documentation.  The
+Yorick user manual is in project GNU's TeXinfo format, which can be
+either printed or read online as hypertext using the info command in
+GNU Emacs.  Also available are a set of six quick reference sheets (as
+PostScript), and alphabetized collections of all of Yorick's online
+help comments (accessible via the help command).  Finally, the
+i/ subdirectory of the Yorick site directory is a library of
+functions which are written in the Yorick language, which are also
+helpful as examples of how to write Yorick programs.
+.PP
+To demonstrate Yorick, start Yorick and type the following two lines:
+.ti 8
+#include "demo1.i"
+.ti 8
+demo1
+.br
+After the little movie runs on your X window system display, try:
+.ti 8
+help, demo1
+.br
+Follow the SEE ALSO references in this help message by issuing additional
+help commands.  Also, the help command will print the full pathname of the
+demo1.i file.  Read this file to see how the demo1 function works.
+You can repeat this procedure with demo2.i, demo3.i, and demo4.i:
+.ti 8
+demo1 - movies of sound and shock waves
+.ti 8
+demo2 - movies of a drumhead oscillating
+.ti 8
+demo3 - movie of a chaotic pendulum
+.ti 8
+demo4 - visualization of the flow field around an airfoil
+.br
+You can run a crude tutorial introducing all of the Yorick graphics
+commands by starting Yorick and typing:
+.ti 8
+#include "testg.i"
+.ti 8
+grtest
+.br
+You can get a description of the various files in the interpreted
+library by typing (as a command to Yorick):
+.ti 8
+library
+.SS Options
+.TP 20
+.RI -i \0file.i
+includes the Yorick source file
+.I file.i
+as Yorick starts.  This is equivalent to the #include directive after
+Yorick has started.
+.TP
+.RI -batch \0file.i
+includes the Yorick source file
+.I file.i
+as Yorick starts.  Your customization file custom.i, if any, is
+.I not
+read,
+and Yorick is placed in batch mode.  Use the help command on the batch
+function (help, batch) to find out more about batch mode.  In batch
+mode, all errors are fatal; normally, Yorick will halt execution and
+wait for more input after an error.
+.PP
+.SH AUTHOR
+.PP
+David H. Munro, Lawrence Livermore National Laboratory
+.PP
+.SH FILES
+.PP
+Y_SITE refers to the Yorick site directory; use the help command
+to find its name at your site (the variable Y_SITE also contains the
+name of the site directory):
+.TP 25
+Y_SITE/doc/*
+documentation, including the quick reference sheets, user manual, and
+alphabetized collections of all the online help messages.
+.TP
+Y_SITE/i/*.i
+a library of interpreted Yorick functions.  Here are Bessel, gamma, and
+beta functions, multiple key sorting, curve fitting functions, and more.
+The file readme.i has a more complete description.
+.TP
+Y_SITE/g/*
+graphics style sheets, palettes, and PostScript template
+.TP
+Y_SITE/i0/*.i
+include files Yorick needs to read whenever it starts.  Several of these
+contain the definitions of functions which you may need to read in order
+to fully understand their operation, or as examples of Yorick programs.
+.SH BUGS
+.PP
+If x is a scalar int, long, or double,
+.ti 8
+x(1)= scalar-expression
+.br
+will fail.  You normally wouldn't do the assignment like this (you 
+would just redefine x).  Usually, you can work around this bug using
+the merge function; do "help, merge" and read Y_SITE/i/bessel.i for
+examples of the merge function.
+.PP
+Expressions like openb("file_containing_x").x do not work, even though
+they are syntactically and logically correct.  It turns out the file
+closes before the data can be read.  This one may be fixable, but it's
+not easy.
+.PP
+The nice= and restrict= keywords to the limits function don't seem to
+work properly.
+.PP
+Clipping of filled mesh plots (the plf command) is not always correct.
+.PP
+Text -- particularly curve markers -- is clipped by not drawing it;
+the absence of partial characters at the edge of a plot puzzles most
+people.
+.PP
+Recursive debug mode (debugging an error which occurred while you were
+debugging) doesn't work.  Also, Yorick can't always get into and out
+of its debug mode properly.  Occasionally, it will get the line number
+where an error occurred wrong, especially if the error was in the
+condition or increment clause of a for loop.
+.PP
+On pseudocolor displays, a color image may require you to move the
+mouse into yorick's X window to display properly, if you use the
+private=1 option of the window command.  Unless your window manager
+allows you to set colormap focus independently of keyboard focus, this
+can be annoying.
+.SH SEE ALSO
+gist(1)

@@ -1,0 +1,3 @@
+LIBRARY udltest.dll
+IMPORTS
+testcall = cfg.exe.testcall

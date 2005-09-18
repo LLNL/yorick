@@ -1,0 +1,82 @@
+
+Yorick version 1.5 is minimally modified from version 1.4 so that it
+can be based on an early version portability layer (play) designed for
+yorick 2.0.  That is, the 1.5 code is a hack.  Here are some notes on
+what I did, and the way it really should work:
+
+The read() function:
+--------------------
+
+Input functions like read() (in any language) break the event driven
+programming model.  They are designed to block program execution until
+the requested input event arrives.  I hacked yorick 1.4 as follows
+(ascio.c):
+
+If the read() source is the keyboard, read() saves all the information
+about numbers and formats of things to read in static variables (the
+destination variables are already on the yorick virtual machine
+stack), then "suspends" the virtual machine and returns.  This
+required a slight performance reducing hack to the EvalBI function
+(fnctn.c), in order to allow Y_read to return without dropping its
+parameters off the stack.  The y_on_stdin event handler notices the
+suspend state by means of a non-null pointer to the prompt string for
+read(), and feeds the input line to yr_reader instead of to the parser
+as usual.  If the read() operation has been satisfied or if there was
+an error, yr_reader pops the arguments to the original read() off the
+stack (which would have been done by EvalBI normally), and resets the
+prompt string to a null pointer.  When y_on_stdin sees the prompt
+string return to null after yr_reader, it signals the virtual machine
+to restart; yr_reader also resets the virtual machine program counter
+back to where it was on the original read.  (Note that the function
+which called read() cannot be destroyed, as the stack still owns a
+use.)
+
+The basic idea here is sound, but it can be implemented much more
+smoothly.  In particular, the notion of suspending the virtual
+machine, and allowing other interpreted tasks to run, needs to be
+better worked out.
+
+I am considering reworking read(), and maybe other input functions, to
+accept an optional callback function as a parameter.  If the callback
+function is provided, then read returns a state object immediately,
+which will be passed to the callback function whenever input arrives.
+If the state object allows arbitrary additional interpreted objects to
+be attached to it, you'd have the means to write true event driven
+interpreted code.  Obviously, this ought to look like the other event
+driven interpreted functions added with yorick 2.0.
+
+An additional problem is that other input sources such as named pipes
+can block on read; ideally it should be possible to handle them as
+event sources as well.
+
+Virtual machine tasks:
+----------------------
+
+I made only superficial modifications to task.c; it needs a full
+overhaul.  The task mechanism just doesn't work quite right.  Also,
+the error recovery mechanism is lame.
+
+An interpreted function suspend() which scraped the whole current task
+off the virtual machine stack and returned it as an object that could
+be restarted (perhaps just by calling it as a function!) seems like a
+good idea.
+
+In fact, the tasks should probably be stored as a list of virtual
+machine stacks, rather than a single stack -- that would obviate the
+need for the scraping operation, and the extra level of data structure
+should not have any impact on performance -- the stack pointer sp is
+already a global variable which changes from time to time.
+
+Parser:
+-------
+
+Again, the parser needs to be rewritten, since the yacc model is
+antithetical to event driven programming.  I merely hacked the yacc
+parser so that it can return in mid-parse when yylex runs out of
+tokens, then resume when a new input line arrives.
+
+In yorick 2.0, I plan to use byacc to generate the parse tables, but I
+have written my own event-driven code to use those tables.  Thus, I
+can still have the tried-and-true yacc parser generator; a trivial awk
+script strips out the tables produced by byacc and reformats them
+slightly for use by yorick.

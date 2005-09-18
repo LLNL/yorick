@@ -1,0 +1,390 @@
+15/Aug/05 added funcdef, spawn, and after APIs
+  yorick/{funcdef.c,spawn.c,task.c} play/unix/uspawn.c play/win/wspawn.c
+  fixed bug in yorick/binpdb.c that made pdb files containing
+    pointers written by 1.5 unreadable by 1.6
+
+16/Jun/05  Many minor fixes and additions:
+1. Makefile,yorapi.sh,yorick/yconfig.sh - added -n flag for tail
+2. hex/hex.i - added HX_block, HX_blkbnd definitions (so test.i runs)
+3. hex/{tools.[ch],hex24.c,hex5.c} - tri_find fixes a SIGFPE
+4. i/cheby.i - new cheby_poly function
+5. i/regress.i - new linear regression package
+6. play/unix/config.sh,others - changed variable name EXTRA_LIBS to ALT_LIBS
+7. play/x11/xconfig.sh - added branches to find lib64, e.g.- /usr/X11R6/lib64
+8. yorick/ops2.c - added errno check to PowerLD, PowerDD
+9. yorick/bcast.c - fixed bug in x(-,,-,)*y broadcasting
+
+12/Mar/05  Huge changes, major items are:
+
+1. The original plug_in and autoload system (see 5/Sep/04 below)
+   has been completely revamped to make a true "package" system.
+   Read the final chapter of doc/yorick.pdf for details.  The
+   bottom line is that #include on a .i file which declares the
+   interface to a plugin (dynamically linked compiled code) now
+   makes the compiled functions available in such a way that the
+   end user doesn't even need to know it was compiled and not
+   interpreted.  The autoload function means that most packages
+   need no explicit #include in order to use them; #include now
+   is used almost exclusively for code you are actively developing.
+
+2. The Makefile system for compiled yorick add-ons has completely
+   changed.  This will require reworking both your Makefiles and
+   the .i file(s) which declare the compiled functions to be changed.
+   Read the completely new final section in the manual (doc/yorick.pdf).
+   Short story:
+   a. Add a plug_in command (help,plug_in) to the top of any .i
+      file which declares a compiled (builtin) function, and remove
+      any MAKE-INSTRUCTIONS comment.
+   b. Rename your Makefile to Makefile.sav, then run
+        yorick -batch make.i
+      This makes a good first cut at the new Makefile.  Merge anything
+      the new make.i missed (including any PKG_DEPLIBS) back from
+      your original Makefile.sav into the new Makefile.
+   Look in the drat, hex, or mpy directories for examples of the
+   new style of package Makefile.  You can practice in the extend/
+   subdirectory.  Get the yorick-z-1.0 package for an example of
+   a compiled package which is not part of this distribution.
+
+3. The string manipulation functions have been dramatically extended.
+   New functions include strgrep, strglob, strfind, streplace,
+   strcase, a new string-to-char-to-string converter strchar, and
+   a powerfully extended strpart.  Do help,string for details.
+
+4. The yorick user manual and quick reference cards have been updated.
+   Several new features have been added to the i/ interpreted library,
+   such as Poisson deviates in random.i, and IEEE 754 support in ieee.i.
+   Also a pdf command has been added as a companion to the eps and hcps
+   commands, which may enable Mac and Windows users to more easily
+   import yorick graphics into PowerPoint (TM).
+
+------------------------------------------------------------------------
+
+5/Sep/04 added autoload function and i-start directory search, changed
+  semantics and improved plug_in function
+i0/{std.i,stdx.i}, yorick/{yio.[ch],yinput.c,task.c,autold.c}, others
+  read documentation for autoload and plug_in functions
+  yorick packages should now place autoload files in Y_SITE/i-start
+  or Y_HOME/i-start in order to automatically be included at startup
+
+4/Jun/04  ************ added plug_in function for dynamic linking ********
+  see yorick/README.2 and play/unix/PLUGIN.txt
+
+16/Apr/04
+yorick/array.c   fixed egregious buffer overrun bug in x(i,..)
+
+18/Feb/04
+emacs/yorick.el  fixed compatibility issue with emacs 21.3 sel-mouse
+
+11/Feb/04
+play/unix/fpuset.c,config.sh
+  desperate attempt to work around severe Apple bugs in MacOS X 10.3
+  see MACOSX10.3 here and
+    ftp://ftp-icf.llnl.gov/pub/Yorick/unix/macosx-10.3-fix.tgz
+
+8/Jan/04
+hex/{tools.[ch],hex.c,hex5.c,hex24.c,hydram.c}  bug fixes in ray tracker
+  main problem is reflecting boundaries, caused SIGFPE and SIGSEGV
+
+12/Nov/03
+play/unix/uevent.c  workaround for MacOS 10.3 poll bug (libc)
+play/playgl.h, play/x11/oglx.c, play/win/oglw.c   added p_glresize function
+
+1/Oct/03
+----------------------- 1.5.14 released -------------------------------
+
+23/Sep/03
+
+i/make.i   switched to Make.cfg-based extensions, Maketmpl deprecated
+
+14/May/03
+
+yorick/binpdb.c   fixed buffer overrun
+opengl/           moved to play/
+configure, play/x11/xconfig.sh   overhauled configure scripts
+
+01/May/03
+
+gist/xbasic.c   fixed serious buffer overrun involving G_N_PENDING
+  this caused yorick to go insane after a graphics window was
+  destroyed, occasionally manifested by SIGSEGV at quit
+
+yorick/{codger.c,Makefile,Maketmpl.in} added explicit -i0= flag for codger
+
+19/Mar/03
+
+i/fermii.i  added incomplete Fermi-Dirac integrals
+
+21/Feb/03
+
+yorick/codger.c  fixed to cope with DOS files under UNIX
+
+14/Feb/03
+
+i/fits.i  complete rewrite by Eric Thiebaut, may break some old code
+i/pnm.i   fixed bugs where PPM written as PBM
+
+30/Dec/02
+
+matrix/dgels.c  fixed bugs that caused SVsolve, QRsolve to fail sometimes
+
+19/Dec/02
+
+i0/std.i    added mergef improved merge API
+i/bessel.i  fixed bugs (x<<1 no longer crashes, bessy0 now correct)
+
+16/Dec/02
+
+i0/std.i  fixed sech, csch, atanh, asinh, acosh
+  to give correct answers for arguments and function values near zero
+  also added expm1, log1p functions (removed expm1 from hex/hex.[ic])
+
+18/Nov/02
+
+play/i/{fermi.i,gammp.i,gamma.i,README}
+    added fermi-dirac integrals, incomplete gamma and beta functions
+yorick/pathfun.c
+    fixed $(ENVVAR) in pathnames (thanks to Eric Thiebaut)
+
+31/oct/02 ============= released 1.5.12
+
+5/Sep/02
+
+play/unix/{playu.h,fpuset.c,handler.c,umain.c,fputest.c}
+    fix SIGFPE for MacOS X 10.2
+matrix/{dgels.c,dgecon.c}  fixed enum goofs in cblas conversion
+
+28/Aug/02
+
+play/x11/rgbread.c  fixed yorick rgb_read(), bug in rgb_find_shift()
+hex/hydra.i  fixed distributed file problems
+
+19/Aug/02
+
+opengl/x11/oglx.c   fixed colormap problem when GLX visual != default
+
+5/Aug/02
+
+yorick/binio.h  turned on PAD_ARRAY for i86's (big speedup)
+win/yorick.d??  added gist browser, fixed cblasy in MSVC project files
+
+12/Jul/02
+
+g/ps[com].ps  fixed LS postscript function (plg with smooth=1)
+
+8/Jul/02
+
+yorick/task.c  make yorick return non-0 exit code on batch or fatal errors
+g/{pscom.ps,ps.ps}  workaround for adobe illustrator 10 bugs
+
+2/Jul/02 ============= released 1.5.10
+
+25/Jun/02
+
+gist/engine.c   zoomed pli images with x1<x0 or y1<y0 in hcp output fixed
+gist/browser.c  added -geometry option
+hex/{hydra.i,ylmdec.i}  upgraded hydra support to handle history families
+
+03/Jun/02
+
+yorick/task.c   batch quit now closes open binary files
+matrix/*        change to new C blas standard linkage (e.g.- atlas)
+
+20/May/02
+
+play/unix/fpuset.c   log(-2) no longer crashes MacOS X
+
+10/May/02
+
+emacs/yorick.el  converted to easymenu, other fixes for xemacs (21.1)
+
+2/May/02
+
+gist/ps.c            fixed gist -f filter mode
+play/unix/stdinit.c  fixed problem when stdin redirected to /dev/null
+
+26/Apr/02
+
+yorick/yhash.c  huge hash tables now work
+  (necessary for writing huge numbers of pointers using save function)
+
+24/Apr/02
+
+  removed all tabs from source files
+yorick/yinput.c
+  #include finds files in ./ before Y_SITE/i/ as in 1.4
+play/x11/{connect.c,colors.c,playx.h}
+     win/pscr.c
+     yorick/graph.c
+  define four gray colors, "graya" (lightest) to "grayd" (darkest)
+
+10/Apr/02
+
+yorick/{task.c,parse.c}
+  rework y_on_stdin to simply queue incoming lines, so all
+  parsing done during y_on_idle -- fixes problems with mousing
+  in multiple lines and other #include/include peculiarities
+play/unix/{fpu*,config.sh}
+  add FPU_GNU_FENV (feenableexcept), fix fputest.c to match yorick
+
+28/Mar/02
+
+play/unix/upoll.c
+  fix p_realloc to have correct sizeof() multiplying 2nd parameter
+yorick/{task.c,yorick.c}
+  fix prompting so read function does not prompt on mouse motion
+gist/xbasic.c
+  add hooks for event handler functions (for OpenGL, GUI extensions)
+opengl/
+  fix configuration script, makefiles, and mesa hook
+g/{ps.ps,pscom.ps}
+  remove EPSF comment line (confuses FrameMaker)
+
+20/Feb/02
+
+yorick/{ops0.c,ops1.c,ops2.c,std0.c}
+  make sure yorick's char type is unsigned char
+
+12/Feb/02
+
+-- serious goof in 1.5.08 makes it impossible to create CGM files:
+gist/cgm.c  fix CGM file creation - repairs feature enhancement below
+emacs/yorick.el  make yutil-query-replace work with emacs 21
+
+1/Feb/02
+
+--try to recover from 1.5.07 disastrous release:
+yorick/std0.c  fix omitted trailing / in Y_HOME
+yorick/yorick.c  fix bad behavior for continued quotes, comments
+emacs/yorick.el  fix sending long input
+yorick/binio.c,binpdb.c  fix things that break recover_file
+gist/gread.c   handle MS Windows c: drive spec in paths
+gist/cgm.c     write explicit VDC TYPE element in CGM files
+ysite.sh       needed more quotes
+
+15/Jan/02
+
+play/unix/slinks.c  Y_LAUNCH bug (failure to find .i files on start)
+yorick/task.c
+  fixed long-standing bug causing bogus "VM idle or lost" messages
+play/win/ and yorick/
+  fixes to make Windows version work properly
+hex/{hydram.c,hydra.i,ylmdec.i}
+  bug fix, fixed scripts to handle large file families faster
+
+24/dec/01
+
+win/ and play/win
+  many fixes, now builds and runs under Windows
+gist/xfancy.c, yorick/std0.c
+  when keybd_focus,1 (or under Windows) can now type commands in
+  graphics window (very crude text editor, like unix termio)
+also several changes to make FPU_MACOSX work, now builds and runs
+  correctly under MacOS X, including SIGFPE handling
+
+21/nov/01
+
+yorick/task.c fix YError mishandling when in Y_SUSPENDED state
+yorick/ascio.c fix retry_sscanf for when sscanf returns -1 (EOF)
+  this does not fix bug in glibc sscanf that returns -1 instead of 0
+  when matching failure for double encounters i, n, I, or N character
+
+14/nov/01
+
+yorick/ascio.c fix more serious problems with keyboard read
+
+yorick/{binio.h, binio.c, binpdb.c, clog.c, std2.c}
+play/any/numfmt.c
+fix problem with struct alignment/size on PowerPC architectures
+(including MacOS X, IBM SP/2)
+
+play/unix/{fpuset.c,config.sh}
+add SIGFPE handling for MacOS X
+
+23/oct/01 version 1.5.05
+
+gist/browser.c and gist/cgmin.c fix SEGV on q, failure to open ncgm
+
+22/oct/01 version 1.5.04
+
+minor fix to close debian bug
+
+18/oct/01 version 1.5.03
+
+numerous bug fixes after disastrous limited release in x-division:
+(1) PDB files close on quit
+(2) handle include and rdline files with no final newline
+(3) deliver prompt, avoid infinite loop on read from #include
+(4) actually loads hex and drat packages
+(5) handle X expose events properly
+open issues: ibm sp/2 compiler bug on -O mminit.c (compile -g)
+  need compaq cc>=6.4-213 to compile stdio.h with _POSIX_SOURCE
+    (workaround by -D_XOPEN_SOURCE)
+  some sgi machines deliver SIGTRAP on integer divide by zero
+
+31/jul/01 version 1.5.03
+
+yorick/task.c  -- YError fixed to handle SIGINT properly
+yorick/std2.c, i/basfix.i  -- edit_times fixed to allow times, ncycs
+  to be added when variable names are changed
+gist/xbasic.c  -- ChangeMap fixed to do landscape properly
+gist/xbasic.h  -- fix DefaultTop macros to work for other than 100 dpi
+gist/xfancy.c  -- fix SEGV on click-to-zoom for overlapping systems
+play/unix/handler.c  -- fix so multiple SIGINTs with 1 sec work
+
+------------------------------------------------------------------------
+
+version 1.5.02
+
+Mostly for Build-Depends fix to debian package.  Minor fixes to
+yorick/Makefile, configure scripts to try to handle alpha Linux SIGFPE
+problems.
+
+------------------------------------------------------------------------
+
+02/may/01 version 1.5.01
+
+First release of yorick-1.5.  The directory structure and
+configuration scripts have completely changed; see the top-level
+README for more.  The 1.5 version of yorick has the directory
+structure, configuration scripts, and portability layer for
+yorick-2.0, but still has the 1.4 interpreter.  The MacOS portion of
+the portability layer is not yet present, but the Windows portion is
+complete or nearly complete.
+
+There are a few new features:
+
+1. RGB colors supported for color= keyword, pli, plf, plfp
+   see help,color or help,pli for more information
+
+2. lsdir, mkdir, rmdir functions added so yorick can read and
+   manipulate directories by itself
+
+3. i86_primitives and other modern binary formats added
+   see help,createb and help,__i86 for more information
+
+4. cheby.i, convol.i, dawson.i, kepler.i added to interpreted
+   library
+
+5. added "hex" 3D transport solver (similar to drat 2D solver)
+
+6. improved the emacs/yorick.el package again, mostly by removing
+   unwanted "improvements" to emacs; see emacs/README
+
+The yorick homepage and Web-based documentation has also been
+completely reworked.  Visit
+
+   ftp://ftp-icf.llnl.gov/pub/Yorick/
+
+or the new homepage
+
+   ftp://ftp-icf.llnl.gov/pub/Yorick/doc/index.html
+
+You can download all this Web-based documentation (and the yorick and
+texi2html scripts used to create it) from the downloads page there.
+It is based on the work of Robert Cannon, who deserves most of the
+credit but none of the blame for the new look.  Perhaps his best idea
+is the HTML-ized source code for the entire interpreted library, which
+makes it much easier to study the interpreted source code that comes
+with the yorick distribution.  Ferdinand Jamitzky also helped by
+making a first cut at converting the Quick Reference Cards to HTML; it
+now works pretty much as well as the PDF or printed versions.

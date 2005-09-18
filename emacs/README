@@ -1,0 +1,47 @@
+                      Emacs Lisp code for yorick
+                      --------------------------
+
+The MS Windows and MacOS versions of yorick provide a simple
+development environment including a terminal window where you can
+interactively type yorick commands, and editor windows where you can
+edit yorick source code.
+
+If you want "creature comforts" like command line recall under UNIX,
+you need to use GNU emacs (ftp://ftp.gnu.org/gnu/emacs/), plus the
+elisp code in this directory.  See the *.el files for installation
+instructions.  This elisp code requires version 19.29 or better to
+work at all, and 19.34 or better (i.e.- any version 20) to function
+completely as designed.  The features of the emacs-based yorick
+development environment go considerably beyond the built-in MS Windows
+or MacOS environments; see the comments at the top of yorick.el for
+details.  Novices or emacs-haters can optionally hide some of the
+quirks of emacs, making its look-and-feel closer to MicroSoft
+products.
+
+Under MS Windows, emacs will start the yorick.exe executable so that
+its MDI (multiple document interface) frame window never appears, and
+yorick graphics windows will be top-level windows instead of children
+of the MDI frame window.  This environment very closely resembles the
+way yorick runs under emacs on a UNIX platform, so you have a choice
+between yorick's built-in development environment and the emacs-based
+development environment.
+
+(This trick is currently impossible under MacOS; you can use emacs to
+edit yorick source code on a Mac, but not as a terminal window where
+you type commands to the yorick interpreter.)
+
+------------------------------------------------------------------------
+
+yorick.el  -- provides emacs modes for
+              (1) editing yorick source code
+              (2) a terminal window for interactive yorick sessions
+              (3) same terminal window for shell and ssh sessions
+
+yorick-auto.el
+   put this and yorick.el in your site-lisp directory,
+   and load it in site-start.el to autoload the yorick, ysh, yssh,
+   and yutil-setup functions
+   -- users should still put a yutil-setup call in their .emacs
+
+Read the comments at the top of yorick.el for instructions on how to
+install and run it.

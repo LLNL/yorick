@@ -1,0 +1,56 @@
+Package: yorick
+Version: 1.6.02
+Revision: 1
+Description: Interpreted language and scientific graphics
+License: OSI-Approved
+Maintainer: Sebastien Maret <sebastien.maret@obs.ujf-grenoble.fr>
+Depends: darwin (>= 7.4.0), x11
+BuildDepends: texinfo, x11-dev
+Source: ftp://ftp-icf.llnl.gov/pub/Yorick/%n-%v.tgz
+SourceDirectory: yorick-1.6
+Source-MD5: 6308d6616610654df834d8e2b1e4c82a
+SetCFLAGS: -O2
+CompileScript: <<
+   make prefix=%p ysite
+   ./configure
+   make
+   cd doc; make yorick.info
+<<
+InstallScript: <<
+   make INSTALL_ROOT=%d Y_BINDIR=%i/bin install 
+   install -d %i/share/info %i/share/man/man1 %i/share/emacs/site-lisp
+   install -m 644 doc/yorick.info* %i/share/info
+   install -m 644 doc/yorick.1 doc/gist.1 %i/share/man/man1
+   install -m 644 emacs/yorick.el emacs/yorick-auto.el %i/share/emacs/site-lisp
+   rm -rf %i/share/%n/1.6/doc
+   ln -s -f %p/share/doc/yorick %i/share/yorick/1.6/doc
+<<
+DocFiles: README TODO VERSION NEWS LICENSE doc/README:README.doc doc/FILE_FORMATS doc/*.doc doc/*.pdf doc/*.ps doc/*.tex
+InfoDocs: yorick.info
+Homepage: ftp://ftp-icf.llnl.gov/pub/Yorick/doc/index.html  
+DescDetail: <<
+Yorick is an interpreted programming language, designed for
+postprocessing or steering large scientific simulation codes. Smaller
+scientific simulations or calculations, can be written as standalone
+yorick programs. The language features a compact syntax for many
+common array operations, so it processes large arrays of numbers very
+efficiently. Unlike most interpreters, which are several hundred times
+slower than compiled code for number crunching, yorick can approach to
+within a factor of four or five of compiled speed for many common
+tasks. Superficially, yorick code resembles C code, but yorick
+variables are never explicitly declared and have a dynamic scoping
+similar to many Lisp dialects. The yorick language is designed to be
+typed interactively at a keyboard, as well as stored in files for
+later use. Yorick includes an interactive graphics package, and a
+binary file package capable of translating to and from the raw numeric
+formats of all modern computers.
+<<
+DescUsage: <<
+See /sw/share/yorick/1.6/i/testfull.i for a test suite. Type 
+"yorick -batch testfull.i" in a xterm to run it.
+<<
+DescPort: <<
+This package will compile Yorick only on MacOSX 10.3.4 or later, because
+of a bug in the system math library libm (part of /usr/lib/LibSystem.dylib)
+in earlier versions of MacOSX 10.3.
+<<

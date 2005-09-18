@@ -1,0 +1,296 @@
+#! /bin/sh
+# $Id: configure,v 1.1 2005-09-18 22:03:38 dhmunro Exp $
+
+# debug=yes to keep all cfg.* stdout and stderr files
+# (most recent warnings always kept, usually don't need debug)
+debug=no
+
+echo ""
+echo "=============== begin top level configuration ==============="
+echo ""
+
+while test -n "$1"; do
+  if test -d "$1"; then
+    if test -n "$pkgdirs"; then
+      pkgdirs="$pkgdirs $1"
+    else
+      pkgdirs="$1"
+    fi
+  else
+    echo "**** ERROR **** no such directory ($1) to configure"
+    echo "rerun ./configure with proper execute line"
+  fi
+  shift
+done
+
+if test -z "$CC" && make echocc >/dev/null 2>&1; then
+  CC=`cat cfg.tmp`
+  if test -z "$CC"; then CC=cc; fi
+  default_cc=yes
+else
+  default_cc=no
+fi
+if test -z "$RANLIB" && make echorl >/dev/null 2>&1; then
+  RANLIB=`cat cfg.tmp`
+fi
+if test -z "$AR" && make echoar >/dev/null 2>&1; then
+  AR=`cat cfg.tmp`
+  if test -z "$AR"; then AR=ar; fi
+fi
+rm -f cfg.*
+curdate=`date`
+cursystem=`uname -a`
+cat >Make.cfg <<EOF
+# Make.cfg built by configure script on $curdate
+# $cursystem
+SHELL=/bin/sh
+EOF
+
+# note: CFLAGS, LDFLAGS should NOT contain optimization flags (-g, -O, etc)
+# take care of common ones here (misses things like -fast etc)
+COPT=
+OTHR=
+if test -n "$CFLAGS"; then
+  for opt in $CFLAGS; do
+    case "$opt" in
+      -g|-O|-O[0-9])
+        if test -z "$COPT"; then COPT="$opt"; else COPT="$COPT $opt"; fi
+        ;;
+      *)
+        if test -z "$OTHR"; then OTHR="$opt"; else OTHR="$OTHR $opt"; fi
+        ;;
+    esac
+  done
+fi
+CFLAGS="$OTHR"
+if test -z "$COPT"; then COPT="-O"; fi
+LOPT=
+OTHR=
+if test -n "$LDFLAGS"; then
+  for opt in $LDFLAGS; do
+    case "$opt" in
+      -g|-O|-O[0-9])
+        if test -z "$LOPT"; then LOPT="$opt"; else LOPT="$LOPT $opt"; fi
+        ;;
+      *)
+        if test -z "$OTHR"; then OTHR="$opt"; else OTHR="$OTHR $opt"; fi
+        ;;
+    esac
+  done
+  LDFLAGS="$OTHR"
+fi
+
+#------------------------------------------------------------------------
+# test that the compiler can handle several ANSI C features
+cat >cfg.c <<EOF
+#undef _POSIX_SOURCE
+#define _POSIX_SOURCE 1
+/* check whether compiler has necessary ANSI C (non K&R) features */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+struct junk { int x; double y; } glbl= { 1, -2.0 };
+extern int oops(struct junk *dummy);      /* prototype */
+extern volatile int vol;
+volatile int vol= 0;                      /* volatile qualifier */
+int oops(struct junk *dummy) {            /* ANSI function definition */
+  struct junk loc1= *dummy;               /* struct assign */
+  struct junk loc2= { -3, 4.0 };          /* aggregate automatic init */
+  void *vtest= &glbl;                     /* implicit void pointer cast */
+  printf("%p %d %g\n", vtest, loc1.x, loc2.y);
+  return 0;
+}
+int main(int argc, char *argv[])
+{
+  size_t l= strlen("four");               /* size_t typedef */
+  struct junk *locl= malloc(sizeof(struct junk)); /* void * cast */
+  *locl= glbl;                            /* struct assignment */
+  return oops(l>3? locl : &glbl);
+}
+EOF
+if $CC $CFLAGS -o cfg cfg.c $LDFLAGS >cfg.00a 2>&1; then
+  :
+elif $CC -Aa $CFLAGS -o cfg cfg.c $LDFLAGS >cfg.00b 2>&1; then
+  CC="$CC -Aa"
+  if test $debug = no; then rm -f cfg.00a; fi
+elif gcc $CFLAGS -o cfg cfg.c $LDFLAGS >cfg.00b 2>&1; then
+  CC=gcc
+  if test $debug = no; then rm -f cfg.00b; fi
+else
+  rm -f cfg cfg.c
+  echo "$CC is not an ANSI C compiler; rerun ./configure with CC env variable"
+  exit 1
+fi
+if $CC $CFLAGS -c cfg.c >cfg.00c 2>&1; then
+  echo "$CC is an ANSI C compiler.  Good."
+else
+  echo "$CC loads but won't compile?  check cfg.00[abc] file messages"
+  exit 1
+fi
+
+#------------------------------------------------------------------------
+# check whether ranlib exists and is necessary
+if $AR cr cfg.a cfg.o >cfg.00d 2>&1; then
+  if ${RANLIB:-ranlib} cfg.a >cfg.00e 2>&1; then
+    if test -s cfg.00e && grep "already did it" cfg.00e >/dev/null 2>&1; then
+      RANLIB=:
+    else
+      RANLIB=${RANLIB:-ranlib}
+    fi
+  else
+    RANLIB=:
+  fi
+else
+  echo "ar utility broken?  check messages in file cfg.00d"
+  exit 1
+fi
+rm -f cfg cfg.exe cfg.c cfg.o cfg.a cfg.00d cfg.00e
+
+echo "RANLIB=$RANLIB" >>Make.cfg
+echo "AR=$AR" >>Make.cfg
+
+PLAY_DIRS="unix x11"
+PLAY_INCS="-I../unix -I../x11"
+PLAY_CFG=../unix
+Y_MAIN_C=unix/pmain.c
+YWIN_LIB=
+YWIN_DEF=
+EXE_SFX=
+win32=no
+cat >cfg.c <<EOF
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <windows.h>
+int main(int argc, char *argv[]) { return 0; }
+#else
+#error not MSWindows
+#endif
+EOF
+if $CC $CFLAGS -o cfg cfg.c $LDFLAGS >cfg.01a 2>&1; then
+  PLAY_INCS=-I../win
+  PLAY_CFG=../win
+  Y_MAIN_C=win/cygmain.c
+  YWIN_LIB=yorapi.def
+  YWIN_DEF='$(PKG_DEF)'
+  win32=yes
+  if test "$default_cc" = yes; then
+    CC=gcc
+  fi
+  cat >cfg.c <<EOF
+#ifdef __CYGWIN__
+int main(int argc, char *argv[]) { return 0; }
+#else
+#error not Cygwin
+#endif
+EOF
+  if $CC $CFLAGS -o cfg cfg.c $LDFLAGS >cfg.01a 2>&1; then
+    win32=cygwin
+  else
+    rm -f cfg.01a
+  fi
+  if test -z "$USEUNIX"; then
+    if test "$win32" = cygwin; then
+      cat >cfg.c <<EOF
+int main(int argc, char *argv[]) { return 0; }
+EOF
+      if $CC -mno-cygwin $CFLAGS -o cfg cfg.c $LDFLAGS >cfg.01a 2>&1; then
+        CC="$CC -mno-cygwin"
+      else
+        rm -f cfg.01a
+      fi
+    fi
+    PLAY_DIRS=win
+    EXE_SFX=.exe
+  fi
+else
+  rm -f cfg.01a
+  os_name=`(uname -s) 2>/dev/null` || os_name=unknown
+  case "$os_name" in
+    AIX)        # IBM RS/6000 (powerpc) architecture
+      YWIN_LIB=yorapi.def
+    ;;
+  esac
+  if test -n "$NO_XLIB"; then
+    PLAY_DIRS=unix
+    PLAY_INCS="-I../unix"
+    CFLAGS="$CFLAGS -DNO_XLIB"
+    echo "X11OBJS=" >>Make.cfg
+  fi
+fi
+rm -f cfg cfg.exe cfg.c
+
+echo "PLAY_DIRS=$PLAY_DIRS" >>Make.cfg
+echo "PLAY_INCS=$PLAY_INCS" >>Make.cfg
+echo "PLAY_CFG=$PLAY_CFG" >>Make.cfg
+echo "Y_MAIN_C=$Y_MAIN_C" >>Make.cfg
+echo "YWIN_LIB=$YWIN_LIB" >>Make.cfg
+echo "YWIN_DEF=$YWIN_DEF" >>Make.cfg
+echo "EXE_SFX=$EXE_SFX" >>Make.cfg
+echo "CC=$CC" >>Make.cfg
+echo "Y_CFLAGS=$CFLAGS" >>Make.cfg
+echo "Y_LDFLAGS=$LDFLAGS" >>Make.cfg
+echo "COPT_DEFAULT=$COPT" >>Make.cfg
+
+#------------------------------------------------------------------------
+# check alternate libm for Alpha Linux (see play/unix/README.fpu)
+
+if test -z "$MATHLIB" && make echoml >/dev/null 2>&1; then
+  MATHLIB=`cat cfg.tmp`
+  rm -f cfg.tmp
+  if test -z "$MATHLIB"; then MATHLIB="-lm"; fi
+  cat >cfg.c <<EOF
+/* check whether libm is broken */
+#include <math.h>
+int main(int argc, char *argv[])
+{
+  return exp(-720.) > 1.0;  /* typically an IEEE denormal */
+}
+EOF
+  if $CC $CFLAGS -o cfg cfg.c $LDFLAGS $MATHLIB >cfg.00f 2>&1; then
+    if ./cfg >cfg.00g 2>&1; then
+      :
+    else
+      if $CC $CFLAGS -o cfg cfg.c $LDFLAGS -lcpml >cfg.00h 2>&1; then
+        MATHLIB="-lcpml"
+        echo "WARNING - using -lcpml instead of -lm"
+      else
+        rm -f cfg.00h
+        echo "WARNING - libm broken? see play/unix/README.fpu"
+        echo "  if on Alpha Linux, rerun ./configure with CC='gcc -mieee'"
+      fi
+    fi
+    rm -f cfg cfg.exe cfg.c cfg.00g
+  else
+    echo "math library missing; rerun ./configure with MATHLIB env variable"
+    exit 1
+  fi
+else
+  rm -f cfg.tmp
+fi
+echo "MATHLIB=$MATHLIB" >>Make.cfg
+
+#----------------------------------------------------------------------
+# clean up, issue warning if compiler gave fishy output
+rm -f cfg cfg.exe cfg.c cfg.o
+for f in cfg.[0-9]*; do
+  if grep ... $f >/dev/null 2>&1; then   # or use test -s $f ?
+    echo "WARNING - check compiler message in $f"
+  else # remove empty files
+    rm -f $f
+  fi
+done
+
+#----------------------------------------------------------------------
+# set up installation directories
+
+#----------------------------------------------------------------------
+# set up optional packages
+
+#----------------------------------------------------------------------
+# configure subdirectories
+
+make "PKGDIRS=$pkgdirs" pkgconfig
+
+echo ""
+echo "================ all configuration completed ================"
+exit 0
+#----------------------------------------------------------------------

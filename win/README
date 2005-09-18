@@ -1,0 +1,402 @@
+		   Building Yorick under MS Windows
+		   --------------------------------
+
+These notes explain how to build yorick with the MSVC++ programming
+environment.  If you want to use cygwin, read the "rationale" notes at
+the end of this file.  (If you are successful, send me your cygwin
+Makefile.)
+
+All paths are relative to the top level distribution directory; this
+README file is therefore win\README.  You should be able to build
+yorick by following these steps:
+
+(1) open the workspace win\yorick.dsw
+(2) set the active project to setup and build it
+    (this copies some .i files into their proper directories)
+(2) set the active project to yorick
+(3) build
+
+The yorick.exe file will be in the Debug\ or Release\ directory.
+These directories are children of the top level distribution directory
+instead of the win\ directory containing the workspace and projects,
+in order for the executable to be in a sibling of the i\, i0\, and g\
+directories.  (See the top level README for an explanation of why that
+is important.)
+
+By default, yorick is organized into a number of separate projects:
+
+numfmt.dsp -- computes primitive data formats, creates yorick\prmtyp.h
+codger.dsp -- builds the yorick initialization/wrapper code generator
+play.dsp   -- builds the portability layer C-code library
+  source is in play\all and play\win
+  does not include the MFC source in play\win, as MSVC++ won't link
+  this code properly if it is in a separate library
+gist.dsp   -- builds the gist 2D graphics library
+drat.dsp   -- builds a 2D raytrace extension library for yorick
+hex.dsp    -- builds a 3D raytrace extension library for yorick
+yorlib.dsp -- builds the library containing yorick itself
+yorick.dsp -- builds the MFC interface to yorick in play\win
+  and links it to the yorlib, drat, hex, gist, and play libraries
+
+There are also four projects which test the play and gist libraries:
+
+test2d.dsp -- builds a test code for debugging play\win\
+bench.dsp  -- builds a test code for debugging gist\
+yordbg.dsp -- builds a test code for debugging all of yorick
+test3d.dsp -- builds a test code for debugging opengl (play\win\oglw.c)
+
+If you want to add an extension package to yorick, you should read the
+chapter in the user manual, then study the drat and hex packages.  A
+simple example of an extension is provided in the extend\ directory,
+which you can use to practice the mechanics.  Here are the basic
+steps:
+
+(0) Open the yorick.dsw workspace.
+
+(1) Put your code in a sibling of the yorick\, i\, i0\, and g\
+directories (like drat\ and hex\), say myext\.
+
+(2) Do not attempt to use MSVC++ to create your project; its GUI does
+not allow you to set all of the path names in your switches (at least
+I haven't been able to figure out how to set, for example, PROP BASE
+Output_Dir).  Instead, copy pkg.dsp to myext.dsp, then edit myext.dsp,
+changing all occurrences of "pkg" to "myext".
+
+(3) Insert myext.dsp into the workspace.  (Either using insert project
+into workspace from the Project menu, or by right-clicking on the
+Workspace line at the top of the Workspace panel.)
+
+(4) Select the FileView tab in the workspace panel.  Right click on
+the "myext files" line, and select "Add Files to Project".  Navigate
+to your myext\ directory and select all your source and header files
+(by holding down the Ctrl key and left clicking on each one).
+
+(5) Set the active project to myext and build it.  This will create
+a Win32 static library myext.lib.
+
+(6) Select "Dependencies..." from the Project menu, and make myext a
+dependency of yorlib.
+
+(7) Edit the file win\makeinit.bat, adding ../myext/myext.i to the
+codger execute line, imediately after ../hex/hex.i.  DO NOT use
+backslashes as directory separators (they represent an escape sequence
+in C).
+
+(8) Copy myext\myext.i into the i0\ startup directory.
+
+(9) Set the active project to yorick and build it.  The version you
+get will have your myext.i extensions.
+
+
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Rationale for MS Windows PLAY Implementation
+--------------------------------------------
+
+Three goals constrain the overall structure I chose for the MS Windows
+implementation of my portability layer (play):
+
+(G1) Provide terminal emulation and a text editor for source files.
+
+(G2) Allow emacs users to run in the same development environment I
+provide for UNIX systems.
+
+(G3) Allow Cygwin developers to build a version of play compatible at
+least with (G2), while at the same time targeting the MSVC++
+development environment.
+
+The (G1) and (G2) goals both must include the ability to interrupt a
+running play-based program, in a manner analogous to SIGINT
+(control-c) on UNIX or POSIX systems.
+
+MS Windows actually runs programs within several different runtime
+environments called "subsystems".  The two most relevant are the
+"windows" subsystem, in which all the programs familiar to most users
+run, and the "console" subsystem, which is designed to be a crippled
+version of a command line environment like the "MSDOS Prompt".  The
+linker marks every executable file with the Windows subsystem in which
+it will run, and it is impossible for a program to change subsystems
+after it has been started.
+
+Originally, I planned to distribute two separate yorick.exe files with
+the distribution -- one marked for the windows subsystem (G1) and a
+second marked for the console subsystem (G2 and G3).  The idea was
+that both could be small programs linked against a common much larger
+yorick.dll containing all the interesting parts of yorick.  The show
+stopper for that plan is that no program running within the console
+subsystem is allowed access to the Windows clipboard (at least on my
+Win95 box), making the p_scopy and p_spaste APIs impossible.
+
+Therefore, I reverted to a single yorick.exe file running in the
+windows subsystem.  In order to satisfy (G2), the program looks for an
+environment variable NO_MDI.  If NO_MDI is present and not "0", then
+yorick.exe uses the GetStdHandle functions to retrieve stdin, stdout,
+and stderr streams, and yorick graphics windows are created as
+top-level windows.  Thus, emacs can setenv NO_MDI=1, then start yorick
+and the combination of the emacs terminal/editor windows and the
+yorick graphics windows will present the same user interface as under
+the X Window system on UNIX systems.  Conversely, if yorick.exe is
+started by simply double-clicking, then NO_MDI is not set, and an MDI
+(multiple document interface) frame window appears, with a terminal
+emulator window and support for text editor windows; yorick graphics
+windows appear as MDI client windows in this mode.
+
+(Originally, I attempted to "autodetect" how yorick.exe was started.
+The idea was that if GetStdHandle returned a valid stdin handle, then
+I would drop into no-MDI mode, while if there was no stdin, I would
+start in full MDI mode.  This worked under Win95, but under WinNT,
+GetStdHandle returns a valid stdin even when yorick.exe is started by
+double-clicking on its icon.  I then tried using a -nomdi command line
+switch, but I couldn't get emacs to pass command line arguments
+correctly, so I wound up with the NO_MDI environment variable.)
+
+Linking a program with MFC in the cygwin development environment is
+either difficult or impossible, so I provide a small alternative
+WinMain for that environment, which produces an executable that only
+runs in the the non-MDI mode.  This must still be linked in the
+windows subsystem in order for the clipboard functions to work.  If
+neither -nomdi nor NO_MDI is set in this mode, an "MSDOS Prompt"
+console is allocated.
+
+The major drawback of running in the windows subsystem instead of
+under the console subsystem is that the OS provides no equivalent for
+the SIGINT (control-c) signal for the windows subsystem.  Hence, there
+is ordinarily no way to interrupt a windows-subsystem program when it
+gets caught in an infinite loop, short of ctrl-alt-del and terminating
+the task entirely.
+
+In order to solve this interrupt problem, and also to allow source
+text editor windows to function while yorick is performing a lengthy
+calculation, I went to a multithreaded implementation.  The basic idea
+is that a "boss thread" controls all the MDI frame and client windows
+(terminal emulator, text editor, and child frames around the graphics
+windows), while the yorick interpreter runs entirely within a separate
+"worker thread".  That way, the boss works like a typical windows
+application, never doing any work that requires more than a second of
+real time, and the terminal and text editor windows remain responsive
+independent of the duration of any interpreted task.  The boss thread
+also controls the MDI menu bar, which includes a "STOP" button that
+generates a fake SIGINT signal to interrupt the worker thread.
+
+Because the mouse and keyboard event callbacks generated within yorick
+graphics windows must run in the worker thread, the worker thread must
+create the graphics windows.  Therefore, yorick graphics windows are
+mostly created as children of an MDI child (client) window owned by
+the boss thread.  Events generated in the graphics windows are thus
+posted to the worker thread as they should be.
+
+The overall structure of yorick looks like this (indentation indicates
+ancestry):
+
+      thread                  window                    C++ class
+   ----------------- ------------------------------ ----------------
+   boss thread       MDI frame window (main window) [mfc_frame_wnd]
+                        MDI child window            [mfc_edit_child]
+                           terminal window          [mfc_term_view]
+                        MDI child window            [mfc_edit_child]
+                           history window           [mfc_term_view]
+                        MDI child window            [mfc_edit_child]
+                           text editor windows      [mfc_edit_view]
+                        MDI child window            [mfc_child]
+      worker thread        graphics windows         <no C++ class>
+                     p_menu windows                 <no C++ class>
+                     P_DIALOG windows               <no C++ class>
+         IO thread
+      SIGINT thread
+
+In NO_MDI-mode, the MDI frame window is created, but never shown.
+This provides a window for SendMessage calls from the worker thread,
+which are by far the easiest way for the worker to communicate with
+the boss.  The PostThreadMessage API could be used instead of
+SendMessage, but its asynchronous semantics means considerable extra
+programming effort in order for the worker to receive a reply to its
+query.  (The boss never expects an immediate reply from the worker,
+because the worker might be doing some lengthy job; however, the boss
+is never occupied for very long, so the worker generally waits for
+replies.)  None of the MDI child windows is ever created in
+NO_MDI-mode, and the graphics windows are top-level in that case.
+
+The IO thread only exists in NO_MDI-mode; it solves the following
+synchronization problem: Input to the worker thread can arrive in the
+form of windows messages concerning events in its graphics windows, or
+from command lines typed in the emacs process which acts as its
+terminal window in NO_MDI-mode.  The Windows API provides an analog of
+the UNIX select/poll functions called MsgWaitForMultipleObjects.
+Unfortunately, MsgWaitForMultipleObjects cannot detect new input on
+the pipe to emacs returned by GetStdHandle (although it can detect new
+input on a true "console" handle).  The solution is to spawn a
+separate IO thread which is always waiting for input from stdin.  It
+collects this until it finds a newline, at which time the IO thread
+sets a Windows event-object, which MsgWaitForMultipleObjects can
+detect, which wakes up the worker thread.  The worker picks up the
+message, then sets a second event-object to tell the IO thread (which
+has returned to listening to stdin in the meantime).  When new input
+arrives, the IO thread skips delivery if the worker has not signalled
+that it has accepted the previous line.
+
+Because SIGINT delivery does not work in the windows subsystem, the IO
+thread simulates it as follows: If the first character on a new input
+line is control-c, the IO thread initiates an interrupt sequence, in
+the same way the boss thread does when the "STOP" button on its
+menubar is pressed.
+
+The interrupt sequence temporarily creates a fourth thread; this
+SIGINT thread is spawned by the boss when the STOP button is pressed,
+or by the IO thread when a control-c arrives.  The SIGINT thread sets
+p_signalling, posts a special "wm_exception" message to the worker
+thread, then goes to sleep for either one second, or until another
+event-object is signalled by the worker thread acknowledging the
+interrupt.  If no acknowledgement has arrived, the SIGINT thread
+suspends the worker thread, retrieves its "thread context", sets its
+program counter to point to p_abort, then resumes the worker thread.
+Executing p_abort immediately raises an exception and the forcible
+interrupt of the worker is accomplished.
+
+For both the MFC and cygwin codes, all play APIs and callbacks execute
+in the worker thread.  However, in the MFC implementation, some APIs
+-- in particular p_stdout and p_stderr -- call SendMessage to the
+main window (the MDI frame window owned by the boss thread) and block
+execution of the worker until the boss processes the message.
+
+The cygwin program structure is different; it omits the boss thread
+altogether.  The worker, IO, and SIGINT threads work exactly as in the
+MDI-mode.  The worker creates a hidden main window, since programs in
+the windows subsystem seem to work better if there is a "main window"
+for the application.
+
+One additional complexity is the implementation of p_abort and other
+signal handlers.  MS documentation warns that POSIX signal handling
+may not work; MS instead provides a non-standard "SEH" (structured
+exception handling) mechanism which it claims to support.  SEH is
+difficult or impossible to use under the cygwin environment.  Hence, I
+provide both an ANSI standard C signal handler implementation of
+p_abort (sigansi.c) for cygwin developers, and an SEH implementation
+of p_abort (sigseh.c) for MSVC++ developers.  The sigansi.c version
+seems to work, but I am leery of the warning in the documentation.  At
+this writing, cygwin (or mingw) maintainers are trying to include SEH
+support, so hopefully this problem will be temporary.
+
+Windows GDI problems
+--------------------
+
+Implementing PLAY graphics primitives with the Win32 GDI is difficult
+because the various versions of Windows behave slightly differently,
+and the API does not specify the precise effects of its graphical
+primitives.  (For example, the MS documentation for its line drawing
+primitives claims that the first point on a line segment is "always
+drawn", while the final point on a segment is "never drawn".  So what
+happens when the first point and final point coincide?  Apparently,
+the answer is different on various versions of Windows.  Furthermore,
+while my Win95 box seems to indeed omit the final point of segments,
+Langer's WinNT box does not.  Hence, different versions of Windows
+require different graphical primitives to produce the same output on
+the screen.  Variation in rendering of enhanced metafiles is even
+greater, since various commercial packages render the same file
+differently even on a single platform.)
+
+One other gotcha is that rotated text does not actually work for
+screen device contexts (at least on many Windows versions) --
+CreateFont silently ignores its text angle parameter (or more likely
+SelectObject ignores it).  Since under Win9x, patterned brushes are
+restricted to 8x8 pixels, the trick I used to get rotated text under
+the X Window system does not work under MS Windows.  Hence, I gave up
+and rotated text under Windows is always opaque -- the bounding
+rectangle is erased to the window background color.  Hopefully, this
+won't be a terrible problem.
+
+Issues for I/O under MS Windows
+-------------------------------
+
+The difference between UNIX and MS Windows filenames is handled in
+pathnm.c.  The only adjustment is to change "/" to "\" in all
+filenames passed to play functions, in order to guarantee that UNIX
+delimiters are acceptable.  The reverse translation is performed for
+the p_getcwd result, so that UNIX delimiters are output.  Note that
+this means non-UNIX-like names of the forms
+
+  C:/path/name
+or
+  //server_name/share_name/path
+or
+  //./physical_drive:
+
+may appear or be required in order to access some files.  The
+backslash delimited names are also acceptable on input.
+
+(Note: perhaps I should not change slash to backslash -- as far as I
+can tell, the Windows file functions, both in the runtime C libraries
+and the native Win32 API, allow either type of slash as a directory
+separator.)
+
+There are several unavoidable idiosyncrasies of (some?) Windows
+filesystems:
+
+(1) Path names are not case sensitive.  However, capitalization is
+remembered for listing purposes.  (But if you overwrite an existing
+file with another of different capitalization, it sometimes remembers
+the original capitalization.)
+
+(2) A trailing period "." in a filename is ignored.  (This has to do
+with the fact that the first three characters after the final period
+in a filename are significant to Windows.)
+
+(3) There may be some additional restrictions on "-"; in particular I
+have trouble making it the first character of a filename.
+
+The p_rename function may not work like the UNIX version in some
+cases.  In particular, if the new name exists and is a directory, I am
+unsure what happens (in either Windows or UNIX).
+
+
+Limitations of PLAY API functions under MS Windows
+--------------------------------------------------
+
+(1) rotated text is opaque (see above discussion)
+
+(2) p_rgb_read only works when window is in foreground
+    -- if window is covered, then reads back covering region
+    -- could use this as "feature" to get contents of other
+       windows as bitmaps...
+
+(3) p_spaste cannot be called from on_deselect method
+
+(4) palettes only used in 256-color mode
+    - p_palette should only be called at beginning of redraw
+    - p_palette should not be called for metafiles or offscreens
+    - p_palette ignored for menus (always use RGB colors)
+    even with all these precautions, still misbehave somewhat, especially
+    when using emacs as terminal
+
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+notes for finding startup files on Windows
+------------------------------------------
+
+Three different problems: (a) startup by user using start menu or
+double clicking on executable, (b) startup by user by double clicking
+on a .i file, (c) startup by development environment for debugging.
+
+(1) Installation puts executable in known location relative to
+    startup files.
+(2) Application looks for startup files relative to its initial
+    current working directory.  Fallback to a text file containing
+    the startup path located in the initial cwd.  This should handle
+    (a) and (c).
+(3) Fallback to reading registry to handle (b)?
+
+REGISTRY
+    possible uses include:
+  (1) non-default installation directory name
+  (2) environment variables and other user preferences
+      (e.g.- a "home" directory name, colors, fonts, sizes, etc)
+RESOURCES
+    possible alternative to REGISTRY
+  (1) find out if resource compiler (rc.exe) and program to bind
+      resulting .res file to application .exe is present on all
+      Windows systems (or can reasonably be shipped with a distribution)
+      - if so, it is probably a superior solution for installation-time
+        choices
+  (2) find out whether setting "environment variables" and other user
+      customizations by this mechanism is plausible

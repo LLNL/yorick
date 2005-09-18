@@ -1,0 +1,27 @@
+This is a relocatable version of yorick.  The yorick and gist
+executables are in the bin/ subdirectory.  You can name this directory
+whatever you want in order to place it in your file system; a typical
+location might be /usr/lib/yorick/1.6.
+
+You cannot move either yorick or gist relative to the other files in
+this directory; yorick and gist find the files they need by moving
+relative to the executable.  However, you may place a softlink from
+another directory to point to bin/yorick or bin/gist.  For example,
+   ln -sf /usr/lib/yorick/1.6/bin/yorick /usr/bin/yorick
+puts a softlink in /usr/bin (which is probably on your PATH), so that
+you can just type "yorick" to start yorick.
+
+Yorick is a command line program.  If you have the X Window System
+version of emacs, you will probably prefer to run yorick from emacs.
+Read the file yorick.el in this directory to learn how to do that.  In
+a nutshell, you put a line like
+   (load "/usr/lib/yorick/1.6/yorick" nil t)
+in your ~/.emacs file, then type M-x yorick RET to emacs.  That will
+give you nice command line recall and editing, as well as a text
+editor for yorick source that understands yorick syntax.
+
+(Gist is a CGM browser.  If you don't know what that means, forget it.)
+
+Look in the doc/ subdirectory for documentation on how to use yorick.
+The interpreted library in the i/ directory contains many yorick
+programming examples, including the demoX.i instructional programs.

@@ -1,0 +1,105 @@
+
+GLX 1.3 documentation
+---------------------
+
+Prior to 1.3, specifying GLX_RGBA attribute to glXChooseVisual
+guaranteed a true (or direct) color visual would be selected, and not
+specifying GLX_RGBA guaranteed a pseudo (or static) color visual.
+This is no longer true in GLX 1.3 which supports a fancier notion of
+GLXFBConfigs.  Mesa is also happy with RGBA in pseudocolor visuals.
+
+Colormaps and associated behavior are not specified in the standard.
+
+GLXDrawable is union of GLXWindow, GLXPixmap, GLXPbuffer, Window
+  (Pbuffer is like Pixmap, but not assocated with any X Drawable)
+  -- note X's Window is included in this list,
+     this is how Mesa works, and apparently pre-1.3 GLX
+
+------------------------------------------------------------------------
+Notes gleaned from Mesa implementation:
+---------------------------------------
+
+The colormap may be inherited from the parent, or a private map for
+the window can be created (informing the window manager by a property
+on its toplevel that the map should be installed).  Mesa will go ahead
+and allocate its own colors in this colormap, in either case.  When
+the colormap is exhausted, it moves on to a "closest" RGB algorithm in
+the colormap.
+
+Note that Mesa uses XGetWindowAttributes to return the colormap.  If
+O'Reilly is right, this defaults to CopyFromParent (i.e.- 0), which it
+looks like Mesa would decide to allocate its own.  Hence the colormap
+attribute should actually be set on the Mesa window, even if only to
+the default colormap.
+
+The colors Mesa attempts to allocate are determined by the DITHER666
+macro at (Mesa) compile time -- if set, it tries to get a 6x6x6 RGB
+cube; by default Mesa takes a 5x9x5 RGB cube.  Apparently, neither
+OpenGL nor GLX provides any way to tell anything about how colors are
+handled.  Mesa defines the symbol MESA, but nothing in its published
+headers (xmesaP.h is the unpublished header) tells how DITHER666 was
+set at compile time.  Note says 5x9x5 better for general colors, 6x6x6
+better for grayscale (but why would you dither grayscale??).  The
+5x9x5 appears to be the default.
+
+     xcol.red  =gamma_adjust(v->RedGamma,   r*65535/(_R-1),65535);
+     xcol.green=gamma_adjust(v->GreenGamma, g*65535/(_G-1),65535);
+     xcol.blue =gamma_adjust(v->BlueGamma,  b*65535/(_B-1),65535);
+     noFaultXAllocColor(v->display, cmap,
+			v->visinfo->colormap_size, &xcol, &exact,
+			&alloced);
+
+(Note that Mesa allocates these in order, which means that when the
+table fills up, all the colors it's missing lie at one end.)
+
+/*
+ * Apply gamma correction to an intensity value in [0..max].  Return the
+ * new intensity value.
+ */
+static GLint gamma_adjust( GLfloat gamma, GLint value, GLint max )
+{
+   double x = (double) value / (double) max;
+   return (GLint) ((GLfloat) max * pow( x, 1.0F/gamma ) );
+}
+
+Where gamma (defaults to 1.0) is separately set for RGB in the
+MESA_GAMMA environment variable.
+
+My guess in general is that OpenGL is not going to work very well
+unless the X server has true color.  In pseudocolor, there is no way
+to make GLX work together with any other clients.  In particular, it
+is apparently impossible to figure out what colors a GL window has
+allocated in order to use them in non-GL windows.
+
+The best color policy is probably to allocate a few colors -- the
+standard colors -- in the colormap before giving the window to GL.
+Note that the 8 standard colors are always on the list requested by
+Mesa's cubes, so Mesa will need either 217 or 208 colors to get its
+full set.  In practice, if you were using Mesa, you could easily
+allocate the identical colormap for your own use, in effect reusing
+Mesa's colors.
+
+------------------------------------------------------------------------
+Non-Mesa GLX problems:
+----------------------
+
+Note that the GL header files may be the Mesa headers, even when the
+library actually linked is not Mesa.  (This is true for, e.g., Redhat
+Linux when you use a hardware accelerated libGL, such as the one from
+NVidia.)  The only non-standard call is glXCreateGLXPixmapMESA, and
+the glconfig.sh script should properly sort out whether this API
+really exists or not.  The bottom line is, you can probably compile
+with any GL headers, even if they do not correspond to the library you
+will link against.  Nevertheless, caveat compilor.
+
+When using a true GLX implementation, glXChooseVisual may well return
+a visual different from the default visual for your screen.  If that
+happens, the XCreateWindow call to make the GL window *must* set the
+colormap to one created for the GL visual.  Not setting any colormap,
+or using a colormap from a different visual, results in a BadMatch
+error during XCreateWindow, and bizarre behavior thereafter.  For
+XFree86 4.0 at least, "bizarre" ranges from SIGSEGV when you attempt
+to make the window the current GL device, to blank windows, to windows
+with incorrect colors.  This behavior depends on the server as well as
+the libGL, so a single executable will behave very differently when
+displaying to different X servers.

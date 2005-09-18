@@ -1,0 +1,625 @@
+
+Overview
+--------
+
+This Yorick package tracks straight rays through a 3D mesh.  The
+inputs are a mesh and a set of rays.  For each ray, the outputs are an
+ordered list of the points along the ray where the ray cuts through
+faces, and a corresponding list of the indices of the cells crossed.
+
+To specify a ray, I need two 3-vectors p and q -- a point on the ray
+and the ray direction, respectively.  (Internally, I normalize q to
+unit length, but for convenience I do not require normalized q on
+input.)  In the following formulas, I assume q is normalized.  The
+distance s from p parameterizes the ray: r = p+q*s is a point on
+the ray.
+
+The result of the trace is a list of s values where the ray cuts cell
+faces, and between each pair of s values, the index c of the cell the
+ray is traversing there.  Hence, there is one more value of s than
+value of c; I store the count of intersections ni as the first item in
+the list of cell indices.  The result of tracking a ray through the
+mesh consists of two lists: a list of ni c indices, and a list of ni s
+values (where the first c value is ni).  When I track multiple rays, I
+can combine the results into a single pair of long lists:
+
+  s= [sA0, sA1, sA2, ..., sB0, sB1, sB2, ..., ..., sZ0, sZ1, sZ2, ...]
+  c= [niA, cA1, cA2, ..., niB, cB1, cB2, ..., ..., niZ, cZ1, cZ2, ...]
+
+where niA is the number of intersections for ray A, niB the number for
+ray B, and so on, and c(L,m) is the cell index for ray L between
+s(L,m-1) and s(L,m).
+
+I use two conventions for exceptional cases: First, if ray M misses
+the mesh entirely, I put niM==1 rather than 0, and use the value of
+sM0 as a diagnostic flag to explain why no entry point was found.
+Second, I use negative ni values to indicate the previous ray has
+re-entered the mesh; the correct count is abs(niR) for the re-entrant
+section of the ray.  For example, if ray B reenters twice, the c list
+looks like this:
+
+  [...,  niBa, cBa1, cBa2, ..., -niBb, cBb1, cBb2, ...,
+        -niBc, cBc1, cBc2, ...,  ...]
+
+Often the exact entry and exit points s are unimportant; all that
+matters is the distance ds the ray spends inside each cell.  The full
+two list solution can be reduced to three lists in that case: A list
+of nc = ni-1 (or sum(abs(ni)-1) for a reentrant ray), the count of
+cells traversed by the ray, and the corresponding cell index dx lists:
+
+  nc = [ncA, ncB, ..., ncZ]
+  cc = [  cA1,     cA2,   ...,   cB1,     cB2,   ..., ..., cZ1, cZ2, ...]
+  ds = [sA1-sA0, sA2-sA1, ..., sB1-sB0, sB2-sB1, ..., ...,
+         sZ1-sZ0, sZ2-sZ1, ...]
+
+These would be appropriate for solving a transport equation; with the
+cc array, I can look up the values of the emission and absorption;
+with the ds array, I can form the transmission exp(-absorption*ds);
+with the emission, transmission, and nc arrays, I can find the total
+emission and transmission for each ray.
+
+Note that this approach assumes emission and absorption are
+cell-centered quantities.  The result of the tracking operation would
+need to be much larger to be able to interpolate nodal emission and
+absorption to the precise intersection points during the trace -- I'd
+need to return four node indices and three node weight fractions for
+each intersection point.  Also, I can't think of an easy way to
+generalize such a scheme to a mesh with arbitrary cell shapes; the
+cell-centered scheme I have implemented works just as well for
+arbitrary polyhedral cells as for hexahedral cells.
+
+
+Tetrahedra
+----------
+
+Tracking a straight ray through a tetrahedron is so easy, that the
+fastest way to track a ray through an arbitrary polyhedron is probably
+to decompose it into tets.
+
+In a tetrahedral mesh, each cell face is a triangle shared by two
+cells (or one cell if it is a mesh boundary).  The ray enters a tet
+through one of its four faces, and exits through one of the remaining
+three faces -- therein is the great simplifying feature of tets: the
+ray will never hit the other two faces, nor can it exit through the
+same face it entered.  The three nodes of the exit face are shared
+with the tet the ray now enters; just replace the fourth node of the
+exited tet by the fourth node of the entered tet to continue tracking.
+
+To restate, the ray has just entered the face determined by nodes n0,
+n1, and n2; the fourth node of the tet it is about to cross is n3.
+Decide whether the ray exits through face 013, 123, or 203 -- which
+you can specify compactly by saying whether node 2, 0, or 1,
+respectively, is to be discarded.  Swap n3 with the discarded node, so
+that n0, n1, n2 are now the exit face.  Finally, load n3 with the
+fourth node of the tet you just entered, and you've tracked the ray
+across one tet.
+
+Although you are tracking through 3D, this tracking operation actually
+takes place in 2D: Project the mesh into a plane perpendicular to the
+ray.  In that plane the ray is a point, and all the tets are squashed
+flat; the tracking problem becomes simply this: Given that the
+ray-point is inside triangle 012, determine which of 013, 123, or 203
+also contains the ray-point.  The fastest algorithm to make that
+decision relies on knowing that triangle 012 has positive area (neither
+zero nor negative), and on the ray-point being (0,0) -- both of which
+are easy to arrange.  Then do this:
+
+   is 0X3 negative? (X means 2D cross product, x0*y3-x3*y0 < 0?)
+   if so,
+      is 1X3 negative?
+      if so,  discard 0, move n3 to n0
+      if not, discard 2, move n3 to n2
+   if not,
+      is 2X3 negative?
+      if so,  discard 1, move n3 to n1
+      if not, discard 0, move n3 to n0
+
+Thus, it costs only two 2D cross products (a total of 4 floating point
+multiplies and 2 floating point adds) to get across the tetrahedron.
+Note that moving n3 into the discarded point automatically preserves
+the condition that 012 have positive area.
+
+There is are two exceptional cases: one or both of the two cross
+products will be zero if the ray exits exactly through an edge or the
+apex.  In those cases, I discard the point that makes the ray exit the
+face with the larger or largest (projected) area.  This prevents
+exiting into a degenerate zero area triangle, but it is extremely
+expensive relative to the above usual cases -- hopefully it will be
+rare in practice.
+
+Now, to actually advance into the next tet, you need to retrieve the
+its fourth node, project it into the plane perpendicular to the ray,
+and displace it to put the ray at (0,0).  If the point is x, this
+operation is Q*(x-p), where p is the point on the ray, and Q is a
+2-by-3 projection matrix.  If you do the obvious thing, this would
+mean 6 multiplies and 7 adds -- substantially more expensive than
+getting across the tet!
+
+I do only a partial projection, in order to greatly reduce the cost
+of retrieving the next node.  My idea is to use the two unrotated
+mesh coordinates most nearly normal to the ray direction "as is",
+only adjusting them by a shear operation so that the ray stays at
+(0,0).  That is, instead of a full Q*(x-p), I do this:
+
+   zz = z-pz
+   yy = y-py - zz*qy/qz
+   xx = x-px - zz*qx/qz
+
+where p = (px,py,pz) is the point on the ray, q = (qx,qy,qz) is the
+ray direction, and xyz have been cyclically permuted so that qz has
+larger absolute value than either qx or qy.  Since I can precompute
+the ratios qx/qz and qy/qz, this partial projection costs only 2
+multiplies and 5 adds.
+
+The 2D coordinates xx and yy are not an orthogonal coordinate system,
+but they cannot be dangerously close to singular either, since qz was
+chosen to have the largest absolute value.  The above test to
+determine exit face works just as well in any coordinate system,
+orthogonal or otherwise.
+
+This is all you need to track the ray topologically through the mesh
+-- that is, to generate the list of cells c the ray crosses.  However,
+you also need the points s where the ray crosses the faces.  Note that
+unless the original mesh was tets, you only need to compute the point
+s (or record the cell c) when you cross a triangle which lies on a
+face of the original mesh -- the tetrahedral decomposition will
+usually lead to many triangles interior to a real mesh cell.  The
+calculation of s turns out to be very expensive relative to the rest
+of the tracking.  The partially projected coordinate system (xx,yy,zz)
+is handy for that task as well.  In those coordinates, the parametric
+equation of the ray is simply (0,0,s*qz); the question is where this
+line intersects triangle 012 (xx0,yy0,zz0), (xx1,yy1,zz1), etc.
+Parametrically, the triangle is:
+
+   xx = xx0 + u*(xx1-xx0) + v*(xx2-xx0)
+   yy = yy0 + u*(yy1-yy0) + v*(yy2-yy0)
+   zz = zz0 + u*(zz1-zz0) + v*(zz2-zz0)
+
+where 0<u<1, 0<v<1, and 0<u+v<1.  Thus, (0,0,anything) is at
+
+   area = (xx1-xx0)*(yy2-yy0) - (xx2-xx0)*(yy1-yy0)
+   u = (xx2*yy0 - xx0*yy2)/area
+   v = (xx0*yy1 - xx1*yy0)/area
+
+The ray intersection point is at:
+
+   s = (zz0 + u*(zz1-zz0) + v*(zz2-zz0))/qz
+
+which comes at the cost of 1 reciprocal, 11 multiplies, and 11 adds
+(assuming you precompute 1/qz).  Note that u and v are really
+interpolation coefficients, which allow you to compute any linear
+function defined on the nodes, not just z.  They cost 1 reciprocal, 8
+multiplies, and 7 adds by themselves.
+
+
+Hexahedral mesh
+---------------
+
+A hexahedral mesh may include cells which are hexahedra, or degenerate
+hexes, including tetrahedra, pyramids, or triangular prisms.  As long
+as the fraction of degenerate cells is fairly small, special handling
+of degenerate cases would not significantly reduce tracking time.
+
+I coded three tetrahedral decompositions of a hexahedral mesh:
+
+(1) The 5 tet decomposition.  When all hex faces are planar, this
+choice is best.  When there are non-planar faces, the 5 tet
+decomposition is not unique; there is a switch to try both choices.
+The decomposition is as follows: Draw either diagonal of one face; in
+the four adjacent faces, draw the diagonals which share a corner with
+the original diagonal; in the opposite face, draw the diagonal
+connecting the two corners shared with the adjacent diagonals.  Those
+six diagonals are the six edges of the "body tet"; each of the four
+corners not on any of those diagonals is the apex of a "corner tet".
+
+The ray always enters a corner tet.  It can exit the hex immediately
+(2 chances in 3) or enter the body tet (1 chance in 3), from which it
+always enters a second corner tet, from which it always exits the hex.
+
+(2) The face-centered 24 tet decomposition.  This usually slightly
+faster than the body-centered 24 tet decomposition.  Either of the 24
+tet decompositions gives a unique result, even when the faces are
+non-planar.  Begin by finding the centroid of each of the six faces,
+and connecting that centroid to each of the four vertices, dividing
+each face into four triangles.  (Note that this decomposition involves
+6 new nodes, which are not nodes of the original mesh.)  Each of the
+24 surface triangles shares one edge with a triangle on the adjacent
+face; these are two sides of 12 "edge tets".  Each of the 8 corners of
+the original hex, together with the centroids of the three adjacent
+faces form 8 "corner tets".  That leaves an octahedron at the center
+of the hex (whose 6 corners are the face centroids), which can be
+divided into 4 "body tets" in three different ways, by connecting any
+of the three pairs of opposite face centroids.
+
+The ray always enters through an edge tet.  It can exit the hex
+immediately (1 chance in 3), or enter either of the corner tets
+associated with the endpoints of the edge.  From those corner tets,
+the ray may move to a new edge tet (2 chances in 3), or into a body
+tet (1 chance in 3).  The ray crosses the central octahedron cutting
+one, two, or three body tets, and emerges into a new corner tet, from
+which it always enters a new edge tet.  From this edge, it can either
+exit the hex, or move to yet another corner.  I'm not sure how long
+this can go on; however, any tet can be entered at most once, and the
+central octahedron can be entered at most once.
+
+(3) The body-centered 24 tet decomposition.  This decomposition
+generalizes to arbitrary polyhedral cells; it is unique, but requires
+in addition to the face centroids, a seventh point at the body center
+-- the mean of all 8 corners of the hex.  As for the face-centered 24
+tet decomposition, begin with the 24 triangles, each face quartered by
+connecting its vertices to its centroid.  This time, take each of
+these 24 triangles as the base of a tet whose apex is at the body
+center.
+
+The ray enters the hex, crossing to at least one other before exiting.
+Initially, there is 1 chance in 3 of stepping to the adjacent face, 2
+chances in 3 of remaining on the same face (but moving to one of the
+other three tets on that face).  Thereafter, there is 1 chance in 3 of
+exiting the hex, with either 2 chances in 3 of remaining on the same
+face (if you just came from the adjacent face), or 1 chance in 3 of
+each of remaining on the same face or of stepping to the adjacent
+face.  Again, this can go on for quite a while before exiting.
+
+When the ray steps from one hex cell to its neighbor, I fetch the
+opposite face of the new hex and perform the partial projection
+operation for all four new corners.  Even though up to three of the
+new corner coordinates might be unnecessary to track the ray, I judged
+that the bookkeeping cost of fetching corners only "on demand" would
+usually exceed the benefit.  For the 24 tet decompositions, I compute
+the five new face centroids and the new body center after the partial
+projection operation (of course); here it certainly pays to compute
+all five or six points at once, since the optimizer should find the
+many common subexpressions.
+
+In addition to all this, I coded a far faster algorithm applicable to
+meshes formed by three orthogonal sets of parallel planes aligned with
+the xyz axes.  See regul.h and the reg_track function in hex.i for
+details.
+
+
+Entering the mesh
+-----------------
+
+In a 2D mesh with NxN cells, the mesh boundary has of order 4N edges,
+while a typical ray might cut 2N edges.  In the past, we have done an
+exhaustive boundary search, checking whether each ray intersects each
+boundary edge.  A typical 2D ray trace therefore spends about equal
+time finding the entry points as it does tracking the rays.
+
+If we continued the exhaustive boundary search in 3D ray tracking, it
+would become grossly more expensive than 2D tracking: Now the mesh has
+NxNxN cells, with 6N^2 boundary faces, while a typical ray might cut
+3N interior faces.  An exhaustive boundary search now costs N times as
+much as in 2D -- so it gets relatively more and more expensive the
+finer your resolution -- while the tracking operation itself has a
+comparable cost as 2D.  In my judgment, this entry expense is
+intolerable.
+
+The only solution is to assume the mesh boundary is convex.  (If not,
+the best solution appears to be to add a few layers of cells to the
+mesh boundary to make it convex -- although I don't see a way to
+automatically extend a mesh in this way.  Or see the following
+section.)  For a convex boundary, there is an algorithm to find an
+entry point requiring only order N operations, so that in the worst
+case, the entry search cost will be comparable to an exhaustive search
+in 2D.  By remembering the entry point found for the previous ray, I
+dramatically reduce the cost of finding the next entry point, if the
+two rays are near each other.  (If you need to trace a random set of
+rays, you can speed up the entry search by a huge factor if you can
+somehow sort them first -- but this never gains you more than about a
+factor of 2 in overall performance, since in the worst case, the entry
+search time is comparable to the tracking time.)
+
+Here's how it works:
+
+Begin with the boundary triangle you entered last time, or with the
+first finite area boundary triangle in the mesh if this is the first
+ray.  Since the triangle has finite area, you can always find a point
+inside the triangle (in its own plane) which does not lie on the ray.
+That point and the ray together determine a plane E.  The E plane cuts
+the convex mesh boundary in a convex curve (it must cut the boundary
+somewhere, since by construction it contains one point of a boundary
+face).  The idea is to circumnavigate this curve, until you either
+come to the place where the ray enters it, or prove that the ray never
+enters.  If the ray enters the E plane curve, it must also exit the
+curve, so you need to distinguish between those two cases.
+
+The partially projected coordinates are once again ideal for
+performing the entry search.  Again, the zz coordinate is irrelevant.
+The E plane is a line through the (xx,yy) origin (i.e.- containing the
+ray).  The E plane is therefore
+
+   ex*xx + ey*yy = 0
+
+where (ex,ey) are the partially projected coordinates of the normal
+to the E plane.  Notice that this 2D dot product in the non-orthogonal
+partially projected system has the same value as the ordinary 3D dot
+product in the orthogonal mesh coordinate system:
+
+   ex*xx + ey*yy = ex*(x-z*qx/qz) + ey*(y-z*qy/qz)
+                 = x*ex + y*ey + z*(-ex*qx-ey*qy)/qz
+                 = x*ex + y*ey + z*ez
+
+where the the normal to E in mesh coordinates is
+
+   (ex,ey,ez) = (ex,ey,(-ex*qx-ey*qy)/qz)
+
+Note that (ex,ey,ez) dot (qx,qy,qz) is zero -- the E plane contains
+the ray.  If (fxx,fyy) are the partially projected coordinates of the
+point in the initial triangle which does not lie on the ray, then
+
+   (ex,ey) = (-fyy,fxx)
+
+is in fact a normal to E, even though (xx,yy) are not orthogonal
+coordinates: If the point is (fx,fy,fz) in mesh coordinates (with the
+point p at the origin for simplicity), then the cross product with
+the ray direction q is normal to E, so (qy*fz-qz*fy, qz*fx-qx*fz,
+qx*fy-qy*fx) = qz*(-fyy, fxx, (fyy*qx-fxx*qy)/qz) is in fact the
+normal to E sought.
+
+Now, the mesh boundary faces can be triangulated, just as the mesh
+itself can be decomposed into tets.  In partially projected (xx,yy)
+coordinates, each vertex lies either to the right or left of the E
+plane according to whether ex*xx+ey*yy is positive or negative.  The E
+plane cuts exactly two of the three edges of a boundary triangle.  If
+the nodes of the current edge are n0 and n1, and the third point of
+the triangle is n2, and if d0 = ex*xx0+ey*yy0 >= 0 and d1 =
+ex*xx1+ey*yy1 <= 0 (and not both zero).  You then compute d2 =
+ex*xx2+ey*yy2.  If d2>0, move to the 21 edge, swapping n2 for n0.  If
+d2<0, move to the 02 edge, swapping n2 for n1.  In the degenerate case
+that d2=0, I keep the point with larger absolute value, discarding the
+smaller.
+
+This topological part of the entry search algorithm is again extremely
+cheap -- 2 multiplies and 1 add to cross each triangle.  After crossing
+the triangle, it costs considerably more to fetch the next n2 node and
+partially project its coordinates.  (For hex meshes, I fetch both points
+of the opposite edge of the new quad face at the same time.  I always
+use a simple diagonal triangulation of the quad for the entry search,
+even for the 24 tet decompositions.  In that case, once I've entered
+a face through a diagonal triangle, I can just cross one or two tets
+to figure out which of the four face triangles I really entered.)
+
+At each step, you need to check to see whether you stepped over the
+entry point.  Since ex*xx+ey*yy=0 on the E plane, xx and yy are
+proportional, and it suffices to keep track of only one -- the one
+with the larger absolute value, which corresponds to the smaller
+absolute value of ex or ey.  Suppose the larger absolute value is xx;
+it's value at the current edge intersection is xx = (xx1*d0-xx0*d1) /
+(d0-d1) -- another divide, 2 multiplies, and 2 adds.
+
+Basically, you just wait until the sign of the intersection xx
+changes.  However, there are two catches: First, the boundary curve in
+the E plane has two branches, one corresponding to ray entry, the
+other to exit.  Second, the ray may miss the mesh entirely, and you
+need to detect that in order to avoid orbiting in the E plane forever.
+The idea for coping with these complications is to notice that you can
+figure out once and for all whether increasing or decreasing xx
+corresponds to the entry point you seek.  Once you've done that, the
+algorithm to check whether to halt the entry search at the current
+edge is:
+
+   dxx = xx_this_edge - xx_last_edge
+   does sign(dxx) match ray_entry_sign?
+   if so,
+      does sign(xx_this_edge) differ from sign(xx_last_edge)?
+      if so,
+         QUIT - ray enters current boundary triangle
+      if not, (**)
+         does sign(dxx) match sign(xx_this_edge)?
+         if so,  QUIT - ray misses the mesh
+         if not, set entry_side_flag
+   if not, (**)
+      is entry_side_flag set?
+      if so,
+         QUIT - ray misses the mesh
+
+Actually, I had serious problems with the branches marked (**): those
+decisions are too sharp, and can be fooled by roundoff errors even in
+very regular meshes.  To solve that problem, I needed to compute a
+"typical very small" scale length for the mesh; I skip the (**)
+branches unless abs(dxx) exceeds the precomputed mesh scale.
+
+The remaining rather nasty problem is to compute the initial values of
+ray_entry_sign and entry_side_flag.  If da is the area element of the
+initial triangle, pointing toward the interior of the mesh, then
+entry_side_flag is set if da dot q is positive, but not set if
+negative or zero.  Actually, I don't set entry_side_flag unless the
+dxx across the initial triangle exceeds the mesh scale length just
+mentioned.
+
+The initial value for ray_entry_sign is computable from the sign of
+fxx (or ey), the sign of qz, and a knowledge of the initial
+orientation of the first boundary triangle.  Working out this sign was
+excruciatingly difficult for me, and I can't really describe (or
+certify) my algorithm, although it's only four short lines of sign
+comparisons.  The underlying idea is to look at the sign of the
+dot product of the area element da with the ray direction, but the
+case in which that dot product is zero (or even the wrong sign owing
+to roundoff) also must and can work cleanly and unambiguously.  The
+only case that becomes problematic is when the ray lies in the plane
+of the initial triangle -- and that really should be an unescapable
+problem; it basically means the ray will miss the mesh for sure.
+
+
+Alternative ray start strategy
+------------------------------
+
+If you only need to track rays as far as their first exit from the
+mesh, there is a fast alternative strategy for initializing the ray
+tracking, which does not rely on the convexity of the mesh boundary.
+The idea is to forget about finding where the ray enters the mesh, and
+instead assume that the given point on the ray lies interior to the
+mesh.  If you specify some cell deep inside the mesh, you can track a
+pseudo ray from any point interior to that given cell (say its
+centroid) to the given point on the ray.  As long as the segment
+connecting the two points lies entirely within the mesh, this will
+succeed.  Now you know what cell contains the given point on the ray,
+and you can track it from there as usual.
+
+To initialize both the pseudo-ray tracking and the actual ray tracking
+by this method, you need to find the point at which a ray containing a
+known interior point of a cell enters that cell.  The easiest way to
+do this is to exhaustively search all of the face triangles for the
+cell, selecting the one that the ray cuts earliest (at smallest s).
+For the 5-tet decomposition this means checking 12 triangles; for the
+24-tet decompositions, there are 24 triangles to check.
+
+This strategy only results in tracking the ray beyond its given point;
+to track it the other direction, you can track the ray with the same
+given point but opposite direction.
+
+
+Reflecting boundaries
+---------------------
+
+Many or most 3D meshes include reflecting boundaries.  When a ray hits
+a cell face at such a boundary, I reflect the ray from the plane of
+the triangle it hit.  This will do weird things if the face of the hex
+is not planar.  When the ray reflects, both p and q change, which
+means the partial projection of all of the nodes must be redone.
+Recall that the partial projection also involves a permutation of the
+mesh coordinates to give qz the largest absolute value; that
+permutation may also change.
+
+All this complexity means that reflection is far costlier than just
+cutting through an ordinary cell face.  I don't see any way to avoid
+this, except by slowing down the tracker on ordinary faces to the
+speed at reflecting faces (for example, by doing a full projection
+rather than partial projection).  I did make the reflection function
+recognize as special cases reflections from a plane normal to one of
+the coordinate axes -- so if you can line up all or most of your
+reflecting boundaries with the coordinate axes, I'll track through
+your mesh much faster.
+
+Reflecting boundaries create a more serious problem: the entry search
+becomes even more conceptually difficult.  If you zone up, say, an
+octant of a sphere with three reflecting planes, you want to be able
+to shoot rays at your mesh that miss the octant you actually zoned,
+but "enter" one of the seven reflected images.  The number of images
+can be very large -- 120 in one popular spherical zoning scheme.  I
+don't want to attempt a "gestalt function" that tries to look at such
+a mesh and figure out automatically what all the images look like;
+there mightn't even be a finite number (e.g.- one radian in phi).
+
+Instead, I treat the entry search the same way as the main trace: As I
+walk along the boundary curve in the E plane, when I encounter a
+reflecting boundary, I reflect the ray.  I also need to reflect the E
+plane.  As in the main trace, all the partially projected mesh
+coordinates must be recomputed, but now the state information in the
+halting algorithm, xx_last_edge and ray_entry_sign must also be
+recomputed.  Pretty tedious, but it works in the end, even for the
+meshes with 120 reflected images, without any gestalt programming.
+
+But worse is yet to come: Remember that one of the key parts of the
+entry search algorithm was to use the entry point found for the
+previous ray as the starting point for the entry search for the
+current ray.  If the previous ray reflected thirty times before it
+entered the mesh, I have to somehow remember those thirty reflections
+and apply them to the new ray before I can even begin its entry
+search.
+
+For each reflection, I already need to update both p and q for the
+ray, and during the entry search, I need to update the E plane normal
+e as well.  If I remember the initial values of p, q, and e, and if I
+also keep track of whether the total number of reflections has been
+even or odd, I have enough information to reconstruct the net result
+of all the reflection transforms, without doing any additional
+calculations for the reflections themselves (other than to flip the
+even-odd counter).  Here's how: With q, e, and the even-odd counter, I
+can reconstruct a set of three orthonormal basis vectors -- the third
+is (-1)^odd*(q cross e) -- and see how that basis set has been rotated
+by all the reflections.  Meanwhile, from the change in p, I can
+discover the net translation due to all the reflections.
+
+Of course, nothing is ever quite that simple.  Before I found e for
+the previous ray, I had already transformed it according to the
+reflections of the ray before it.  Fortunately, that previous
+transformation matrix is still available, so I can rotate e back to
+the original coordinate system for p and q by its transpose, before I
+update the transformation matrix for the next ray.  One residual
+problem with all these transformations is that roundoff errors in the
+transformation matrix seem to accumulate with alarming speed.  So far,
+this hasn't been a major issue -- I think it will be manageable as
+long as we don't track more than a hundred thousand or so rays in a
+single group.
+
+
+Organizational notes
+--------------------
+
+Read the *.h files for the details of the functions I wrote.  The
+functions defined in tools.h constitute (I hope) a generic toolkit
+useful for tracking rays through any mesh which can be decomposed into
+tets.  The functions in hex.h are for dealing specifically with
+hexahedral meshes.
+
+Right now, I assume the mesh consists of a single ix by jx by kx block
+of cells.  Some minor additions will be necessary to handle meshes
+which consist of several such blocks stuck together; the main problem
+is designing an interface to describe how the blocks fit together.
+
+Currently, each of the six logical boundaries of the mesh can be
+treated as an actual mesh boundary surface, a reflecting surface (each
+face of the surface is a planar reflector), or a periodic boundary
+(assuming the other two logical coordinates remain fixed).
+
+
+Profiling and timing
+--------------------
+
+On an HP735 (laura), I can track through about 1.e5 cells/sec for the
+5 tet decomposition.  If the machine were getting 35 Mflops (close to
+its Livermore loops geometric mean), that would indicate 350 floating
+point operations to get across each cell.
+
+On my Linux/Pentium, the number is 4.e4 cells/sec on a nominally 7.5
+Mflop machine, indicating 175 floating point ops per cell crossing.
+
+On a DEC alpha (fajita), the rate is 2.6e5 cells/sec, for a machine
+nominally rated at perhaps 85 Mflops, for 330 floating ops per cell.
+
+For this test, crossing a hex cell required on average crossing 2
+tets, or 8 multiplies and 4 adds.  The partial projection for four new
+nodes of each cell costs 8 multiplies and 40 adds, and computing the s
+value at each cell exit is another 1 reciprocal, 11 multiplies and 11
+adds.  Thus, the minimum possible work the algorithm I'm using could
+cross a cell in is 1 reciprocal, 27 multiplies, and 55 adds -- perhaps
+a little under 100 floating point operations, maybe four times fewer
+than the estimate of 350.  So I'm bogged down with a fair amount of
+bookkeeping; a factor of two faster ray tracing code doesn't seem
+beyond the realm of possibility.  A factor of ten improvement,
+however, would certainly require a smarter algorithm.
+
+The speed of the 5, 24f (face centered), and 24b (body centered)
+tracking routines are in the following ratio:
+
+   reg : 5 : 24f : 24b  =  0.15 : 1.00 : 1.3 : 1.3
+
+The reg is the special case regular mesh code mentioned above.  The
+ratios vary quite a bit from problem to problem, but those numbers are
+typical.
+
+Also of interest is the "typical" number of tets crossed in crossing
+each hex cell.  I have numbers for the big_mesh and degen_test timing
+routines in test.i.  Here "image" means the rays where parallel in a
+2D array, while "random" means random rays:
+
+     rect image  sphere random  sphere image
+ 5:     2.0           2.3            2.3
+24f:    3.4           4.0            3.9
+24b:    3.0           4.1            4.1
+
+The practical difference between the 24f and 24b seems to be very
+slight by any measure.  Probably that means I should prefer the 24b
+algorithm, since that generalizes to an arbitrary mesh.  The 24f
+decomposition is still my favorite, though.
+
+I've profiled the code on a Linux/Pentium only.  In all cases, the
+hex_face routine dominates (with hex24_face often second), using about
+1/5 of the total time.  The tet_traverse and tri_intersect routines
+are usually next.  Even for random rays, the time for the entry search
+seems to be only perhaps 1/10 of the total cost; for image rays, the
+entry search cost is negligible.  Almost certainly it makes no sense
+to try to beat down the entry search cost further (for example, by
+reversing every other row of a 2D image array).

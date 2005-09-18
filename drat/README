@@ -1,0 +1,31 @@
+
+				 Drat
+
+   A Yorick package which integrates the transport equation through
+			 a quadrilateral mesh
+
+
+This is a very specialized Yorick package which integrates the
+transport equation through a quadrilateral mesh in cylindrical
+coordinates.  It is unlikely to be of use to anyone outside my own
+narrow specialty (laser fusion research).  I provide it as an example
+of a package which "knows" about the interpreter, as opposed to the
+Math package, which is a mere installation of LAPACK subroutines into
+Yorick.  This "knowledge" is contained in the file ydrat.c, which you
+can study if you need to do something similar.
+
+In particular, a new data type -- the "DratMesh" -- is added to the
+Yorick interpreter.  This encapsulates the "FullMesh" data structure
+which is maintained by the rad-transport package.  This data structure
+could not be easily made available to interpreted code, since the
+rad-transport code reallocates some of the variable sized data
+associated with the "FullMesh"; it wouldn't be nice to attempt to
+resize an array the interpreter owned, nor would it be easy to
+communicate such a change back to an interpreted data structure.
+
+Also, the interface routines take care of getting their arguments off
+of Yorick's stack, which in principle allows them to have a more
+general syntax than interpreted functions.  In this case, the only
+benefit is that no interpreted "wrapper" routines are required to fix
+up the data types and dimensions of input variables before the
+compiled routines are called.

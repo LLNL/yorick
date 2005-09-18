@@ -1,0 +1,15 @@
+This directory contains code that works around bugs on single
+platforms I consider to be important enough to not insist that yorick
+will not run until the vendor repairs the bug.  Yorick source code
+contains numerous places where the source has been tweaked slightly to
+work around minor bugs (that is, non-compliance to either ANSI or
+POSIX standards, or just compiler or library errors).  In many more
+instances, an expert can set compiler flags to build a correct yorick
+on platforms where the default settings tickle such bugs.
+
+Finally, with the release of MacOS X 10.3, there is a bug that cannot
+be handled by anything short of wholesale hacking, that actually will
+work only on that individual platform, causing harm elsewhere (even on
+MacOS X 10.2 or 10.1).  The top level file MacOS103.bug in this tree
+describes the bug.  Here is the code to partly fix it, engineered in
+such a way that any future similar hacks could use it as well.

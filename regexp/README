@@ -1,0 +1,20 @@
+This directory contains the regexp and fnmatch routines.
+
+Guido van Rossum wrote the fnmatch routines, and contributed them to
+the University of California for the BSD operating system.  The name
+has been changed by appending _fr (for Francois Rigaut) in order to
+avoid collision with the libc routine.  The original source is
+available from any BSD website, or from Apple's Darwin sources:
+
+http://www.freebsd.org/cgi/cvsweb.cgi/src/sys/libkern/fnmatch.c
+http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libc/gen/fnmatch.c
+http://developer.apple.com/darwin/
+
+Henry Spencer wrote the regexp routines for the University of Toronto.
+The source code has been (slightly) modified from the original in
+order to link it into yorick.  The original source is available at:
+
+ftp://ftp.zoo.toronto.edu/pub/regex.shar
+
+Read the source files yfnmatch.c and yregexp.c for the complete
+copyright and license statements.  Both are freely redistributable.

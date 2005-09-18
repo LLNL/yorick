@@ -1,0 +1,1678 @@
+% Language Reference Card for Yorick version 1
+% Function Reference Card for Yorick version 1
+% I/O Reference Card for Yorick version 1
+% $Id: refs.tex,v 1.1 2005-09-18 22:05:02 dhmunro Exp $
+
+%**start of header
+\newcount\columnsperpage
+
+% This file can be printed with 1, 2, or 3 columns per page (see below).
+% Specify how many you want here.  Nothing else needs to be changed.
+
+\columnsperpage=3
+
+% Based on the refcard.tex file from the GNU Emacs 18.57 distribution:
+% Copyright (c) 1987 Free Software Foundation, Inc.
+
+% This file is intended to be processed by plain TeX (TeX82).
+%
+% The final reference card has six columns, three on each side.
+% This file can be used to produce it in any of three ways:
+% 1 column per page
+%    produces six separate pages, each of which needs to be reduced to 80%.
+%    This gives the best resolution.
+% 2 columns per page
+%    produces three already-reduced pages.
+%    You will still need to cut and paste.
+% 3 columns per page
+%    produces two pages which must be printed sideways to make a
+%    ready-to-use 8.5 x 11 inch reference card.
+%    For this you need a dvi device driver that can print sideways.
+% Which mode to use is controlled by setting \columnsperpage above.
+%
+% Author of GNU Emacs refcard.tex from which this is derived:
+%  Stephen Gildea
+%  UUCP: mit-erl!gildea
+%  Internet: gildea@erl.mit.edu
+
+\def\versionnumber{1.1}
+\def\year{1995}
+\def\version{March \year\ v\versionnumber}
+
+\def\shortcopyrightnotice{\vskip 1ex plus 2 fill
+  \centerline{\small \copyright\ \year\ Regents of the U. C.
+  Permissions on back.  v\versionnumber}}
+
+\def\copyrightnotice{
+\vskip 1ex plus 2 fill\begingroup\small
+\centerline{Copyright \copyright\ \year\
+            Regents of the University of California}
+\centerline{designed by David Munro, \version}
+\centerline{for Yorick version 1}
+
+Permission is granted to make and distribute copies of
+this card provided the copyright notice and this permission notice
+are preserved on all copies.
+
+For copies of the Yorick manual, contact dhmunro@users.sf.net.
+
+\endgroup}
+
+% make \bye not \outer so that the \def\bye in the \else clause below
+% can be scanned without complaint.
+\def\bye{\par\vfill\supereject\end}
+
+\newdimen\intercolumnskip
+\newbox\columna
+\newbox\columnb
+
+\def\ncolumns{\the\columnsperpage}
+
+\message{[\ncolumns\space 
+  column\if 1\ncolumns\else s\fi\space per page]}
+
+\def\scaledmag#1{ scaled \magstep #1}
+
+% This multi-way format was designed by Stephen Gildea
+% October 1986.
+\if 1\ncolumns
+  \hsize 4in
+  \vsize 10in
+  \voffset -.7in
+  \font\titlefont=\fontname\tenbf \scaledmag3
+  \font\headingfont=\fontname\tenbf \scaledmag2
+  \font\smallfont=\fontname\sevenrm
+  \font\smallsy=\fontname\sevensy
+
+  \footline{\hss\folio}
+  \def\makefootline{\baselineskip10pt\hsize6.5in\line{\the\footline}}
+\else
+  \hsize 3.2in
+  \vsize 7.95in
+  \hoffset -.75in
+  \voffset -.745in
+  \font\titlefont=cmbx10 \scaledmag2
+  \font\headingfont=cmbx10 \scaledmag1
+  \font\smallfont=cmr6
+  \font\smallsy=cmsy6
+  \font\eightrm=cmr8
+  \font\eightbf=cmbx8
+  \font\eightit=cmti8
+  \font\eighttt=cmtt8
+  \font\eightsy=cmsy8
+  \textfont0=\eightrm
+  \textfont2=\eightsy
+  \def\rm{\eightrm}
+  \def\bf{\eightbf}
+  \def\it{\eightit}
+  \def\tt{\eighttt}
+  \normalbaselineskip=.8\normalbaselineskip
+  \normallineskip=.8\normallineskip
+  \normallineskiplimit=.8\normallineskiplimit
+  \normalbaselines\rm           %make definitions take effect
+
+  \if 2\ncolumns
+    \let\maxcolumn=b
+    \footline{\hss\rm\folio\hss}
+    \def\makefootline{\vskip 2in \hsize=6.86in\line{\the\footline}}
+  \else \if 3\ncolumns
+    \let\maxcolumn=c
+    \nopagenumbers
+  \else
+    \errhelp{You must set \columnsperpage equal to 1, 2, or 3.}
+    \errmessage{Illegal number of columns per page}
+  \fi\fi
+
+  \intercolumnskip=.46in
+  \def\abc{a}
+  \output={%
+      % This next line is useful when designing the layout.
+      %\immediate\write16{Column \folio\abc\space starts with \firstmark}
+      \if \maxcolumn\abc \multicolumnformat \global\def\abc{a}
+      \else\if a\abc
+        \global\setbox\columna\columnbox \global\def\abc{b}
+        %% in case we never use \columnb (two-column mode)
+        \global\setbox\columnb\hbox to -\intercolumnskip{}
+      \else
+        \global\setbox\columnb\columnbox \global\def\abc{c}\fi\fi}
+  \def\multicolumnformat{\shipout\vbox{\makeheadline
+      \hbox{\box\columna\hskip\intercolumnskip
+        \box\columnb\hskip\intercolumnskip\columnbox}
+      \makefootline}\advancepageno}
+  \def\columnbox{\leftline{\pagebody}}
+
+  \def\bye{\par\vfill\supereject
+    \if a\abc \else\null\vfill\eject\fi
+    \if a\abc \else\null\vfill\eject\fi
+    \end}  
+\fi
+
+% we won't be using math mode much, so redefine some of the characters
+% we might want to talk about
+% \catcode`\^=12
+\catcode`\_=12
+
+\chardef\\=`\\
+\chardef\{=`\{
+\chardef\}=`\}
+
+\hyphenation{mini-buf-fer}
+\hyphenation{Yor-ick}
+\hyphenation{ter-min-ated}
+
+\parindent 0pt
+\parskip 1ex plus .5ex minus .5ex
+
+\def\small{\smallfont\textfont2=\smallsy\baselineskip=.8\baselineskip}
+
+\outer\def\newcolumn{\vfill\eject}
+
+\outer\def\title#1{{\titlefont\centerline{#1}}\vskip 1ex plus .5ex}
+
+\outer\def\section#1{\par\filbreak
+  \vskip 3ex plus 2ex minus 2ex {\headingfont #1}\mark{#1}%
+  \vskip 2ex plus 1ex minus 1.5ex}
+
+\newdimen\keyindent
+
+\def\beginindentedkeys{\keyindent=1em}
+\def\endindentedkeys{\keyindent=0em}
+\endindentedkeys
+
+\def\paralign{\vskip\parskip\halign}
+
+\def\<#1>{$\langle${\rm #1}$\rangle$}
+
+\def\kbd#1{{\tt#1}\null}        %\null so not an abbrev even if period follows
+
+\def\beginexample{\leavevmode\begingroup
+  \obeylines\obeyspaces\parskip0pt\tt}
+{\obeyspaces\global\let =\ }
+\def\endexample{\endgroup}
+
+\def\key#1#2{\leavevmode\hbox to \hsize{\vtop
+  {\hsize=.75\hsize\rightskip=1em
+  \hskip\keyindent\relax#1}\kbd{#2}\hfil}}
+
+\def\func#1#2{\leavevmode\hbox to \hsize{\hbox to \hsize
+  {\hskip\keyindent\relax\kbd{#1}\hfil}%
+  \hskip 0pt minus 1fil
+  \null#2\hfil}}
+
+\def\sample#1#2{\leavevmode\hbox to \hsize{\hbox to \hsize
+  {\hskip\keyindent\relax#1\hfil}%
+  \hskip 0pt minus 1fil
+  \null#2\hfil}}
+
+\def\begindemo{\leavevmode\begingroup
+  \obeylines\obeyspaces\parskip0pt}
+% {\obeyspaces\global\let =\ }
+\def\enddemo{\endgroup}
+
+\newif\ifpdf
+\ifx\pdfoutput\undefined
+  \pdffalse
+  \def\mysection#1{\par\filbreak
+    \vskip 3ex plus 2ex minus 2ex {\headingfont #1}\mark{#1}%
+    \vskip 2ex plus 1ex minus 1.5ex}
+\else
+  \pdftrue
+  \pdfpagewidth=11truein
+  \pdfpageheight=8.5truein
+  \pdfcompresslevel=9
+  \outer\def\mysection#1{\par\filbreak
+    \vskip 3ex plus 2ex minus 2ex\hskip -2em \pdfdest name{#1} xyz \hskip 2em {\headingfont #1}\mark{#1}%
+    \vskip 2ex plus 1ex minus 1.5ex}
+  \pdfcatalog{/PageMode /UseOutlines} openaction goto page 1 {/FitV}
+  \pdfoutline goto page 1 {/FitV} count 9 {Language Reference-1}
+    \pdfoutline goto name{Starting and Quitting Yorick}{Starting and Quitting Yorick}
+    \pdfoutline goto name{Getting Help}{Getting Help}
+    \pdfoutline goto name{Error Recovery}{Error Recovery}
+    \pdfoutline goto name{Array Data Types}{Array Data Types}
+    \pdfoutline goto name{Constants}{Constants}
+    \pdfoutline goto name{Defining Variables}{Defining Variables}
+    \pdfoutline goto name{Arithmetic and Comparison Operators}{Arithmetic and Comparison Operators}
+    \pdfoutline goto name{Creating Arrays}{Creating Arrays}
+    \pdfoutline goto name{Indexing Arrays}{Indexing Arrays}
+  \pdfoutline goto page 2 {/FitV} count -9 {Language Reference-2}
+    \pdfoutline goto name{Array Conformability Rules}{Array Conformability Rules}
+    \pdfoutline goto name{Logical Operators}{Logical Operators}
+    \pdfoutline goto name{Calling Functions}{Calling Functions}
+    \pdfoutline goto name{Defining Functions}{Defining Functions}
+    \pdfoutline goto name{Variable Scope}{Variable Scope}
+    \pdfoutline goto name{Returning from Functions}{Returning from Functions}
+    \pdfoutline goto name{Compound Statements}{Compound Statements}
+    \pdfoutline goto name{Conditional Execution}{Conditional Execution}
+    \pdfoutline goto name{Loops}{Loops}
+  \pdfoutline goto page 3 {/FitV} count -8 {Function Reference-1}
+    \pdfoutline goto name{Including Source Files}{Including Source Files}
+    \pdfoutline goto name{Comments}{Comments}
+    \pdfoutline goto name{Issuing Shell Commands}{Issuing Shell Commands}
+    \pdfoutline goto name{Matrix Multiplication}{Matrix Multiplication}
+    \pdfoutline goto name{Using Pointers}{Using Pointers}
+    \pdfoutline goto name{Instancing Data Structures}{Instancing Data Structures}
+    \pdfoutline goto name{Index Range Functions}{Index Range Functions}
+    \pdfoutline goto name{Elementary Functions}{Elementary Functions}
+  \pdfoutline goto page 4 {/FitV} count -9 {Function Reference-2}
+    \pdfoutline goto name{Information About Variables}{Information About Variables}
+    \pdfoutline goto name{Reshaping Arrays}{Reshaping Arrays}
+    \pdfoutline goto name{Logical Functions}{Logical Functions}
+    \pdfoutline goto name{Interpolation and Lookup Functions}{Interpolation and Lookup Functions}
+    \pdfoutline goto name{Sorting}{Sorting}
+    \pdfoutline goto name{Transposing}{Transposing}
+    \pdfoutline goto name{Manipulating Strings}{Manipulating Strings}
+    \pdfoutline goto name{Advanced Array Indexing}{Advanced Array Indexing}
+    \pdfoutline goto name{Generating Simple Meshes}{Generating Simple Meshes}
+  \pdfoutline goto page 5 {/FitV} count -7 {I/O Reference-1}
+    \pdfoutline goto name{Opening and Closing Text Files}{Opening and Closing Text Files}
+    \pdfoutline goto name{Reading Text}{Reading Text}
+    \pdfoutline goto name{Writing Text}{Writing Text}
+    \pdfoutline goto name{Positioning a Text File}{Positioning a Text File}
+    \pdfoutline goto name{Opening and Closing Binary Files}{Opening and Closing Binary Files}
+    \pdfoutline goto name{Saving and Restoring Variables}{Saving and Restoring Variables}
+    \pdfoutline goto name{Reading History Records}{Reading History Records}
+  \pdfoutline goto page 6 {/FitV} count -7 {I/O Reference-2}
+    \pdfoutline goto name{Writing History Records}{Writing History Records}
+    \pdfoutline goto name{Opening Non-PDB Files}{Opening Non-PDB Files}
+    \pdfoutline goto name{Making Plots}{Making Plots}
+    \pdfoutline goto name{Plot Paging and Hardcopy}{Plot Paging and Hardcopy}
+    \pdfoutline goto name{Setting Plot Limits}{Setting Plot Limits}
+    \pdfoutline goto name{Managing Graphics Windows}{Managing Graphics Windows}
+    \pdfoutline goto name{Graphics Query, Edit, and Defaults}{Graphics Query, Edit, and Defaults}  
+  \pdfoutline goto page 1 {/FitV} count 7 {TOPICS}
+    \pdfoutline goto page 1 {/FitV} count -9 {Getting Started}
+      \pdfoutline goto name{Starting and Quitting Yorick}{Starting and Quitting Yorick}
+      \pdfoutline goto name{Getting Help}{Getting Help}
+      \pdfoutline goto name{Error Recovery}{Error Recovery}
+      \pdfoutline goto name{Including Source Files}{Including Source Files}
+      \pdfoutline goto name{Comments}{Comments}
+      \pdfoutline goto name{Issuing Shell Commands}{Issuing Shell Commands}
+      \pdfoutline goto name{Constants}{Constants}
+      \pdfoutline goto name{Defining Variables}{Defining Variables}
+      \pdfoutline goto name{Arithmetic and Comparison Operators}{Arithmetic and Comparison Operators}
+    \pdfoutline goto page 2 {/FitV} count -13 {Programming}
+      \pdfoutline goto name{Logical Operators}{Logical Operators}
+      \pdfoutline goto name{Compound Statements}{Compound Statements}
+      \pdfoutline goto name{Conditional Execution}{Conditional Execution}
+      \pdfoutline goto name{Loops}{Loops}
+      \pdfoutline goto name{Instancing Data Structures}{Instancing Data Structures}
+      \pdfoutline goto name{Using Pointers}{Using Pointers}
+      \pdfoutline goto name{Elementary Functions}{Elementary Functions}
+      \pdfoutline goto name{Logical Functions}{Logical Functions}
+      \pdfoutline goto name{Information About Variables}{Information About Variables}
+      \pdfoutline goto name{Matrix Multiplication}{Matrix Multiplication}
+      \pdfoutline goto name{Sorting}{Sorting}
+      \pdfoutline goto name{Manipulating Strings}{Manipulating Strings}
+      \pdfoutline goto name{Generating Simple Meshes}{Generating Simple Meshes}
+    \pdfoutline goto page 2 {/FitV} count -4 {Functions}
+      \pdfoutline goto name{Calling Functions}{Calling Functions}
+      \pdfoutline goto name{Defining Functions}{Defining Functions}
+      \pdfoutline goto name{Variable Scope}{Variable Scope}
+      \pdfoutline goto name{Returning from Functions}{Returning from Functions}
+    \pdfoutline goto page 1 {/FitV} count -8 {Arrays}
+      \pdfoutline goto name{Array Data Types}{Array Data Types}
+      \pdfoutline goto name{Creating Arrays}{Creating Arrays}
+      \pdfoutline goto name{Indexing Arrays}{Indexing Arrays}
+      \pdfoutline goto name{Array Conformability Rules}{Array Conformability Rules}
+      \pdfoutline goto name{Advanced Array Indexing}{Advanced Array Indexing}
+      \pdfoutline goto name{Reshaping Arrays}{Reshaping Arrays}
+      \pdfoutline goto name{Transposing}{Transposing}
+      \pdfoutline goto name{Index Range Functions}{Index Range Functions}
+    \pdfoutline goto page 5 {/FitV} count -4 {Text Files}
+      \pdfoutline goto name{Opening and Closing Text Files}{Opening and Closing Text Files}
+      \pdfoutline goto name{Reading Text}{Reading Text}
+      \pdfoutline goto name{Writing Text}{Writing Text}
+      \pdfoutline goto name{Positioning a Text File}{Positioning a Text File}
+    \pdfoutline goto page 5 {/FitV} count -5 {Binary Files}
+      \pdfoutline goto name{Opening and Closing Binary Files}{Opening and Closing Binary Files}
+      \pdfoutline goto name{Saving and Restoring Variables}{Saving and Restoring Variables}
+      \pdfoutline goto name{Reading History Records}{Reading History Records}
+      \pdfoutline goto name{Writing History Records}{Writing History Records}
+      \pdfoutline goto name{Opening Non-PDB Files}{Opening Non-PDB Files}
+    \pdfoutline goto page 6 {/FitV} count -6 {Making Plots}
+      \pdfoutline goto name{Making Plots}{Making Plots}
+      \pdfoutline goto name{Interpolation and Lookup Functions}{Interpolation and Lookup Functions}
+      \pdfoutline goto name{Plot Paging and Hardcopy}{Plot Paging and Hardcopy}
+      \pdfoutline goto name{Setting Plot Limits}{Setting Plot Limits}
+      \pdfoutline goto name{Managing Graphics Windows}{Managing Graphics Windows}
+      \pdfoutline goto name{Graphics Query, Edit, and Defaults}{Graphics Query, Edit, and Defaults}  
+\fi
+
+%**end of header
+
+
+%----------------------------------------------------------------------------
+
+\title{Yorick Language Reference}
+
+\centerline{(for version 1)}
+
+\mysection{Starting and Quitting Yorick}
+
+To enter Yorick, just type its name: \hglue1em \kbd{yorick}
+
+\key{normal Yorick prompt}{>}
+\key{prompt for continued line}{cont>}
+\key{prompt for continued string}{quot>}
+\key{prompt for continued comment}{comm>}
+\key{prompt in debug mode}{dbug>}
+
+\func{quit}{close all open files and exit Yorick}
+
+\mysection{Getting Help}
+
+Most Yorick functions have online documentation.
+
+\func{help}{help on using Yorick help}
+\func{help, f}{help on a specific function f}
+\func{info, v}{information about a variable v}
+
+\mysection{Error Recovery}
+
+\key{To abort a running Yorick program type}{C-c}
+
+To enter Yorick's debug mode after an error, type return in response
+to the first prompt after the error occurs.
+
+\mysection{Array Data Types}
+
+The basic data types are:
+
+\func{char}{one 8-bit byte, from 0 to 255}
+\func{short}{compact integer, at least 2 bytes}
+\func{int}{{\bf logical results}-- 0 false, 1 true, at least 2 bytes}
+\func{long}{{\bf default integer}-- at least 4 bytes}
+\func{float}{at least 5 digits, $10^{\pm38}$}
+\func{double}{{\bf default real}-- 14 or 15 digits, usually $10^{\pm308}$}
+\func{complex}{{\bf re} and {\bf im} parts are double}
+\func{string}{0-terminated text string}
+\func{pointer}{pointer to an array}
+
+A compound data type {\it compound\_type} can be built from any combination
+of basic or previously defined data types as follows:
+\begindemo
+\hglue1em\kbd{struct} {\it compound\_type} \kbd{\{}
+\hglue2em {\it type\_name\_A memb\_name\_1} \kbd{;}
+\hglue2em {\it type\_name\_B memb\_name\_2(dimlist)} \kbd{;}
+\hglue2em {\it type\_name\_C memb\_name\_3,memb\_name\_4(dimlist)} \kbd{;}
+\hglue2em ...
+\hglue1em\kbd{\}}
+\enddemo
+A {\it dimlist} is a comma delimited list of dimension lengths, 
+or lists in the format returned by the \kbd{dimsof} function, or
+ranges of the form \kbd{min\_index : max\_index}.  (By default,
+\kbd{min\_index} is 1.)
+
+For example, the \kbd{complex} data type is predefined as:
+\begindemo
+\hglue1em\kbd{struct complex \{ double re, im; \}}
+\enddemo
+
+\shortcopyrightnotice
+
+\mysection{Constants}
+
+By default, an integer number is a constant of type \kbd{long}, and
+a real number is a constant of type \kbd{double}.  Constants of the
+types \kbd{short}, \kbd{int}, \kbd{float}, and \kbd{complex} are
+specified by means of the suffices \kbd{s}, \kbd{n}, \kbd{f}, and
+\kbd{i}, respectively.  Here are some examples:
+
+\func{char}{{\tt '\\0', '\\1', '\\x7f', '\\177', 'A', '\\t'}}
+\func{short}{{\tt 0s, 1S, 0x7fs, 0177s, -32766s}}
+\func{int}{{\tt 0N, 1n, 0x7Fn, 0177n, -32766n}}
+\func{long}{{\tt 0, 1, 0x7f, 0177, -32766, 1234L}}
+\func{float}{{\tt .0f, 1.f, 1.27e2f, 0.00127f, -32.766e3f}}
+\func{double}{{\tt 0.0, 1.0, 127.0, 1.27e-3, -32.766e-33}}
+\func{complex}{{\tt 0i, 1i, 127.i, 1.27e-3i, -32.766e-33i}}
+\func{string}{{\tt "", "Hello, world!", "\\tTab\\n2nd line"}}
+
+The following escape sequences are recognized in type \kbd{char} and
+type \kbd{string} constants:
+
+\keyindent=6em
+\func{\\n}{newline\hglue6em}
+\func{\\t}{tab\hglue6em}
+\func{\\"}{double quote\hglue6em}
+\func{\\'}{single quote\hglue6em}
+\func{\\\\}{backslash\hglue6em}
+\func{\\ooo}{octal number\hglue6em}
+\func{\\xhh}{hexadecimal number\hglue6em}
+\func{\\a}{alert (bell)\hglue6em}
+\func{\\b}{backspace\hglue6em}
+\func{\\f}{formfeed (new page)\hglue6em}
+\func{\\r}{carriage return\hglue6em}
+\endindentedkeys
+
+\mysection{Defining Variables}
+
+\sample{{\it var} {\tt =} {\it expr}}
+       {redefines {\it var\/} as the value of {\it expr}}
+\sample{{\it var} {\tt = [ ]}}
+       {undefines {\it var}}
+
+Any previous value or data type of {\it var} is forgotten.
+The {\it expr\/} can be a data type, function, file, or any other object.
+
+The \kbd{=} operator is a binary operator which has the side effect of
+redefining its left operand.  It associates to the right, so
+
+\sample{{\it var1} {\tt =} {\it var2} {\tt =} {\it var3} {\tt =} {\it expr}}
+       {initializes all three {\it var\/} to {\it expr}}
+
+\mysection{Arithmetic and Comparison Operators}
+
+From highest to lowest precedence, 
+
+\keyindent=3em
+\func{\^{}}{raise to power\hglue3em}
+\func{* / \%}{multiply, divide, modulo\hglue3em}
+\func{+ -}{add, subtract (also unary plus, minus)\hglue3em}
+\func{<< >>}{shift left, shift right\hglue3em}
+\func{>= < <= >}
+     {(not) less, (not) greater (\kbd{int} result)\hglue3em}
+\func{== !=}{equal, not equal (\kbd{int} result)\hglue3em}
+\func{\&}{bitwise and\hglue3em}
+\func{\~{}}{bitwise xor (also unary bitwise complement)\hglue3em}
+\func{|}{bitwise or\hglue3em}
+\func{=}{redefine or assign\hglue3em}
+\endindentedkeys
+
+Any binary operator may be prefixed to \kbd{=} to produce an increment
+operator; thus \kbd{x*=5} is equivalent to \kbd{x=x*5}.  Also, \kbd{++x}
+and \kbd{--x} are equivalent to \kbd{x+=1} and \kbd{x-=1}, respectively.
+Finally, \kbd{x++} and \kbd{x--} increment or decrement \kbd{x} by 1, but
+return the value of \kbd{x} {\bf before} the operation.
+
+\mysection{Creating Arrays}
+
+\sample{{\tt [} {\it obj1, obj2, ..., objN} {\tt ]}}
+       {build an array of N objects}
+The {\it objI} may be arrays to build multi-dimensional arrays.
+
+\sample{\kbd{array(}{\it value, dimlist\/}\kbd{)}}
+       {add dimensions {\it dimlist\/} to {\it value}}
+\sample{\kbd{array(}{\it type\_name, dimlist\/}\kbd{)}}
+       {return specified array, all zero}
+
+\sample{\kbd{span(}{\it start, stop, n\/}\kbd{)}}
+       {{\it n} equal stepped values from {\it start\/} to {\it stop}}
+\sample{\kbd{spanl(}{\it start, stop, n\/}\kbd{)}}
+       {{\it n} equal ratio values from {\it start\/} to {\it stop}}
+\sample{\kbd{grow, }{\it var, sfx1, sfx2, ...}}
+       {append {\it sfx1}, {\it sfx1}, etc. to {\it var}}
+These functions may be used to generate multi-dimensional arrays;
+ use \kbd{help} for details.
+
+\mysection{Indexing Arrays}
+
+\sample{{\it x}{\tt (}{\it index1, index2, ..., indexN\/}{\tt )}}
+       {is a subarray of the array {\it x}}
+
+Each index corresponds to one dimension of the {\it x} array, called
+the {\bf ID} in this section (the two exceptions are noted below).
+The {\it index1\/} varies fastest, {\it index2\/} next fastest, and so
+on.  By default, Yorick indices are 1-origin.  An {\it indexI\/} may
+specify multiple index values, in which case the result array will
+have one or more dimensions which correspond to the {\bf ID} of
+{\it x}.  Possibilities for the {\it indexI} are:
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ scalar index \hfil\break
+Select one index.  No result dimension will correspond to {\bf ID}.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ nil (or omitted) \hfil\break
+Select the entire {\bf ID}.  One result dimension will match the {\bf ID}.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ index range \hglue 1em \kbd{start:stop} or
+\kbd{start:stop:step} \hfil\break
+Select \kbd{start}, \kbd{start+step}, \kbd{start+2*step}, etc.  One
+result dimension of length \kbd{1+(stop-start)/step} and origin 1
+will correspond to {\bf ID}.  The default \kbd{step} is 1; it may be
+negative.  In particular, \kbd{::-1} reverses the order of {\bf ID}.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ index list \hfil\break
+Select an arbitrary list of indices -- the index list can be any array of
+integers.  The dimensions of the index list will replace the {\bf ID} in
+the result.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ pseudo-index \hglue 1em \kbd{-} \hfil\break
+Insert a unit length dimension in the result which was not present in the 
+original array {\it x}.  There is no {\bf ID} for a \kbd{-} index.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ rubber-index \hglue 1em \kbd{..} \hglue 1em or
+                       \hglue 1em \kbd{*} \hfil\break
+The {\bf ID} may be zero or more dimensions of {\it x}, forcing {it indexN\/}
+to be the final actual index of {\it x}.  A \kbd{..} preserves the actual
+indices, \kbd{*} collapses them to a single index.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ range function {\it ifunc\/} or {\it ifunc\/}:range \hfil\break
+Apply a range function to all or a subset of the {\bf ID}; the other
+dimensions are ``spectators''; multiple {\it ifunc\/} are performed
+successively from left to right.
+
+Function results and expressions may be indexed directly, e.g.:
+\hfil\break
+\hglue0.5em{\it f\/}{\tt (}{\it a,b,c\/}{\tt )(}{\it index1,index2\/}{\tt )}
+or
+{\tt (}$2*x+1${\tt )(}{\it index1,index2,index3\/}{\tt )}
+
+If the left hand operand of the \kbd{=} operator is an indexed array, the
+right hand side is converted to the type of the left, and the specified
+array elements are replaced.  Do not confuse this with the redefinition
+operation {\it var}{\tt =}:
+
+\sample{{\it x}{\tt (}{\it index1, index2, ..., indexN\/}{\tt )=} {\it expr}}
+       {assign to a subarray of {\it x}}
+
+\mysection{Array Conformability Rules}
+
+Operands may be arrays, in which case the operation is performed on
+each element of the array(s) to produce an array result.  Binary
+operands need not have identical dimensions, but their dimensions must
+be {\it conformable}.  Two arrays are conformable if their first
+dimensions {\it match}, their second dimensions {\it match}, their
+third dimensions {\it match}, and so on up to the number of dimensions in
+the array with the fewer dimensions.  Two array dimensions {\it match\/}
+if either of the following conditions is met:
+
+$\bullet$ the dimensions have the same length
+
+$\bullet$ one of the dimensions has unit length (1 element)
+
+Unit length or missing dimensions are broadcast (by copying the single
+value) to the length of the corresponding dimension of the other
+operand.  The result of the operation has the number of dimensions of
+the higher rank operand, and the length of each dimension is the
+longer of the lengths in the two operands.
+
+\mysection{Logical Operators}
+
+Yorick supports C-style logical AND and OR operators.  Unlike
+the arithmetic and comparison operators, these take only scalar
+operands and return a scalar \kbd{int} result.  Their precedence
+is between \kbd{|} and \kbd{=}.
+
+The right operand is not evaluated at all if the value of the
+left operand decides the result value; hence the left operand
+may be used to determine whether the evaluation of the right
+operand would lead to an error.
+
+\keyindent=3em
+\func{\&\&}{logical and (scalar \kbd{int} result)\hglue3em}
+\func{||}{logical or (scalar \kbd{int} result)\hglue3em}
+\endindentedkeys
+
+The logical NOT operator takes an array or a scalar operand, returning
+\kbd{int} 1 if the operand was zero, 0 otherwise.  Its precedence is
+above \kbd{\^{}}.
+
+\keyindent=3em
+\func{!}{logical not (\kbd{int} result)\hglue3em}
+\endindentedkeys
+
+The ternary operator selects one of two values based on the value of a
+scalar {\it condition}: \hfil\break
+\hglue4em {\it condition} \kbd{?} {\it true\_expr} \kbd{:} {\it false\_expr}
+\hfil\break
+Its precedence is low, and it must be parenthesized in a function argument
+list or an array index list to prevent confusion with the \kbd{:} in the
+index range syntax.  Like \kbd{\&\&} and \kbd{||}, the expression which is
+rejected is not evaluated at all.
+
+\mysection{Calling Functions}
+
+\sample{{\it f\/}\kbd{(}{\it arg1, ..., argN\/}\kbd{)}}
+       {invoke {\it f} as a function}
+\sample{{\it f\/}\kbd{, }{\it arg1, ..., argN\/}}
+       {invoke {\it f} as a subroutine, discard return}
+
+Arguments which are omitted are passed to the function as nil.  In addition
+to positional arguments, a function (invoked by either of the above two
+mechanisms).  Keyword arguments look like this:
+
+\hglue2em
+{\it f\/}\kbd{, }{\it arg1, keyA= exprA, keyB= exprB, arg2, ...\/}
+
+where {\it keyA} and {\it keyB} are the names of keyword arguments of the
+function {\it f}.  Omitted keywords are passed to {\it f} as nil values.
+Keywords typically set optional values which have defaults.
+
+\mysection{Defining Functions}
+
+\def\indf{\hglue1em\kbd{func}}
+
+A function of N dummy arguments is defined by:
+\begindemo
+\indf {\it func\_name\/}\kbd{(}{\it dummy1, dummy2, ..., dummyN\/}\kbd{)}
+\hglue1em\kbd{\{}
+\hglue2em {\it body\_statements}
+\hglue1em\kbd{\}}
+\enddemo
+
+If the function has no dummy arguments, the first line of the
+definition should read:
+\begindemo
+\indf {\it func\_name\/}
+\enddemo
+
+Mark output parameters with a \kbd{\&}, as {\it dummy2} here:
+\begindemo
+\indf {\it func\_name\/}\kbd{(}{\it dummy1, \kbd{\&}dummy2, dummy3\/}\kbd{)}
+\enddemo
+
+If the function will take keyword arguments, they must be listed after all
+positional arguments and marked by a \kbd{=}:
+\begindemo
+\indf {\it func\_name\/}\kbd{(}{\it ..., dummyN, key1=, ..., keyN=}\kbd{)}
+\enddemo
+
+If the function allows an indeterminate number of positional arguments
+(beyond those which can be named), place the special symbol \kbd{..} after
+the final dummy argument, but before the first keyword.  For example, to
+define a function which takes one positional argument, followed by an
+indeterminate number of positional arguments, and one keyword, use:
+\hfil\break
+\indf\hglue.7em {\it func\_name\/}\kbd{(}{\it dummy1, \kbd{..}, key1=}\kbd{)}
+\hfil\break
+The function \kbd{more_args()} returns the number of unread actual
+arguments corresponding to the \kbd{..} indeterminate dummy argument.
+The function \kbd{next_arg()} reads and returns the next unread actual
+argument, or nil if all have been read.
+
+\mysection{Variable Scope}
+
+\sample{\kbd{local} {\it var1, var2, ..., varN}}
+       {give the {\it varI} local scope}
+\sample{\kbd{extern} {\it var1, var2, ..., varN}}
+       {give the {\it varI} external scope}
+
+If a variable {\it var} has local scope within a function, any value
+associated with {\it var} is temporarily replaced by nil on entry to
+the function.  On return from the function, the external value of {\it
+var} is restored, and the local value is discarded.
+
+If a variable {\it var} has external scope within a function,
+references to {\it var} within the function refer to the {\it var} in
+the ``nearest'' calling function for which {\it var} has local scope
+(that is, to the most recently created {\it var}).
+
+The \kbd{*main*} function has no variables of local scope; all
+variables created at this outermost level persist until they are
+explicitly undefined or redefined.
+
+Dummy or keyword arguments always have local scope.
+
+In the absence of a \kbd{extern} or \kbd{local} declaration, a variable
+{\it var} has local scope if, and only if, its first use within the
+function is as the left operand of a redefinition, {\it var\/}\kbd{=}
+{\it expr}.
+
+\mysection{Returning from Functions}
+
+\sample{\kbd{return} {\it expr}}{return {\it expr} from current function}
+The {\it expr} may be omitted to return nil, which is the default
+return value if no \kbd{return} statement is encountered.
+
+\sample{\kbd{exit,} {\it msg}}{return from all functions, printing {\it msg}}
+\sample{\kbd{error,} {\it msg}}{halt with error, printing {\it msg}}
+
+\mysection{Compound Statements}
+
+Yorick statements end with a \kbd{;} or end-of-line if the resulting
+statement would make sense.
+
+Several Yorick statements can be combined into a single compound
+statement by enclosing them in curly braces:
+\begindemo
+\hglue1em \kbd{\{}
+\hglue2em {\it statement1}
+\hglue2em {\it statement2}
+\hglue2em ...
+\hglue1em \kbd{\}}
+\enddemo
+The bodies of most loops and \kbd{if} statements are compound.
+
+\mysection{Conditional Execution}
+
+A Yorick statement can be executed or not based on the value of a
+scalar {\it condition} (0 means don't execute, non-0 means execute):
+\begindemo
+\hglue1em \kbd{if (}{\it condition\/}\kbd{)} {\it statementT}
+\enddemo
+or, more generally,
+\begindemo
+\hglue1em \kbd{if (}{\it condition\/}\kbd{)} {\it statementT}
+\hglue1em \kbd{else} {\it statementF}
+\enddemo
+
+Several \kbd{if} statements may be chained as follows:
+\begindemo
+\hglue1em \kbd{if (}{\it condition1\/}\kbd{)} {\it statement1}
+\hglue1em \kbd{else if (}{\it condition2\/}\kbd{)} {\it statement2}
+\hglue1em \kbd{else if (}{\it condition3\/}\kbd{)} {\it statement3}
+\hglue1em ...
+\hglue1em \kbd{else} {\it statementF}
+\enddemo
+
+\mysection{Loops}
+
+Yorick has three types of loops:
+\begindemo
+\hglue1em\kbd{while (}{\it condition\/}\kbd{)} {\it body\_statement}
+\hglue1em\kbd{do} {\it body\_statement\/} \kbd{while (}{\it condition\/}\kbd{)}
+\hglue1em\kbd{for (}{\it init\_expr \kbd{;} test\_expr \kbd{;} inc\_expr\/}\kbd{)} {\it body\_statement}
+\enddemo
+The {\it init\_expr} and {\it inc\_expr} of a \kbd{for} loop may be comma
+delimited lists of expressions.  They or the {\it test\_expr} may be
+omitted.  In particular, \kbd{for (;;) ...} means ``do forever''.  If
+there is a {\it test\_expr}, the {\it body\_statement} of the \kbd{for} loop
+will execute until it becomes false (possibly never executing).  After
+each pass, but before the {\it test\_expr}, the {\it inc\_expr} executes.
+A \kbd{for} loop to make N passes through its {\it body\_statement} might
+look like this: \hfil\break
+\hglue1em\kbd{for (i=1 ; i<=N ; i++)} {\it body\_statement}
+
+
+Within a loop body, the following statements are legal:
+
+\func{break}{exit the current loop now}
+\func{continue}{abort the current pass through the current loop}
+
+For more complex flow control, Yorick supports a \kbd{goto}:
+
+\sample{\kbd{goto} {\it label}}{go to the statement after {\it label}}
+\sample{{\it label\/}\kbd{:} {\it statement}}
+       {mark {\it statement} as a \kbd{goto} target}
+
+\copyrightnotice
+
+\par\vfill\supereject
+
+%----------------------------------------------------------------------------
+
+\title{Yorick Function Reference}
+
+\centerline{(for version 1)}
+
+\mysection{Including Source Files}
+
+\func{\#include "{\it filename.i\/}"}{insert contents of {\it filename}}
+
+This is a parser directive, NOT an executable statement.  Yorick also
+provides two forms of executable include statements:
+
+\func{include, "{\it filename.i\/}"}{parse contents of {\it filename.i}}
+\func{require, "{\it filename.i\/}"}{parse {\it filename.i} if not yet parsed}
+
+The effect of the \kbd{include} function is not quite immediate, since
+any tasks (\kbd{*main*} programs) generated cannot execute until the
+task which called \kbd{include} finishes.
+
+The \kbd{require} function should be placed at the top of a file which
+represents a package of Yorick routines that depends on functions or
+variables defined in another package {\it filename.i}.
+
+The {\it filename.i\/} ends with a \kbd{.i} suffix by convention.
+
+\mysection{Comments}
+
+\hglue1em \kbd{/* Yorick comments begin with slash-asterisk, \hfil\break
+\hglue2.5em  and end with asterisk-slash.  A comment \hfil\break
+\hglue2.5em  of any size is treated as a single blank.  */}
+
+Since \kbd{/* ... */} comments do not nest properly, Yorick supports
+C++ style comments as well:
+\begindemo
+\hglue1em \kbd{statement   //} remainder of line is comment (C++)
+\hglue1em \kbd{//} Prefix a double slash to each line to comment out
+\hglue1em \kbd{//} a block of lines, which may contain comments.
+\enddemo
+
+\mysection{Issuing Shell Commands}
+
+You can execute a system command, returning to Yorick when
+the command completes, by prefixing the command line with \kbd{\$}:
+
+\hglue1em \kbd{\$}any shell command line
+
+This is a shorthand for the \kbd{system} function:
+
+\func{system, {\it shell\_string}}{pass {\it shell\_string} to a system shell}
+
+You need to use the \kbd{system} function if you want to compute the
+{\it shell\_string}; otherwise \kbd{\$} is more convenient.
+
+Note that the cd (change directory) shell command and its relatives
+will not have any effect on Yorick's working directory.  Instead, use
+Yorick's \kbd{cd} function to change it's working directory:
+
+\func{cd, {\it path\_name}}{change Yorick's default directory}
+\func{get_cwd()}{return Yorick's current working directory}
+
+The following functions also relate to the operating system:
+
+\func{get_home()}{return your home directory}
+\func{get\_env({\it env\_string\/})}
+     {return environment variable {\it env\_string\/}}
+\func{get\_argv()}{return the command line arguments}
+
+\shortcopyrightnotice
+
+\mysection{Matrix Multiplication}
+
+The \kbd{*} binary operator normally represents the product of its
+operands element-by-element, following the same conformability rules
+as the other binary operators.  However, by marking one dimension of
+its left operand and one dimension of its right operand with \kbd{+},
+\kbd{*} will be interpreted as a matrix multiply along the marked
+dimensions.  The marked dimensions must have the same length.  The result
+will have the unmarked dimensions of the left operand, followed by the
+unmarked dimensions of the right operand.
+
+For example, if \kbd{x} is a 12-by-25-by-35 array, \kbd{y} and \kbd{z} are
+vectors of length 35, and \kbd{w} is a 9-by-12-by-7 array, then:
+
+\func{x(,,+)*y(+)}{is a 12-by-25 array}
+\func{y(+)*z(+)}{is the inner product of \kbd{y} and \kbd{z}}
+\func{x(+,,)*w(,+,)}{is a 25-by-35-by-9-by-7 array}
+
+\mysection{Using Pointers}
+
+A scalar of type \kbd{pointer} points to a Yorick array of any data
+type or dimensions.  Unary \kbd{\&} returns a \kbd{pointer} to its
+argument, which can be any array valued expression.  Unary \kbd{*}
+dereferences its argument, which must be a scalar of type
+\kbd{pointer}, returning the original array.  A dereferenced pointer
+may itself be an array of type \kbd{pointer}.  The unary \kbd{\&} and
+\kbd{*} bind more tightly than any other Yorick operator except
+\kbd{.} and \kbd{->} (the member extraction operators), and array
+indexing {\it x\/}\kbd{(..)}:
+
+\keyindent=2em
+\sample{\kbd{\&}{\it expr}}
+       {return a scalar \kbd{pointer} to {\it expr}\hglue2em}
+\sample{\kbd{*}{\it expr}}
+       {dereference {\it expr}, a scalar pointer\hglue2em}
+\endindentedkeys
+
+Since a \kbd{pointer} always points to a Yorick array, Yorick can
+handle all necessary memory management.  Dereference \kbd{*} or
+\kbd{->}, copy by assignment \kbd{=}, or compare to another pointer
+with \kbd{==} or \kbd{!=} are the only legal operations on a \kbd{pointer}.
+A pointer to a temporary {\it expr} makes sense and may be useful.
+
+The purpose of the \kbd{pointer} data type is to deal with several related
+objects of different types or shapes, where the type or shape changes,
+making \kbd{struct} inapplicable.
+
+\mysection{Instancing Data Structures}
+
+Any data type {\it type\_name} --- basic or defined by \kbd{struct}
+--- serves as a type converter to that data type.  A nil argument is
+converted to a scalar zero of the specified type.  Keywords matching
+the member names can be used to assign non-zero values to individual
+members:
+
+\func{{\it type\_name}()}{scalar instance of {\it type\_name}, zero value}
+\func{{\it type\_name}({\it memb\_name\_1}={\it expr\_1},...)}
+     {scalar {\it type\_name}}
+
+The \kbd{.} operator extracts a member of a data structure.  The
+\kbd{->} operator dereferences a pointer to the data structure before
+extracting the member.  For example:
+\beginexample
+struct Mesh \{ pointer x, y; long imax, jmax; \}
+mesh= Mesh(x=\&xm,
+           imax=dimsof(xm)(1), jmax=dimsof(xm)(2));
+mesh.y= \&ym;        mptr= \&mesh;
+print, mesh.x(2,1:10), mptr->y(2,1:10);
+\endexample
+
+\mysection{Index Range Functions}
+
+Range functions are executed from left to right if more than one
+appears in a single index list.  The following range functions reduce
+the rank of the result, like a scalar index:
+
+\beginindentedkeys
+\func{min}{minimum of values along index}
+\func{max}{maximum of values along index}
+\func{sum}{sum of values along index}
+\func{avg}{average of values along index}
+\func{rms}{root mean square of values along index}
+\func{ptp}{peak-to-peak of values along index}
+\func{mnx}{index at which minimum occurs}
+\func{mxx}{index at which maximum occurs}
+\endindentedkeys
+
+The following functions do not change the rank of the result, like an
+index range.  However, the length of the index is changed as indicated
+by +1, -1, or 0 (no change):
+
+\beginindentedkeys
+\func{cum, psum}{+1, 0, partial sums of values along index}
+\func{dif}{-1, pairwise differences of adjacent values}
+\func{zcen}{-1, pairwise averages of adjacent values}
+\func{pcen}{+1, pairwise averages of adjacent interior values}
+\func{uncp}{-1, inverse of pcen (point center) operation}
+\endindentedkeys
+
+For example, given a two-dimensional array \kbd{x}, \kbd{x(min, max)}
+returns the largest of the smallest elements along the first dimension.
+To get the smallest of the largest elements along the second dimension,
+use \kbd{x(, max)(min)}.
+
+\mysection{Elementary Functions}
+
+\func{abs, sign}{absolute value, arithmetic sign}
+\func{sqrt}{square root}
+\func{floor, ceil}{round down, round up to integer}
+\func{conj}{complex conjugation}
+\func{pi}{the constant 3.14159265358979323846...}
+\func{sin, cos, tan}{trigonometric functions (of radians)}
+\func{asin, acos, atan}{inverse trigonometric functions}
+\func{sinh, cosh, tanh, sech, csch}{hyperbolic functions}
+\func{asinh, acosh, atanh}{inverse hyperbolic functions}
+\func{exp, log, log10}{exponential and logarithmic functions}
+\func{min, max}{find minimum, maximum of array}
+\func{sum, avg}{find sum, average of array}
+\func{random}{random number generator}
+
+The \kbd{atan} function takes one or two arguments; \kbd{atan(t)}
+returns a value in the range $(-\pi/2,\pi/2])$, while \kbd{atan(y,x)}
+returns the counterclockwise angle from $(1,0)$ to $(x,y)$ in the
+range $(-\pi,\pi])$.
+
+The \kbd{abs} function allows any number of arguments; for example,
+\kbd{abs(x, y, z)} is the same as \kbd{sqrt(x\^{}2 + y\^{}2 + z\^{}2)}.
+The \kbd{sign} satisfies \kbd{sign(0)==1} and \kbd{abs(z)*sign(z)==z}
+always (even when \kbd{z} is \kbd{complex}).
+
+The \kbd{min} and \kbd{max} functions return a scalar result when
+presented with a single argument, but the pointwise minimum or maximum
+when presented with multiple arguments.
+
+The \kbd{min}, \kbd{max}, \kbd{sum}, and single argument \kbd{abs}
+functions return integer results when presented integer arguments; the
+other functions will promote their arguments to a real type and return
+reals.
+
+\mysection{Information About Variables}
+
+\func{print, {\it var1, var2, ...}}{print the values of the {\it varI}}
+\func{info, {\it var}}{print a description of {\it var}}
+\func{dimsof({\it x\/})}{returns [\# dimensions, length1, length2, ...]}
+\func{orgsof({\it x\/})}{returns [\# dimensions, origin1, origin2, ...]}
+\func{numberof({\it x\/})}
+     {returns number of elements (product of \kbd{dimsof})}
+\func{typeof({\it x\/})}{returns name of data type of {\it x}}
+\func{structof({\it x\/})}{returns data type of {\it x}}
+
+\func{is_array({\it x\/})}{returns 1 if {\it x} is an array, else 0}
+\func{is_func({\it x\/})}{returns 1 or 2 if {\it x} is an function, else 0}
+\func{is_void({\it x\/})}{returns 1 if {\it x} is nil, else 0}
+\func{is_range({\it x\/})}{returns 1 if {\it x} is an index range, else 0}
+\func{is_stream({\it x\/})}{returns 1 if {\it x} is a binary file, else 0}
+\func{am_subroutine()}{1 if current function invoked as subroutine}
+
+The \kbd{print} function returns a string array of one string per line if
+it is invoked as a function.  Using \kbd{print} on files, bookmarks, and
+other objects usually produces some sort of useful description.  Also,
+\kbd{print} is the default function, so that
+\begindemo
+\hglue2em{\it expr}
+\enddemo
+
+is equivalent to \kbd{print,} {\it expr\/} (if {\it expr\/} is not a function).
+
+\mysection{Reshaping Arrays}
+
+\func{reshape, {\it x, type\_name, dimlist}}
+     {masks shape of {\it x}}
+
+Don't try to use this unless (1) you're an expert, and (2) you're desperate.
+It is intended mainly for recovering from misfeatures of other programs,
+although there are a few legitimate uses within Yorick.
+
+\mysection{Logical Functions}
+
+\func{allof({\it x\/})}{returns 1 if every element of {\it x} is non-zero}
+\func{anyof({\it x\/})}{returns 1 if any element of {\it x} is non-zero}
+\func{noneof({\it x\/})}{returns 1 if no element of {\it x} is non-zero}
+\func{nallof({\it x\/})}{returns 1 if any element of {\it x} is zero}
+
+\func{where({\it x\/})}{returns list of indices where {\it x} is non-zero}
+\func{where2({\it x\/})}{human-readable variant of \kbd{where}}
+
+\mysection{Interpolation and Lookup Functions}
+
+In the following function, {\it y\/} and {\it x\/} are one-dimensional
+arrays which determine a piecewise linear function {\it y(x)}.  The {\it x\/}
+must be monotonic.  The {\it xp\/} (for {\it x\/}-prime) can be an
+array of any dimensionality; the dimensions of the result will be the
+same as the dimensions of {\it xp}.
+
+\func{digitize({\it xp, x\/})}
+     {returns indices of {\it xp\/} values in {\it x}}
+\func{interp({\it y, x, xp\/})}
+     {returns {\it yp}, {\it xp\/} interpolated into {\it y(x)}}
+\func{integ({\it y, x, xp\/})}
+     {returns the integrals of {\it y(x)\/} from {\it x\/}(1) to {\it xp}}
+
+Note that \kbd{integ} is really an area-conserving interpolator.  If
+the {\it xp} coincide with {\it x}, you probably want to use \hfil\break
+\hglue2em \kbd{(}{\it y\/}\kbd{(zcen)*}{\it x\/}\kbd{(dif))(cum)} \hfil\break
+instead.
+
+The on-line \kbd{help} documentation for \kbd{interp} describes how to
+use \kbd{interp} and \kbd{integ} with multidimensional {\it y} arrays.
+
+\mysection{Sorting}
+
+\func{sort({\it x\/})}{return index list which sorts {\it x}}
+
+That is, {\it x\/}\kbd{(sort({\it x\/}))} will be in non-decreasing order
+({\it x\/} can be an integer, real, or string array).  The on-line
+\kbd{help} documentation for \kbd{sort} explains how to sort
+multidimensional arrays.
+
+\func{median({\it x\/})}{return the median of the {\it x\/} array}
+
+Consult the on-line \kbd{help} documentation for \kbd{median} for use
+with multidimensional arrays.
+
+\mysection{Transposing}
+
+\func{transpose({\it x\/})}{transpose the 2-D array {\it x}}
+\func{transpose({\it x, permutation\/})}{general transpose}
+
+The {\it permutation\/} is a comma delimited list of cyclic permutations
+to be applied to the indices of {\it x}.  Each cyclic permutation may
+be:
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ a list of dimension numbers [{\it n1, n2, ..., nN\/}] \hfil\break
+to move dimension number {\it n1\/} (the first dimension is number 1, the
+second number 2, and so on) to dimension number {\it n2\/}, {\it n2\/} to
+{\it n3\/}, and so on, until finally {\it nN\/} is moved to {\it n1\/}.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ a scalar integer {\it n} \hfil\break
+to move dimension number 1 to dimension number {\it n\/}, 2 to {\it n\/}+1,
+and so on, cyclically permuting all of the indices of {\it x}.
+
+In either case, {\it n\/} or {\it nI\/} can be non-positive to refer to
+indices relative to the {\bf final} dimension of {\it x}.  That is, 0 refers
+to the final dimension of {\it x}, -1 to the next to last dimension, and so
+on.  Thus, \hfil\break
+\hglue2em \kbd{transpose({\it x}, [1,0])} \hfil\break
+swaps the first and last dimensions of {\it x}.
+
+\mysection{Manipulating Strings}
+
+Yorick type \kbd{string} is a pointer to a 0-terminated
+array of \kbd{char}.  A string with zero characters -- \kbd{""} -- differs
+from a zero pointer -- \kbd{string(0)}.  A \kbd{string} variable {\it s\/}
+can be converted to a \kbd{pointer} to a 1-D array of \kbd{char}, and such
+a \kbd{pointer} {\it p\/} can be converted back to a \kbd{string}:
+\begindemo
+\hglue2em \kbd{{\it p\/}= pointer({\it s\/});}
+\hglue2em \kbd{{\it s\/}= string({\it p\/});}
+\enddemo
+These conversions copy the characters, so you can't use the pointer {\it p\/}
+to alter the characters of {\it s}.  The \kbd{strchar} function directly
+converts between \kbd{string} and  \kbd{char} data.
+
+Given a string or an array of strings {\it s\/}:
+
+\func{strlen({\it s\/})}{number of characters in each element of {\it s\/}}
+\func{strpart({\it s, rng})}{returns substring {\it rng\/} of {\it s\/}}
+\func{strfind({\it pat, s\/})}
+          {returns {\it rng\/} where {\it pat} occurs in {\it s\/}}
+\func{strgrep({\it pat, s\/})}{regular expression version of \kbd{strfind}}
+\func{strword({\it s, delims\/})}{returns {\it rng\/} of words in {\it s}}
+\func{streplace({\it s, rng, \it to})}
+          {replaces {\it rng\/} of {\it s\/} by {\it to}}
+
+The \kbd{strfind}, \kbd{strgrep}, and \kbd{strword} functions return
+{\it rng} lists suitable as inputs to \kbd{strpart} or \kbd{streplace}.
+Other string manipulation functions include \kbd{strmatch}, \kbd{strglob},
+\kbd{strcase}, and \kbd{strtrim}.  Use \kbd{help} for details.
+
+\mysection{Advanced Array Indexing}
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ A scalar index or the \kbd{start} and \kbd{stop} of an index
+range may be non-positive to reference the elements near the end of a
+dimension.  Hence, 0 refers to the final element, -1 refers to the next
+to last element, -2 to the element before that, and so on.  For example,
+{\it x\/}\kbd{(2:-1)} refers to all but the first and last elements of
+the 1-D array {\it x}.  This convention does {\bf NOT} work for an index
+list.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ A range function {\it ifunc} may be followed by a colon and an
+index range \kbd{start:stop} or \kbd{start:stop:step} in order to restrict
+the indices to which the range function applies to a subset of the entire
+dimension.  Hence, {\it x\/}\kbd{(min:2:-1)} returns the minimum of all
+the elements of the 1-D array {\it x}, excluding the first and last elements.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ An index specified as a scalar, the \kbd{start} or \kbd{stop} of
+an index range, or an element of an index list may exceed the length of the
+indexed dimension {\bf ID}, provided that the entire indexing operation does
+not overreach the bounds of the array.  Thus, if {\it y\/} is a 5-by-6 array,
+then {\it y\/}\kbd{(22)} refers to the same datum as  {\it y\/}\kbd{(2,5)}.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ The expression {\it z\/}\kbd{(..)} --- using the rubber-index
+operator \kbd{..} --- refers to the entire array {\it z\/}.  This is
+occasionally useful as the left hand side of an assignment statement in
+order to force broadcasting and type conversion of the right hand
+expression to the preallocated type and shape {\it z\/}.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ The expression {\it z\/}\kbd{(*)} --- using the rubber-index
+operator \kbd{*} --- collapses a multidimensional array {\it z\/} into
+a one-dimensional array.  Even more useful as {\it z\/}\kbd{(*,)} to
+preserve the final index of an array and force a two-dimensional result.
+
+\mysection{Generating Simple Meshes}
+
+Many Yorick calculations begin by defining an array of {\it x\/} values
+which will be used as the argument to functions of a single variable.
+The easiest way to do this is with the \kbd{span} or \kbd{spanl} function:
+\begindemo
+\hglue2em \kbd{x= span(x\_min, x\_max, 200);}
+\enddemo
+This gives 200 points equally spaced from \kbd{x\_min} to \kbd{x\_max}.
+
+A two dimensional rectangular grid is most easily obtained as follows:
+\begindemo
+\hglue1em \kbd{x= span(x\_min, x\_max, 50)(, -:1:40);}
+\hglue1em \kbd{y= span(y\_min, y\_max, 40)(-:1:50, );}
+\enddemo
+This gives a 50-by-40 rectangular grid with \kbd{x} varying fastest.
+Such a grid is appropriate for exploring the behavior of a function of
+two variables.  Higher dimensional meshes can be built in this way, too.
+
+\copyrightnotice
+
+\par\vfill\supereject
+
+%----------------------------------------------------------------------------
+
+\title{Yorick I/O Reference}
+
+\centerline{(for version 1)}
+
+\mysection{Opening and Closing Text Files}
+
+\func{{\it f\/}= open({\it filename, mode\/})}
+     {open {\it filename\/} in {\it mode}}
+\func{close, {\it f}}
+     {close file {\it f} (automatic if {\it f\/} redefined)}
+
+The {\it mode} is a string which announces the type of operations you
+intend to perform: \kbd{"r"} (the default if {\it mode\/} is omitted)
+means read operations only, \kbd{"w"} means write only, and destroy any
+existing file {\it filename}, \kbd{"r+"} means read/write, leaving any
+existing file {\it filename\/} intact.  Other {\it mode\/} values are
+also meaningful; see \kbd{help}.
+
+The file variable {\it f\/} is a distinct data type in Yorick; text
+files have a different data type than binary files.  The \kbd{print}
+or \kbd{info} function will describe the file.  The \kbd{close}
+function is called implicitly when the last reference to a file disappears.
+
+\mysection{Reading Text}
+
+\func{read, {\it f, var1, var2, ..., varN}}
+     {reads the {\it varI} from file {\it f}}
+\func{read, {\it var1, var2, ..., varN}}
+     {reads the {\it varI\/} from keyboard}
+\func{read\_n, {\it f, var1, var2, ..., varN}}
+     {read, skip non-numeric tokens}
+\func{rdline({\it f\/})}
+     {returns next line from file {\it f}}
+\func{rdline({\it f, n\/})}
+     {returns next {\it n\/} lines from file {\it f}}
+\func{sread, {\it s, var1, var2, ..., varN}}
+     {reads the {\it varI\/} from string {\it s}}
+
+The data type and dimensions of the {\it varI\/} determine how the text
+is converted as it is read.  The {\it varI\/} may be arrays, provided the
+arrays have identical dimensions.  If the {\it varI\/} have length {\bf L},
+then the \kbd{read} is applied as if  called {\bf L} times, with successive
+elements of each of the {\it varI\/} read on each call.
+
+The \kbd{read} function takes the \kbd{prompt} keyword to set the prompt
+string, which defaults to \kbd{"read> "}.
+
+Both \kbd{read} and \kbd{sread} accept the \kbd{format} keyword.  The
+format is a string containing conversion specifiers for the {\it varI}.
+The number of conversion specifiers should match the number of {\it varI}.
+If the {\it varI\/} are arrays, the format string is applied repeatedly
+until the arrays are filled.
+
+Read format strings in Yorick have (nearly) the same meaning as the
+format strings for the ANSI standard C library \kbd{scanf} routine.  In
+brief, a format string consists of:
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ whitespace \hfil\break
+means to skip any number of whitespace characters in the source
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ characters other than whitespace and \kbd{\%} \hfil\break
+must match characters in the source exactly or the read operation stops
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ conversion specifiers beginning with \kbd{\%} \hfil\break
+each specifier ends with one of the characters \kbd{d} (decimal integer),
+\kbd{i} (decimal, octal, or hex integer), \kbd{o} (octal integer),
+\kbd{x} (hex integer), \kbd{s} (whitespace delimited string),
+any of \kbd{e}, \kbd{f}, or \kbd{g} (real),
+\kbd{[{\it xxx}]} to match the longest string of characters in the list,
+\kbd{[\^{}{\it xxx}]} to match the longest string of characters not in
+the list, or \kbd{\%} (the \kbd{\%} character -- not a conversion)
+
+\shortcopyrightnotice
+
+\mysection{Writing Text}
+
+\func{write, {\it f, expr1, expr2, .., exprN}}
+     {writes the {\it exprI\/} to file {\it f}}
+\func{write, {\it expr1, expr2, .., exprN}}
+     {writes the {\it exprI\/} to terminal}
+\func{swrite({\it expr1, expr2, .., exprN\/})}
+     {returns the {\it exprI\/} as a string}
+
+The \kbd{swrite} function returns an array of strings --- one string
+for each line that would have been produced by the \kbd{write} function.
+
+The {\it exprI\/} may be arrays, provided the arrays are conformable.
+In this case, the {\it exprI\/} are broadcast to the same length {\bf L},
+then the \kbd{write} is applied as if called {\bf L} times, with
+successive elements of the {\it exprI\/} written on each call.
+
+Both functions accept an optional \kbd{format} keyword.  Write format
+strings in Yorick have (nearly) the same meaning as the format strings
+for the ANSI stacndard C library \kbd{printf} routine.  In brief, a format
+string consists of:
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ characters other than \kbd{\%} \hfil\break
+which are copied directly to output
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ conversion specifiers beginning with \kbd{\%} \hfil\break
+of the general format \kbd{\%}{\it FW.PSC\/} where: \hfil\break
+{\it F\/} is zero or more of the optional flags \kbd{-} (left justify),
+\kbd{+} (always print sign), (space) (leave space if +), \kbd{0}
+(leading zeroes) \hfil\break
+{\it W\/} is an optional decimal integer specifying the minimum number
+of characters to output \hfil\break
+{\it .P\/} is an optional decimal integer specifying the number of
+digits of precision \hfil\break
+{\it S\/} is one of \kbd{h}, \kbd{l}, or \kbd{L}, ignored by Yorick \hfil\break
+{\it C\/} is \kbd{d} or \kbd{i} (decimal integer), \kbd{o} (octal integer),
+\kbd{x} (hex integer), \kbd{f} (fixed point real), \kbd{e} (scientific
+real), \kbd{g} (fixed or scientific real), \kbd{s} (string), \kbd{c}
+(ASCII character), or \kbd{\%} (the \kbd{\%} character -- not a conversion)
+
+For example,
+\beginexample
+> write, format="   tp \%7.4f \%e\\n", [1.,2.], [.5,.6]
+   tp  1.0000 5.000000e-01
+   tp  2.0000 6.000000e-01
+>
+\endexample
+
+\mysection{Positioning a Text File}
+
+The \kbd{write} function always appends to the end of a file.
+
+A sequence of \kbd{read} operations may be intermixed with \kbd{write}
+operations on the same file.  The two types of operations do not
+interact.
+
+The \kbd{read} and \kbd{rdline} functions read the file in complete
+lines; a file cannot be positioned in the middle of a line -- although
+the \kbd{read} function may ignore a part of the last line read,
+subsequent \kbd{read} operations will begin with the next full line.
+The following functions allow the file to be reset to a previously
+read line.
+
+\func{backup, {\it f}}{back up file {\it f\/} one line}
+\func{{\it m\/}= bookmark({\it f\/})}
+     {record position of file {\it f\/} in {\it m}}
+\func{backup, {\it f}, {\it m}}{back up file {\it f\/} to {\it m}}
+
+The bookmark {\it m\/} records the current position of the file; it
+has a distinct Yorick data type, and the \kbd{info} or \kbd{print}
+function can be used to examine it.  Without a bookmark, the \kbd{backup}
+function can back up only a single line.
+
+\mysection{Opening and Closing Binary Files}
+
+\func{{\it f\/}= openb({\it filename\/})}
+     {open {\it filename\/} read-only}
+\func{{\it f\/}= updateb({\it filename\/})}
+     {open {\it filename\/} read-write}
+\func{{\it f\/}= createb({\it filename\/})}
+     {create the binary file {\it filename\/}}
+\func{close, {\it f}}
+     {close file {\it f}}
+
+A binary file {\it f\/} has a Yorick data type which is distinct from a text
+file.  The \kbd{info} and \kbd{print} functions describe {\it f\/}.  The
+\kbd{close} function will be called implicitly when the last reference to
+a file disappears, e.g.-- if {\it f} is redefined.
+
+The data in a binary file is organized into named variables, each of
+which has a data type and dimensions.  The \kbd{.} operator, which extracts
+members from a structure instance, accepts binary files for its left
+operand.  Thus:
+\beginexample
+\hglue2em f= updateb("foo.bar");
+\hglue2em print, f.var1, f.var2(2:8,::4);
+\hglue2em f.var3(2,5)= 3.14;
+\hglue2em close, f;
+\endexample
+Opens a file, prints \kbd{var1} and a subarray of \kbd{var2}, sets one
+element of \kbd{var3}, then closes the file.
+
+The \kbd{show} command prints an alphabetical list of the variables
+contained in a file:
+
+\func{show, {\it f}}{shows the variables in file {\it f}}
+\func{show, {\it f, pat}}{show only names starting with {\it pat}}
+\func{get_vars({\it f\/})}
+     {returns pointers to complete name lists for {\it f}}
+
+\mysection{Saving and Restoring Variables}
+
+\func{save, {\it f, var1, var2, ..., varN}}
+     {saves the {\it varI\/} in binary file {\it f}}
+\func{restore, {\it f, var1, var2, ..., varN}}
+     {restores the {\it varI\/} from {\it f}}
+\func{save, {\it f}}
+     {saves all array variables in binary file {\it f}}
+\func{restore, {\it f}}
+     {restores all variables from binary file {\it f}}
+
+Unlike {\it f.varI\/}\kbd{=} {\it expr}, the \kbd{save} function will
+create the variable {\it varI\/} in the file {\it f\/} if it does not
+already exist.
+
+The \kbd{restore} function redefines the in-memory
+{\it varI\/}.  If several binary
+files are open simultaneously, the {\it f.varI\/} syntax will be more
+useful for reading variables than the \kbd{restore} function.
+
+Note that a single command can be used to create a binary file, save
+variables {\it varI\/} in it, and close the file:
+\beginexample
+\hglue2em save, createb({\it filename\/}), {\it var1, var2, ..., varN}
+\endexample
+A similar construction using \kbd{restore} and \kbd{openb} is also useful.
+
+\mysection{Reading History Records}
+
+A binary file may have two groups of variables: those belonging to a set
+of history records, and non-record variables.
+The record variables may have different values in each record.  The records
+are labeled by (optional) time and cycle numbers:
+
+\func{jt, {\it time}}
+     {advance all open record files to record nearest {\it time}}
+\func{jt, {\it f, time}}
+     {advance file {\it f\/} to record nearest {\it time}}
+\func{jc, {\it f, ncyc}}
+     {advance file {\it f\/} to record nearest {\it ncyc}}
+\func{get\_times({\it f\/})}{return list of record times}
+\func{get\_ncycs({\it f\/})}{return list of record cycles}
+
+\mysection{Writing History Records}
+
+To write a family of files containing history records:
+
+\hangindent=1em
+\hangafter=1
+1.\hglue.5emCreate the file using \kbd{createb}.
+
+\hangindent=1em
+\hangafter=1
+2.\hglue.5emWrite all of the non-record (time independent) variables to the
+file using \kbd{save}.
+
+\hangindent=1em
+\hangafter=1
+3.\hglue.5emCreate a record which will correspond to time {\it time} and cycle
+{\it ncyc} for future \kbd{jt} and \kbd{jc} commands.  Use:
+
+\func{add_record, {\it f, time, ncyc}}{make new record at {\it time, ncyc}}
+
+\hangindent=1em
+\hangafter=1
+4.\hglue.5emWrite all record (time dependent) variables to the file using
+\kbd{save}.  After the first \kbd{add_record}, \kbd{save} will create and
+store record variables instead of non-record variables as in step 2.
+
+\hangindent=1em
+\hangafter=1
+5.\hglue.5emRepeat steps 3 and 4 for each new record you wish to add to the
+file.  For the second and subsequent records, \kbd{save} will not allow
+variables which were not written to the first record, or whose data type or
+shape has changed since the first record.  That is, the structure of all
+history records in a file must be identical.  Use type \kbd{pointer} variables
+to deal with data which changes in size, shape, or data type.
+
+After each \kbd{add\_record}, any number of \kbd{save} commands may be used
+to write the record.
+
+If the current member of a history record file family has at least one
+record, and if the next record would cause the file to exceed the maximum
+allowed file size, \kbd{add_record} will automatically form the next member
+of the family.  The maximum family member file size defaults to 4 MBytes, but:
+
+\func{set\_filesize, {\it f, n\_bytes}}{set family member size}
+
+\mysection{Opening Non-PDB Files}
+
+Yorick expects binary files to be in PDB format, but it can be trained to
+recognize any file whose format can be described using its Contents Log
+file description language.  The basic idea is that if you can figure out
+how to compute the names, data types, dimensions, and disk addresses of the
+data in the file, you can train Yorick to open the file; once open, all of
+Yorick's machinery to manipulate the data will grind away as usual.
+
+The following functions can be used to teach Yorick about a non-PDB file;
+use \kbd{help} to get complete details:
+
+\func{\_read, {\it f, address, var}}{raw binary read}
+\func{install\_struct, {\it f, struct\_name, size, align, order, layout}}{}
+\func{}{define a primitive data type}
+\func{add_variable, {\it f, address, name, type, dimlist}}
+     {add a variable}
+\func{add_member, {\it f, struct\_name, offset, name, type, dimlist}}{}
+\func{}{build up a data structure}
+\func{install\_struct, {\it f, struct\_name}}{finish \kbd{add_member} struct}
+\func{data\_align, {\it f, alignment}}{specify default data alignment}
+\func{struct\_align, {\it f, alignment}}{specify default struct alignment}
+\func{add\_record, {\it f, time, ncyc, address}}{declare record}
+\func{add\_next\_file, {\it f, filename}}{open new family member}
+
+To write a plain text description of any binary file, use:
+
+\func{dump\_clog, {\it f, clogname}}{write Contents Log for {\it f}}
+
+\mysection{Making Plots}
+
+\func{plg, {\it y, x}}{plot graph of 1-D {\it y} vs.\ {\it x}}
+\func{plm, {\it mesh\_args}}{plot quadrilateral mesh}
+\func{plc, {\it z, mesh\_args}}{plot contours of {\it z}}
+\func{plf, {\it z, mesh\_args}}{plot filled mesh, filling with {\it z}}
+\func{plv, {\it v, u, mesh\_args}}{plot vector field ({\it u,v)\/})}
+\func{pli, {\it z, x0, y0, x1, y1}}{plot image {\it z}}
+\func{pldj, {\it x0, y0, x1, y1}}{plot disjoint lines}
+\func{plt, {\it text, x, y}}{plot {\it text\/} at ({\it x,y\/})}
+
+The {\it mesh\_args\/} may be zero, two, or three arguments as follows:
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ omitted to use the current default mesh set by:
+
+\func{plmesh, {\it mesh\_args}}{set default quadrilateral mesh}
+\func{plmesh}{delete current default quadrilateral mesh}
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ {\it y, x} \hfil\break
+To set mesh points to ({\it x, y\/}), which must be 2-D arrays of the same
+shape, with at least two elements in each dimension.
+
+\hangindent=1em
+\hangafter=1
+$\bullet$ {\it y, x, ireg} \hfil\break
+To set mesh points to ({\it x, y\/}), as above, with a region number array
+{\it ireg}.  The {\it ireg\/} should be an integer array of the same
+shape as {\it y\/} and {\it x}, which has a non-zero ``region number'' for
+every meaningful zone in the problem.  The first row and column of
+{\it ireg\/} do not correspond to any zone, since there are one fewer zones
+along each dimension than points in {\it y\/} and {\it x}.
+
+The \kbd{plc} command accepts the \kbd{levs} keyword to specify the list of
+{\it z\/} values to be contoured; by default, eight linearly spaced levels
+are generated.
+
+The \kbd{plc} and \kbd{plmesh} commands accept the \kbd{triangle} keyword
+to specify a detailed triangulation map for the contouring algorithm.  Use
+the \kbd{help, triangle} for details.
+
+The \kbd{plv} command accepts the \kbd{scale} keyword to specify the
+scaling factor to be applied to ({\it u, v\/}) before rendering the vectors
+in ({\it x, y\/}) space; by default, the vector lengths are chosen to be
+comparable to typical zone dimensions.
+
+The \kbd{plm} command accepts the \kbd{boundary} keyword, which should be
+set to 1 if only the mesh boundary, rather than the mesh interior, is to
+be plotted.
+
+The \kbd{plm}, \kbd{plc}, \kbd{plf}, and \kbd{plv} commands accept the
+\kbd{region} keyword to restrict the plot to only one region of the
+mesh, as numbered by the {\it ireg\/} argument.  The default \kbd{region}
+is 0, which is interpreted to mean the every non-0 region of the mesh.
+
+The \kbd{pli} command produces a cell array; the {\it x0, y0, x1, y1\/},
+which are optional, specify the coordinates of the opposite corners of the
+cell array.
+
+Numerous other keywords adjust the style of lines, text, etc.
+
+\mysection{Plot Paging and Hardcopy}
+
+\func{fma}{frame advance --- next plot command will clear picture}
+\func{hcp}{send current picture to hardcopy file}
+\func{hcpon}{do automatic \kbd{hcp} at each \kbd{fma}}
+\func{hcpoff}{require explicit \kbd{hcp} for hardcopy}
+\func{hcp\_out}{print and destroy current hardcopy file}
+\func{animate}{toggle animation mode (see \kbd{help})}
+
+\mysection{Setting Plot Limits}
+
+\func{logxy, {\it xflag, yflag}}{set log or linear axis scaling}
+
+\func{limits, {\it xmin, xmax, ymin, ymax}}{set plot limits}
+\func{limits, {\it xmin, xmax}}{set plot x-limits}
+\func{range, {\it ymin, ymax}}{set plot y-limits}
+\func{{\it l\/}= limits()}{save current plot limits in {\it l\/}}
+\func{limits, {\it l}}{restore plot limits saved in {\it l\/}}
+
+The four plot limits can be numbers to fix them at specific values, or
+the string \kbd{"e"} to specify extreme values.  The \kbd{limits}
+command accepts the keywords \kbd{square}, \kbd{nice}, and
+\kbd{restrict}, which control how extreme values are computed.
+
+Plot limits may also be set by point-and-click in the X window.  The
+left button zooms in, middle button pans, and right button zooms out.
+Refer \kbd{help} on \kbd{limits} for details.
+
+\mysection{Managing Graphics Windows}
+
+\func{window, {\it n}}{switch to window {\it n\/} (0-7)}
+\func{winkill, {\it n}}{delete window {\it n\/} (0-7)}
+
+The \kbd{window} command takes several keywords, for example:
+\kbd{dpi=75} makes a smaller X window than the default \kbd{dpi=100},
+\kbd{private=1} forces use of private instead of shared colors,
+\kbd{dump=1} forces the palette to be dumped to the \kbd{hcp} file,
+and \kbd{style} specifies an alternative style sheet for
+tick and label style (\kbd{"work.gs"} and \kbd{"boxed.gs"} are two
+predefined style sheets).
+
+The \kbd{plf} and \kbd{pli} commands require a color palette:
+
+\func{palette, {\it name}}{load the standard palette {\it name}}
+\func{palette, {\it r, g, b}}{load a custom palette}
+\func{palette, query=1, {\it r, g, b}}{retrieve current palette}
+
+Standard palette names: \kbd{"earth.gp"} (the default), \kbd{"gray.gp"},
+\kbd{"yarg.gp"}, \kbd{"stern.gp"}, \kbd{"heat.gp"}, and \kbd{"rainbow.gp"}.
+
+\mysection{Graphics Query, Edit, and Defaults}
+
+\func{plq}{query (print) legends for current window}
+\func{plq, {\it i}}{query properties of element {\it i}}
+\func{pledit, {\it key\_list}}{change properties of queried element}
+\func{pldefault, {\it key\_list}}{set default window and element properties}
+
+The keywords which regulate the appearance of graphical primitives
+include (each has a \kbd{help} entry):
+
+\func{legend}{string to use for legend}
+\func{hide}{non-zero to skip element}
+\func{type}{\kbd{"solid", "dash", "dot", "dashdot"}, etc.}
+\func{width}{line width, default 1.0}
+\func{color}{\kbd{"fg"} (default), \kbd{"red", "green", "blue"}, etc.}
+\func{marks, marker, mspace, mphase, msize}{line markers}
+\func{rays, rspace, rphase, arroww, arrowl}{line ray arrows}
+\func{closed, smooth}{more line properties}
+\func{font, height, opaque, path, justify}{text properties}
+\func{hollow, aspect}{vector properties for \kbd{plv}}
+
+\copyrightnotice
+
+\bye
+
+% Local variables:
+% compile-command: "tex refs"
+% End:

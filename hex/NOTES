@@ -1,0 +1,323 @@
+
+Both BCs and BNDs are specified by lists of node indices, not face
+indices -- hence the facial data must be reconstructed somehow.  To
+complicate matters further, the nodal indices are for the in-memory
+coordinate arrays, which are larger by 3 in each dimension than the
+coordiante arrays written to the file.
+
+Both BCs and BNDs
+-----------------
+
+pn
+  +- 1 jp kp
+  says what to add in order to move away from mesh (or block) interior
+  (if not one of these six values for BND, ignore it -- it's not a face)
+jp, kp
+  strides for in-memory mesh block,
+  which is typically 3 greater than the on-disk coordinate arrays
+ndx (or ndx_send or ndx_recv for BND)
+  list of 0-origin, in-memory coordinate array (nodal) indices
+    ndx= (k+1)*kp + (j+1)*jp + (i+1)
+    k=  ndx/kp - 1
+    j= (ndx%kp)/jp - 1
+    i=  ndx%jp - 1
+  where (i,j,k) are the 1-origin on-disk coordinate array indices
+  for either BCs or face BNDs, the nodes in this list all lie in a
+  logical plane of constant i or j or k
+
+
+BCs
+---
+
+rtype
+  0 - open boundary, radiation escapes
+  1 - closed boundary, radiation reflects
+  3 - pole boundary, all associated faces have zero area
+
+
+BNDs
+----
+
+orientation (BND only)
+  tells how ijk axes in this block are related to neighbor block
+    orientation[1] == my neighbor's +i direction (value is my direction)
+    orientation[2] == my neighbor's +j direction
+    orientation[3] == my neighbor's +k direction
+      can be +- 1, 2, or 3 to represent my +- i, j, or k direction
+  this is a shorthand for (+-1,0,0), (0,+-1,0), (0,0,+-1), so the
+  three orientation numbers are a 3x3 transfer matrix; the neighbor's
+  orientation will be the inverse matrix, which is
+    nghbr.orient[abs(my.orient[n])]= sign(my.orient[n]) * n
+      for n=1,2,3 (i,j,k), so that
+    if m=abs(my.orient[n]), then n=abs(nghbr.orient[m]) and
+      nghbr.orient[m]= sign(my.orient[n]) * n
+      my.orient[n]= sign(nghbr.orient[m]) * m
+  in order for this to represent a right-handed to right-handed
+  change, the parity of the permutation must equal the even or
+  oddness of the number of minus signs
+
+------------------------------------------------------------------------
+
+Here is a mesh data structure which accomodates this type of block
+structured mesh, and allows the hex ray tracer to operate reasonably
+efficiently.  The big picture is that the multiblock mesh is stored in
+a single large array, and the ray trace is returns a list of global
+cell indices.  A mesh-face-sized index array (mesh->bound) is mostly
+zero, but for for those few faces which lie on a true problem boundary
+(either reflective or open), it contains a negative entry to stop the
+search, while for the few faces which lie on a block boundary, it
+contains an index (plus 1 so it can't be zero) into the mesh->bndy
+array.  This array conatins one item per block boundary face (remember
+that block boundary faces are represented twice in the mesh, once
+within each of the two blocks -- mesh->bndy has a separate entry for
+each side).  The boundary information consists of the block and cell
+indices for the neighboring cell, and the face reorientation
+orientation which must be applied in order to map the faces of the
+current cell into the faces of the neighboring cell.
+
+struct HX_block {
+  long stride[3];         /* i, j, k strides for this block */
+  long length[3];         /* i, j, k lengths for this block
+                           * these are cumulative, so length[n]/stride[n]
+                           * is number of coordinate points along n */
+  long first;             /* global index of 1st coordinate in this block */
+  long final;             /* global index of 1st coordinate in next block */
+};
+
+struct HX_blkbnd {
+  long block;             /* block index of neighboring cell */
+  long cell;              /* global cell index of neighboring cell */
+  int orient;            /* face orientation (0-23) required to map face
+                           * in current cell to face in neighboring cell */
+};
+
+struct HX_mesh {
+  real (*xyz)[3];         /* multiblock vertex coordinate array */
+  int orient;             /* current face orientation (0-23) */
+  long *stride;           /* current pointer to array of 3 strides for xyz
+                           * points into one of the blks arrays */
+  long (*bound)[3];       /* per face indices into bnds list:
+                           * bound[c][ijk]= 0 if face is not boundary
+                           *              < 0 if face is problem boundary
+                           *              = index+1 into bnds list
+                           *                if face is block boundary */
+  long nbnds;             /* number of block boundary faces in this mesh */
+  HX_blkbnd *bnds;        /* bnds[nbnds] block boundary face descriptions */
+  long nblks;             /* number of blocks in this mesh */
+  HX_block *blks;         /* blks[nblks] block descriptions */
+  long block;             /* current index into blks */
+  long start;             /* face index = face (0-5) + 6*(cell index)
+                           * of any face on the convex mesh boundary */
+};
+
+------------------------------------
+
+Orientations of a Cube
+----------------------
+
+Imagine a die numbered 0-5 instead of 1-6, with opposite faces having
+the same number except for the low order bit (rather than summing to
+5), and with the 0, 2, and 4 faces arranged counterclockwise around
+the corner they share:
+
+                        +j
+                        /|\
+                      /  |  \
+                    /    |    \
+                   |  4  |  0  |
+                   |    / \    |
+                   |  /     \  |
+                   |/    2    \|
+                  +i\         /+k
+                      \     /
+                        \ /
+
+This face numbering scheme lends itself to arithmetic operations; for
+face n:
+    n^1                  is opposite face
+    (n&4)? n-4 : n+2     is adjacent face (adj) on next axis
+                           in cyclic order with same low bit (LOB)
+                           same as (n+2)%6
+    n^adj^7              is adjacent face on third axis with same LOB
+
+The rotational symmetry group of this cube has 24 elements: any face
+0-5 can be moved to the position initially occupied by face 0, and for
+each of those six choices, any of the four faces on the other two axes
+may be moved to the position initially occupied by face 2.  Here is a
+way to number these orientations 0-23 which facilitates calculations
+involving the orientations:
+
+Let 0<=o<=23 represent an orientation.  Take f0 = o>>2 be the face at
+the position originally occupied by face 0.  Interpret the two low
+order bits as follows: Set the 1 bit (bit 0) if f2 -- the face at the
+position orginally occupied by face 2 -- has the opposite low order
+bit from f0.  Set the 2 bit (bit 1) if f2 is before f0 in cyclic ijk
+order.  Hence:
+
+Given f0, f2:
+   o= ((f0&4)?f0-4:f0+2) ^ f2;
+   if (o&4) o^= 6;
+   o|= (f0<<2);
+Given o:
+   f0= o>>2;
+   f2= ((o&2)? ((f0&6)?f0-2:f0+4) : ((f0&4)?f0-4:f0+2)) ^ (o&1);
+   f4= ((o&2)? ((f0&6)?f0-2:f0+4)^1 : ((f0&4)?f0-4:f0+2)) ^ (o&1) ^ (f0&1);
+
+o   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+f0  0  0  0  0  1  1  1  1  2  2  2  2  3  3  3  3  4  4  4  4  5  5  5  5
+f2  2  3  4  5  3  2  5  4  4  5  0  1  5  4  1  0  0  1  2  3  1  0  3  2
+f4  4  5  3  2  4  5  3  2  0  1  5  4  0  1  5  4  2  3  1  0  2  3  1  0
+f1 = f0^1
+f3 = f2^1
+f5 = f4^1
+
+The rotation operation may be expressed by the location of each of the
+six faces f=0-5 in the rotated cube; orientations[o][f] is the face to
+which face f moves under the orientation rotation o:
+
+static int orientations[24][6]= {
+  {0,1,2,3,4,5}, {0,1,3,2,5,4}, {0,1,4,5,3,2}, {0,1,5,4,2,3},
+  {1,0,3,2,4,5}, {1,0,2,3,5,4}, {1,0,5,4,3,2}, {1,0,4,5,2,3},
+  {2,3,4,5,0,1}, {2,3,5,4,1,0}, {2,3,0,1,5,4}, {2,3,1,0,4,5},
+  {3,2,5,4,0,1}, {3,2,4,5,1,0}, {3,2,1,0,5,4}, {3,2,0,1,4,5},
+  {4,5,0,1,2,3}, {4,5,1,0,3,2}, {4,5,2,3,1,0}, {4,5,3,2,0,1},
+  {5,4,1,0,2,3}, {5,4,0,1,3,2}, {5,4,3,2,1,0}, {5,4,2,3,0,1}
+};
+
+Here is a routine that successively applies two of the orientation
+rotations to produce a third -- the group operation on the 0-23
+orientation representation:
+
+int orient_compose(int second, int first)
+{
+  long *o1= orientations[first];
+  long *o2= orientations[second];
+  int f0= o2[o1[0]];
+  int lo= o2[o1[2]] ^ ((f0&4)? f0-4 : f0+2);
+  if (lo&4) lo^= 6;
+  return (f0<<2) | lo;
+}
+
+The relation to Pudliner's orientation array is:
+
+                    o&0x03
+           0       1       2       3
+o&0x1c
+   0    +1+2+3  +1-2-3  +1-3+2  +1+3-2
+   4    -1-2+3  -1+2-3  -1-3-2  -1+3+2
+   8    +3+1+2  -3+1-2  +2+1-3  -2+1+3
+  12    +3-1-2  -3-1+2  -2-1-3  +2-1+3
+  16    +2+3+1  -2-3+1  -3+2+1  +3-2+1
+  20    -2+3-1  +2-3-1  -3-2-1  +3+2-1
+
+void set_pudliner(int o, int pudliner[/* 3 */])
+{
+  int f0= ((unsigned int)o)>>2;  /* cast avoids warnings from some */
+  int i= ((unsigned int)f0)>>1;  /* disgruntled ANSI compilers */
+  int f2= ((o&2)? ((f0&6)?f0-2:f0+4) : ((f0&4)?f0-4:f0+2)) ^ (o&1);
+  int j= ((unsigned int)f2)>>1;
+  pudliner[i]= (f0&1)? -1 : 1;
+  pudliner[j]= (f2&1)? -2 : 2;
+  pudliner[i^j^3]= ((f0&1)^(f2&1)^((o&2)!=0))? -3 : 3;
+}
+
+int get_pudliner(int pudliner[/* 3 */])
+{
+  int f0, f2;
+  int u= pudliner[0];
+  int su= u<0;
+  int v= pudliner[1];
+  int sv= v<0;
+  if (su) u= -u;
+  if (sv) v= -v;
+  if (u>2) {
+    if (v==1) return ((2^sv)<<2) | su;
+    else      return ((5^su^sv)<<2) | (3^su);
+  } else if (v>2) {
+    if (u==1) return (su<<2) | (3^sv);
+    else      return ((4^su^sv)<<2) | sv;
+  } else {
+    if (u==1) return (su<<2) | (su^sv);
+    else      return ((2^sv)<<2) | (2^su^sv);
+  }
+}
+
+------------------------------------
+
+Hex will always use the orientation of the mesh->start cell to label
+faces.  It uses face number 0 1 2 3 4 5 for -i +i -j +j -k +k
+respectively.  The mesh->orient member is an index into orientations,
+such that face in the mesh->start orientation is, in the current mesh
+block, number orientations[mesh->orient][face].
+
+The hex boundary data structures allow each block boundary transition
+to specify a change in orientation bnds[n].orient, rather than forcing
+each block to declare a universal orientation relative to the
+mesh->start block.  (This is slightly more open to abuse than the
+hydra scheme, but hydra's structures also allow a block's orientation
+to change depending on how a ray reaches it.)  To do this,
+bnds[n].orient specifies the value mesh->orient should have after the
+transition to the new block, assuming its value before the transition
+is zero.  The correspondence with hydra's orientation flags is as
+follows:
+
+The index in orientations[n] is my face number, the value is my
+neighbor's face number.
+
+------------------------------------------------------------------------
+
+The remaining problem is how to map the hydra data structures into the
+hex data structures.
+
+The major problem is how to map (pn,ndx) into a list of cell+face
+indices.  We also have the coordinate arrays (x,y,z) for the block, so
+we know imax, jmax, and kmax along with everything else.
+
+The great simplifying assumption is that abs(pn) points to the index
+[i,j,k] which is the same for every node in the ndx list.  (Marty
+assures me this will always be true.)  In that case, what I need to do
+is to construct a temporary array that is imaxXjmax, if abs(pn)==kp,
+then fill it with markers for the ndx list, then identify which faces
+have all four corners marked.  In yorick, the algorithm is:
+
+    /* inputs:
+     *   jp, kp   - hydra block strides
+     *   pn       - +- 1 jp kp direction pointing out of mesh from bnd
+     *   ndx      - list of nodes on the bnd
+     *   imax, jmax, kmax  - on-disk coordinate array block dimensions
+     */
+    ival= abs(pn);
+    if (ival==jp) ival= 2;
+    else if (ival>jp) ival= 3;
+    ijk=  [ndx%jp, (ndx%kp)/jp, ndx/kp] - 1;
+    i= ijk(1,ival);
+    if (anyof(ijk(,ival)!=i))
+      error, "illegal hydra mesh block ndx list";
+    jval= ival%3 + 1;
+    kval= jval%3 + 1;
+    j= ijk(,jval);
+    k= ijk(,kval);
+    ijk= ndx= [];
+
+    nmax= [imax,jmax,kmax];
+    jlen= nmax(jval)+1;
+    klen= nmax(kval)+1;
+    tmp= array(int, jlen, klen);
+    list= j + jlen*(k-1);
+    tmp(list)= 1;
+    tmp(list+1)&= 1;
+    tmp(list+jlen)&= 1;
+    tmp(list+jlen+1)&= 1;
+    tmp= tmp(list);
+    list= where(tmp);
+    ijk= [i, j, k];
+    j= k= list= tmp= [];
+
+    stride= [1,imax,imax*jmax]([ival,jval,kval]);
+    cell= (ijk-1)(,+)*stride(+);  /* 0-origin */
+    face= (int(abs(pn)-1)<<1) | (sign(pn)>0);
+
+Unfortunately, this still doesn't give the correspondence between one
+side of the bnd and the other...
+
+------------------------------------------------------------------------

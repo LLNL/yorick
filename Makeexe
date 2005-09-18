@@ -1,0 +1,17 @@
+# $Id: Makeexe,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# see Makepkg for description
+
+PLUG=
+
+$(PKG_LIB): Makefile $(OBJS) ywrap.o $(LIB_TARGETS)
+	$(AR) $(ARFLAGS) $@ $(OBJS) ywrap.o
+	$(RANLIB) $@
+	@rm -f $(PKG_LIB).dep
+	if test -n "$(PKG_DEPLIBS)";then echo $(PKG_DEPLIBS) >$(PKG_LIB).dep;fi
+$(PKG_EXE): $(PKG_LIB) yinit.o $(EXE_TARGETS)
+	$(LD_EXE) -o $@ $(Y_MAIN_O) yinit.o $(EXE_LIBS)
+
+$(PKG_DLL): clean
+	@echo **********************************************************
+	@echo Rerun make with TGT=dll to build this package as a plugin.
+	@echo **********************************************************

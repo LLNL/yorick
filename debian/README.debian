@@ -1,0 +1,14 @@
+yorick for Debian
+-----------------
+
+This is Debian GNU/Linux's prepackaged version of the `yorick'
+interpreted language by David H. Munro.
+
+This package was put together by David H. Munro <munro1@llnl.gov>
+from the sources at ftp://ftp-icf.llnl.gov/pub/Yorick/yorick-1.5.08.tgz.
+
+The only changes in this package are the addition of support for the
+Debian package maintenance scheme, by adding the debian/ directory.
+
+David H. Munro <munro1@llnl.gov>, Mon Feb  4 08:44:15 PST 2002
+

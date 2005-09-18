@@ -1,0 +1,9 @@
+These interpreted source files are read by yorick as it starts.  The
+files themselves contain extensive documentation comments.
+
+paths.i     -- read before anything else, allows adjustments to paths
+std.i       -- standard built in yorick functions (yorick/)
+graph.i     -- standard graphics functions (yorick/)
+matrix.i    -- linear algebra functions (matrix/)
+fft.i       -- FFT functions (fft/)
+stdx.i      -- final startup file, changes path to proper value

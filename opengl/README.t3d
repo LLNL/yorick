@@ -1,0 +1,26 @@
+Instructions for running ogltest
+--------------------------------
+
+When ogltest starts, a window should pop up showing a cube with red,
+green and blue smoothly shaded faces.  The p_stdin input window should
+also appear with an ogl> prompt.
+
+Commands that can be typed in response to the ogl> prompt are:
+
+quit
+help
+bar
+
+The bar command toggles a 2d drawing space above the 3d OpenGL window.
+
+Dragging the mouse in the 3d part of the window rotates the cube in
+3d.  Typing the arrow keys in any part of the graphics window also
+rotates the cube.  Typing q in the graphics window is the same as the
+quit command at the ogl> prompt.  [Note: the rotation control is crude
+-- the cube sometimes seems to rotate in a direction opposite to the
+mouse movement or arrow key directions.]
+
+Test all interactions of the graphics window and the windowing system
+(iconifying, raising and lowering, etc.).  The graphics window is not
+supposed to be resizable (P_NORESIZE).  You should try these with the
+2d bar both on and off.

@@ -1,0 +1,34 @@
+Most of these will probably be postponed...
+
+(1) Fix the x(1)=y bug by adding a virtual instruction for assignment.
+
+(2) Add a syntax for trace operations; actually it would be better
+    to go for an indexing syntax that allows you to specify that one
+    index equals another.  The following would even allow more than
+    two indices to be set equal:
+
+        x(=,i,=,j,...)
+
+    This even works with the =:start:stop:step syntax, which is very
+    nice, and it should work on assignment as well, since all you are
+    doing is adding the strides of the participating dimensions.
+
+    Three minor problems:
+    (a) Where does the new index go in the index list?
+        Suggestion: at the position of the first marked index
+    (b) What happens if only one index is marked?
+        Suggestion: noop
+    (c) Must the index lengths agree?
+
+(3) L'Ecuyer random numbers, compiled Bessel, gamma, and elliptic funcs
+
+(4) Investigate sort algorithm -- can performance for big numerical
+    sorts be improved by actually moving the data during the sort?
+
+(5) Work on new binary file model.
+    (a) Directories?  (dictionaries?)
+    (b) Interpreted close hooks?  Other hooks?
+        -- should there be a destroy hook for any interpreted variable?
+    (c) Support for opening family as array of filenames.
+    (d) Attributes?  With dictionaries, maybe these can be interpreted.
+    (e) Better low level support for interpreted open routines.

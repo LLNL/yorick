@@ -1,0 +1,9 @@
+There is an OpenGL package for yorick written by Steve Langer at
+llnl.gov.  This package, yorgl, will be released as yorick-gl.  The
+files in this directory are examples of how OpenGL can be detected and
+inserted into the play/x11 or play/win windowing functions.  They are
+probably out of date with respect to yorick-gl, and this directory
+will be deleted when yorgl source archiving makes it superfluous.
+
+oglx.o: $(STD_DEPS) ../pstdlib.h ../playgl.h oglx.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(GLCFLAGS) -c oglx.c

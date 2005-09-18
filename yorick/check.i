@@ -1,0 +1,2 @@
+#include "testfull.i"
+quit

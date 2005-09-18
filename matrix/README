@@ -1,0 +1,26 @@
+This directory contains a set of more matrix functions for yorick,
+obtained from lapack, which is available at netlib.org.
+
+(1) Tridiagonal solver.
+
+(2) LU decomposition (by Gaussian elimination) matrix solver
+
+(3) QR decomposition matrix solver
+
+(4) SVD matrix solver and analyzer
+
+The file startup/matrix.i describes the interpreted interface.
+
+I converted the original Fortran source to C using my f2c.el Emacs
+functions (Emacs 19.25, but should work with others) and a few by-hand
+fixes afterwards.  The "by hand fixes" included several typographical
+bugs introduced by f2c.el --- so beware.  For these few routines, I
+prefer this nearly-by-hand translation to the illegible machine C
+translation available as clapack.  This is still far from ideal,
+however, since many of the branches can never be accessed, and should
+therefore be removed from this source.  I may also have introduced
+bugs in the translation process, especially in the unused branches.
+
+The blas routines (cblasy.c) have the same interface as the C blas
+standard, so if you have a fast blas C library, you should be able to
+use it instead of the cblasy.c supplied here.

@@ -1,0 +1,791 @@
+I improved and lengthened the descriptions of netCDF and PDB binary
+data file formats, and added a description of the HDF format.  The
+new descriptions are available by anonymous FTP from:
+
+    ftp-icf.llnl.gov: /pub/Yorick/comp-formats.txt
+
+The "clog" file format which Yorick uses internally is described here.
+I have a partial design for a better and more ecumenical file format,
+so I'm not sure how long I'm going to continue supporting this clog
+file concept.
+
+
+4. A Generic Binary Data Description Language
+---------------------------------------------
+
+   Unidata has provided a plain-text representation for netCDF files
+(CDL format) which is extremely useful.  The following plain-text
+format can of describe either a netCDF or a PDB file (as well as HDF
+and the majority of one-of-a-kind binary file formats which have been
+designed to store scientific data).
+
+   The PDB format provides two capabilities lacking in the netCDF
+format: non-XDR primitive data formats, and definable data types
+including compound data structures and additional primitive types.
+The netCDF format offers two capabilities lacking in the PDB format:
+history records, and variable attributes.
+
+   In a PDB file, the want of a formal provision for history records
+or for variable attributes can be fulfilled by variable naming
+conventions.  The trick is to use special naming conventions to
+associate related variables ("x-units" might be the variable used to
+store the "units" attribute of the variable "x"), or to imbue a
+special significance to some of the variables in the file (instances
+of a history record sequence might be named "rec0000", "rec0001", and
+so on).  Such tricks result in data which is accessed nearly as
+efficiently as with the netCDF interface to a netCDF file.
+
+   Similar tricks allow single instances of data structures, such as
+FORTRAN common blocks, to be accessed in a netCDF file. However, an
+array of structure instances is very difficult to handle in netCDF
+format, and any file with primitive data formats other than XDR is
+impossible.
+
+   Of course, the underlying simplicity of the netCDF format is really
+a virtue, not a weakness.  A physics code written in FORTRAN can't
+really generate any data the netCDF format can't handle.  In fact, in
+designing a PDB format suitable for holding restart or post-processing
+information for a physics code, one of the primary objectives is to
+remain within the bounds of the data describable by the netCDF format.
+
+   Two considerations beyond the scope of the format of an individual
+file are important.  The first is robustness against unexpected
+program or machine crashes when part, but not all, of the data in a
+file has been written.  The second is the difficulty of handling
+extremely large files as a single unit -- it is much easier to deal
+with a few dozen smaller files than one monster.  Both problems
+commonly arise with files used for storing history data, which is
+generally stored one record at a time with a long pause between the
+writing of one record and the next, and which may grow to a very large
+size.
+
+   The usual PDB format, which places the self-descriptive information
+at the end of the file, is not very robust.  Unless the structure
+chart, symbol table, and extras are written after each history record,
+only to be overwritten by the next, a crash causes the data in the
+file to be uninterpretable.  The file format itself allows the
+structure chart, symbol table, and extras section to precede the data,
+as in a netCDF file; perhaps such a strategy should be adopted to deal
+with this problem.
+
+   A very general way to deal with the problem of robustness is to
+keep two files open.  Whenever new data is written at the end of the
+data file, its description is written at the end of the description
+file.  The files can be merged when they are really finished, or left
+as eparate components of a single whole.  This two-file scheme has the
+advantage that new data can be declared after some data has been
+written, without sacrificing robustness in the face of program or
+machine crashes.  The plain-text binary data description language
+defined below is a designed to be usable as the format for the
+description member of such a pair.
+
+   The problem of dealing with very large files is easy to handle in
+the case of history data -- just produce a family of files each having
+a restricted length, instead of a single giant file.  Splitting
+history data across several files has a major impact on the
+programming interface used to access the data, but no effect on the
+format of an individual file.  The most important thing to notice here
+is that an attractive feature of the netCDF programming interface --
+that you can retrieve values of a particular variable over a range of
+times with a single subroutine call -- becomes much more difficult to
+implement if the data extends over several files.  Another remark is
+that it is wise to copy the non-record data into each file in a
+history family, so that each file "makes sense" by itself.
+
+   Bearing all of these remarks in mind, here is a generic binary data
+description language, hereby christened "Clog", which can describe the
+contents of any PDB or netCDF file, as well as many other binary file
+formats:
+
+
+ 4A. Notation
+ -----
+
+   The extended Backus-Nauer Form notation used in the RFC1014 XDR
+standard is adopted here:
+
+   1. The characters |, (, ), [, ], and * are special.
+   2. Terminal symbols are strings surrounded by double quotes.
+   3. Non-terminal symbols are strings of non-special characters.
+   4. Alternative items are separated by the vertical bar character |.
+   5. Optional items are enclosed in square brackets [ ... ].
+   6. Items are grouped by enclosing them in parentheses ( ... ... ).
+   7. An item followed by * means zero or more occurrences of that item.
+   8. A non-terminal followed by : and a set of alternatives constitutes
+      the definition of that non-terminal.
+
+   Comments in a binary data description file begin with /* and end
+with */, and are treated as whitespace.  An identifier is a letter or
+underscore "A-Za-z_", followed by zero or more letters, digits,
+underscores, pluses, minuses, periods, or commas "A-Za-z_0-9,.+-".  An
+identifier may also consist of a quoted string, which is interpreted
+as the characters within the quotes, recognizing the following escape
+sequences:
+
+     \"    double quote
+     \\    one backslash
+     \ooo  an arbitrary 8-bit byte, except that \000 and any following
+           characters are ignored
+
+An identifier may not be more than 1023 characters long, in its printed
+form including the open and close quotes, if any.
+
+   A number is a sequence of one or more decimal digits optionally
+preceded by a minus "-".  A float_number is anything readable by the
+standard C library "%e" format directive.  All control characters and
+spaces are treated as whitespace, principally to allow for any
+differences in the newline character among various operating systems.
+
+
+ 4B. Overview of language
+ -----
+
+   The binary data description language Clog is modeled on C variable
+declaration and structure definition syntax.  C declarations relate a
+variable name, data type and dimension information.  Clog variable
+declarations must additionally specify the disk address for the
+variable.  Clog structure defintions are similarly extended to allow
+the offset of each member to be specified.  This extension makes it
+easier to automatically generate a Clog description of some binary
+file formats.
+
+   Following the PDB file format, Clog allows the bit-by-bit format of
+the primitive data types to be specified.  This greatly increases the
+set of binary files describable using Clog.  This same mechanism
+enables new primitive data types to be declared.
+
+   Following the netCDF file format, Clog has a formal mechanism for
+describing a sequence of history records.  This allows natural
+descriptions of an important class of binary files (including netCDF
+files).
+
+   Finally, the Clog contains a formal means for including new types
+of descriptive information not envisioned at its inception.  (This has
+been a valuable feature of the PDB file format.)  Separate "trial" and
+"standard" extension syntax is provided.  The rules for Clog
+extensions are simple: No Clog extension can alter the meaning of any
+previously defined part of Clog (thus, nothing like the "Major-Order"
+extra block in the PDB file format is acceptable).  And any Clog
+extensions should be conceived as supplying supplemental information,
+rather than as wholesale replacements of existing features to get
+additonal functionality.
+
+
+ 4C. Basic primitive data types
+ -----
+
+   There are six basic primitive data types:
+
+     char    an 8-bit byte
+     short   a signed integer of at least 2 bytes
+               - used when small size is important
+     int     a signed integer of at least 2 bytes
+               - most efficient integer type, used for boolean values
+     long    a signed integer of at least 4 bytes
+               - most commonly used integer type, e.g.- an array index
+     float   a floating point number of at least 4 bytes, range is
+               at least 10^(+-38), precision at least 6 decimal digits
+     double  a floating point number usually 8 bytes, range is
+               at least 10^(+-38), precision at least 9 decimal digits,
+               but usually at least 10^(+-307) and 14 decimal digits
+
+   No data structure (compound data type) or additional primitive may
+have one of these six names.  Any one of these six names may be used
+as a data type without any definition.  All other identifiers used as
+data type names must be previous defined, with the following two
+exceptions:
+
+     string   a string of 8-bit ASCII characters not containing '\0'
+                - a string is represented as a long containing the
+                  disk address of the string; the string itself is
+                  a long (aligned as a long) with a non-negative
+                  count of the non-0 characters in the string (i.e.-
+                  the result of the ANSI C strlen function), followed
+                  by that many characters.
+     pointer  a pointer to an array of any type
+                - the pointee contains the data type and dimension
+                  information; the pointer is represented as a long
+                  containing the disk address of the pointee
+
+If string or pointer is used as a data type without defining it, the
+default meaning is as shown.  Once used, the string or pointer data
+type may not be redefined.  A NULL pointer or string is represented by
+a disk address of -1; there is no associated pointee.
+
+
+ 4D. Clog file layout
+ -----
+
+     clog_description:
+        "Contents Log"
+        basic_statement*
+            [ record_initializer basic_statement* record_declaration* ]
+            [ end_of_data ]
+
+     basic_statement:
+        primitive_definition
+      | structure_definition
+      | variable_declaration
+      | alignment_spec
+      | other_information
+
+     record_initializer:
+        record_declaration
+      | record_begin
+
+     end_of_data:
+        "+" "eod" "@" disk_address
+
+   The clog_description must begin with the QUOTED string "Contents
+Log" -- if it is not quoted, the Clog lexical rules will divide it
+into two tokens.  Note that comments and white space may precede the
+"Contents Log" token.
+
+   The clog_statement's order is restricted by a general "definition
+before use" rule, as described in detail below.  Basically, this means
+a data type must be defined before it can be used.  If the
+record_initializer is present, clog_statements before it describe
+non-record variables, while clog_statements afterwards describe record
+variables.  Notice that all record_declaration statements, except
+possibly the first, follow the clog_statements which declare the
+record variables.  Thus, the structure of the records in a Clog
+description cannot change.
+
+   If present, the +eod statement must be the very last thing in a
+Clog description of a file, even beyond any comments.  The
+disk_address specified is the address of the first byte beyond all of
+the data in the file.  This may be beyond the end of any variable
+declared in the Clog for any number of reasons; the most obvious is
+that there may be pointees beyond the last declared data.  The entire
++eod statement from the initial "+" to the final digit of the
+disk_address must not occupy more than 80 characters.
+
+   In addition to specifying a safe address at which to begin adding
+data to the binary file, the +eod statement allows the entire Clog to
+be appended to the end of the binary file itself to make a single,
+self-descriptive package.  (Note that this procedure does not damage
+either a netCDF or a PDB file.)  This is done as follows:
+
+   At the address specified in the +eod statement, write the entire
+plain-text Clog description of the file, including the final +eod
+statement.  Then close and truncate the file.  A program which opens
+the file can scan the last 80 bytes; if it finds a +eod statement, it
+can check that "Contents Log" is the first token after specified
+address, and, if so, interpret the Clog to determine the layout of the
+binary data in the file.
+
+
+ 4E. Variable declaration
+ -----
+
+     variable_declaration:
+        type_name variable_name dimension_spec* ["@" disk_address]
+             ("," variable_name dimension_spec* ["@" disk_address])*
+
+     type_name: identifier
+
+     variable_name: identifier
+
+     dimension_spec:
+        "[" dimension_length [dimension_name] "]"
+      | "[" minimum_index ":" maximum_index [dimension_name] "]"
+
+     dimension_name: identifier
+
+     dimension_length: number
+
+     minimum_index: number
+
+     maximum_index: number
+
+     disk_address: number
+
+
+   The disk_address is a byte address.  If omitted, the default is the
+next available address after all the variables previously declared.
+The "next available" address may be rounded up for alignment purposes,
+as discussed in more detail below.
+
+   If more than one dimension_spec is present, the slowest varying
+dimension is first in the list, and the fastest varying dimension
+last.  This is the C convention.  As in C, a multidimensional array is
+best regarded as an array of arrays -- the first index specifies which
+array, so the second index must vary faster.
+
+   The optional dimension_name is provided for easier compatibility
+with the netCDF format.  Behavior is undefined if the same
+dimension_name is used for dimension_spec's with different lengths.
+The idea is to distinguish between dimension lengths which are
+accidentally equal, and those which are equal by virtue of their
+variable's meanings.  If not suppied, the default dimension name is
+"_%ld", where "%ld" is the decimal representation of the dimension
+length.
+
+   The alternative minimum_index:maximum_index syntax is intended to
+suggest the preferred range of the index values.  The equivalent
+dimension_length is maximum_index-minimum_index+1.  This information
+is far less important than the dimension_length, since the
+dimension_length values (in their proper order!) specify the topology
+of the array -- that is, how to find nearest neighbors along the
+various dimensions.
+
+   The type_name and variable_name identifiers must be unique among
+all other type_name and variable_name identifiers, respectively.
+However, there are two separate name spaces, so a type_name identifier
+may match a variable_name identifier without conflict.  The
+dimension_name identifiers, if any, form a third independent name
+space.
+
+
+ 4F. Primitive data type definition
+ -----
+
+     primitive_definition:
+        "+" "define" type_name
+            "[" size_value "]" "[" alignment_value "]"
+            [ "[" order_value "]"
+              ["{" sign_address exponent_address exponent_size
+                   mantissa_address mantissa_size mantissa_flag
+                   exponent_bias "}"] ]
+      | "+" "define" "string" "standard"
+      | "+" "define" "pointer" "standard"
+
+     size_value: number
+     alignment_value: number
+
+     order_value:
+        number
+      | "sequential"
+      | "pdbpointer"
+
+     sign_address: number
+     exponent_address: number
+     exponent_size: number
+     mantissa_address: number
+     mantissa_size: number
+     mantissa_flag: number
+     exponent_bias: number
+
+
+   The type_name must neither have been defined nor referenced
+previously.
+
+   All primitive type definitions must have a size_value (the number
+of bytes one instance occupies) and an alignment_value (the largest
+number by which the byte offset a structure member of this type is
+guaranteed to be divisible).
+
+   The order_value, if a number, determines the byte ordering within
+the size_value.  If order_value is not present, the primitive type is
+to be regarded as opaque.  If order_value is present, but { ... } is
+not present, the primitive type is an integer value.  If { ... } is
+present, the primitive type is a floating point value (order_value
+must be present also in this case).
+
+   If the order_value is the identifier "sequential", then any
+instance of this primitive requires sequential I/O; that is, portions
+of arrays of this type may not be read or written.  If the size_value
+is 0, then the size of an instance is indeterminate.  Otherwise, an
+instance of the object occupies the specified size and has the
+specified alignment as a structure member.  The code reading or
+writing the file is responsible for recognizing the name of a
+sequential primitive and taking appropriate action to read or write
+it.
+
+   The parameterization of a floating point format is the same as
+described above for the PDB file format.  The order_value is a
+simplification of the general byte permutation provided by the PDB
+file format.  The meaning of the order value is as follows:
+
+     order_value  ==> 1. The magnitude of the order_value represents
+                         the number of bytes per "word".  Within a
+                         word, the byte order is monotone (either from
+                         most significant to least significant or vice
+                         versa).  The magnitude of the order_value is
+                         thus a multiple of the size_value.  If the
+                         entire object has monotone byte order, then
+                         the magnitude of the order_value is one.  In
+                         practice, this is always the case, except for
+                         the VAX floating point formats.
+                      2. The sign of the order value determines the
+                         word order.  The byte order within a word is
+                         always opposite to the word order.  (Otherwise
+                         the entire word is monotone, the word size is
+                         one, and the word order is the byte order.)
+                         The sign is positive if the most significant
+                         word is first, negative if the least
+                         significant word is first.
+                      3. An order_value of zero is equivalent to omitting
+                         the order_value altogether; it indicates opaque
+                         data with the specified size and alignment.
+
+In brief, the vast majority of numeric formats fall into one of the
+following four categories:
+     order_value=  1  for big-endian (MSB first) machines
+     order_value= -1  for little-endian (LSB first) machines
+     order_value=  0  for opaque data
+     order_value=  2  for VAX floating point formats
+
+   The precise order of definition of primitive types is significant if
+the file contains pointers to objects of non-predefined types.  In
+this case, the data type of the pointee will be encoded as an ordinal
+based on the order of +struct and +define definitions.  The exception
+is a +define with a type_name of one of the predefined types: char,
+short, int, long, float, double, string, or pointer.  The order of
+such a +define is unimportant, provided only that it precede the first
+use of that predefined type.  As explained in the next section, a
++define of type long must also precede any uses of the predefined
+string or pointer types.
+
+   To use the default definitions of string and pointer, you must NOT
+specify them using a +define (doing so would redefine them to the
+meaning specified in the +define), OR you must use the special
+"standard" forms of +define.  With their default meanings, the a
+string and a pointer are represented as a long.
+
+   In general, +defines of the six basic primitive data types should
+precede any other statements in the Clog description of a file.  If
+these are not defined, the default is the standard for the machine on
+which the binary data file was written.  Without the basic primitive
+type definitions, therefore, a Clog description of a file is not
+portable across different machine architectures.  As an example, a
+Clog describing a netCDF file (in XDR format) would begin:
+
+     +define char   [1][4][1]
+     +define short  [2][4][1]
+     +define int    [4][4][1]
+     +define long   [4][4][1]
+     +define float  [4][4][1] {0 1  8  9 23 0  127}
+     +define double [8][4][1] {0 1 11 12 52 0 1023}
+
+Note that, since a netCDF does not support data structures, the
+alignment_value is not really significant.  For the same reason, the
+definition of int is unnecessary.  Furthermore, a definition of a
+synonym for char would be appropriate:
+
+     +define byte   [1][4][1]
+
+
+ 4G. Compound data structure definition
+ -----
+
+     structure_definition:
+        "+" "struct" type_name "{"
+                        full_member_definition member_definition* "}"
+
+     full_member_definition:
+        type_name member_name dimension_spec* ["@" byte_offset]
+
+     member_definition:
+        full_member_definition
+      | "," member_name dimension_spec* ["@" byte_offset]
+
+     member_name: identifier
+
+
+   The leading "+" permits immediate recognition a structure_definition
+as opposed to a variable_declaration, without the necessity for making
+"struct" a reserved word in the context of a type_name.
+
+   If present, the byte_offset specifies the byte offset of the member
+from the beginning of an instance of the data structure.  If absent,
+the byte offset is the next available byte beyond all previously
+declared members; the first member has a byte_offset of 0 by default.
+The "next available" byte offset is always rounded up to the nearest
+multiple of the alignment value for the type_name of the member.
+The alignment value of a compound structure is the largest alignment
+value for any of its members (see the discussion of alignment within
+data structures below).  Despite the fact that the byte_offset syntax
+allows it, no two members of a data structure may overlap.
+
+   The body of each structure definition has its own name space, so
+the member_name need only be unique among all the member_names for
+the structure currently being defined.
+
+   As usual, type_name in a member_definition must be either a
+predefined primitive, or must have been previously defined.
+Obviously, a structure may not contain members which are instances of
+itself.
+
+   Beyond this "define before using" requirement, the precise order of
+defintion of structures is significant if the file contains pointers
+to objects which are structures.  In this case, the data type of the
+pointee will be encoded as an ordinal based on the order of +struct
+and +define definitions.
+
+
+ 4H. Record definition
+ -----
+
+     record_begin:
+        "+" "record" "begin"
+
+     record_declaration:
+        "+" "record" "{" [time_value] "," [cycle_value] "}"
+                      ["@" disk_address]
+
+     time_value: float_number
+
+     cycle_value: number
+
+   The first occurrence of +record changes the meaning of subsequent
+variable_declaration statements from declaring non-record variables to
+declaring record variables.  This first occurance may actually declare
+the first history record itself, or it may merely be the record_begin
+marker.
+
+   In any record_declaration, the disk_address defaults to the next
+available address, as for a variable declaration.
+
+   The time_value and the cycle_value need not actually represent the
+time and cycle number associated with the record; they can be any
+double and long value which characterizes a record.  Note that the
+time_value is specified only to the accuracy it is printed; if a
+precise time is required, the time should be made a record variable.
+The intent of time_value and cycle_value is to provide more
+informative "names" for the record than merely its position in the
+sequence of records.  If either time_value or cycle_value is omitted
+in the first history record instance declaration, it must be omitted
+in all following declarations; similarly, if present in the first
+declaration, it must be present in all subsequent declarations.
+
+   Because of the possibility of families of time history files, it is
+very difficult to realize a programming interface which allows
+non-record data to be written after the writing of records has begun.
+This practical difficulty is the reason for the division of the Clog
+description into a non-record section, followed by a record section.
+
+   The restriction of history data to a sequence of a single type of
+record, rather than allowing several interleaved sequences of records
+of various types, is also deliberate.  If several types of record need
+to be written, several output files or file families should be used.
+
+   Note that a member of the history record structure may be a pointer
+to a block of data whose size changes from record to record.  For this
+reason, Clog records are not necessarily layed out end-to-end in the
+file, as are netCDF records.  If the record addresses are random, the
+efficiency of collection of a portion of the record data across
+several or all records is reduced.  More importantly, the Clog
+description of a file will fail in practice if the storage of an
+exceedingly large number of exceedingly small records is attempted.
+As a rule of thumb, you're in trouble if your record length is less
+than the number of bytes in the "+record" statement necessary to
+declare the record (this can't be less than 8 bytes).  If you are in
+this category, you should strongly consider buffering several records
+and writing them as an array for the sake of efficiency anyway.
+
+
+ 4I. Additional alignment information
+ -----
+
+     alignment_spec:
+        "+" "align" alignment_type "[" alignment_value "]"
+
+     alignment_type:
+        "variables"
+      | "structs"
+
+   Some files, for example netCDF files, impose additional alignment
+restrictions on variables.  This can be specified using the "+align
+variables" syntax in Clog.  As a special case, alignment_value of 0
+means that the same alignment should be applied to a variable in a
+file as it were a member of a data structure.  An alignment_value of 1
+means that there is no padding between variables; every variabe starts
+on the byte immediately following the previous variable.  The
+"@address" syntax in a variable declaration overrides the "+align
+variables" statement.  The special value 0 is the Clog default; netCDF
+files would have "+align variables 4", and PDB files would have "+align
+variables 1".
+
+   Some C compilers place an additional alignment restriction on
+struct members which are themselves struct instances (beyond the usual
+restriction that the alignment of a struct instance is the same as the
+alignment of its most restrictively aligned member).  Such an
+additional alignment restriction may be expressed in Clog via the
+"+align structs" syntax.  The value 1 is the default, meaning that
+there is no additional alignment restriction on struct instances.
+
+   At most "+align" statement of each type is allowed in a Clog
+description.  If present, these must come before any variables,
+compound data structures, or records have been declared.
+
+
+ 4J. Predefined string and pointer formats
+ -----
+
+   As indicated above, the type_names "string" and "pointer" have an
+optional predefined meaning, which is designed to map relatively
+easily into the C language "char *" and "void *" data types.  In order
+to do this, descriptive information unavoidably leaks from the
+description of the binary data into the data itself.  The following
+design minimizes this leakage; nevertheless, a binary file designer
+should avoid gratuitous use of indirect data types.
+
+   An instance of either string or pointer is represented on disk as a
+long.  Hence, no use of the default string or pointer types may
+precede a +define of the long primitive.  The value of that long is
+interpreted as a disk address (as always, in bytes, with 0 meaning the
+address of the first byte).  A disk address of -1 is taken as a NULL
+pointer, meaning that there is no data associated with the pointer.
+
+   In the case of a string, a character count of type long will be
+found at the disk address specified in the (non-negative) pointer.
+The characters of the string, if any, begin with the byte immediately
+following the character count.  The terminating NULL character is not
+included in either the character count or the string itself.
+
+   In the case of a pointer, the (non-zero) pointer is the disk address
+of a small header describing the pointee, followed by the pointee data
+itself.  The header is an array of long integers encoded as follows:
+
+     long          type_number     number representing the data type
+                                   of the pointee data:
+                                   0 char, 1 short, 2 int, 3 long,
+                                   4 float, 5 double,
+                                   6 string, 7 pointer,
+                                   >=8 for the data types defined using
+                                   +struct or +define in the order of
+                                   definition in the Clog
+     long          n_dims          number of dimensions (0 if scalar)
+     long[n_dims]  length[n_dims]  (not present if n_dims==0)
+                                   the number of elements along each
+                                   dimension, in order from slowest
+                                   varying to fastest varying dimension
+     <garbage>     pad             any pad necessary to align the
+                                   data to a disk address which would
+                                   be acceptable if it were an ordinary
+                                   variable
+     <type_number> data            the pointee itself
+
+
+
+ 4K. Generic extension syntax
+ -----
+
+   The preceding sections cover the basic requirements for being able
+to decipher the contents of a binary data file.  Of course, you can't
+necessarily do anything with a bunch of numbers just because you can
+read them.  In general, the meaning of the numbers in a binary file
+emerges only from careful documentation.  The required level of
+documentation is appropriate to a user's manual for the program which
+wrote the file, not to the Clog description of the file.
+
+   Nevertheless, sometimes it is appropriate to carry a higher level
+of meaning around with a binary data file.  The Clog therefore provides
+a generic syntax for such information:
+
+     other_information:
+        "+" public_extension [extension_id]
+                             "{" extension_data "}" ["@" disk_address]
+        "-" private_extension [extension_id]
+                              "{" extension_data "}" ["@" disk_address]
+
+     public_extension: identifier
+
+     private_extension: identifier
+
+     extension_id: identifier
+
+     extension_data: <any sequence of tokens with balanced "{" and "}">
+
+The notion of a public_extension is that considerable effort be
+expended to ensure that the associated identifier be unique across all
+implementations of the Clog.  A private_extension, on the other hand,
+can be used immediately and freely at a single site.
+
+   The private_extension syntax should not be used as a substitute for
+the comment syntax /* ... */.
+
+   A public_extension cannot have the identifiers "struct", "define",
+"history", or "eod".  Furthermore, the following public_extensions are
+hereby defined, in order to prevent the corresponding inevitable
+private extensions:
+
+
+     "+" "pedigree" "{" pedigree_spec ("," pedigree_spec)* "}"
+
+     pedigree_spec:
+        "created_by" "=" identifier
+      | "creation_date" "=" identifier
+      | "modified_by" "=" identifier
+      | "modification_date" "=" identifier
+      | "revision" "=" number
+      | "archive_id" "=" identifier
+      | "format_version" "=" number
+      | identifier "=" identifier
+      | identifier "=" number
+
+   Blue bloods and bureaucrats demand pedigrees for their data.
+
+
+     "+" "attributes" [variable_name]
+                      "{" attribute_spec (";" attribute_spec)* "}"
+
+     attribute_spec:
+        attribute_name ["=" attribute_value]
+
+     attribute_name: identifier
+
+     attribute_value:
+        number ("," number)*
+      | float_number ("," float_number)*
+      | identifier
+
+   The attribute extension handles netCDF-style attributes.  The
+number and float_number tokens are extended by the suffix notation
+described in the netCDF User's Guide from Unidata, in the section on
+CDL format.  An identifier as an attribute_value covers the case of a
+string valued attribute; it should normally be a quoted string.  If
+the variable_name is not present, the attributes apply to the whole
+binary file.  If present, the variable_name must specify a previously
+declared variable.
+
+
+     "+" "value" variable_name "{" variable_value "}"
+
+     variable_value:
+        number ("," variable_value)*
+      | float_number ("," variable_value)*
+      | "{" variable_value "}"
+
+   This extension is provided in order to be able to directly
+translate Unidata CDL files into Clog files.  Just as the string and
+pointer data types cause a leakage of descriptive information into the
+data, the +value extension amounts to a leakage of data into the
+descriptive information.  Each level of { ... } descends one level
+into a structure instance.
+
+
+     "+" "PDBpointer" ("variable" | "member") "{" type_name "}"
+
+   The type_name must specify an opaque data type previously defined
+by +define.  Two separate types should be supplied; one for variables,
+which has size==0, and one for structure members, which has non-zero
+size.  Both are sequential data types, since any object containing a
+PDB-style pointer must be read sequentially as a complete block.  The
+following declarations would be reasonable:
+
+     +define "char *" [0][4][sequential]
+     +PDBpointer variable { "char *" }
+     +define "char  *" [4][4][sequential]  /* note extra space */
+     +PDBpointer member { "char  *" }
+
+These definitions assume that the sizeof(void *) specified in the PDB
+prim_info section was 4, and the ptr_align specified in the PDB
+Alignment extra block was 4.  There is no limit on the number of
+different type_names which can be declared to be PDBpointer, but all
+of the corresponding +define statements must be identical.
+
+
+     "+" "PDBcast" type_name "{" member_pair ("," member_pair)* "}"
+
+     member_pair: cast_member "," type_member
+
+     cast_member: identifier
+
+     type_member: identifier
+
+   The PDBcast extension handles the information in the PDB Casts
+extra block for PDB-style derived classes.  Given the clumsy nature of
+the PDBpointer public_extension, this does not really work very
+well...

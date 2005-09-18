@@ -1,0 +1,416 @@
+		     MPY = Message Passing Yorick
+		     ----------------------------
+
+What is MPY?
+------------
+
+This package provides message passing capabilities for Yorick.  It is
+based on the MPI (Message Passing Interface) standard.  I know of
+three freely available MPI implementations.  Anonymous FTP sites:
+
+   MPICH:  info.mcs.anl.gov: pub/mpi       (Argonne/MSU)
+   LAM:    tbag.osc.edu: pub/lam           (Ohio Supercomputer Center)
+   CHIMP:  ftp.epcc.ed.ac.uk: pub/chimp/release     (Edinburgh)
+
+   WinMPI: csftp.unomaha.edu: pub/rewini/WinMPI
+   UNIFY:  ftp.erc.msstate.edu: unify      (partial MPI/PVM)
+
+The FAQ for the comp.parallel.mpi newsgroup is the best source of
+general information about MPI.
+
+Installation
+------------
+
+(0) Configure and build Yorick (according to ../README)
+
+(1) Read the configure script.  You need to give it the names for
+    substitutes for the cc and (optionally) f77 compilers which
+    will insert the proper -I, -L, and -l options before invoking
+    the underlying C or Fortran compiler.  The distribution configure
+    uses the names mpicc and mpif77, which are appropriate for MPICH.
+    You may need to write your own script here; a sample mpicc-sh
+    appropriate for LAM is included (LAM's hcc handles -I but not
+    -L or -l).
+
+(2) Configure and build MPY by typing (see configure for more options):
+
+     ./configure your-mpi-cc-command
+     make
+
+(3) Begin the installation of MPY by typing:
+
+     make install
+
+(4) Complete the installation by hand.  You need to be sure that
+    Y_SITE is visible to all processors (by copying it many places if
+    necessary); otherwise mpy won't start at all.  You will also want
+    to make your own .i files similarly visible:
+
+    To run MPY, you will need to devise a way to make Yorick include
+    files visible to all processes.  Remember that the processes may
+    start in a directory other than where you typed "mpy" on remote
+    machines.  If the directory trees are identical on the different
+    machines, you can use MPY's mp_cd command to change all processes
+    to the same directory (type help,mp_cd after you start mpy).
+    Otherwise, your easiest course is probably to put copies of all
+    the include files you need to mp_include (see help,mp_include)
+    in your ~/Yorick directory on every machine.  Once you have solved
+    the visibility problem, you can start MPY the same way you start
+    other multiprocessing codes (this is idiosyncratic -- if you don't
+    know how, ask someone nearby, not me).
+
+(5) You can start MPY as a single process like this:
+
+     mpy -nompi
+
+    This should behave like any other version of Yorick.  To start
+    a multiprocessing MPY, you do something more like this (for
+    MPICH -- you might well need something else):
+
+    % mpirun -np 28 mpy
+     MPI started with 28 processes.
+     Copyright (c) 1995.  The Regents of the University of California.
+     All rights reserved.  Yorick 1.2 ready.  For help type 'help'
+    > mp_include, "testmp.i"   // everybody includes testmp.i
+    > testmp
+    ...general message passing test results...
+    > testpool
+    ...mp_pool function test results...
+    > quit
+    %
+
+    I've experimented with scripts like mpy-sh in this distribution to
+    try to make this a little more user-friendly, but I think it just
+    adds yet another layer of complexity to an already brutally
+    difficult environment.  Keyboard input and terminal output can
+    get pretty funky, but if you're using these machines, you are no
+    doubt used to that feature.
+
+********WARNING*********
+You cannot start mpy itself without the -nompi argument.  See the
+discussion below for why not.  This will be true of all MPY derived
+codes as well.  (The mpy-sh script was one attempt to work around this
+ugliness.)
+
+Building other Yorick codes which use the MPY package
+-----------------------------------------------------
+
+If you need to add your own custom compiled routines to MPY (a pretty
+safe bet), you need to add lines
+   Y_MAKEMPY=$(Y_MAKEDIR)/Makempy
+and
+   include $(Y_MAKEMPY)
+to your package Makefile.  See the mpy/Makefile in this directory for
+where these lines need to be placed.  You may also want to think carefully
+about whether TGT=exe is better for your needs than the usual TGT=dll
+default.
+
+------------------------------------------------------------------------
+Discussion
+----------
+
+The interpreted interface represents a small subset of the MPI
+standard.  More complicated inter-process interactions are left to
+additional compiled packages.  You may need to start each of the
+interconnected Yorick instances from your multiprocessing environment;
+this package may not enable Yorick to spawn new processes.  All of the
+Yorick instances except (at most) the rank 0 instance will be running
+in batch mode, and only the rank 0 process will accept keyboard input.
+An attempt is made to catch errors; an error on any process will cause
+the virtual machine to halt and return to a state where it can be
+restarted by a keyboard command from the rank 0 process.  However,
+errors may easily be severe enough to cause the entire set of Yorick
+processes to collapse or become hopelessly desynchronized.
+
+These Yorick global variables are set to multiprocessor rank and size
+at startup (MPI assigns a unique rank to each Yorick instance, from 0
+to size-1):
+
+   mp_rank
+   mp_size
+
+All but the rank 0 process will initially place themselves in Yorick's
+batch mode, and will define an idler process so that they never accept
+keyboard input.  The idler will catch all errors and attempt to signal
+all other processes that a restart is necessary.  The rank 0 instance
+may call
+
+   mp_include, filename
+
+to cause all the other processes to include the named file (an include
+file of this name must be accessible by every Yorick instance), which
+in turn must cause them to trade messages and carry out the desired
+calculation.  A custom version of Yorick may provide defintions of
+functions that are performed in parallel in its startup include file(s),
+in which case all instances will automatically have them, and an
+mp_include call may not be necessary.  In general, the non-rank 0
+processes will not start in the same directory as rank 0.  The mp_cd
+function changes the working directories of all processes to match
+the rank 0 process working directory, or, with an argument, sets the
+working directory for all processes:
+
+   mp_cd
+   mp_cd, directory_name
+
+You send a Yorick message to instance number "rank" with:
+
+   mp_send, rank, value1, value2, ...
+
+The mp_send call will block until all the messages have been received
+(it is *synchronous* in MPI parlance).  The rank may also be a list of
+ranks to send to multiple destinations; in this case each value may be
+a matching array of pointers to allow sending a different message to
+each destination.  Within such a multiple mp_send call, the various
+messages may be initiated concurrently; it is only at the interpreted
+level that mp_send uses blocking operations.
+
+To receive the message, use:
+
+   value1= mp_recv()
+   value2= mp_recv(dimlist)
+   ...
+
+Each value must be received by a separate mp_recv call, even if
+several were sent by a single mp_send.  An optional dimlist argument
+allows for mp_recv to return other than scalar or 1D values (mp_send
+does not communicate the detailed dimensions of the value, just it's
+data type and length).
+
+The sender of the most recently received value may be determined by
+calling mp_from:
+
+   sender_rank= mp_from()
+
+The mp_from function takes an optional flag argument if you want to
+see where the *next* mp_recv will come from:
+
+   next_sender_rank= mp_from(1)
+
+This returns -1 if no message has yet been sent, which enables you to
+test for whether a subsequent mp_recv will return immediately (since
+mp_recv itself blocks).  You may also want to block until the next
+message arrives, without actually receiving it, but returning its
+source:
+
+   next_sender_rank= mp_from(2)
+
+An interpreted function which performs a parallel calculation must
+have a special general form in order to work properly.  It is assumed
+that such a function will be called interactively (or from some action
+begun interactively), and that only the rank 0 instance initiates such
+a call.  The special form is required in order to guarantee that the
+function is actually started on every *other* rank, so it can begin
+passing messages.  The required form is:
+
+   func my_function(arglist)
+   {
+     /* two things must be done to start a parallel calculation:
+        (1) we must prepare to catch any unexpected errors so that
+            every process is notified
+        (2) we must be start this function on every process and be
+            sure they are all synchronized with no messages outstanding */
+     if (!catch(-1)) mp_abort;
+     mp_start, my_function;
+     if (!mp_rank) {
+       /* the rank 0 instance begins as the "leader" who must send
+          messages elsewhere in order to initiate the parallel
+          calculation */
+       /* perform rank 0 part of calculation
+          the return value for rank 0 is what the user will see */
+       return rank_0_function(arglist);
+     } else {
+       /* begin the non-rank 0 part of the calculation
+          the arglist will not be present here, so the rank_0_function
+          is always responsible for ensuring that every other process
+          knows its job
+          any return value will just be discarded */
+       rank_N_function;
+     }
+   }
+
+-----
+
+The mp_send function is scales very poorly as the number of destinations
+becomes large (i.e.- when the rank argument is a long array).  A higher
+level function mp_bcast enlists all of the processes to speed up sending
+messages to every other process.
+
+One other high-level function is provided: mp_pool, which manages a
+pool-of-tasks calculation.  In this model, the master (rank 0) process
+assigns tasks to slave processes (all the others) whenever they finish
+sending back the results of their previous task.  You pass the mp_pool
+function a set of three or four functions to perform the parts of this
+model which are peculiar to the calculation you need to perform, and
+mp_pool maintains the list of free processes, the distribution of tasks,
+and the collecting of results -- in short, performs the bookkeeping for
+the pool-of-tasks.
+
+-----
+
+Startup presents a serious problem, since MPI_Init is poorly specified
+in the standard.  In particular, MPI_Init may not return if the
+program is started outside the message passing environment, so there
+is no portable way to write an MPI program which drops back to a
+single processor paradigm in that situation.  Furthermore, the multi-
+processor paradigm must be the default, since the standard does not
+require that any command line arguments at all be delivered.
+
+To handle this startup problem, MPY will call MPI_Init unless the
+argument "-nompi" appears on the command line (argv), in which case
+MPI_Init is not called.  In order to create a friendlier interface,
+some sort of a script should be provided which starts MPY (or another
+MPY-based program); mpy.sh is an example for the MPICH environment.
+
+-----
+
+Implementation notes:
+
+This interface is rather primitive by design; it can be enhanced by
+building additional interpreted routines based on these.  Here is a
+sketch of the implementation of the simple routines:
+
+At startup the following routines are called:
+
+   MPI_Init
+   MPI_Comm_size
+   MPI_Comm_rank
+   MPI_Comm_dup    -- make special communicator for interpreter traffic
+   MPI_Errhandler_set
+
+additionally, Yorick arranges to call
+
+   MPI_Finalize
+
+before it exits, or when an MPI failure causes interprocess
+communication to collapse.
+
+The routines
+
+   MPI_Issend    -- for mp_send
+   MPI_Waitsome  -- for mp_send
+   MPI_Probe     -- for mp_recv
+   MPI_Recv      -- for mp_recv
+   MPI_Get_count -- for mp_recv
+   MPI_Iprobe    -- for mp_from(1)
+   MPI_Irecv     -- for control message only
+   MPI_Test      -- to check for control message
+
+   MPI_Ssend     -- for some abort messages
+   MPI_Abort     -- for fatal message traffic errors
+
+underlie the workhorse mp_send, mp_recv, and mp_from routines.  The
+basic idea is as follows:
+
+(0) All communications handled by the interpreter make use of a
+    special communicator created for that purpose at startup.
+    The tag field is used to indicate the data type of a message,
+    so that each "value" can be sent and received as a single MPI
+    message.  One special tag value is used for control messages,
+    which are restricted to a certain maximum length and contain
+    only MPI_BYTE data.
+
+(1) Rank 0 sends two "BEGIN" control messages to every other process.
+    (There is a pair to allow a programming style in which the
+     interpreted program leaves all non-0 rank processes waiting
+     in mp_recv for their next task, even when the rank 0 process
+     has exhausted the tasks.  Otherwise, the program must recognize
+     a special message which signals the absence of tasks.)
+    Then every process calls MPI_Irecv to post a non-blocking receive
+    capable of producing the first message sent with the control
+    tag.  Such a message is always a signal to abort or restart,
+    since control messages can never be generated by the mp_send,
+    mp_recv, or mp_from interpreted calls (except as the result of
+    an error).
+
+(2) Any call to mp_recv, mp_send, or mp_from tests to see whether
+    a control message has arrived both before and after it blocks
+    (if it blocks).  If so, the abort sequence begins.
+
+(3) mp_send calls MPI_Issend as many times as possible subject to
+    the constraints that no two messages with a single destination
+    (from a single source) be simultaneously active, and that
+    the total number of active messages from a single source be
+    restricted to some "reasonable" value (like 100, for the case
+    in which there are thousands of processes).  After posting these
+    synchronous sends, mp_send calls MPI_Waitsome to block until at
+    least one completes.  Crucially, the initial MPI_Irecv request
+    for a control message is always included in the list of requests
+    for which MPI_Waitsome will return; if MPI_Waitsome should report
+    a message has filled that request, the abort sequence begins.
+    When all the messages specified by the mp_send are on their way,
+    it finally returns.
+
+(4) mp_recv calls MPI_Probe to block waiting for any messages from
+    any source.  When it returns, the tag and length of the message
+    are used to construct an interpreted variable to hold the result,
+    and MPI_Recv is called to read the message.  If the message
+    detected by MPI_Probe had the control tag, the abort sequence
+    begins.
+
+(5) mp_from(1) calls MPI_Iprobe to test for the existence of a message
+    that MPI_Recv can produce immediately.  Detection of an error
+    again results in an abort.
+
+(6) The abort sequence is initiated as follows:
+    A non-0 rank process sends a control message to rank 0 containing
+    "ABORT#1" plus the error message.  It then immediately sends a
+    second message to rank 0 marked "ABORT#2".  It then enters the loop
+    to clear out all pending messages (see below).
+    The rank 0 process follows this same two message "ABORT#1" then
+    "ABORT#2" sequence, except that it sends the two messages to all
+    other processes.
+    The first message will trigger the MPI_Waitsome to return if the
+    receiver was blocked in an mp_send.  However, if it is blocked in
+    an mp_recv, that first message fills the initial MPI_Irecv control
+    channel request, and the process remains blocked in MPI_Probe until
+    the "ABORT#2" message arrives.
+
+(7) The loop to clear out pending messages goes like this:
+    First, it makes sure both "ABORT#1" and "ABORT#2" messages have
+    been received.  It then loops calling MPI_Iprobe to check for
+    any incoming messages, and MPI_Recv to accept them for immediate
+    discard, if any are found.  Next, if it has any pending sends,
+    it launches a new MPI_Irecv to accept the next message from any
+    source with the control tag, then MPI_Waitsome to block until
+    some sort of message activity wakes it up.  When some of its
+    pending sends have been accepted, it begins again by calling
+    MPI_Iprobe, and continues until all of its sends have been
+    accepted.  After all its sends have completed, it sends the
+    control message "READY" to the rank 0 process, then blocks
+    in a loop with MPI_Probe followed by MPI_Recv and discard of
+    the message.
+
+(8) When the rank 0 process has received "READY" from all other
+    processes, it sends a "CLEAR" messages back to them.
+    When all processes have received "CLEAR", everybody
+    knows that they are back in sync, and an ordinary interpreted
+    error exit can be taken.  This error is marked ".SYNC." so as
+    not to cause a second abort.
+
+-----
+
+What is MPY not for?
+
+(1) Production multiprocessing of interpreted code.  You are spending
+a factor of maybe five in speed by implementing a calculation in the
+interpreter.  Why do you need to run parallel?  For speed?  (On the
+other hand, it does make sense in some cases to use the interpreter to
+do all message passing, so your compiled code may not need to do that.)
+
+What is MPY for?
+
+(1) To control master/slave parallel calculations, especially
+pool-of-tasks calculations in which the interpreter handles the
+distribution (send and receive) of tasks and the accumulation of
+results.
+
+(2) To launch more complicated parallel calculations?  Perhaps to
+compute the initial splitting of the task, distribution of initial
+values and collection of results from a task with more complicated
+connection topology.  Are there tasks of this sort where the
+interpreter might be able to handle all of the message passing?
+
+(3) To test message passing schemes as a rapid prototyper for
+designing a later full-performance compiled application.
+
+-----

@@ -1,0 +1,107 @@
+------------------------------------------------------------------------
+-------------------------lecuyer.[ch]-----------------------------------
+------------------------------------------------------------------------
+
+Random number generator based on
+L'Ecuyer, Mathematics of Computation, 65, pp 203-213 (96)
+
+Basic interface
+---------------
+
+   double x= le_random(0);
+
+   double x[N];
+   le_nrandom(0, N, x);
+
+That is, you can retrieve random numbers either singly or N at a time.
+Both routines use the same underlying generator, so you get the same
+sequence of numbers for any mix of calls to le_random or le_nrandom.
+For example, the eleventh call to le_random produces the same
+number as two calls to le_random, followed by a call to le_nrandom
+with N=8, followed by a call to le_random.  The le_nrandom routine
+should be significantly faster than N calls to le_random on most
+platforms.
+
+The sequence of numbers will be the same on all platforms.  The
+period length is about 3.1e26 (2^88).
+
+The numbers are actually near the centers of 2^32-1 (4,294,967,295)
+equal width bins on the interval [0,1] -- therefore 0.0 and 1.0 can
+never occur.  The "near bin centers" means that other exact values
+like 0.5 are also impossible -- so for example 2.*x-1. won't be 0.
+
+You can get the integer bin numbers instead of doubles by means
+of the following routine:
+
+   unsigned long i= le_next(0);
+
+
+Seeding the sequence
+--------------------
+
+You can "seed" the sequence to force it to start at a particular
+known location by either:
+
+   le_rseed(0, x);
+or
+   le_iseed(0, i);
+
+where x is a real in (0,1) or i is an integer.  If x is outside the
+interval or i is zero (modulo 2^32), the generator is reset to its
+initial "standard startup" state.
+
+
+Multiple generators or thread-safe operation
+--------------------------------------------
+
+The "0" argument to all of the functions is actually a pointer to
+the array of three unsigned longs containing the state of the
+generator.  The default generator (that you get with a "0" argument)
+is called le_generator.
+You can create as many generators as you want, copy them, save them,
+reset them -- whatever you like.  The only restriction is that
+none of the three values should be zero, nor have any bits outside
+the low order 32 -- mask them with 0xffffffff.  If you create a
+generator of your own, you need to be sure it is properly initialized;
+calling le_rseed or le_iseed is the easiest way to do this:
+
+   unsigned long my_generator[3];
+   le_iseed(my_generator, 31415926);
+
+
+------------------------------------------------------------------------
+------------------------heapsort.[ch]-----------------------------------
+------------------------------------------------------------------------
+
+Algorithm:
+  divide the array into a binary tree like this:
+    index i children are 2*i+1 and 2*i+2
+    index i parent is (i-1)/2
+    largest index with a child is n/2-1
+
+  the inner loop is a basic sifting algorithm;
+    starting at some index i, and with some value v
+      is v greater than either of the children of i
+      if so,
+        set value[i]=v and quit
+      if not,
+        set value[i] to its larger child then set i to that child index
+    this loop pushes the value v at its starting index down the
+    binary tree until it is larger than either of its children
+    note that the maximum number of passes is log2(n)
+
+  the inner loop is applied in two distinct phases:
+    first, it is applied to index n/2-1 (the largest with any children),
+      with v=value[n/2-1], then n/2-2, n/2-3, and so on, down to index 0
+      at the end of this first phase, the largest value will be at
+        index 0, and in general the largest value of any subtree will
+        be at its root
+    second, the inner loop is applied n times, starting each time
+      from i=0, with v=value[n-1] the first time, then v=value[n-2],
+        and so on a total of n more times
+        with each pass, the size of the tree decreases by one
+      before each pass, value[0] (always the largest remaining) is moved
+        to the index v was taken from, so that at the end of this phase,
+        value[] is sorted from smallest to largest
+
+Would it be better (faster) to actually move the values?

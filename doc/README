@@ -1,0 +1,43 @@
+		Yorick Documentation
+
+The files in this Y_SITE/doc directory are:
+
+    yorick.ps    PostScript version of (incomplete) Yorick user manual.
+    refs.ps      PostScript version of Quick reference card -- 6 sheets
+                 in 3 pairs for double-sided copying
+    yorick.tex   TeXinfo source for yorick.ps (needs texinfo.tex)
+    refs.tex     TeX source for refs.ps
+
+    yorick.1     stub man page for yorick
+    gist.1       man page for gist binary CGM browser
+
+    std.doc      alphabetized DOCUMENT comments for standard Yorick
+                 functions.  Print this file and read it after you have
+                 read yorick.ps; the information is *NOT* duplicated.
+    graph.doc    alphabetized DOCUMENT comments for Yorick graphics
+                 functions.  Print this file and read it after you have
+                 read yorick.ps; the information is *NOT* duplicated.
+    math.doc     alphabetized DOCUMENT comments for matrix and FFT
+                 functions.  Print this file and read it after you have
+                 read yorick.ps; the information is *NOT* duplicated.
+    drat.doc     alphabetized DOCUMENT comments for sample Drat transport
+                 equation solver.  This is probably of interest only as
+                 an example of how to write a complete Yorick application.
+
+
+    FILE_FORMATS  pointers to descriptions of all the binary file formats
+                  recognized or produced by Yorick
+
+Removed:
+
+    dir          GNU Emacs Info dir file -- for versions 19.25 and above
+                 just add this directory (Y_SITE/doc) to your Info search
+                 path.
+    yorick.nfo*  GNU Emacs Info online version of yorick.ps
+
+I removed the formatted GNU info documentation for Yorick to save
+space in the distribution.  You can recreate it with the makeinfo
+program (from prep.ai.mit.edu:/pub/gnu) and yorick.tex.  Here is
+the line I use for Yorick in the TeXinfo dir file:
+
+* Yorick: (yorick.nfo).  The Yorick interpreted programming language.

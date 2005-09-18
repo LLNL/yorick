@@ -1,0 +1,9 @@
+This directory contains the Swarztrauber FFT routines.
+
+They came from fftpack, available at netlib.org.  The file
+startup/fft.i describes the interpreted interface.
+
+I converted the original Fortran source to C using my f2c.el Emacs
+functions (Emacs 19.25, but should work with others) and a few by-hand
+fixes afterwards.  The "by hand fixes" included several typographical
+bugs introduced by f2c.el --- so beware.

@@ -1,0 +1,14 @@
+# $Id: Makedll,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# see Makepkg for description
+
+PLUG=$(PLUG_PIC) -DPLUG_IN
+
+$(PKG_DLL): Makefile $(OBJS) ywrap.o $(DLL_DEF) $(DLL_TARGETS)
+	$(LD_DLL) -o $@ $(OBJS) ywrap.o $(DLL_LIBS) $(DLL_DEF)
+
+$(PKG_LIB): clean
+	@echo **************************************************************
+	@echo Rerun make with TGT=exe to build and static load this package.
+	@echo **************************************************************
+$(PKG_EXE): $(PKG_LIB)
+	@:

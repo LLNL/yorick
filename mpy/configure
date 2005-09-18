@@ -1,0 +1,42 @@
+#!/bin/sh
+# $Id: configure,v 1.1 2005-09-18 22:04:58 dhmunro Exp $
+#
+# skeleton configure script for MPY (Message Passing Yorick)
+# assumes top level configuration of distribution yorick already done
+#
+# You need to do the work here yourself:
+#
+#     MPI implementations typically come with a substitute for the
+#     cc and f77 compilers.  These invoke the underlying cc and f77
+#     compilers with the appropriate -I, -L, and -l options so the
+#     MPI headers and libraries can be found.  If your MPI does not
+#     come with these substitutes, you will need to write scripts
+#     to do it yourself.  The mpicc-sh script in this directory
+#     is an example for the LAM implementation of MPI (LAM's hcc
+#     script supplies the necessary -I options, but not the -L or
+#     -l options).
+#     You don't need to set MPI_F77 correctly unless you plan to use
+#     Fortran in your own codes; MPY itself doesn't use any.  Be sure
+#     that you've set up the FC line in ../Yorick/Maketmpl correctly
+#     if you do care about MPI_F77.
+#     MPI_CFLAGS is for any additional CFLAGS (-D or -I options)
+#     required to build mpy.c
+
+# Now type this:
+#     ./configure mpi-cc-command
+# or, if the command is mpicc, simply
+#     ./configure
+# If mpicc requires compiler flags beyond those in Make.cfg Y_CFLAGS:
+#     env 'MPI_CFLAGS=-additional -c-flags' ./configure mpi-cc-command
+# Similarly, if you wish to set an mpi Fortran compiler, set the
+# MPI_F77 environment variable while running ./configure
+
+# The ./configure script will build Makempy.  Type:
+#     make
+# to build MPY itself.  See the README for more details.
+
+cat >Makempy <<EOF
+CC=${1:-mpicc}
+FC=${MPI_F77:-mpif77}
+MPI_CFLAGS=$MPI_CFLAGS
+EOF

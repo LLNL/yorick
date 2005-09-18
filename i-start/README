@@ -1,0 +1,31 @@
+These interpreted source files are read by yorick as it starts.  (The
+actual commands which include them may be found in i0/stdx.i.)
+
+All files in this directory whose names end with ".i" will be
+included, in alphabetical order (all uppercase letters precede any
+lower case letter, and digits precede either).  Other files (such as
+this README) are ignored.
+
+There are a total of three i-start directories which treated the same
+way at startup.  All of the .i files in these directories are included
+automatically whenever yorick starts, in this order:
+
+  Y_SITE/i-start
+  Y_HOME/i-start      (skipped if Y_HOME == Y_SITE)
+  ~/yorick/i-start    (or ~/Yorick/i-start)
+
+Mostly, these startup files should contain autoload commands to load
+other .i files at first reference to the API functions defined
+therein.  Yorick packages can install themselves by simply placing a
+file in one of these directories, possibly along with files in
+Y_SITE/i and/or Y_HOME/lib, or in ~/yorick.  The Y_SITE/i-start
+directory is intended for packages which contain only interpreted
+code.  The Y_HOME/i-start directory is for plugins (see the plug_in
+function), and the ~/yorick/i-start directory is for user-written
+packages.
+
+50i.i   autoloads for most frequently used library functions in
+        the i/ directory
+        - this name is selected to make it easy to implement a
+          "/etc/rc.d"-style ordering of package includes, with
+          filenames beginning with two digits

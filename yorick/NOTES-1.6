@@ -1,0 +1,123 @@
+
+Plug-in Support for Yorick
+--------------------------
+
+The easiest way to add compiled code to yorick is to build a special
+version of yorick which includes your compiled routines.  When you
+want your additional features, you run your special executable instead
+of the distribution yorick.  If you want your custom features all the
+time, or available to everyone at your site, change the name of your
+special executable to "yorick" and install it in place of the
+distribution yorick.
+
+The only disadvantage of this approach is that you cannot easily
+distribute your package to other yorick users in binary form.  More
+generally, if there are many yorick packages which are potentially
+interesting, it can become a very tedious business to maintain a giant
+version of yorick which includes the subset that are relevant to you
+and any coworkers.  The cleanest way to meet this challenge is to be
+able to link a simple distribution yorick to an arbitrary set of
+additional packages at runtime, using the same technology that Web
+browsers use to link plug-ins.  Since browsers with plug-ins are
+available on most platforms, this is obviously possible.
+
+Unfortunately, the technique to build a shareable object file varies
+tremendously across different platforms.  Even the filename extension
+that identifies such a file changes from one platform to another:
+".dll" on MS Windows and ".so" on Linux and many other UNIX systems,
+except ".sl" on HPUX.  There is a GNU development tool (called
+libtool) which tries to bring all of these models under one umbrella
+system, but needless to say it has to include all of the complexity of
+every model.
+
+Fortunately, yorick needs only the form of "dynamic linking" in which
+you call a system function to "dlopen" a shared object file, whose
+pathname you pass as you would to open a file with fopen.  Yorick
+requires just two functions: "dlopen" to open the shared object file
+containing your package's compiled code, and "dlsym" to look up the
+address of the function that initializes your package, making its
+compiled code known to the yorick interpreter.  There is no need to
+ever "dlclose" the package; just as yorick has no way to "forget" the
+contents of an include (.i) file, it has no ability to "forget" about
+new compiled features.  Since a dynamically linked yorick package will
+be connected using explicit "dlopen" and "dlsym" calls, there is no
+need to worry about the additional layer of platform dependent tricks
+required to be able to link against the package at build time (the way
+you link to the libc or libm shared libraries).
+
+A subtle requirement, which imposes a difficult burden on some
+platforms, is that the yorick plug-in must be able to call the
+functions declared in ydata.h in order to retrieve input parameters
+and otherwise communicate with the interpreter.  This is quite
+different from a dynamic system library like libc or libm, where the
+library functions are completely independent of anything defined in
+the calling code.  That is, in addition to the explicit retrieval of a
+function pointer in the plug-in via "dlsym", the plug-in's calls to
+fuctions in the yorick executable must be linked at runtime.  This is
+the function usually performed by the system dynamic linker at
+runtime, but there is some unfortunate platform dependence on how the
+runtime linker accomplishes such backward linking from the library to
+the executable.
+
+While you are developing your package, you will find it much easier to
+link it statically into a special version of yorick, which you can
+debug in the usual manner.
+
+After your package is debugged, you may wish to take advantage of
+yorick's plug-in support to distribute it.  Here is how it works: The
+interface between yorick and your compiled functions is described in
+one or more startup .i files, which, like extend/cerfc.i, contain
+extern statements and, optionally, PROTOTYPE comments, for the
+compiled functions.
+
+When you link statically, this .i file is read twice: First, during
+the build process, codger (yorick/codger.c) scans your startup .i
+file(s) and generates two critical things: (1) a reference to the
+address of each compiled function mentioned in an extern statement,
+together with the string representing the name of the function for the
+interpreter, and (2) any optional wrapper code from PROTOTYPE
+comments.  When you build a yorick executable, the output of codger in
+"wrap" mode, called ywrap.c, contains an array of all the function
+pointer/name pairs for all of yorick.  Those function pointers get
+built into yorick, and those references are what forces the loader to
+actually load all that compiled code into the yorick executable.
+Additionally, the name of every startup .i file is built into the
+yorick executable, and when yorick starts it must find and include all
+of those .i files in order to parse any func definitions or other
+interpreted code associated with your package.
+
+When you dynamically link to a package, none of this happened at the
+time yorick was built.  Thus, not only must you "dlopen" the shared
+object containing your compiled code, somehow yorick has to find all
+the compiled function pointer/name pairs in order to enable the
+interpreter to actually call your compiled functions.  In order to do
+this, codger has to put the information about the function
+pointer/name pairs into the ywrap.c code, which then becomes a part of
+the plug-in code.  Note that codger still has to generate any
+PROTOTYPE wrapper code, which must also be built into your plug-in.
+
+Plug-in support in yorick therefore consists of a single function:
+   plug_in, dll_name This function goes in the startup .i file for
+your package, so that when you #include that .i file, it performs the
+required dlopen of the plug-in shared binary, say, mylib.so (or
+mylib.dll on MS Windows, or mylib.sl on HPUX, or whatever file
+extension is standard on your platform).  The plug_in command opens
+the shared library (which must be installed someplace in Y_HOME or
+~/yorick), and retrieves the function pointer/name information to
+expose the compiled routines to interpreted builtin functions.  The
+point of this is, that the #include file defining the interpreted
+interface to a compiled yorick package (that is, containing a plug_in
+command), dynamically links to the plug-in, so that including it
+actaully makes the compiled functions available, just as including a
+purely interpreted package makes those functions available.
+
+If the file has already been loaded, plug_in is a no-op; you cannot
+develop a dynamically linked object by including multiple versions,
+since the ability to "dlclose" and then reopen such a file is not
+common to all platforms.  The plug_in function will also recognize the
+case that the associated package was statically linked when yorick was
+built.  In this case, plug_in is again a no-op.  That way, you do not
+need to change any compiled code to run on a platform that does not
+support plug-ins, and you can still get all the functionality by
+building a special version of yorick that includes statically linked
+versions of all your packages.

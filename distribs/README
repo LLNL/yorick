@@ -1,0 +1,20 @@
+Yorick distributions
+--------------------
+
+Here are templates for producing yorick distributions for various open
+source software systems.
+
+../debian/    - Debian GNU/Linux
+
+yorick.spec   - RedHat (or Fedora) RPM
+                Version, Release must be updated from ../VERSION
+
+yorick        - FreeBSD port, must use
+                  md5sum -b yorick-$version.$release.tgz
+                to update the yorick/distinfo file (using ./md5 script),
+                and update PORTVERSION in yorick/Makefile
+
+yorick.info   - Fink port, must update Source-MD5
+
+md5           - shell script to compute md5 checksum using either
+                md5 or md5sum utility

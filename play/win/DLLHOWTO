@@ -1,0 +1,71 @@
+Making a yorick plugin as a MSWindows DLL
+-----------------------------------------
+
+As on many other systems, the problem is that the dll both provides
+compiled functions to be called by yorick, and requires calling
+functions (such as yarg_d to get an argument or YError to abort on
+error) which are supplied by yorick.  Other plugin systems, such as
+browser plugins, are constructed in such a way that the plugin
+contains a function which requests the addresses of any functions or
+data which the plugin functions require -- in other words, the plugin
+itself contains the code used to link it back to the parent
+executable.  Yorick expects the dynamic linker to provide this service
+(the links in the other direction already are made by a linker based
+on dlopen/dlsym internal to yorick).
+
+Suppose that an executable cfg.exe contains a function testcall, which
+is called by a dynamic load library udltest.dll, which cfg.exe will
+load using LoadLibrary (the MSWindows equivalent of dlopen).  When you
+build udltest.dll, the linker fails because udltest.dll contains an
+unsatisfied external, testcall.  In the cfg.exe source, testcall
+should be declared like this:
+
+PLUG_EXPORT int testcall(int);
+
+This alerts the linker to put testcall in a table of symbols that
+cfg.exe exports, and to generate code which will be used by the
+dynamic linker at runtime to link references by udltest.dll to
+testcall.  In the udltest.dll source, it should be declared like this:
+
+PLUG_IMPORT int testcall(int);
+
+See plugin.h for the definitions of PLUG_EXPORT and PLUG_IMPORT.
+
+Next, on the linker command line, you need a file which tells the
+dynamic linker the name of the module containing the testcall
+function; it is not sufficient to simply alert it that testcall can be
+found somewhere external to udltest.dll, you have to tell it exactly
+where.  One way to do that is to prepare a cfg.def file that looks
+like this:
+
+LIBRARY udltest.dll
+IMPORTS
+testcall = cfg.exe.testcall
+
+If you put cfg.def on the linker command line for udltest.dll, the
+calls to testcall in udltest.dll will be resolved to the testcall in
+the cfg.exe module at runtime, which is what you want.  In fact, with
+this cfg.def file, you do not need to declare testcall using
+PLUG_IMPORT; a normal extern declaration is suffices.  (However, the
+explicit PLUG_IMPORT declaration may still be necessary to be able to
+link data as opposed to fucntion references?)
+
+The cygwin dlltool utility can assist in creating cfg.def, as well
+as import libraries that ought to address the same issue.  There ought
+to be a way to implement the cfg.def file using import libraries, as
+created by dlltool, but so far I have been unable to find it.  (The
+problem appears to be that the name yorick.exe does not get written
+into the .lib file.)
+
+Note that dlltool has a --export-all-symbols flag, which might avoid
+the PLUG_API macro in play/plugin.h, in a manner very similar to the
+loader switch (PLUG_EXPORT in Make.cfg) on many UNIX platforms.
+
+dlltool -z libyor.def libyor.a
+sed -e 's/^EXPORTS/IMPORTS/' -e 's/ @ .*//' -e 's/\t//' <libyor.def >libyor.def1
+sed -e '3,$s/.*/\0 = yorick.exe.\0/' <libyor.def1 >libyor.def2
+
+Then
+1. Prepend LIBRARY line if necessary.  Apparently for the purpose of
+   linking the library file itself, this is unnecessary.
+2. Substitute yorick.exe as necessary.
