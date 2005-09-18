@@ -1,5 +1,5 @@
 /*
- * $Id: txpath.i,v 1.1 2005-09-18 22:06:13 dhmunro Exp $
+ * $Id: txpath.i,v 1.1.1.1 2005-09-18 22:06:13 dhmunro Exp $
  * Replacement for old meaning of text path= keyword.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

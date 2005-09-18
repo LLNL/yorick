@@ -1,5 +1,5 @@
 /*
- * $Id: fermi.i,v 1.1 2005-09-18 22:06:15 dhmunro Exp $
+ * $Id: fermi.i,v 1.1.1.1 2005-09-18 22:06:15 dhmunro Exp $
  * Fermi-Dirac integrals and inverses of orders -1/2, 1/2, 3/2, 5/2
  */
 /* Copyright (c) 2005, The Regents of the University of California.

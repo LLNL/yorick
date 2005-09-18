@@ -1,5 +1,5 @@
 /*
- * $Id: hack103.c,v 1.1 2005-09-18 22:05:45 dhmunro Exp $
+ * $Id: hack103.c,v 1.1.1.1 2005-09-18 22:05:45 dhmunro Exp $
  * fix bugs in sqrt, tanh, sinh shipped with MacOS X 10.3
  */
 /* Copyright (c) 2005, The Regents of the University of California.

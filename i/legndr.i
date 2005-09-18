@@ -1,5 +1,5 @@
 /*
- * $Id: legndr.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ * $Id: legndr.i,v 1.1.1.1 2005-09-18 22:06:00 dhmunro Exp $
  * Compute Legendre polynomials and associated Legendre functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

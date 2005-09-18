@@ -1,5 +1,5 @@
 /*
- * $Id: fitlsq.i,v 1.1 2005-09-18 22:05:56 dhmunro Exp $
+ * $Id: fitlsq.i,v 1.1.1.1 2005-09-18 22:05:56 dhmunro Exp $
  * Least squares fit a piecewise linear function to data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

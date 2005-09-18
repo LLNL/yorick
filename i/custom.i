@@ -1,5 +1,5 @@
 /*
- * $Id: custom.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: custom.i,v 1.1.1.1 2005-09-18 22:05:54 dhmunro Exp $
  * Default version of user customization file --
  * read after std.i and all package initalization files.
  */

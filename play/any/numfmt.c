@@ -1,5 +1,5 @@
 /*
- * $Id: numfmt.c,v 1.1 2005-09-18 22:05:43 dhmunro Exp $
+ * $Id: numfmt.c,v 1.1.1.1 2005-09-18 22:05:43 dhmunro Exp $
  * compute size, alignment, byte order, and floating point format
  */
 /* Copyright (c) 2005, The Regents of the University of California.

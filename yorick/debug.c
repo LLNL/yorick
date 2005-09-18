@@ -1,5 +1,5 @@
 /*
- * $Id: debug.c,v 1.1 2005-09-18 22:04:00 dhmunro Exp $
+ * $Id: debug.c,v 1.1.1.1 2005-09-18 22:04:00 dhmunro Exp $
  *
  * Define Yorick debugging functions.
  */

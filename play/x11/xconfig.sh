@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: xconfig.sh,v 1.1 2005-09-18 22:05:34 dhmunro Exp $
+# $Id: xconfig.sh,v 1.1.1.1 2005-09-18 22:05:34 dhmunro Exp $
 
 debug=no
 

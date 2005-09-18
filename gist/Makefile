@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:04:19 dhmunro Exp $
+# $Id: Makefile,v 1.1.1.1 2005-09-18 22:04:19 dhmunro Exp $
 SHELL=/bin/sh
 MAKE=make
 X11OBJS=xfancy.o xbasic.o

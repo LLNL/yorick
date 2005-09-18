@@ -1,5 +1,5 @@
 /*
- * $Id: dlamc3.c,v 1.1 2005-09-18 22:04:48 dhmunro Exp $
+ * $Id: dlamc3.c,v 1.1.1.1 2005-09-18 22:04:48 dhmunro Exp $
  * LAPACK routine to add in non-optimized way -- compile this -g always.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

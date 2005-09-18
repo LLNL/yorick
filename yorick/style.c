@@ -1,5 +1,5 @@
 /*
- * $Id: style.c,v 1.1 2005-09-18 22:04:15 dhmunro Exp $
+ * $Id: style.c,v 1.1.1.1 2005-09-18 22:04:15 dhmunro Exp $
  * Set/get details of graphics style for style.i functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

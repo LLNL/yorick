@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.1 2005-09-18 22:03:47 dhmunro Exp $
+ * $Id: ascio.c,v 1.1.1.1 2005-09-18 22:03:47 dhmunro Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.

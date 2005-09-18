@@ -1,5 +1,5 @@
 /*
- * $Id: readn.i,v 1.1 2005-09-18 22:06:06 dhmunro Exp $
+ * $Id: readn.i,v 1.1.1.1 2005-09-18 22:06:06 dhmunro Exp $
  * Provides a handy way to read numbers from a file, skipping
  * non-numeric tokens.
  */

@@ -1,5 +1,5 @@
 /*
- * $Id: fpuset.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: fpuset.c,v 1.1.1.1 2005-09-18 22:05:39 dhmunro Exp $
  * set up FPU to trap floating point exceptions
  * - this is very non-portable, not covered by ANSI C, POSIX, or even C9X
  * - if you port to a new platform (eg- Ultrix) please contact the author

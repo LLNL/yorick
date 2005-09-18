@@ -6,10 +6,10 @@
  * Copyright (c) 2000-2002 Eric THIEBAUT.
  *
  * History:
- *	$Id: fits.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ *	$Id: fits.i,v 1.1.1.1 2005-09-18 22:06:00 dhmunro Exp $
  *	$Log: fits.i,v $
- *	Revision 1.1  2005-09-18 22:06:00  dhmunro
- *	Initial revision
+ *	Revision 1.1.1.1  2005-09-18 22:06:00  dhmunro
+ *	initial import
  *
  *	Revision 1.16  2004/09/03 09:13:27  eric
  *	 - New function fits_pad_hdu to round up file size to a multiple
@@ -97,7 +97,7 @@
 
 /*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.1 $";
+fits = "$Revision: 1.1.1.1 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at

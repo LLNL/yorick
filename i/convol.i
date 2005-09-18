@@ -1,5 +1,5 @@
 /*
- * $Id: convol.i,v 1.1 2005-09-18 22:06:14 dhmunro Exp $
+ * $Id: convol.i,v 1.1.1.1 2005-09-18 22:06:14 dhmunro Exp $
  * convolution of two vectors using fft
  */
 /* Copyright (c) 2005, The Regents of the University of California.

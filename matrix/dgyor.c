@@ -1,5 +1,5 @@
 /*
- * $Id: dgyor.c,v 1.1 2005-09-18 22:04:48 dhmunro Exp $
+ * $Id: dgyor.c,v 1.1.1.1 2005-09-18 22:04:48 dhmunro Exp $
  * Yorick wrappers for LAPACK routines.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

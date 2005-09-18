@@ -1,5 +1,5 @@
 /*
- * $Id: dlasr.c,v 1.1 2005-09-18 22:04:50 dhmunro Exp $
+ * $Id: dlasr.c,v 1.1.1.1 2005-09-18 22:04:50 dhmunro Exp $
  * LAPACK matrix solver using SVD (split from dgelss.c).
  */
 /* Copyright (c) 2005, The Regents of the University of California.

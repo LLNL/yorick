@@ -1,5 +1,5 @@
 /*
- * $Id: pathfun.c,v 1.1 2005-09-18 22:04:16 dhmunro Exp $
+ * $Id: pathfun.c,v 1.1.1.1 2005-09-18 22:04:16 dhmunro Exp $
  * Implement path name expansion and utility functions required by Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

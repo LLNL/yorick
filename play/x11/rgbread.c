@@ -1,5 +1,5 @@
 /*
- * $Id: rgbread.c,v 1.1 2005-09-18 22:05:34 dhmunro Exp $
+ * $Id: rgbread.c,v 1.1.1.1 2005-09-18 22:05:34 dhmunro Exp $
  * p_rgbread for X11, reads window contents into pixmap
  */
 /* Copyright (c) 2005, The Regents of the University of California.

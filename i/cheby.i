@@ -1,5 +1,5 @@
 /*
- * $Id: cheby.i,v 1.1 2005-09-18 22:06:14 dhmunro Exp $
+ * $Id: cheby.i,v 1.1.1.1 2005-09-18 22:06:14 dhmunro Exp $
  * Chebyshev polynomial approximation routines
  * after Numerical Recipes (Press et. al.) section 5.6
  */

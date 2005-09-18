@@ -1,5 +1,5 @@
 /*
- * $Id: clips.c,v 1.1 2005-09-18 22:05:35 dhmunro Exp $
+ * $Id: clips.c,v 1.1.1.1 2005-09-18 22:05:35 dhmunro Exp $
  * p_clip for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.

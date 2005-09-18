@@ -1,5 +1,5 @@
 # Gist earth.gp palette
-# $Id: earth.gp,v 1.1 2005-09-18 22:06:18 dhmunro Exp $
+# $Id: earth.gp,v 1.1.1.1 2005-09-18 22:06:18 dhmunro Exp $
 
 # dk blue - lt blue - dk green - yellow green - lt brown - white
 # sort of like mapmakers colors from deep ocean to snow capped peak

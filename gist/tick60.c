@@ -1,5 +1,5 @@
 /*
- * $Id: tick60.c,v 1.1 2005-09-18 22:04:36 dhmunro Exp $
+ * $Id: tick60.c,v 1.1.1.1 2005-09-18 22:04:36 dhmunro Exp $
  * Implement base 60 ticks and labels for coordinate systems.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

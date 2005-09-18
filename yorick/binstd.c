@@ -1,5 +1,5 @@
 /*
- * $Id: binstd.c,v 1.1 2005-09-18 22:03:53 dhmunro Exp $
+ * $Id: binstd.c,v 1.1.1.1 2005-09-18 22:03:53 dhmunro Exp $
  * Define various standard binary data formats.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

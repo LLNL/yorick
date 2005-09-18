@@ -1,5 +1,5 @@
 /*
- * $Id: string.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ * $Id: string.i,v 1.1.1.1 2005-09-18 22:06:00 dhmunro Exp $
  * String and related convenience functions.
  * (Based on routines contributed by Eric Theibaut.)
  */

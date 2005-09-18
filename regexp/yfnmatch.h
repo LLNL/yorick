@@ -1,5 +1,5 @@
 /*
- * $Id: yfnmatch.h,v 1.1 2005-09-18 22:06:21 dhmunro Exp $
+ * $Id: yfnmatch.h,v 1.1.1.1 2005-09-18 22:06:21 dhmunro Exp $
  */
 /*-
  * Copyright (c) 1992, 1993

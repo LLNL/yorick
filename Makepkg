@@ -1,4 +1,4 @@
-# $Id: Makepkg,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# $Id: Makepkg,v 1.1.1.1 2005-09-18 22:03:40 dhmunro Exp $
 # standard parts of yorick package Makefile
 SHELL=/bin/sh
 MAKE=make

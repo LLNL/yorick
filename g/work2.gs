@@ -1,5 +1,5 @@
 # Gist work2.gs drawing style
-# $Id: work2.gs,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: work2.gs,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # Two overlayed coordinate systems on a portrait page
 # Legends: two columns below viewport, no contour legends

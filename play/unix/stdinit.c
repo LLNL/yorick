@@ -1,5 +1,5 @@
 /*
- * $Id: stdinit.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: stdinit.c,v 1.1.1.1 2005-09-18 22:05:39 dhmunro Exp $
  * UNIX version of play terminal I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.

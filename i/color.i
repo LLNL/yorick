@@ -1,5 +1,5 @@
 /*
- * $Id: color.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: color.i,v 1.1.1.1 2005-09-18 22:05:54 dhmunro Exp $
  * Hue-Saturation-Value color representation routines and other
  * color and palette construction tools.
  */

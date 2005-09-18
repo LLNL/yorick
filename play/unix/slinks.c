@@ -1,5 +1,5 @@
 /*
- * $Id: slinks.c,v 1.1 2005-09-18 22:05:41 dhmunro Exp $
+ * $Id: slinks.c,v 1.1.1.1 2005-09-18 22:05:41 dhmunro Exp $
  * u_track_link and u_find_exe functions from playu.h
  */
 /* Copyright (c) 2005, The Regents of the University of California.

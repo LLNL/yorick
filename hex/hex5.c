@@ -1,5 +1,5 @@
 /*
- * $Id: hex5.c,v 1.1 2005-09-18 22:05:49 dhmunro Exp $
+ * $Id: hex5.c,v 1.1.1.1 2005-09-18 22:05:49 dhmunro Exp $
  * use 5-tet decomposition to track rays through hex mesh
  */
 /* Copyright (c) 2005, The Regents of the University of California.

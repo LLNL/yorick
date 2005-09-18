@@ -1,5 +1,5 @@
 # Gist boxed2.gs drawing style
-# $Id: boxed2.gs,v 1.1 2005-09-18 22:06:18 dhmunro Exp $
+# $Id: boxed2.gs,v 1.1.1.1 2005-09-18 22:06:18 dhmunro Exp $
 
 # Two overlayed coordinate systems on a portrait page with frame
 # Legends: two columns below viewport, no contour legends

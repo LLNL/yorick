@@ -1,5 +1,5 @@
 /*
- * $Id: ops3.c,v 1.1 2005-09-18 22:04:10 dhmunro Exp $
+ * $Id: ops3.c,v 1.1.1.1 2005-09-18 22:04:10 dhmunro Exp $
  * Implement assignment operations:
  *
  *  Assign =   Increment += (and ++)   Decrement -= (and --)

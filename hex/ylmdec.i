@@ -1,5 +1,5 @@
 /*
- * $Id: ylmdec.i,v 1.1 2005-09-18 22:05:46 dhmunro Exp $
+ * $Id: ylmdec.i,v 1.1.1.1 2005-09-18 22:05:46 dhmunro Exp $
  * decompose a radiation pattern into spherical harmonics
  */
 /* Copyright (c) 2005, The Regents of the University of California.

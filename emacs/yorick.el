@@ -1,6 +1,6 @@
 ;;; yorick.el --- Yorick Development Environment for Emacs
 ;;; for emacs versions >=19 (UNIX or MS Windows)
-;;; $Id: yorick.el,v 1.1 2005-09-18 22:05:53 dhmunro Exp $
+;;; $Id: yorick.el,v 1.1.1.1 2005-09-18 22:05:53 dhmunro Exp $
 
 ;; Copyright (c) 2000 David H. Munro.
 

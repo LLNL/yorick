@@ -1,5 +1,5 @@
 /*
- * $Id: lecuyer.h,v 1.1 2005-09-18 22:03:44 dhmunro Exp $
+ * $Id: lecuyer.h,v 1.1.1.1 2005-09-18 22:03:44 dhmunro Exp $
  * random number generator interface
  * L'Ecuyer, Mathematics of Computation, 65, pp 203-213 (96)
  */

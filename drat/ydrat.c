@@ -1,5 +1,5 @@
 /*
- * $Id: ydrat.c,v 1.1 2005-09-18 22:04:57 dhmunro Exp $
+ * $Id: ydrat.c,v 1.1.1.1 2005-09-18 22:04:57 dhmunro Exp $
  * High level interface routines for Yorick Drat (interpreter dependent).
  */
 /* Copyright (c) 2005, The Regents of the University of California.

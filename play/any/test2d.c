@@ -1,5 +1,5 @@
 /*
- * $Id: test2d.c,v 1.1 2005-09-18 22:05:43 dhmunro Exp $
+ * $Id: test2d.c,v 1.1.1.1 2005-09-18 22:05:43 dhmunro Exp $
  * test code to exercise play features
  */
 /* Copyright (c) 2005, The Regents of the University of California.

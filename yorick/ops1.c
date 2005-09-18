@@ -1,5 +1,5 @@
 /*
- * $Id: ops1.c,v 1.1 2005-09-18 22:04:09 dhmunro Exp $
+ * $Id: ops1.c,v 1.1.1.1 2005-09-18 22:04:09 dhmunro Exp $
  * Implement bitwise binary operations and unary operations:
  *
  *  Or |   And &   Xor ~

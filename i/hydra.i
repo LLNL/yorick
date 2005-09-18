@@ -1,5 +1,5 @@
 /*
- * $Id: hydra.i,v 1.1 2005-09-18 22:06:17 dhmunro Exp $
+ * $Id: hydra.i,v 1.1.1.1 2005-09-18 22:06:17 dhmunro Exp $
  * functions to access hydra-generated Silo/PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.

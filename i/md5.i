@@ -1,5 +1,5 @@
 /*
- * $Id: md5.i,v 1.1 2005-09-18 22:06:16 dhmunro Exp $
+ * $Id: md5.i,v 1.1.1.1 2005-09-18 22:06:16 dhmunro Exp $
  * routines to compute MD5 checksums
  * entirely in interpreted code, so they are slow,
  *   on the order of a few seconds per megabyte

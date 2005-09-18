@@ -1,7 +1,7 @@
 
       The BENCH program benchmarks and tests Gist
 
-      $Id: README.B,v 1.1 2005-09-18 22:04:20 dhmunro Exp $
+      $Id: README.B,v 1.1.1.1 2005-09-18 22:04:20 dhmunro Exp $
 
 The execute line for the program is
 

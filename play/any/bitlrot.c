@@ -1,5 +1,5 @@
 /*
- * $Id: bitlrot.c,v 1.1 2005-09-18 22:05:44 dhmunro Exp $
+ * $Id: bitlrot.c,v 1.1.1.1 2005-09-18 22:05:44 dhmunro Exp $
  * routines to rotate bitmaps, least significant bit first version
  */
 /* Copyright (c) 2005, The Regents of the University of California.

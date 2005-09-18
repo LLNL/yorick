@@ -1,5 +1,5 @@
 /*
- * $Id: ops2.c,v 1.1 2005-09-18 22:03:58 dhmunro Exp $
+ * $Id: ops2.c,v 1.1.1.1 2005-09-18 22:03:58 dhmunro Exp $
  * Implement arithmetic binary operations:
  *
  *  Add +   Subtract -   Multiply *   Divide /   Modulo %   Power ^

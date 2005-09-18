@@ -1,5 +1,5 @@
 /*
- * $Id: ugetc.h,v 1.1 2005-09-18 22:05:40 dhmunro Exp $
+ * $Id: ugetc.h,v 1.1.1.1 2005-09-18 22:05:40 dhmunro Exp $
  * play interface for non-event-driven programs
  * -- incompatible with p_stdinit/p_stdout functions
  */

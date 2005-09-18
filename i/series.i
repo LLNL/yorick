@@ -1,5 +1,5 @@
 /*
- * $Id: series.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: series.i,v 1.1.1.1 2005-09-18 22:06:07 dhmunro Exp $
  * Routines for handling geometric series (e.g.- tapered zoning).
  */
 /* Copyright (c) 2005, The Regents of the University of California.

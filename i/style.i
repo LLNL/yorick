@@ -1,5 +1,5 @@
 /*
- * $Id: style.i,v 1.1 2005-09-18 22:06:10 dhmunro Exp $
+ * $Id: style.i,v 1.1.1.1 2005-09-18 22:06:10 dhmunro Exp $
  * Get and set graphics styles from within the Yorick interpreter.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

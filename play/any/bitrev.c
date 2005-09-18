@@ -1,5 +1,5 @@
 /*
- * $Id: bitrev.c,v 1.1 2005-09-18 22:05:44 dhmunro Exp $
+ * $Id: bitrev.c,v 1.1.1.1 2005-09-18 22:05:44 dhmunro Exp $
  * array of bytes with reversed bits
  */
 /* Copyright (c) 2005, The Regents of the University of California.

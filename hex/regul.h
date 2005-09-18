@@ -1,5 +1,5 @@
 /*
- * $Id: regul.h,v 1.1 2005-09-18 22:05:49 dhmunro Exp $
+ * $Id: regul.h,v 1.1.1.1 2005-09-18 22:05:49 dhmunro Exp $
  * regular mesh specific tracking routines
  */
 /* Copyright (c) 2005, The Regents of the University of California.

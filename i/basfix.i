@@ -1,5 +1,5 @@
 /*
- * $Id: basfix.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: basfix.i,v 1.1.1.1 2005-09-18 22:05:54 dhmunro Exp $
  * Fixes to handle Basis-generated PDB file weirdnesses.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

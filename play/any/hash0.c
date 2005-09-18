@@ -1,5 +1,5 @@
 /*
- * $Id: hash0.c,v 1.1 2005-09-18 22:05:42 dhmunro Exp $
+ * $Id: hash0.c,v 1.1.1.1 2005-09-18 22:05:42 dhmunro Exp $
  * mask data for hashing functions
  */
 /* Copyright (c) 2005, The Regents of the University of California.

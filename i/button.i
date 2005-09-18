@@ -1,5 +1,5 @@
 /*
- * $Id: button.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: button.i,v 1.1.1.1 2005-09-18 22:05:54 dhmunro Exp $
  * Implement buttons in Yorick graphics window.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

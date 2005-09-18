@@ -1,5 +1,5 @@
 /*
- * $Id: dgecon.c,v 1.1 2005-09-18 22:04:39 dhmunro Exp $
+ * $Id: dgecon.c,v 1.1.1.1 2005-09-18 22:04:39 dhmunro Exp $
  * LAPACK routines to estimate the condition number of a matrix.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

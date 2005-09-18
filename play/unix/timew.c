@@ -1,5 +1,5 @@
 /*
- * $Id: timew.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: timew.c,v 1.1.1.1 2005-09-18 22:05:39 dhmunro Exp $
  * p_wall_secs for UNIX machines (ANSI C version not UNIX specific)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

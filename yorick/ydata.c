@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.c,v 1.1 2005-09-18 22:04:16 dhmunro Exp $
+ * $Id: ydata.c,v 1.1.1.1 2005-09-18 22:04:16 dhmunro Exp $
  * Implement functions for Yorick-specific types of data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

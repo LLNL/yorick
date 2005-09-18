@@ -1,5 +1,5 @@
 /*
- * $Id: bcast.c,v 1.1 2005-09-18 22:03:48 dhmunro Exp $
+ * $Id: bcast.c,v 1.1.1.1 2005-09-18 22:03:48 dhmunro Exp $
  * Implement generic broadcast, scatter, and gather functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

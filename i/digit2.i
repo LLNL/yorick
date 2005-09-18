@@ -1,5 +1,5 @@
 /*
- * $Id: digit2.i,v 1.1 2005-09-18 22:05:55 dhmunro Exp $
+ * $Id: digit2.i,v 1.1.1.1 2005-09-18 22:05:55 dhmunro Exp $
  * 2D versions of digitize and interp functions (based on mesh_loc)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: eps.c,v 1.1 2005-09-18 22:04:37 dhmunro Exp $
+ * $Id: eps.c,v 1.1.1.1 2005-09-18 22:04:37 dhmunro Exp $
  * Define the Encapsulated PostScript pseudo-engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

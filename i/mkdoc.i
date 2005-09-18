@@ -1,5 +1,5 @@
 /*
- * $Id: mkdoc.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ * $Id: mkdoc.i,v 1.1.1.1 2005-09-18 22:06:00 dhmunro Exp $
  * Alphabetize DOCUMENT comments and prepare for line printer.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

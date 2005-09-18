@@ -1,5 +1,5 @@
 /*
- * $Id: yasync.h,v 1.1 2005-09-18 22:04:15 dhmunro Exp $
+ * $Id: yasync.h,v 1.1.1.1 2005-09-18 22:04:15 dhmunro Exp $
  * Headers describing a simple memory management package for
  * Yorick-derived programs, which is "safe" against asynchronous
  * interrupts.  That is, memory allocated with this package will

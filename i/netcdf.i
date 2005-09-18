@@ -1,5 +1,5 @@
 /*
- * $Id: netcdf.i,v 1.1 2005-09-18 22:06:02 dhmunro Exp $
+ * $Id: netcdf.i,v 1.1.1.1 2005-09-18 22:06:02 dhmunro Exp $
  * Yorick procedures to open a netCDF file
  *
  * The definitive reference for netCDF files is:

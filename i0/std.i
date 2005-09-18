@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.1 2005-09-18 22:05:30 dhmunro Exp $
+ * $Id: std.i,v 1.1.1.1 2005-09-18 22:05:30 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

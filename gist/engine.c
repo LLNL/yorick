@@ -1,5 +1,5 @@
 /*
- * $Id: engine.c,v 1.1 2005-09-18 22:04:19 dhmunro Exp $
+ * $Id: engine.c,v 1.1.1.1 2005-09-18 22:04:19 dhmunro Exp $
  * Implement common properties of all GIST engines
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: pmain.c,v 1.1 2005-09-18 22:05:40 dhmunro Exp $
+ * $Id: pmain.c,v 1.1.1.1 2005-09-18 22:05:40 dhmunro Exp $
  * play main function for UNIX with raw X11 (no X toolkit)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: yorick.c,v 1.1 2005-09-18 22:03:56 dhmunro Exp $
+ * $Id: yorick.c,v 1.1.1.1 2005-09-18 22:03:56 dhmunro Exp $
  *
  * Based on Berkeley Yacc (byacc) parser generated from yorick.y.
  * Modified to handle parser stack overflow gracefully.

@@ -1,5 +1,5 @@
 /*
- * $Id: dgels.c,v 1.1 2005-09-18 22:04:43 dhmunro Exp $
+ * $Id: dgels.c,v 1.1.1.1 2005-09-18 22:04:43 dhmunro Exp $
  * LAPACK routines to solve (in least squares sense) a matrix
  * by QR or LQ decomposition.
  */

@@ -1,5 +1,5 @@
 /*
- * $Id: dgtsv.c,v 1.1 2005-09-18 22:04:48 dhmunro Exp $
+ * $Id: dgtsv.c,v 1.1.1.1 2005-09-18 22:04:48 dhmunro Exp $
  * LAPACK routine to solve a tridiagonal matrix.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: ops.c,v 1.1 2005-09-18 22:04:12 dhmunro Exp $
+ * $Id: ops.c,v 1.1.1.1 2005-09-18 22:04:12 dhmunro Exp $
  *
  * Define miscellaneous virtual machine functions.
  */

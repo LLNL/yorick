@@ -1,5 +1,5 @@
 /*
- * $Id: yio.c,v 1.1 2005-09-18 22:04:14 dhmunro Exp $
+ * $Id: yio.c,v 1.1.1.1 2005-09-18 22:04:14 dhmunro Exp $
  * Implement Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

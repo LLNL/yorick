@@ -1,5 +1,5 @@
 /*
- * $Id: kepler.i,v 1.1 2005-09-18 22:06:15 dhmunro Exp $
+ * $Id: kepler.i,v 1.1.1.1 2005-09-18 22:06:15 dhmunro Exp $
  * yorick solar system model
  */
 /* Copyright (c) 2005, The Regents of the University of California.

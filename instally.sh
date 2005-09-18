@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: instally.sh,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# $Id: instally.sh,v 1.1.1.1 2005-09-18 22:03:40 dhmunro Exp $
 
 # set Y_SITE, Y_HOME environment variables
 if test -r Make.cfg; then

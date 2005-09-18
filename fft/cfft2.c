@@ -1,5 +1,5 @@
 /*
- * $Id: cfft2.c,v 1.1 2005-09-18 22:04:52 dhmunro Exp $
+ * $Id: cfft2.c,v 1.1.1.1 2005-09-18 22:04:52 dhmunro Exp $
  * FFT with strides.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

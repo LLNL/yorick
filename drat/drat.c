@@ -1,5 +1,5 @@
 /*
- * $Id: drat.c,v 1.1 2005-09-18 22:04:54 dhmunro Exp $
+ * $Id: drat.c,v 1.1.1.1 2005-09-18 22:04:54 dhmunro Exp $
  * High level interface routines for Drat (interpreter independent).
  */
 /* Copyright (c) 2005, The Regents of the University of California.

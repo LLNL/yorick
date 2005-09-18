@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:05:38 dhmunro Exp $
+# $Id: Makefile,v 1.1.1.1 2005-09-18 22:05:38 dhmunro Exp $
 # for cygwin mingw
 
 SHELL=/bin/sh

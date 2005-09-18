@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:05:08 dhmunro Exp $
+# $Id: Makefile,v 1.1.1.1 2005-09-18 22:05:08 dhmunro Exp $
 # you need the makeinfo and texi2dvi programs from gnu.org
 # and the tex typesetting system from tug.org
 MAKEINFO = makeinfo

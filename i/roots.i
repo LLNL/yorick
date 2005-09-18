@@ -1,5 +1,5 @@
 /*
- * $Id: roots.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: roots.i,v 1.1.1.1 2005-09-18 22:06:07 dhmunro Exp $
  * Collection of root, maximum, and minimum finders.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

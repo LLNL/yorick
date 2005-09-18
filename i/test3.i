@@ -1,5 +1,5 @@
 /*
- * $Id: test3.i,v 1.1 2005-09-18 22:06:11 dhmunro Exp $
+ * $Id: test3.i,v 1.1.1.1 2005-09-18 22:06:11 dhmunro Exp $
  * Pure scalar math problem for timing Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

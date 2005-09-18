@@ -1,5 +1,5 @@
 /*
- * $Id: make.i,v 1.1 2005-09-18 22:06:17 dhmunro Exp $
+ * $Id: make.i,v 1.1.1.1 2005-09-18 22:06:17 dhmunro Exp $
  * create or update a Makefile for a yorick package (compiled extension)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

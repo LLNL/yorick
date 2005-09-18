@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.1 2005-09-18 22:04:07 dhmunro Exp $
+ * $Id: std2.c,v 1.1.1.1 2005-09-18 22:04:07 dhmunro Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.

@@ -1,5 +1,5 @@
 /*
- * $Id: multi.i,v 1.1 2005-09-18 22:06:02 dhmunro Exp $
+ * $Id: multi.i,v 1.1.1.1 2005-09-18 22:06:02 dhmunro Exp $
  * Drat/DSP routines defining and implementing a standard for
  * retrieving opacity/emissivity data from multiple files and
  * combining it for a single problem.

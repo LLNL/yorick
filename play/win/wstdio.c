@@ -1,5 +1,5 @@
 /*
- * $Id: wstdio.c,v 1.1 2005-09-18 22:05:38 dhmunro Exp $
+ * $Id: wstdio.c,v 1.1.1.1 2005-09-18 22:05:38 dhmunro Exp $
  * p_stdinit, p_stdout, p_stdin for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.

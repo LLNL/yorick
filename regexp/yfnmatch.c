@@ -1,4 +1,4 @@
-/* $Id: yfnmatch.c,v 1.1 2005-09-18 22:06:22 dhmunro Exp $
+/* $Id: yfnmatch.c,v 1.1.1.1 2005-09-18 22:06:22 dhmunro Exp $
  * sources:
  * http://www.freebsd.org/cgi/cvsweb.cgi/src/sys/libkern/fnmatch.c
  * http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libc/gen/fnmatch.c

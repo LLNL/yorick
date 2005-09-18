@@ -1,5 +1,5 @@
 /*
- * $Id: yhex.c,v 1.1 2005-09-18 22:05:51 dhmunro Exp $
+ * $Id: yhex.c,v 1.1.1.1 2005-09-18 22:05:51 dhmunro Exp $
  * Yorick-specific interface routines, see hex.i
  */
 /* Copyright (c) 2005, The Regents of the University of California.

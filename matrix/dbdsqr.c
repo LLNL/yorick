@@ -1,5 +1,5 @@
 /*
- * $Id: dbdsqr.c,v 1.1 2005-09-18 22:04:39 dhmunro Exp $
+ * $Id: dbdsqr.c,v 1.1.1.1 2005-09-18 22:04:39 dhmunro Exp $
  * LAPACK matrix solver using SVD.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

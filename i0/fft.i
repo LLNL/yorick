@@ -1,5 +1,5 @@
 /*
- * $Id: fft.i,v 1.1 2005-09-18 22:05:23 dhmunro Exp $
+ * $Id: fft.i,v 1.1.1.1 2005-09-18 22:05:23 dhmunro Exp $
  * Yorick interface to Swarztrauber FFT routines, modified for strides.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

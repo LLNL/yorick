@@ -1,5 +1,5 @@
 /*
- * $Id: romberg.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: romberg.i,v 1.1.1.1 2005-09-18 22:06:07 dhmunro Exp $
  * Romberg integrator, after qromb in Numerical Recipes (Press, et.al.)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: testp.i,v 1.1 2005-09-18 22:06:13 dhmunro Exp $
+ * $Id: testp.i,v 1.1.1.1 2005-09-18 22:06:13 dhmunro Exp $
  * Test of Yorick parser
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: nonc.c,v 1.1 2005-09-18 22:04:08 dhmunro Exp $
+ * $Id: nonc.c,v 1.1.1.1 2005-09-18 22:04:08 dhmunro Exp $
  * Implement a few math functions not in the standard C library:
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -24,7 +24,7 @@
             - complex version of other math.h functions
     signZ   - closest point on unit circle (+1 for 0)
 
-    $Id: nonc.c,v 1.1 2005-09-18 22:04:08 dhmunro Exp $
+    $Id: nonc.c,v 1.1.1.1 2005-09-18 22:04:08 dhmunro Exp $
  */
 
 /* NOTE: All complex function algorithms work when the destination

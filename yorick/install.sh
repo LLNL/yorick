@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: install.sh,v 1.1 2005-09-18 22:04:17 dhmunro Exp $
+# $Id: install.sh,v 1.1.1.1 2005-09-18 22:04:17 dhmunro Exp $
 
 # Usage: install.sh [- | group] [file1 [file2 ...]] dir
 # if dir does not exist, creates it

@@ -1,5 +1,5 @@
 /*
- * $Id: ieee.i,v 1.1 2005-09-18 22:06:15 dhmunro Exp $
+ * $Id: ieee.i,v 1.1.1.1 2005-09-18 22:06:15 dhmunro Exp $
  * work out native numeric formats, provide ieee NaN and Inf tests
  */
 /* Copyright (c) 2005, The Regents of the University of California.

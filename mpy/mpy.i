@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.1 2005-09-18 22:05:00 dhmunro Exp $
+ * $Id: mpy.i,v 1.1.1.1 2005-09-18 22:05:00 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

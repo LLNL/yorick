@@ -1,4 +1,4 @@
-/* $Id: yregexp.c,v 1.1 2005-09-18 22:06:22 dhmunro Exp $
+/* $Id: yregexp.c,v 1.1.1.1 2005-09-18 22:06:22 dhmunro Exp $
  * regular expression engine for yorick
  * source code has been slightly modified from the original version
  *   available at ftp://ftp.zoo.toronto.edu/pub/regex.shar

@@ -1,5 +1,5 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.1 2005-09-18 22:04:57 dhmunro Exp $
+# $Id: Makefile,v 1.1.1.1 2005-09-18 22:04:57 dhmunro Exp $
 
 Y_MAKEDIR=..
 Y_EXE=../yorick/yorick

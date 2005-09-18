@@ -1,5 +1,5 @@
 /*
- * $Id: udltest.c,v 1.1 2005-09-18 22:05:41 dhmunro Exp $
+ * $Id: udltest.c,v 1.1.1.1 2005-09-18 22:05:41 dhmunro Exp $
  * test of play dynamic link functions (with config.c TEST_DL branch)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

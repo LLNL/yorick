@@ -1,5 +1,5 @@
 /*
- * $Id: conterm.c,v 1.1 2005-09-18 22:05:37 dhmunro Exp $
+ * $Id: conterm.c,v 1.1.1.1 2005-09-18 22:05:37 dhmunro Exp $
  * console specific part of wstdio.c
  */
 /* Copyright (c) 2005, The Regents of the University of California.

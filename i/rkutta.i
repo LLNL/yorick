@@ -1,5 +1,5 @@
 /*
- * $Id: rkutta.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: rkutta.i,v 1.1.1.1 2005-09-18 22:06:07 dhmunro Exp $
  *  4th order Runge-Kutta integrator (rk_integrate, rkutta)
  * Also Bulirsch-Stoer integrator (bs_integrate, bstoer)
  * After routines in Numerical Recipes by Press et.al.

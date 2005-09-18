@@ -1,5 +1,5 @@
 /*
- * $Id: browser.c,v 1.1 2005-09-18 22:04:26 dhmunro Exp $
+ * $Id: browser.c,v 1.1.1.1 2005-09-18 22:04:26 dhmunro Exp $
  * Main for GIST CGM viewer
  */
 /* Copyright (c) 2005, The Regents of the University of California.

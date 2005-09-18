@@ -1,5 +1,5 @@
 /*
- * $Id: parse.c,v 1.1 2005-09-18 22:04:12 dhmunro Exp $
+ * $Id: parse.c,v 1.1.1.1 2005-09-18 22:04:12 dhmunro Exp $
  *
  * Define functions required to parse Yorick grammar.
  */

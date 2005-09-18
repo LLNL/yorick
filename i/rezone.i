@@ -1,5 +1,5 @@
 /*
- * $Id: rezone.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: rezone.i,v 1.1.1.1 2005-09-18 22:06:07 dhmunro Exp $
  * Point and click rezoner, written in interpreted Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

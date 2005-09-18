@@ -1,5 +1,5 @@
 /*
- * $Id: ellipse.i,v 1.1 2005-09-18 22:05:55 dhmunro Exp $
+ * $Id: ellipse.i,v 1.1.1.1 2005-09-18 22:05:55 dhmunro Exp $
  * Complete elliptic integrals.
  * (Maybe someday can find cn, sn, dn algorithms...)
  */

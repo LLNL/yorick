@@ -1,5 +1,5 @@
 /*
- * $Id: random.i,v 1.1 2005-09-18 22:06:05 dhmunro Exp $
+ * $Id: random.i,v 1.1.1.1 2005-09-18 22:06:05 dhmunro Exp $
  * Random numbers with various distributions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

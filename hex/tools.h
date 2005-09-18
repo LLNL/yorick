@@ -1,5 +1,5 @@
 /*
- * $Id: tools.h,v 1.1 2005-09-18 22:05:51 dhmunro Exp $
+ * $Id: tools.h,v 1.1.1.1 2005-09-18 22:05:51 dhmunro Exp $
  * headers and descriptions for ray tracing toolkit
  */
 /* Copyright (c) 2005, The Regents of the University of California.

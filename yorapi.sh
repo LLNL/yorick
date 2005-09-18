@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: yorapi.sh,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# $Id: yorapi.sh,v 1.1.1.1 2005-09-18 22:03:40 dhmunro Exp $
 # MSWindows and AIX both require lists of all symbols declared as PLUG_API
 # in order to properly link plugins.
 

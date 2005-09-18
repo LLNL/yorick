@@ -1,5 +1,5 @@
 # Gist yarg.gp palette
-# $Id: yarg.gp,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: yarg.gp,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # white - gray - black
 # linear gray scale from white to black

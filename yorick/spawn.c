@@ -1,5 +1,5 @@
 /*
- * $Id: spawn.c,v 1.1 2005-09-18 22:04:17 dhmunro Exp $
+ * $Id: spawn.c,v 1.1.1.1 2005-09-18 22:04:17 dhmunro Exp $
  * yorick spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.

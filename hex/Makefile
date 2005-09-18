@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:05:45 dhmunro Exp $
+# $Id: Makefile,v 1.1.1.1 2005-09-18 22:05:45 dhmunro Exp $
 # similar to any yorick package Makefile
 
 COPT=$(COPT_DEFAULT)

@@ -1,5 +1,5 @@
 # Gist boxed.gs drawing style
-# $Id: vgbox.gs,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: vgbox.gs,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # A single coordinate system on a portrait page with frame with big labels
 # This is more suitable for scale reduction or projection than boxed.gs.

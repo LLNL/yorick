@@ -1,5 +1,5 @@
 # Gist rainbow.gp palette
-# $Id: rainbow.gp,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: rainbow.gp,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # red - orange - yellow - green - blue - purple
 # colors in spectral order

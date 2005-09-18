@@ -1,5 +1,5 @@
 /*
- * $Id: test.i,v 1.1 2005-09-18 22:05:50 dhmunro Exp $
+ * $Id: test.i,v 1.1.1.1 2005-09-18 22:05:50 dhmunro Exp $
  * set various skip==1 before including to skip tests
  * set skip_all=1 to skip all tests
  * set timing_only==1 before including to do big timing test

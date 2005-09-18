@@ -1,5 +1,5 @@
 /*
- * $Id: gcd.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ * $Id: gcd.i,v 1.1.1.1 2005-09-18 22:06:00 dhmunro Exp $
  * GCD, LCM, and prime factorization routines.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

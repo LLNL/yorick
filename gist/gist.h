@@ -1,5 +1,5 @@
 /*
- * $Id: gist.h,v 1.1 2005-09-18 22:04:33 dhmunro Exp $
+ * $Id: gist.h,v 1.1.1.1 2005-09-18 22:04:33 dhmunro Exp $
  * Declare GIST interface for C programs
  */
 /* Copyright (c) 2005, The Regents of the University of California.

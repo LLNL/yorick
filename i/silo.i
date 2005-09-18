@@ -1,5 +1,5 @@
 /*
- * $Id: silo.i,v 1.1 2005-09-18 22:06:16 dhmunro Exp $
+ * $Id: silo.i,v 1.1.1.1 2005-09-18 22:06:16 dhmunro Exp $
  * support for Silo files, a higher level binary format than PDB
  */
 /* Copyright (c) 2005, The Regents of the University of California.

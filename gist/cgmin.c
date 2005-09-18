@@ -1,5 +1,5 @@
 /*
- * $Id: cgmin.c,v 1.1 2005-09-18 22:04:36 dhmunro Exp $
+ * $Id: cgmin.c,v 1.1.1.1 2005-09-18 22:04:36 dhmunro Exp $
  * Define the CGM reader/echoer for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

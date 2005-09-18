@@ -1,5 +1,5 @@
 /*
- * $Id: gammp.i,v 1.1 2005-09-18 22:06:14 dhmunro Exp $
+ * $Id: gammp.i,v 1.1.1.1 2005-09-18 22:06:14 dhmunro Exp $
  * Incomplete gamma (chi-square distribution) and beta functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

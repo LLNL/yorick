@@ -1,5 +1,5 @@
 /*
- * $Id: mm.c,v 1.1 2005-09-18 22:05:42 dhmunro Exp $
+ * $Id: mm.c,v 1.1.1.1 2005-09-18 22:05:42 dhmunro Exp $
  *
  * load default function pointers for pstdlib.h interface
  * p_mminit and p_mmdebug override these defaults

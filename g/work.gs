@@ -1,5 +1,5 @@
 # Gist work.gs drawing style
-# $Id: work.gs,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: work.gs,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # A single coordinate system on a portrait page
 # Legends: two columns below viewport, contours in single column to right

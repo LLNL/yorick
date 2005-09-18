@@ -1,5 +1,5 @@
 /*
- * $Id: idlsave.i,v 1.1 2005-09-18 22:06:15 dhmunro Exp $
+ * $Id: idlsave.i,v 1.1.1.1 2005-09-18 22:06:15 dhmunro Exp $
  * read IDL save files
  * IDL is a trademark of Reasearch Systems Incorporated (RSI)
  * code based on work of Craig Markwardt

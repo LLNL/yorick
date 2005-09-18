@@ -1,5 +1,5 @@
 /*
- * $Id: getdc.c,v 1.1 2005-09-18 22:05:35 dhmunro Exp $
+ * $Id: getdc.c,v 1.1.1.1 2005-09-18 22:05:35 dhmunro Exp $
  * get a DC to draw into a window
  */
 /* Copyright (c) 2005, The Regents of the University of California.

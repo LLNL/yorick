@@ -1,5 +1,5 @@
 /*
- * $Id: dg.h,v 1.1 2005-09-18 22:04:40 dhmunro Exp $
+ * $Id: dg.h,v 1.1.1.1 2005-09-18 22:04:40 dhmunro Exp $
  * Headers for LAPACK and BLAS routines in this directory.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

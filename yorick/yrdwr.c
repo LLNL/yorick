@@ -1,5 +1,5 @@
 /*
- * $Id: yrdwr.c,v 1.1 2005-09-18 22:04:16 dhmunro Exp $
+ * $Id: yrdwr.c,v 1.1.1.1 2005-09-18 22:04:16 dhmunro Exp $
  * Implement YRead and YWrite functions, plus general gather/scatter
  * routines with StructDef format Converter.
  */

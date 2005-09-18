@@ -1,5 +1,5 @@
 /*
- * $Id: binio.h,v 1.1 2005-09-18 22:03:49 dhmunro Exp $
+ * $Id: binio.h,v 1.1.1.1 2005-09-18 22:03:49 dhmunro Exp $
  * Declare structures and functions for arrays of data that have
  * meaningful interpretations on disk.
  *

@@ -1,5 +1,5 @@
 /*
- * $Id: std1.c,v 1.1 2005-09-18 22:04:15 dhmunro Exp $
+ * $Id: std1.c,v 1.1.1.1 2005-09-18 22:04:15 dhmunro Exp $
  * More Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.

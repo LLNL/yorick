@@ -1,5 +1,5 @@
 /*
- * $Id: yhash.c,v 1.1 2005-09-18 22:04:09 dhmunro Exp $
+ * $Id: yhash.c,v 1.1.1.1 2005-09-18 22:04:09 dhmunro Exp $
  * Define interface to hash routines
  */
 /* Copyright (c) 2005, The Regents of the University of California.

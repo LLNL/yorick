@@ -1,5 +1,5 @@
 /*
- * $Id: demo1.i,v 1.1 2005-09-18 22:05:55 dhmunro Exp $
+ * $Id: demo1.i,v 1.1.1.1 2005-09-18 22:05:55 dhmunro Exp $
  * 1-D hydro code written in Yorick language
  */
 /* Copyright (c) 2005, The Regents of the University of California.

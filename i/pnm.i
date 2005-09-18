@@ -1,5 +1,5 @@
 /*
- * $Id: pnm.i,v 1.1 2005-09-18 22:06:04 dhmunro Exp $
+ * $Id: pnm.i,v 1.1.1.1 2005-09-18 22:06:04 dhmunro Exp $
  *
  * Read and write PBM, PGM, or PPM image files defined by the PBMPLUS
  * package by Jef Poskanzer.  The most recent version of this package

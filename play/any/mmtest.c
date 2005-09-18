@@ -1,5 +1,5 @@
 /*
- * $Id: mmtest.c,v 1.1 2005-09-18 22:05:42 dhmunro Exp $
+ * $Id: mmtest.c,v 1.1.1.1 2005-09-18 22:05:42 dhmunro Exp $
  * test pstdlib.h memory manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.

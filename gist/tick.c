@@ -1,5 +1,5 @@
 /*
- * $Id: tick.c,v 1.1 2005-09-18 22:04:34 dhmunro Exp $
+ * $Id: tick.c,v 1.1.1.1 2005-09-18 22:04:34 dhmunro Exp $
  * Implement ticks and labels for GIST coordinate systems
  */
 /* Copyright (c) 2005, The Regents of the University of California.

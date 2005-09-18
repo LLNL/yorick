@@ -1,5 +1,5 @@
 /*
- * $Id: uinbg.c,v 1.1 2005-09-18 22:05:40 dhmunro Exp $
+ * $Id: uinbg.c,v 1.1.1.1 2005-09-18 22:05:40 dhmunro Exp $
  * foreground/background detection function (UNIX arcana)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

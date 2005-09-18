@@ -1,5 +1,5 @@
 /*
- * $Id: handler.c,v 1.1 2005-09-18 22:05:37 dhmunro Exp $
+ * $Id: handler.c,v 1.1.1.1 2005-09-18 22:05:37 dhmunro Exp $
  * MS Windows exception handling
  * - w_interrupt raises a signal in worker thread from boss thread,
  *   idea from MSDN "Win32 Q&A" KillThrd library

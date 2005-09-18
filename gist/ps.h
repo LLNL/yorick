@@ -1,5 +1,5 @@
 /*
- * $Id: ps.h,v 1.1 2005-09-18 22:04:36 dhmunro Exp $
+ * $Id: ps.h,v 1.1.1.1 2005-09-18 22:04:36 dhmunro Exp $
  * Declare the PostScript engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

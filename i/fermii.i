@@ -1,5 +1,5 @@
 /*
- * $Id: fermii.i,v 1.1 2005-09-18 22:06:15 dhmunro Exp $
+ * $Id: fermii.i,v 1.1.1.1 2005-09-18 22:06:15 dhmunro Exp $
  * incomplete Fermi-Dirac integrals of orders -1/2, 1/2, 3/2, 5/2
  */
 /* Copyright (c) 2005, The Regents of the University of California.

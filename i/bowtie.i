@@ -1,5 +1,5 @@
 /*
- * $Id: bowtie.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: bowtie.i,v 1.1.1.1 2005-09-18 22:05:54 dhmunro Exp $
  * Detect bowties, boomerangs, and other topological oddities in
  * a quadrilateral mesh.
  */

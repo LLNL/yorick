@@ -1,5 +1,5 @@
 /*
- * $Id: ps.c,v 1.1 2005-09-18 22:04:30 dhmunro Exp $
+ * $Id: ps.c,v 1.1.1.1 2005-09-18 22:04:30 dhmunro Exp $
  * Implement the PostScript engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

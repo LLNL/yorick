@@ -1,5 +1,5 @@
 /*
- * $Id: heapsort.c,v 1.1 2005-09-18 22:03:44 dhmunro Exp $
+ * $Id: heapsort.c,v 1.1.1.1 2005-09-18 22:03:44 dhmunro Exp $
  * heapsort sorting routines
  */
 /* Copyright (c) 2005, The Regents of the University of California.

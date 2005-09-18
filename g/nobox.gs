@@ -1,5 +1,5 @@
 # Gist nobox.gs drawing style
-# $Id: nobox.gs,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: nobox.gs,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # A single coordinate system on a portrait page with no ticks or labels
 # Legends: none

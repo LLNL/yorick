@@ -1,5 +1,5 @@
 /*
- * $Id: mminit.c,v 1.1 2005-09-18 22:05:42 dhmunro Exp $
+ * $Id: mminit.c,v 1.1.1.1 2005-09-18 22:05:42 dhmunro Exp $
  * basic memory management interface
  *
  * compile this file twice:

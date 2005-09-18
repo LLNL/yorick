@@ -1,5 +1,5 @@
 /*
- * $Id: gist.c,v 1.1 2005-09-18 22:04:31 dhmunro Exp $
+ * $Id: gist.c,v 1.1.1.1 2005-09-18 22:04:31 dhmunro Exp $
  * Implement non-device specific portion of GIST C interface
  */
 /* Copyright (c) 2005, The Regents of the University of California.

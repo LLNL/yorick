@@ -1,5 +1,5 @@
 # Gist heat.gp palette
-# $Id: heat.gp,v 1.1 2005-09-18 22:06:19 dhmunro Exp $
+# $Id: heat.gp,v 1.1.1.1 2005-09-18 22:06:19 dhmunro Exp $
 
 # dk red - red - orange - yellow  - white
 # color temperatures of hot iron bar

@@ -1,5 +1,5 @@
 /*
- * $Id: maked.i,v 1.1 2005-09-18 22:05:08 dhmunro Exp $
+ * $Id: maked.i,v 1.1.1.1 2005-09-18 22:05:08 dhmunro Exp $
  * Yorick script to genrate alphabetized listings of all help
  * command documentation.
  */

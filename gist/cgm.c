@@ -1,5 +1,5 @@
 /*
- * $Id: cgm.c,v 1.1 2005-09-18 22:04:24 dhmunro Exp $
+ * $Id: cgm.c,v 1.1.1.1 2005-09-18 22:04:24 dhmunro Exp $
  * Implement the CGM binary metafile engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

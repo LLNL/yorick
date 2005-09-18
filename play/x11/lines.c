@@ -1,5 +1,5 @@
 /*
- * $Id: lines.c,v 1.1 2005-09-18 22:05:33 dhmunro Exp $
+ * $Id: lines.c,v 1.1.1.1 2005-09-18 22:05:33 dhmunro Exp $
  * p_lines and p_disjoint for X11
  */
 /* Copyright (c) 2005, The Regents of the University of California.

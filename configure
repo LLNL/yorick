@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: configure,v 1.1 2005-09-18 22:03:38 dhmunro Exp $
+# $Id: configure,v 1.1.1.1 2005-09-18 22:03:38 dhmunro Exp $
 
 # debug=yes to keep all cfg.* stdout and stderr files
 # (most recent warnings always kept, usually don't need debug)

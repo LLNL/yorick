@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: config.sh,v 1.1 2005-09-18 22:05:41 dhmunro Exp $
+# $Id: config.sh,v 1.1.1.1 2005-09-18 22:05:41 dhmunro Exp $
 
 debug=no
 

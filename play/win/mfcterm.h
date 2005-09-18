@@ -1,5 +1,5 @@
 /*
- * $Id: mfcterm.h,v 1.1 2005-09-18 22:05:38 dhmunro Exp $
+ * $Id: mfcterm.h,v 1.1.1.1 2005-09-18 22:05:38 dhmunro Exp $
  * richedit class for play MDI development environment
  */
 /* Copyright (c) 2005, The Regents of the University of California.

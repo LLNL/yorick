@@ -1,5 +1,5 @@
 /*
- * $Id: lecuyer.c,v 1.1 2005-09-18 22:03:44 dhmunro Exp $
+ * $Id: lecuyer.c,v 1.1.1.1 2005-09-18 22:03:44 dhmunro Exp $
  * small, fast, portable, certified good random number generator
  * L'Ecuyer, Mathematics of Computation, 65, pp 203-213 (1996)
  */

@@ -1,5 +1,5 @@
 /*
- * $Id: rays.i,v 1.1 2005-09-18 22:06:05 dhmunro Exp $
+ * $Id: rays.i,v 1.1.1.1 2005-09-18 22:06:05 dhmunro Exp $
  * Yorick functions to manipulate 3-D rays on a cylindrical mesh.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

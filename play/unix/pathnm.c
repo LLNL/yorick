@@ -1,5 +1,5 @@
 /*
- * $Id: pathnm.c,v 1.1 2005-09-18 22:05:40 dhmunro Exp $
+ * $Id: pathnm.c,v 1.1.1.1 2005-09-18 22:05:40 dhmunro Exp $
  * p_getenv and u_pathname pathname preprocessing for UNIX machines
  */
 /* Copyright (c) 2005, The Regents of the University of California.

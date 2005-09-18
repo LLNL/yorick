@@ -1,5 +1,5 @@
 /*
- * $Id: ystr.c,v 1.1 2005-09-18 22:03:45 dhmunro Exp $
+ * $Id: ystr.c,v 1.1.1.1 2005-09-18 22:03:45 dhmunro Exp $
  * Yorick string manipulation functions
  *
  * This interface was inspired by the regexp package written by

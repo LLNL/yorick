@@ -1,5 +1,5 @@
 /*
- * $Id: p595.c,v 1.1 2005-09-18 22:05:44 dhmunro Exp $
+ * $Id: p595.c,v 1.1.1.1 2005-09-18 22:05:44 dhmunro Exp $
  * 5x9x5 rgb colormap for p_palette(w,p_595,225)
  */
 /* Copyright (c) 2005, The Regents of the University of California.

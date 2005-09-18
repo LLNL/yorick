@@ -1,5 +1,5 @@
 /*
- * $Id: regul.c,v 1.1 2005-09-18 22:05:49 dhmunro Exp $
+ * $Id: regul.c,v 1.1.1.1 2005-09-18 22:05:49 dhmunro Exp $
  * routine to track rays through a regular mesh
  */
 /* Copyright (c) 2005, The Regents of the University of California.

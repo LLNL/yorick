@@ -1,7 +1,7 @@
 
 	Externals used by Gist library
 
-     $Id: EXTERNS,v 1.1 2005-09-18 22:04:18 dhmunro Exp $
+     $Id: EXTERNS,v 1.1.1.1 2005-09-18 22:04:18 dhmunro Exp $
 
 
 Memory management <stdlib.h>:

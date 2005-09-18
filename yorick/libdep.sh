@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: libdep.sh,v 1.1 2005-09-18 22:04:17 dhmunro Exp $
+# $Id: libdep.sh,v 1.1.1.1 2005-09-18 22:04:17 dhmunro Exp $
 
 # Usage: libdep.sh Y_HOME pkname1 pkgname2 ...
 # returns -L and -l options for given list of libpkgname.a libraries

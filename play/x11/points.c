@@ -1,5 +1,5 @@
 /*
- * $Id: points.c,v 1.1 2005-09-18 22:05:34 dhmunro Exp $
+ * $Id: points.c,v 1.1.1.1 2005-09-18 22:05:34 dhmunro Exp $
  * p_i_pnts, p_d_pnts, p_d_map for X11
  */
 /* Copyright (c) 2005, The Regents of the University of California.

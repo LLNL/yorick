@@ -1,5 +1,5 @@
 /*
- * $Id: matrix.i,v 1.1 2005-09-18 22:05:24 dhmunro Exp $
+ * $Id: matrix.i,v 1.1.1.1 2005-09-18 22:05:24 dhmunro Exp $
  * Yorick interface to LAPACK matrix solving routines.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

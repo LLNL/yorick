@@ -1,5 +1,5 @@
 /*
- * $Id: pixels.i,v 1.1 2005-09-18 22:06:03 dhmunro Exp $
+ * $Id: pixels.i,v 1.1.1.1 2005-09-18 22:06:03 dhmunro Exp $
  * Attempt to plot images on an X display one pixel to the cell.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

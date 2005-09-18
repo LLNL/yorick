@@ -1,5 +1,5 @@
 /*
-  * $Id: regress.i,v 1.1 2005-09-18 22:06:18 dhmunro Exp $
+  * $Id: regress.i,v 1.1.1.1 2005-09-18 22:06:18 dhmunro Exp $
   * linear regression and related statistical functions
   * after Numerical Recipes (Press et. al.) chapter 14
   */

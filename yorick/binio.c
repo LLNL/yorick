@@ -1,5 +1,5 @@
 /*
- * $Id: binio.c,v 1.1 2005-09-18 22:03:49 dhmunro Exp $
+ * $Id: binio.c,v 1.1.1.1 2005-09-18 22:03:49 dhmunro Exp $
  * Define Yorick functions for dealing with binary I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.

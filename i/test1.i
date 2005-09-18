@@ -1,5 +1,5 @@
 /*
- * $Id: test1.i,v 1.1 2005-09-18 22:06:10 dhmunro Exp $
+ * $Id: test1.i,v 1.1.1.1 2005-09-18 22:06:10 dhmunro Exp $
  * Poorly vectorizing physics problem for timing Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
