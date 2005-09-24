@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.1 2005-09-18 22:05:30 dhmunro Exp $
+ * $Id: std.i,v 1.2 2005-09-24 05:04:17 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2556,7 +2556,7 @@ func process_argv(msg)
     if (is_void(msg)) {
       v= Y_VERSION;
       msg= [
-" Copyright (c) 1996.  The Regents of the University of California.",
+" Copyright (c) 2005.  The Regents of the University of California.",
 " All rights reserved.  Yorick "+v+" ready.  For help type 'help'"];
     }
     write, msg, format="%s\n";
