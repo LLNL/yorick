@@ -1,5 +1,5 @@
 /*
- * $Id: opsv.c,v 1.1 2005-09-18 22:04:10 dhmunro Exp $
+ * $Id: opsv.c,v 1.2 2005-09-28 06:17:33 thiebaut Exp $
  *
  * Load up virtual functions for the various DataBlock and Symbol types.
  */
@@ -562,7 +562,7 @@ Operations functionOps = {
   &FreeFunction, T_FUNCTION, 0, T_STRING, "function",
   {&PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX},
   &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX,
-  &NegateX, &ComplementX, &NotVD, &TrueVD,
+  &NegateX, &ComplementX, &NotX, &TrueX,
   &AddX, &SubtractX, &MultiplyX, &DivideX, &ModuloX, &PowerX,
   &EqualX, &NotEqualX, &GreaterX, &GreaterEQX,
   &ShiftLX, &ShiftRX, &OrX, &AndX, &XorX,
@@ -573,7 +573,7 @@ Operations builtinOps = {
   &FreeBIFunction, T_BUILTIN, 0, T_STRING, "builtin",
   {&PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX},
   &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX,
-  &NegateX, &ComplementX, &NotVD, &TrueVD,
+  &NegateX, &ComplementX, &NotX, &TrueX,
   &AddX, &SubtractX, &MultiplyX, &DivideX, &ModuloX, &PowerX,
   &EqualX, &NotEqualX, &GreaterX, &GreaterEQX,
   &ShiftLX, &ShiftRX, &OrX, &AndX, &XorX,
