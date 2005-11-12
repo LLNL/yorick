@@ -1,5 +1,5 @@
 /*
- * $Id: ops.c,v 1.1 2005-09-18 22:04:12 dhmunro Exp $
+ * $Id: ops.c,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
  *
  * Define miscellaneous virtual machine functions.
  */
@@ -569,7 +569,7 @@ void MatMultX(Operand *l, Operand *r)
 void CallShell(void)
 {
   Array *array= (Array *)(pc++)->constant->value.db;
-  if (array->value.q[0]) system(array->value.q[0]);
+  if (array->value.q[0]) p_system(array->value.q[0]);
 }
 
 void Y_system(int nArgs)

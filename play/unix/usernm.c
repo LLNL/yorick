@@ -1,5 +1,5 @@
 /*
- * $Id: usernm.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: usernm.c,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
  * p_getuser for UNIX machines
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -33,7 +33,7 @@ p_getuser(void)
 }
 
 #else
-
+# ifndef NO_CUSERID
 extern char *cuserid(char *);
 char *
 p_getuser(void)
@@ -41,5 +41,13 @@ p_getuser(void)
   char *user = cuserid((char *)0);
   return user;
 }
-
+# else
+extern char *getenv(char *);
+char *
+p_getuser(void)
+{
+  char *user = getenv("LOGNAME");
+  return user;
+}
+# endif
 #endif

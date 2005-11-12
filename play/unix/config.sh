@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: config.sh,v 1.1 2005-09-18 22:05:41 dhmunro Exp $
+# $Id: config.sh,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
 
 debug=no
 
@@ -59,16 +59,26 @@ else
 fi
 
 # find function to get user name
-args="-DTEST_USERNM $commonargs"
-if $CC $args >cfg.03a 2>&1; then
-  echo "using POSIX getlogin(), getpwuid(), getuid() functions"
-  echo "D_USERNM=" >>../../Make.cfg
-elif $CC -DNO_PASSWD $args >cfg.03b 2>&1; then
-  echo "fallback to cuserid(), POSIX getlogin() family missing"
-  echo "D_USERNM=-DNO_PASSWD" >>../../Make.cfg
+if test -z "$NO_PASSWD"; then
+  args="-DTEST_USERNM $commonargs"
+  if $CC $args >cfg.03a 2>&1; then
+    echo "using POSIX getlogin(), getpwuid(), getuid() functions"
+    echo "D_USERNM=" >>../../Make.cfg
+  elif $CC -DNO_PASSWD $args >cfg.03b 2>&1; then
+    echo "fallback to cuserid(), POSIX getlogin() family missing"
+    echo "D_USERNM=-DNO_PASSWD" >>../../Make.cfg
+  else
+    echo "FATAL cuserid(), POSIX getlogin() family both missing (usernm.c)"
+    fatality=1
+  fi
 else
-  echo "FATAL cuserid(), POSIX getlogin() family both missing (usernm.c)"
-  fatality=1
+  if test -z "$NO_CUSERID"; then
+    echo "using cuserid(), POSIX getlogin() family missing"
+    echo "D_USERNM=-DNO_PASSWD" >>../../Make.cfg
+  else
+    echo "using getenv(LOGNAME), cuserid(), POSIX getlogin() family missing"
+    echo "D_USERNM=-DNO_PASSWD -DNO_CUSERID" >>../../Make.cfg
+  fi
 fi
 
 # find function to get controlling terminal process group

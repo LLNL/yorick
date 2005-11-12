@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.1 2005-09-18 22:04:59 dhmunro Exp $
+ * $Id: mpy.c,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -16,6 +16,23 @@
 
 #ifdef DEBUG
 #include <stdio.h>
+#endif
+
+#ifdef USE_MYPROBE
+/* work around catamount bug/feature broken MPI_Probe */
+#define MPI_Probe my_mpi_Probe
+extern int my_mpi_Probe(int source, int tag,
+                        MPI_Comm comm, MPI_Status *status);
+int
+my_mpi_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
+{
+  int iflag;
+  int iretval;
+  do {
+    iretval= MPI_Iprobe(source, tag, comm, &iflag, status);
+  } while (!iflag);
+  return(iretval);
+}
 #endif
 
 /* The interpreter uses its own communicator to avoid conflicts with
@@ -794,8 +811,9 @@ void Y_mpy_sync(int nArgs)
       if (request[0]!=MPI_REQUEST_NULL) {
         /* may need to complete reading the message which arrived before
          * the one that tripped the previous probe */
-        if (MPI_Test(&request[0], &ready, &status[0])!=MPI_SUCCESS)
-          mpy_fatal(mpy_rank, "MPI_Test failed in mpy_sync");
+        if (MPI_Wait(&request[0], &status[0])!=MPI_SUCCESS)
+          mpy_fatal(mpy_rank, "MPI_Wait failed in mpy_sync");
+        ready=1;
 #ifdef DEBUG
         if (ready) {
           printf("(%d) mpy_sync completes control %d from %d\n", (int)mpy_rank,

@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.1 2005-09-18 22:04:09 dhmunro Exp $
+ * $Id: ydata.h,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -354,6 +354,8 @@ PLUG_API Operations functionOps;
 PLUG_API Operations builtinOps;
 PLUG_API Operations structDefOps;
 PLUG_API Operations streamOps;
+PLUG_API Operations textOps;
+PLUG_API Operations listOps;
 PLUG_API Operations auto_ops;
 
 /* generic operators are needed to implement foreign objects */
