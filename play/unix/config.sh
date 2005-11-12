@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: config.sh,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
+# $Id: config.sh,v 1.3 2005-11-12 17:49:23 dhmunro Exp $
 
 debug=no
 
@@ -158,7 +158,10 @@ if test -z "$NO_PROCS"; then
     # Mac OS X 10.4 poll() is broken, but select() works
     swv="`/usr/bin/sw_vers -productVersion`"
     case "$swv" in
-      10.4*) NO_POLL=yes ;;
+      # 10.4*) NO_POLL=yes ;;
+      # even though poll works before 10.4, want yorick built on
+      # 10.3 system to be able to run on a 10.4 system!
+      10.*) NO_POLL=yes ;;
     esac
   fi
   if test -z "$NO_POLL"; then
