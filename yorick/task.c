@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.2 2005-11-13 22:21:26 dhmunro Exp $
+ * $Id: task.c,v 1.3 2005-11-13 22:24:33 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1075,7 +1075,7 @@ YError(const char *msg)
     return;
   }
 
-  if (yBatchMode || !strncmp(msg,"(FATAL)",7)) {
+  if ((yBatchMode && !y_idler_function) || !strncmp(msg,"(FATAL)",7)) {
     if (yBatchMode) YputsErr("yorick: quitting on error in batch mode");
     else YputsErr("yorick: quitting on fatal error");
     ym_fatal = yBatchMode? 1 : 2;

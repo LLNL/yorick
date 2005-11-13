@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.2 2005-09-24 05:04:17 dhmunro Exp $
+ * $Id: std.i,v 1.3 2005-11-13 22:21:26 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3538,6 +3538,7 @@ extern batch;
 
 extern set_idler;
 /* DOCUMENT set_idler, idler_function
+         or set_idler, idler_function, no_reset
      sets the idler function to IDLER_FUNCTION.  Instead of waiting
      for keyboard input when all its tasks are finished, the interpreter
      will invoke IDLER_FUNCTION with no arguments.  The idler function
@@ -3545,6 +3546,9 @@ extern set_idler;
      after one call to the idler.  Of course, an idler is free to call
      set_idler again before it returns, which will have the effect of
      calling that function in a loop.
+     If NO_RESET is present and non-zero, an error will not remove
+     the idler function; instead of entering debug mode, the idler
+     function will be called after an error.
    SEE ALSO: batch, maybe_prompt, after
  */
 
