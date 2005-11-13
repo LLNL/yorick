@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.1 2005-09-18 22:04:18 dhmunro Exp $
+ * $Id: task.c,v 1.2 2005-11-13 22:21:26 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -99,6 +99,8 @@ static int caughtTask= 0;
 /* stuff to implement set_idler */
 extern BuiltIn Y_set_idler;
 Function *y_idler_function= 0;
+extern int y_idler_flag;
+int y_idler_flag = 0;
 
 /*--------------------------------------------------------------------------*/
 
@@ -394,6 +396,7 @@ y_on_idle(void)
           y_idler_function) {
         Function *f = y_idler_function;
         y_idler_function = 0;
+        y_idler_flag = 0;
         PushTask(f);
         Unref(f);
       }
@@ -886,6 +889,7 @@ Instruction *yErrorPC= 0;   /* for dbup function in debug.c */
 void
 YError(const char *msg)
 {
+  extern void yg_got_expose(void);
   long beginLine= ypBeginLine;
   Instruction *pcDebug= pc;
   Function *func;
@@ -906,7 +910,7 @@ YError(const char *msg)
   ym_state &= ~Y_PENDING;
   ym_dbenter = 0;
 
-  if (y_idler_function) {
+  if (y_idler_function && !y_idler_flag) {
     /* remove any idler on error - catch can reset if desired */
     Function *f= y_idler_function;
     y_idler_function= 0;
@@ -1034,7 +1038,13 @@ YError(const char *msg)
       YputsErr("Function corrupted, cannot enter debug mode.");
     }
 
-    if (!yBatchMode && !pcUp && (!yAutoDebug || yDebugLevel>1)) {
+    if (y_idler_function) {
+      /* special idler function will forge on after error message */
+      ResetStack(1);
+      yr_reset();
+      yg_got_expose();
+      p_clr_alarm(0, 0);
+    } else if (!yBatchMode && !pcUp && (!yAutoDebug || yDebugLevel>1)) {
       if (yDebugLevel>1) {
         YputsErr(" To enter recursive debug level, type <RETURN> now");
       } else {
@@ -1045,7 +1055,6 @@ YError(const char *msg)
     }
 
   } else {
-    extern void yg_got_expose(void);
     /* Clear the stack back to the most recent debugging level,
      * or completely clear if aborting a read() operation.  */
     if (recursing<5) ResetStack(y_read_prompt!=0);
@@ -1301,18 +1310,21 @@ void Y_catch(int nArgs)
 void Y_set_idler(int nArgs)
 {
   Function *f;
-  if (nArgs>1)
-    YError("set_idler function takes exactly zero or one argument");
+  if (nArgs>2)
+    YError("set_idler function takes zero, one, or two arguments");
 
-  if (nArgs>0 && YNotNil(sp)) {
-    f= (Function *)sp->value.db;
-    if (sp->ops!=&dataBlockSym || f->ops!=&functionOps)
+  if (nArgs>0 && YNotNil(sp-nArgs+1)) {
+    int flag = (nArgs>1)? YGetInteger(sp) : 0;
+    f = (Function *)sp[1-nArgs].value.db;
+    if (sp[1-nArgs].ops!=&dataBlockSym || f->ops!=&functionOps)
       YError("expecting function as argument");
-    y_idler_function= Ref(f);
+    y_idler_function = Ref(f);
+    y_idler_flag = flag;
 
   } else if (y_idler_function) {
-    f= y_idler_function;
-    y_idler_function= 0;
+    f = y_idler_function;
+    y_idler_function = 0;
+    y_idler_flag = 0;
     Unref(f);
   }
 }
