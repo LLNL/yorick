@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.3 2005-11-13 22:24:33 dhmunro Exp $
+ * $Id: task.c,v 1.4 2005-11-13 23:28:49 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -886,6 +886,8 @@ static char *includeFile= 0;
 static long mainIndex= -1;
 Instruction *yErrorPC= 0;   /* for dbup function in debug.c */
 
+static void ypush_catchmsg(char *tmsg);
+
 void
 YError(const char *msg)
 {
@@ -1040,10 +1042,14 @@ YError(const char *msg)
 
     if (y_idler_function) {
       /* special idler function will forge on after error message */
+      char tmsg[84];
+      strncpy(tmsg, msg, 80);
+      tmsg[80] = '\0';
       ResetStack(1);
       yr_reset();
       yg_got_expose();
       p_clr_alarm(0, 0);
+      ypush_catchmsg(tmsg);
     } else if (!yBatchMode && !pcUp && (!yAutoDebug || yDebugLevel>1)) {
       if (yDebugLevel>1) {
         YputsErr(" To enter recursive debug level, type <RETURN> now");
@@ -1236,8 +1242,6 @@ static Catcher *CatchScan(const char *msg, int category)
 
   if (i>=0) {
     char tmsg[84];
-    Array *array;
-    long cmsg;
     Instruction *pcRet;
     Symbol *spCatch= spBottom + catchers[i].isp;
     catchers[i].category= 0;  /* disable this catcher */
@@ -1258,21 +1262,28 @@ static Catcher *CatchScan(const char *msg, int category)
     PushIntValue(1);
 
     /* set catch_message variable (after stack cleared) */
-    cmsg= Globalize("catch_message", 0L);
-    if (globTab[cmsg].ops==&dataBlockSym) {
-      globTab[cmsg].ops= &intScalar;
-      Unref(globTab[cmsg].value.db);
-    }
-    array= NewArray(&stringStruct, (Dimension *)0);
-    globTab[cmsg].value.db= (DataBlock *)array;
-    globTab[cmsg].ops= &dataBlockSym;
-    array->value.q[0]= p_strcpy(tmsg);
+    ypush_catchmsg(tmsg);
 
     return &catchers[i];
 
   } else {
     return 0;
   }
+}
+
+static void
+ypush_catchmsg(char *tmsg)
+{
+  Array *array;
+  long cmsg = Globalize("catch_message", 0L);
+  if (globTab[cmsg].ops==&dataBlockSym) {
+    globTab[cmsg].ops = &intScalar;
+    Unref(globTab[cmsg].value.db);
+  }
+  array=  NewArray(&stringStruct, (Dimension *)0);
+  globTab[cmsg].value.db = (DataBlock *)array;
+  globTab[cmsg].ops = &dataBlockSym;
+  array->value.q[0] = p_strcpy(tmsg);
 }
 
 extern VMaction BranchFalse, BranchTrue;

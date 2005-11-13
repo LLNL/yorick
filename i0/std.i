@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.3 2005-11-13 22:21:26 dhmunro Exp $
+ * $Id: std.i,v 1.4 2005-11-13 23:28:49 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3548,7 +3548,9 @@ extern set_idler;
      calling that function in a loop.
      If NO_RESET is present and non-zero, an error will not remove
      the idler function; instead of entering debug mode, the idler
-     function will be called after an error.
+     function will be called after an error.  After an error (which
+     you must arrange to detect), catch_message will contain the
+     error message, which was also printed.
    SEE ALSO: batch, maybe_prompt, after
  */
 

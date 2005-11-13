@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.1 2005-09-18 22:05:00 dhmunro Exp $
+ * $Id: mpy.i,v 1.2 2005-11-13 23:28:49 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -283,6 +283,7 @@ func mp_start(task)
   mp_send, indgen(mp_size-1), nameof(task);
 }
 
+/* this function is now never called, remove it eventually */
 func mp_abort(void)
 /* DOCUMENT if (catch(-1)) mp_abort
      must be the first line of any function registered with mp_task.
@@ -300,6 +301,13 @@ func mp_abort(void)
   else error, "(bailing out of parallel task)";
 }
 
+/* temporary hack so that existing task code works properly
+ * in future, catch no longer necessary in task functions
+ * - potentially this breaks code that was using catch for other reasons
+ */
+func mp_catch(x) { return 0; }
+if (is_void(_orig_catch)) { _orig_catch = catch; catch = mp_catch; }
+
 /* The mpy_idler function is called in lieu of waiting for keyboard input
  * when Yorick is finished with all its tasks.  This idler is intended
  * for use by non-rank 0 processes.  It's purpose is to catch any errors
@@ -308,13 +316,25 @@ func mp_abort(void)
 func mpy_idler
 {
   batch, 1;
-  if (catch(-1)) {
+  why = _mpy_catch;
+  _mpy_catch = 1;
+  if (why) {
+    if (why == 2) {  /* this used to be mp_abort */
+      if (mp_debug)
+        write,"(**mp_idlera) rank "+print(mp_rank)(1)+" caught "+catch_message;
+      if (catch_message!=".SYNC.") mpy_sync, catch_message;
+      if (mp_debug)
+        write,"(**mp_idlera) rank "+print(mp_rank)(1)+" done with mpy_sync";
+      _mpy_catch = 1;
+      if (mp_rank) error, ".SYNC.";
+      else error, "(bailing out of parallel task)";
+    }
     if (mp_debug)
       write,"(**mpy_idler) rank "+print(mp_rank)(1)+" caught "+catch_message;
     if (catch_message!=".SYNC.") mpy_sync, catch_message;
     if (mp_debug)
       write,"(**mpy_idler) rank "+print(mp_rank)(1)+" done with mpy_sync";
-    set_idler, mpy_idler;
+    set_idler, mpy_idler, 1;
     return;
   }
   if (mp_debug)
@@ -325,8 +345,10 @@ func mpy_idler
   if (mp_debug)
     write,"rank "+print(mp_rank)(1)+" executing "+task;
   task= symbol_def(task);
+  _mpy_catch = 2;
   task;
-  set_idler, mpy_idler;
+  _mpy_catch = [];
+  set_idler, mpy_idler, 1;
 }
 
 func mp_include(filename)
