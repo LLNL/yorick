@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
+ * $Id: ydata.h,v 1.3 2005-11-13 21:01:56 dhmunro Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -8,8 +8,16 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/* use the functions declared in yapi.h to retrieve information
+ * for use by new built-in functions - the functions and data
+ * structures here are for internal use by the interpreter, and
+ * are subject to change as the interpreter evolves
+ */
+
 #ifndef YDATA_H
 #define YDATA_H
+
+#include "yapi.h"
 
 #include "hash.h"
 #include "binio.h"
@@ -424,9 +432,10 @@ PLUG_API void FreeRange(void *range);        /* *** Use Unref(range) *** */
 PLUG_API BIFunction *NewBIFunction(BuiltIn *bi, long index);
 PLUG_API void FreeBIFunction(void *bif);    /* *** Use Unref(bif) *** */
 
-/*--------------------------------------------------------------------------*/
-
 PLUG_API int yDebugLevel;
+
+/*--------------------------------------------------------------------------*/
+/* following are deprecated -- use alternatives in yapi.h */
 
 PLUG_API long Globalize(const char *name, long n);
 PLUG_API long GlobalizeDB(const char *name, long n, void *db);
@@ -553,7 +562,6 @@ PLUG_API long yarg_sl(int iarg);
 PLUG_API double yarg_sd(int iarg);
 PLUG_API char *yarg_sq(int iarg);
 #define yarg_sp(iarg) (yarg_p(iarg,0)[0])
-PLUG_API int yarg_nil(int iarg);
 PLUG_API IOStream *yarg_file(int iarg);
 PLUG_API Operand *yarg_op(int iarg, Operand *op);
 /* yarg_keys returns next non-keyword iarg, or <0 if none */

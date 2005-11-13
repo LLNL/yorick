@@ -1,5 +1,5 @@
 /*
- * $Id: ystr.c,v 1.1 2005-09-18 22:03:45 dhmunro Exp $
+ * $Id: ystr.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  * Yorick string manipulation functions
  *
  * This interface was inspired by the regexp package written by
@@ -15,28 +15,31 @@
 #include "yregexp.h"
 
 #include "pstdlib.h"
-#include "ydata.h"
+#include "yapi.h"
 #include <string.h>
 
-extern BuiltIn Y_strlen, Y_strcase, Y_strchar, Y_strpart, Y__strtok;
-extern BuiltIn Y_strword, Y_strfind, Y_strglob, Y_strgrep, Y_streplace;
-
-/* must match array.c, should move to ydata.h */
-#define MAX_INDICES 10
+extern void Y_strlen(int argc);
+extern void Y_strcase(int argc);
+extern void Y_strchar(int argc);
+extern void Y_strpart(int argc);
+extern void Y__strtok(int argc);
+extern void Y_strword(int argc);
+extern void Y_strfind(int argc);
+extern void Y_strglob(int argc);
+extern void Y_strgrep(int argc);
+extern void Y_streplace(int argc);
 
 void
-Y_strlen(int nargs)
+Y_strlen(int argc)
 {
-  Dimension *dims = 0;
-  char **q = yarg_q(0, &dims);
-  if (nargs != 1) YError("strlen takes exactly one argument");
-  if (dims) {
-    Array *result = PushDataBlock(NewArray(&longStruct, dims));
-    long n = TotalNumber(dims);
-    long i, *lens = result->value.l;
+  long n, dims[Y_DIMSIZE];
+  char **q = ygeta_q(0, &n, dims);
+  if (argc != 1) y_error("strlen takes exactly one argument");
+  if (dims[0]) {
+    long i, *lens = ypush_l(dims);
     for (i=0 ; i<n ; i++) lens[i] = q[i]? strlen(q[i]) : 0;
   } else {
-    PushLongValue(q[0]? (long)strlen(q[0]) : 0L);
+    ypush_long(q[0]? (long)strlen(q[0]) : 0L);
   }
 }
 
@@ -56,23 +59,22 @@ static char ys_table[256] =
     5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,2, 5,5,5,5,5,5,5,8 };
 
 void
-Y_strcase(int nargs)
+Y_strcase(int argc)
 {
-  int up = (yarg_sl(nargs-1) != 0);
-  Dimension *dims = 0;
-  char **q = yarg_q(nargs-2, &dims);
-  long n = TotalNumber(dims);
-  char **r = CalledAsSubroutine()? q : 0;
+  int up = (ygets_l(argc-1) != 0);
+  long n, dims[Y_DIMSIZE];
+  char **q = ygeta_q(argc-2, &n, dims);
   unsigned char c, *t;
-  if (nargs!=2 || !q)
-    YError("strcase takes exactly two arguments");
-  if (!r) {
+  if (argc!=2 || !q)
+    y_error("strcase takes exactly two arguments");
+  if (!yarg_subroutine() && !yarg_scratch(0)) {
     long i;
-    r = ((Array*)PushDataBlock(NewArray(&stringStruct, dims)))->value.q;
+    char **r = ypush_q(dims);
     for (i=0 ; i<n ; i++) r[i] = p_strcpy(q[i]);
+    q = r;
   }
-  for (; n-- ; r++) {
-    t = (unsigned char *)r[0];
+  for (; n-- ; q++) {
+    t = (unsigned char *)q[0];
     if (!t) continue;
     if (up) {
       for (c=t[0] ; c ; c=(++t)[0]) if (ys_table[c]==5) t[0] ^= ('A'^'a');
@@ -83,43 +85,39 @@ Y_strcase(int nargs)
 }
 
 void
-Y_strchar(int nargs)
+Y_strchar(int argc)
 {
-  Operand op;
   char **q, *c;
-  long i, j, n;
-  if (nargs!=1 || !yarg_op(0, &op))
-    YError("strchar takes exactly one argument");
+  long i, j, n, dims[Y_DIMSIZE];
+  int typeid = yarg_typeid(0);
+  if (argc!=1)
+    y_error("strchar takes exactly one argument");
 
-  n = TotalNumber(op.type.dims);
-
-  if (op.type.base == &stringStruct) {
+  if (typeid == Y_STRING) {
     char *qi;
-    long nc = n;  /* number of terminal 0s */
-    q = op.value;
-    for (i=0 ; i<n ; i++) if (q[i]) nc += strlen(q[i]);
-    c = ((Array*)PushDataBlock(NewArray(&charStruct,
-                                        ynew_dim(nc,(void*)0))))->value.c;
+    q = ygeta_q(0, &n, 0);
+    for (dims[0]=1,dims[1]=n, i=0 ; i<n ; i++)
+      if (q[i]) dims[1] += strlen(q[i]);
+    c = ypush_c(dims);
     for (i=j=0 ; i<n ; i++,j++) {
       qi = q[i];
       if (qi) while (*qi) c[j++] = *qi++;
       c[j] = '\0';
     }
 
-  } else if (op.type.base == &charStruct) {
+  } else if (typeid == Y_CHAR) {
     long nlead, ns;
     /* find leading dimension of multidimensional char array */
-    Dimension *dims = 0, *lead = op.type.dims? op.type.dims->next : 0;
-    if (lead) while (lead->next) lead = lead->next;
-    nlead = lead? lead->number : n;
-    c = op.value;
+    c = ygeta_c(0, &n, dims);
+    nlead = dims[0]? dims[1] : n;
     for (i=j=ns=0 ; i<n ; i++,j++) {
       if (j == nlead) j = 0;
       if (!c[i] || j==nlead-1) ns++;
     }
-    if (!ns) YError("(BUG) strchar impossible ns");
-    if (ns>1) dims = ynew_dim(ns, (void*)0);
-    q = ((Array*)PushDataBlock(NewArray(&stringStruct, dims)))->value.q;
+    if (!ns) y_error("(BUG) strchar impossible ns");
+    dims[0] = (ns>1);
+    dims[1] = ns;
+    q = ypush_q(dims);
     for (i=j=ns=0 ; i<n ;) {
       if (j >= nlead) j = 0;
       if (c[i]) {
@@ -134,7 +132,7 @@ Y_strchar(int nargs)
     }
 
   } else {
-    YError("strchar input must be type string or char");
+    y_error("strchar input must be type string or char");
   }
 }
 
@@ -142,50 +140,41 @@ Y_strchar(int nargs)
 
 typedef struct ys_iter_t ys_iter_t;
 struct ys_iter_t {
-  long ndx[MAX_INDICES+1];
-  long str[MAX_INDICES+1];
-  long off[MAX_INDICES+1];
-  long len[MAX_INDICES+1];
+  long ndx[Y_DIMSIZE];
+  long str[Y_DIMSIZE];
+  long off[Y_DIMSIZE];
+  long len[Y_DIMSIZE];
 };
 
-static int ys_stroff(int iarg, char ***pstr, Dimension **sdims,
-                     long **poff, Dimension **odims);
+static int ys_stroff(int iarg, char ***pstr, long *sdims,
+                     long **poff, long *odims);
 static int ys_conform(int sel, long *str, long *off, long *rslt);
-static Dimension *ys_dim(long nlead);
-static void ys_error(char *fname, char *errmsg);
+static int ys_dim(long *dims, long nlead, long *dims0);
 
 static void ys_increment(ys_iter_t *iter);
 static void ys_inc3(ys_iter_t *iter, long *to);
 static void ys_dcombine(long *str, long *off, long *rslt);
 static void ys_strides(long *s);
-static long ys_initer(ys_iter_t *iter, Dimension *sdims, Dimension *odims,
-                      int mx_indices, char *fname);
+static long ys_initer(ys_iter_t *iter, int mx_indices, char *fname);
+static void ys_initer2(ys_iter_t *iter);
 static void ys_3combine(long *str, long *off, long *to, long *rslt);
 
 static int
-ys_stroff(int iarg, char ***pstr, Dimension **sdims,
-          long **poff, Dimension **odims)
+ys_stroff(int iarg, char ***pstr, long *sdims, long **poff, long *odims)
 {
   *pstr = 0;
   *poff = 0;
-  *sdims = *odims = 0;
+  sdims[0] = odims[0] = 0;
   if (iarg >= 0) {
-    *pstr = yarg_q(iarg--, sdims);
+    *pstr = ygeta_q(iarg--, 0, sdims);
     if (*pstr) {
-      Operand op;
-      int iarg0 = iarg;
-      while (!yarg_op(iarg0--, &op)) {
-        if (iarg0 < 0) return iarg;
-        /* skip over keywords */
-        iarg0--;
+      while (yarg_key(iarg) >= 0) {
+        iarg -= 2;  /* skip over keywords */
+        if (iarg < 0) return iarg;
       }
-      if (op.ops->promoteID <= T_LONG) {
+      if (yarg_typeid(iarg) <= Y_LONG)
         /* argument was an offset, retrieve it */
-        op.ops->ToLong(&op);
-        *poff = op.value;
-        *odims = op.type.dims;
-        iarg = iarg0;
-      }
+        *poff = ygeta_l(iarg--, 0, odims);
     }
   }
   return iarg;
@@ -194,7 +183,6 @@ ys_stroff(int iarg, char ***pstr, Dimension **sdims,
 static int
 ys_conform(int sel, long *str, long *off, long *rslt)
 {
-  Dimension *dims = tmpDims;
   int i, ndim = str[0];
   if (sel) {  /* remove leading dimension of off (it is really sel) */
     if (off[0] > 0) {
@@ -212,26 +200,18 @@ ys_conform(int sel, long *str, long *off, long *rslt)
     else return i;
   }
 
-  if (dims) {
-    tmpDims = 0;
-    FreeDimension(dims);
-  }
-  for (i=1 ; i<=ndim ; i++) tmpDims = NewDimension(rslt[i], 1L, tmpDims);
-
   return 0;
 }
 
-static Dimension *
-ys_dim(long nlead)
+static int
+ys_dim(long *dims, long nlead, long *dims0)
 {
-  if (tmpDims) {  /* assumes created by ys_conform */
-    Dimension *dims = tmpDims;
-    while (dims->next) dims = dims->next;
-    dims->next = NewDimension(nlead, 1L, (Dimension *)0);
-  } else {
-    tmpDims = NewDimension(nlead, 1L, (Dimension *)0);
-  }
-  return tmpDims;
+  long n = *dims0++;
+  if (n >= Y_DIMSIZE-1) return 1;
+  *dims++ = n+1;
+  *dims++ = nlead;
+  while (n-- > 0) *dims++ = *dims0++;
+  return 0;
 }
 
 /* ndx = counter used to iterate
@@ -346,20 +326,25 @@ ys_strides(long *s)
 }
 
 static long
-ys_initer(ys_iter_t *iter, Dimension *sdims, Dimension *odims,
-          int mx_indices, char *fname)
+ys_initer(ys_iter_t *iter, int mx_indices, char *fname)
 {
   long i, nstr;
 
-  /* check s,off conformability, put result in tmpDims */
-  iter->str[0] = YGet_dims(sdims, &iter->str[1], MAX_INDICES);
-  iter->off[0] = YGet_dims(odims, &iter->off[1], MAX_INDICES);
+  /* check s,off conformability */
   if (ys_conform(0, iter->str, iter->off, iter->len))
-    ys_error(fname, "str,off arguments not conformable");
-  nstr = TotalNumber(tmpDims);
+    y_errorq("%s: str,off arguments not conformable", fname);
+  for (nstr=1,i=1 ; i<=iter->len[0] ; i++) nstr *= iter->len[i];
   /* note that strfind result has one more dimension than input str,off */
   if (iter->len[0] > mx_indices)
-    ys_error(fname, "inputs have too many dimensions");
+    y_errorq("%s: inputs have too many dimensions", fname);
+
+  return nstr;
+}
+
+static void
+ys_initer2(ys_iter_t *iter)
+{
+  long i;
 
   /* reduce dimensions as much as possible, convert str,off to strides */
   ys_dcombine(iter->str, iter->off, iter->len);
@@ -367,8 +352,6 @@ ys_initer(ys_iter_t *iter, Dimension *sdims, Dimension *odims,
   ys_strides(iter->off);
   for (i=0 ; i<=iter->len[0] ; i++) iter->ndx[i] = 0;
   iter->str[0] = iter->off[0] = 0;
-
-  return nstr;
 }
 
 /* streplace version of dcombine */
@@ -410,45 +393,36 @@ ys_3combine(long *str, long *off, long *to, long *rslt)
 /* ------------------------------------------------------------------------ */
 
 void
-Y_strpart(int nargs)
+Y_strpart(int argc)
 {
-  int in_place = CalledAsSubroutine();
-  Operand op;
+  int in_place = yarg_subroutine();
+  int typeid = yarg_typeid(0);
   long i, j, n, len, mn, mx;
-  Dimension *dims;
+  ys_iter_t iter;
   char **input, **output, *inp;
 
-  if (nargs != 2) YError("strpart takes exactly two arguments");
+  if (argc != 2) y_error("strpart takes exactly two arguments");
 
-  input = yarg_q(1, &dims);
+  input = ygeta_q(1, &n, iter.str);
 
-  yarg_op(0, &op);
-  if (op.ops==&rangeOps) {
-    long min, max;
-    int maxNil;
-    Range *range = op.value;
-    if (range->rf || range->inc!=1 ||
-        range->nilFlags&(R_PSEUDO|R_RUBBER|R_NULLER))
-      YError("bad 2nd argument to strpart");
-    min = range->nilFlags&R_MINNIL? 0 : range->min-1L;
-    maxNil = range->nilFlags&R_MAXNIL;
-    max = range->max-1L;
+  if (typeid == Y_RANGE) {
+    long min, max, nxs[3];
+    int flags = yget_range(0, nxs);
+    if (flags&14 || nxs[2]!=1)
+      y_error("strpart 2nd argument cannot have range function or step");
+    min = (flags&Y_MIN_DFLT)? 0 : nxs[0]-1L;
+    max = nxs[1]-1L;
+    flags &= Y_MAX_DFLT;
 
-    if (in_place) {
-      output = input;
-    } else {
-      Array *result = PushDataBlock(NewArray(&stringStruct, dims));
-      output = result->value.q;
-    }
+    output = in_place? input : ypush_q(iter.str);
 
-    n = TotalNumber(dims);
     for (i=0 ; i<n ; i++) {
       inp = input[i];
       if (inp) {
         len = strlen(inp);
         mn = min<0? len+min : min;
-        if (maxNil) mx= len-1;
-        else mx = max<0? len+max : max;
+        if (flags) mx = len-1;
+        else       mx = max<0? len+max : max;
         if (mn<0) mn = 0;
         if (mx<0) mx = -1;
         if (mx>=len) mx = len-1;
@@ -458,42 +432,35 @@ Y_strpart(int nargs)
       }
     }
 
-  } else if (op.ops->promoteID <= T_LONG) {
-    ys_iter_t iter;
+  } else if (typeid <= Y_LONG) {
     long *sel, isel, nlead;
-    op.ops->ToLong(&op);
-    sel = op.value;
-    iter.str[0] = YGet_dims(dims, &iter.str[1], MAX_INDICES);
-    iter.off[0] = YGet_dims(op.type.dims, &iter.off[1], MAX_INDICES);
+    sel = ygeta_l(0, 0, iter.off);
     nlead = iter.off[0]? iter.off[1] : 1;
     if (nlead & 1)
-      YError("strpart leading dimension of sel argument must be even");
+      y_error("strpart leading dimension of sel argument must be even");
     if (ys_conform(1, iter.str, iter.off, iter.len))
-      YError("strpart str,sel arguments not conformable");
-    n = TotalNumber(tmpDims);
-    if (nlead > 2) {
-      if (iter.len[0]==MAX_INDICES)
-        YError("strpart result would have too many dimensions");
-      ys_dim(nlead>>1);
-    }
+      y_error("strpart str,sel arguments not conformable");
+    for (n=1,i=1 ; i<=iter.len[0] ; i++) n *= iter.len[i];
 
     if (in_place) {
       for (i=1 ; i<=iter.len[0] ; i++)
         if (i>iter.str[0] || iter.str[i]!=iter.len[i]) break;
       if (i<=iter.len[0] || nlead>2)
-        YError("strpart in place requires result same shape as input");
+        y_error("strpart in place requires result same shape as input");
       output = input;
     } else {
-      Array *result = PushDataBlock(NewArray(&stringStruct, tmpDims));
-      output = result->value.q;
+      if (nlead > 2) {
+        long dims[Y_DIMSIZE];
+        if (ys_dim(dims, nlead>>1, iter.len))
+          y_error("strpart result would have too many dimensions");
+        output = ypush_q(dims);
+      } else {
+        output = ypush_q(iter.len);
+      }
     }
 
     /* reduce dimensions as much as possible, convert str,off to strides */
-    ys_dcombine(iter.str, iter.off, iter.len);
-    ys_strides(iter.str);
-    ys_strides(iter.off);
-    for (i=0 ; i<=iter.len[0] ; i++) iter.ndx[i] = 0;
-    iter.str[0] = iter.off[0] = 0;
+    ys_initer2(&iter);
 
     for (i=0 ; i<n ; i++) {
       inp = input[iter.str[0]];
@@ -515,43 +482,42 @@ Y_strpart(int nargs)
 
       ys_increment(&iter);
     }
+
+  } else {
+    y_error("strpart 2nd argument must be range or sel");
   }
 }
 
 void
-Y_streplace(int nargs)
+Y_streplace(int argc)
 {
-  int in_place = CalledAsSubroutine();
+  int in_place = yarg_subroutine();
   long i, n, len, mn, mx, j, m, im=0, lfrom, lto, ito, k;
-  Dimension *sdims, *odims, *tdims=0;
   char **s, **t, **out, *inp, *to=0;
   ys_iter_t iter;
-  long todim[MAX_INDICES+1], *sel, isel, nlead, tlead;
+  long todim[Y_DIMSIZE], *sel, isel, nlead, tlead;
 
-  int iarg = ys_stroff(nargs-1, &s, &sdims, &sel, &odims);
+  int iarg = ys_stroff(argc-1, &s, iter.str, &sel, iter.off);
   if (!sel)
-    YError("streplace second argument must be start-end indices");
-  t = yarg_q(iarg--, &tdims);
+    y_error("streplace second argument must be start-end indices");
+  t = ygeta_q(iarg--, 0, todim);
   if (!t)
-    YError("streplace third argument must be to-string");
+    y_error("streplace third argument must be to-string");
   if (iarg >= 0)
-    YError("streplace takes three non-keyword arguments");
+    y_error("streplace takes three non-keyword arguments");
 
-  iter.str[0] = YGet_dims(sdims, &iter.str[1], MAX_INDICES);
-  iter.off[0] = YGet_dims(odims, &iter.off[1], MAX_INDICES);
   nlead = iter.off[0]? iter.off[1] : 1;
   if (nlead & 1)
-    YError("streplace leading dimension of start-end list must be even");
+    y_error("streplace leading dimension of start-end list must be even");
   if (ys_conform(1, iter.str, iter.off, iter.len))
-    YError("streplace str,sel arguments not conformable");
-  n = TotalNumber(tmpDims);
-  todim[0] = YGet_dims(tdims, &todim[1], MAX_INDICES);
+    y_error("streplace str,sel arguments not conformable");
+  for (n=1,i=1 ; i<=iter.len[0] ; i++) n *= iter.len[i];
   tlead = 1;
   if (nlead > 2) {
     /* to-string needs a leading dimension matching sel's */
     if (todim[0]) tlead = todim[1];
     if (tlead!=1 && tlead+tlead!=nlead)
-      YError("streplace to-string not conformable (leading dimension)");
+      y_error("streplace to-string not conformable (leading dimension)");
     for (i=1 ; i<todim[0] ; i++) todim[i] = todim[i+1];
     if (todim[0]) todim[0]--;
     if (!todim[0]) todim[0] = todim[1] = 1;
@@ -560,17 +526,16 @@ Y_streplace(int nargs)
   for (i=1 ; i<=todim[0] ; i++) {
     if (todim[i] == 1) continue;
     if (i>iter.len[0] || todim[i]!=iter.len[i])
-      YError("streplace to-string not conformable (trailing dimensions)");
+      y_error("streplace to-string not conformable (trailing dimensions)");
   }
 
   if (in_place) {
     for (i=1 ; i<=iter.len[0] ; i++)
       if (i>iter.str[0] || iter.str[i]!=iter.len[i])
-        YError("strpart in place requires result same shape as input");
+        y_error("streplace in place requires result same shape as input");
     out = s;
   } else {
-    Array *result = PushDataBlock(NewArray(&stringStruct, tmpDims));
-    out = result->value.q;
+    out = ypush_q(iter.len);
   }
 
   /* reduce dimensions as much as possible, convert str,off to strides */
@@ -598,7 +563,7 @@ Y_streplace(int nargs)
         if (m<0 || mn>=m)
           m = mx;
         else
-          YError("streplace start-end list not disjoint and increasing");
+          y_error("streplace start-end list not disjoint and increasing");
         lfrom += mx-mn;
         if (im < 0) {
           if (to && to[0]) for (im=1 ; to[im] ; im++);
@@ -629,62 +594,61 @@ Y_streplace(int nargs)
 }
 
 static char *ys_default = " \t\n";
-static void ys_strword(int nargs, int tok);
+static void ys_strword(int argc, int tok);
 
 void
-Y__strtok(int nargs)
+Y__strtok(int argc)
 {
-  ys_strword(nargs, 1);
+  ys_strword(argc, 1);
 }
 
 void
-Y_strword(int nargs)
+Y_strword(int argc)
 {
-  ys_strword(nargs, 0);
+  ys_strword(argc, 0);
 }
 
 void
-ys_strword(int nargs, int tok)
+ys_strword(int argc, int tok)
 {
   char **delim=&ys_default, **s, *str;
   long ndelim=1, ncount=1, *o, npairs, idel;
-  Dimension *sdims, *odims, *ddims=0;
   int iarg, final, trailing, supress;
   long nstr, i, off, iout, *out, o0=0;
   ys_iter_t iter;
   char is_delim[256];
+  long dims[Y_DIMSIZE];
 
-  iarg = ys_stroff(nargs-1, &s, &sdims, &o, &odims);
+  iarg = ys_stroff(argc-1, &s, iter.str, &o, iter.off);
   if (!o) o = &o0;
-  else if (tok) YError("strtok takes no offset argument, use strword");
-  if (iarg<nargs-3)
-    ys_error(tok?"strtok":"strword", "accepts no keywords");
+  else if (tok) y_error("strtok takes no offset argument, use strword");
+  if (iarg<argc-3)
+    y_errorq("%s: accepts no keywords", tok?"strtok":"strword");
   if (iarg>=0) {
-    if (!yarg_nil(iarg)) delim = yarg_q(iarg--, &ddims);
-    else iarg--;
-    ndelim = TotalNumber(ddims);
+    if (!yarg_nil(iarg)) delim = ygeta_q(iarg, &ndelim, 0);
+    iarg--;
     if (iarg>=0) {
-      ncount = yarg_sl(iarg--);
+      ncount = ygets_l(iarg--);
       if (iarg>=0)
-        ys_error(tok?"strtok":"strword", "argument list bad");
+        y_errorq("%s: argument list bad", tok?"strtok":"strword");
     }
   }
   if (tok) {
-    if (ncount<=0) YError("strtok takes positive delim count, use strword");
+    if (ncount<=0) y_error("strtok takes positive delim count, use strword");
     if (ndelim<2 && ncount<2) ncount = 2;
   }
-
-  nstr = ys_initer(&iter, sdims, odims, MAX_INDICES-1, tok?"strtok":"strword");
+  nstr = ys_initer(&iter, Y_DIMSIZE-2, tok?"strtok":"strword");
 
   trailing = (ncount == 0);
   supress = (ncount <= 0);
   if (supress && !trailing) ncount = -ncount-1;
   npairs = ndelim+ncount-1;
   if (npairs <= 0)
-    YError("strword N<=0 needs at least two delimiters");
+    y_error("strword N<=0 needs at least two delimiters");
 
-  out = ((Array*)
-         PushDataBlock(NewArray(&longStruct, ys_dim(2*npairs))))->value.l;
+  ys_dim(dims, npairs+npairs, iter.len);
+  ys_initer2(&iter);
+  out = ypush_l(dims);
 
   /* outer loop is over [start,end] pairs in result */
   for (idel=final=0 ; !final ; idel++) {
@@ -776,39 +740,43 @@ struct ys_state_t {
 
 #define YS_MAX_KEYS 3
 static char *ys_kglob[] = { "case", "path", "esc", 0 };
+static long ys_nkglob[YS_MAX_KEYS+1];
 
 void
-Y_strglob(int nargs)
+Y_strglob(int argc)
 {
-  Symbol *keys[YS_MAX_KEYS];
+  int keys[YS_MAX_KEYS];
   long i, nstr, *o = 0;
   char *str, **s = 0;
-  Dimension *sdims=0, *odims=0;
   int iarg, flags;
   ys_iter_t iter;
   ys_state_t state;
   int *out;
 
-  for (i=0 ; i<YS_MAX_KEYS ; i++) keys[i] = 0;
-  iarg = yarg_keys(nargs-1, ys_kglob, keys);
+  yarg_kw_init(ys_kglob, ys_nkglob, keys);
+  iarg = yarg_kw(argc-1, ys_nkglob, keys);
   if (iarg >= 0) {
-    state.pat = yarg_sq(iarg--);
-    iarg = yarg_keys(iarg, ys_kglob, keys);
-    iarg = ys_stroff(iarg, &s, &sdims, &o, &odims);
-    iarg = yarg_keys(iarg, ys_kglob, keys);
+    state.pat = ygets_q(iarg--);
+    iarg = yarg_kw(iarg, ys_nkglob, keys);
+    flags = ys_stroff(iarg, &s, iter.str, &o, iter.off);
+    for (iarg-- ; iarg>=flags ; iarg--)
+      iarg = yarg_kw(iarg, ys_nkglob, keys);
+  } else {
+    state.pat = 0;
   }
   if (!s || iarg>=0)
-    YError("strfind takes 2 or 3 non-key arguments");
-  nstr = ys_initer(&iter, sdims, odims, MAX_INDICES, "strglob");
+    y_error("strfind takes 2 or 3 non-key arguments");
+  nstr = ys_initer(&iter, Y_DIMSIZE-1, "strglob");
 
   /* analyze other keywords (FNM_CASEFOLD is a GNU extension) */
-  flags = (keys[0] && !YGetInteger(keys[0]))? FNM_CASEFOLD : 0;
-  iarg = keys[1]? YGetInteger(keys[1]) : 0;
+  flags = (keys[0]>=0 && !ygets_l(keys[0]))? FNM_CASEFOLD : 0;
+  iarg = (keys[1]>=0)? ygets_l(keys[1]) : 0;
   if (iarg&1) flags |= FNM_PATHNAME;
   if (iarg&2) flags |= FNM_PERIOD;
-  if (keys[2] && !YGetInteger(keys[2])) flags |= FNM_NOESCAPE;
+  if (keys[2]>=0 && !ygets_l(keys[2])) flags |= FNM_NOESCAPE;
 
-  out = ((Array*)PushDataBlock(NewArray(&intStruct, tmpDims)))->value.i;
+  out = ypush_i(iter.len);
+  ys_initer2(&iter);
 
   for (i=0 ; i<nstr ; i++) {
     str = s[iter.str[0]];
@@ -836,46 +804,49 @@ static void (*ys_finder[4])(ys_state_t *state, char *str) = {
   ys_findf, ys_findcf, ys_findb, ys_findcb };
 
 static char *ys_kfind[] = { "n", "case", "back", 0 };
+static long ys_nkfind[YS_MAX_KEYS+1];
 
 void
-Y_strfind(int nargs)
+Y_strfind(int argc)
 {
   void (*searcher)(ys_state_t *state, char *str);
-  Symbol *keys[YS_MAX_KEYS];
+  int keys[YS_MAX_KEYS];
   long i, nstr, *o;
   char *str, **s=0;
-  Dimension *sdims=0, *odims=0;
   int iarg;
   ys_iter_t iter;
   ys_state_t state;
+  long dims[Y_DIMSIZE];
 
-  for (i=0 ; i<YS_MAX_KEYS ; i++) keys[i] = 0;
-  iarg = yarg_keys(nargs-1, ys_kfind, keys);
+  yarg_kw_init(ys_kfind, ys_nkfind, keys);
+  iarg = yarg_kw(argc-1, ys_nkfind, keys);
   if (iarg >= 0) {
-    state.pat = yarg_sq(iarg--);
-    iarg = yarg_keys(iarg, ys_kfind, keys);
-    iarg = ys_stroff(iarg, &s, &sdims, &o, &odims);
-    iarg = yarg_keys(iarg, ys_kfind, keys);
+    int iarg0;
+    state.pat = ygets_q(iarg--);
+    iarg = yarg_kw(iarg, ys_nkfind, keys);
+    iarg0 = ys_stroff(iarg, &s, iter.str, &o, iter.off);
+    for (iarg-- ; iarg>=iarg0 ; iarg--)
+      iarg = yarg_kw(iarg, ys_nkfind, keys);
   }
   if (!s || iarg>=0)
-    YError("strfind takes 2 or 3 non-key arguments");
-  nstr = ys_initer(&iter, sdims, odims, MAX_INDICES-1, "strfind");
+    y_error("strfind takes 2 or 3 non-key arguments");
+  nstr = ys_initer(&iter, Y_DIMSIZE-2, "strfind");
 
   /* analyze keywords */
-  state.nrep = keys[0]? YGetInteger(keys[0]) : 1;
+  state.nrep = (keys[0]>=0)? ygets_l(keys[0]) : 1;
   if (state.nrep < 1)
-    YError("strfind illegal n= repeat count");
-  iarg = (keys[1] && !YGetInteger(keys[1]));
-  if (keys[2] && YGetInteger(keys[2])) {
+    y_error("strfind illegal n= repeat count");
+  iarg = (keys[1]>=0 && !ygets_l(keys[1]));
+  if (keys[2]>=0 && ygets_l(keys[2])) {
     iarg |= 2;
     state.lpat = 0;
     if (state.pat) for ( ; state.pat[state.lpat] ; state.lpat++);
   }
   searcher = ys_finder[iarg];
 
-  state.out = ((Array*)
-               PushDataBlock(NewArray(&longStruct,
-                                      ys_dim(2*state.nrep))))->value.l;
+  ys_dim(dims, state.nrep+state.nrep, iter.len);
+  ys_initer2(&iter);
+  state.out = ypush_l(dims);
 
   for (i=0 ; i<nstr ; i++) {
     str = s[iter.str[0]];
@@ -1010,50 +981,53 @@ ys_reclear(void)
   regerr_dm();         /* reset (very crude) regexp error detection */
 }
 static char *ys_kgrep[] = { "n", "sub", 0 };
+static long ys_nkgrep[YS_MAX_KEYS];
 
 void
-Y_strgrep(int nargs)
+Y_strgrep(int argc)
 {
-  Symbol *keys[YS_MAX_KEYS];
+  int keys[YS_MAX_KEYS-1];
   long i, j, is, ntot, nstr, nsub=1, *sub=0, *o;
   long default_sub[1];
   char *str, **s=0;
-  Dimension *sdims=0, *odims=0;
   int iarg;
   ys_iter_t iter;
   ys_state_t state;
+  long dims[Y_DIMSIZE];
 
-  for (i=0 ; i<YS_MAX_KEYS ; i++) keys[i] = 0;
-  iarg = yarg_keys(nargs-1, ys_kgrep, keys);
+  yarg_kw_init(ys_kgrep, ys_nkgrep, keys);
+  iarg = yarg_kw(argc-1, ys_nkgrep, keys);
   if (iarg >= 0) {
-    state.pat = yarg_sq(iarg--);
-    iarg = yarg_keys(iarg, ys_kgrep, keys);
-    iarg = ys_stroff(iarg, &s, &sdims, &o, &odims);
-    iarg = yarg_keys(iarg, ys_kgrep, keys);
+    int iarg0;
+    state.pat = ygets_q(iarg--);
+    iarg = yarg_kw(iarg, ys_nkgrep, keys);
+    iarg0 = ys_stroff(iarg, &s, iter.str, &o, iter.off);
+    for (iarg-- ; iarg>=iarg0 ; iarg--)
+      iarg = yarg_kw(iarg, ys_nkgrep, keys);
+  } else {
+    state.pat = 0;
   }
   if (!s || iarg>=0)
-    YError("strgrep takes 2 or 3 non-key arguments");
-  nstr = ys_initer(&iter, sdims, odims, MAX_INDICES-1, "strgrep");
+    y_error("strgrep takes 2 or 3 non-key arguments");
+  nstr = ys_initer(&iter, Y_DIMSIZE-2, "strgrep");
 
   /* analyze keywords */
-  state.nrep = keys[0]? YGetInteger(keys[0]) : 1;
+  state.nrep = (keys[0]>=0)? ygets_l(keys[0]) : 1;
   if (state.nrep < 1)
-    YError("strgrep illegal n= repeat count");
-  if (keys[1]) {
-    sdims = 0;
-    sub = YGet_L(keys[1], 1, &sdims);
-    if (sub) {
-      if (sdims) {
-        if (sdims->next)
-          YError("strgrep sub= not scalar or 1D list of subexpressions");
-        nsub = sdims->number;
-      }
-      if (nsub > 10)
-        YError("strgrep sub= list can contain at most 10 items");
-      for (i=0 ; i<nsub ; i++) {
-        if (sub[i]<0 || sub[i]>=NSUBEXP)
-          YError("strgrep sub= subexpression numbers run from 0 to 9");
-      }
+    y_error("strgrep illegal n= repeat count");
+  if (keys[1]>=0 && !yarg_nil(keys[1])) {
+    long sdims[Y_DIMSIZE];
+    sub = ygeta_l(keys[1], 0, sdims);
+    if (sdims[0]) {
+      if (sdims[0] != 1)
+        y_error("strgrep sub= not scalar or 1D list of subexpressions");
+      nsub = sdims[1];
+    }
+    if (nsub > NSUBEXP)
+      y_error("strgrep sub= list can contain at most 10 items");
+    for (i=0 ; i<nsub ; i++) {
+      if (sub[i]<0 || sub[i]>=NSUBEXP)
+        y_error("strgrep sub= subexpression numbers run from 0 to 9");
     }
   }
   if (!sub) {
@@ -1071,15 +1045,15 @@ Y_strgrep(int nargs)
       errmsg = regerr_dm();
       if (errmsg)
         strncat(msg+36, errmsg? errmsg : "(unknown reason)", 79-36);
-      YError(msg);
+      y_error(msg);
     }
     /* mxsub = regnpar_dm();   dont second guess, trust the user */
   }
 
   ntot = state.nrep*nsub;
-  state.out = ((Array*)
-               PushDataBlock(NewArray(&longStruct,
-                                      ys_dim(ntot+ntot))))->value.l;
+  ys_dim(dims, ntot+ntot, iter.len);
+  ys_initer2(&iter);
+  state.out = ypush_l(dims);
 
   for (i=0 ; i<nstr ; i++) {
     str = s[iter.str[0]];
@@ -1129,14 +1103,4 @@ Y_strgrep(int nargs)
   }
 
   ys_reclear();
-}
-
-static void
-ys_error(char *fname, char *errmsg)
-{
-  char msg[120];
-  strcpy(msg, fname);  /* fname must be <18 characters */
-  strcat(msg, ": ");
-  strncat(msg, errmsg, 100);
-  YError(msg);
 }

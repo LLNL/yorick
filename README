@@ -123,7 +123,8 @@ following directory structure:
       yorick documentation (optional)
 
   $Y_HOME/
-    Maketmpl  => Makefile template for building custom yorick versions
+    Makepkg  => Makefile template for building custom yorick versions
+      Makeexe, Makedll are components of this build system
     include/
       ".h" C header files for building custom yorick versions
       NOTE: this should be in Y_SITE...
@@ -201,11 +202,22 @@ To build yorick on a MS Windows machine, read win/README.
 
 If you want to install yorick in a directory other than the one you
 are building in, you must first set Y_SITE and Y_HOME, as described
-above.  (Otherwise, just skip to the next paragraph.)  You can either
-edit the file ysite.sh (read the comments there for a detailed
-description of what to do), or, alternatively, you can type (all UNIX
-commands must be typed in the top-level directory of the
-distribution):
+above.  (Otherwise, just skip to the next paragraph.)
+
+A good, generic choice for Y_SITE and Y_HOME is Y_HOME=Y_SITE=relocate,
+which you can specify with
+
+   make Y_HOME=relocate ysite
+or with the equivalent shorthand:
+   make reloc
+
+The relocate choice forces the runtime fallback to compute Y_HOME and
+Y_SITE.
+
+To set Y_HOME and Y_SITE to hardwired values, you can either edit the
+file ysite.sh (read the comments there for a detailed description of
+what to do), or, alternatively, you can type (all UNIX commands must
+be typed in the top-level directory of the distribution):
 
    make prefix=/my/top/path Y_PLATFORM=hal9000 ysite
      to get
@@ -248,8 +260,8 @@ but you are free to change that name to whatever you like.  Read the
 top level README (which is install.rel in this directory) for complete
 instructions.
 
-More usually, you can take up to four steps to configure, build, test,
-and install yorick.  In order, the four separate commands are:
+You can take up to four steps to configure, build, test, and install
+yorick.  In order, the four separate commands are:
 
    make config
    make
@@ -269,22 +281,41 @@ your system or edit the files Make.cfg and play/unix/config.h by hand
 to repair any errors or oversights of "make config".
 
 The "make config" step creates the file Make.cfg (in this top-level
-directory).  By default, the compiler and loader flags are just
-"-O".  If you want fancier options, you can edit Make.cfg before
-you build; just modify the COPTIONS and/or LDOPTIONS variable.  For
-the convenience of gcc users, a maximal error-checking set of
-options is included in Make.cfg.  Just set
-COPTIONS=$(GCCOPTS)
-to use this set.  (This actually detects a vast number of non-ansi
-constructs in the system string.h header file on my system, so you
-might need to get rid of the -ansi and -pedantic switches.)
+directory).  By default, the compiler and loader flags are just "-O".
+If you want fancier options, you can edit Make.cfg before you build;
+just modify the Y_CFLAGS and/or Y_LDFLAGS variable.  Optimization flags
+like -g or -O are handled separately; use the COPT_DEFAULT variable
+to set those.
 
-You can set environment variables before the "make config" step in
-order to skip or force various configuration options:
-   NO_XLIB=yes     # build yorick with no onscreen graphics
+Instead of editing Make.cfg by hand after the "make config" step, you
+can also set a variety of environment variables to control the
+configuration process.  You can read the configuration scripts --
+configure, play/unix/config.sh, play/x11/xconfig.sh, and
+yorick/yconfig.sh -- to find out precisely what they do.  Here they
+are, with sample non-default values:
+
+   CC='xlc -q64'      # C compiler name plus overall mode switch
+   CFLAGS=-g          # compile flags (-O is default)
+   LDFLAGS=-g         # load flags (optimization CFLAGS is default)
+   AR='ar -X 64'      # ar archive program
+   RANLIB='ranlib -X 64'  # ranlib archive indexer
+   MATHLIB=-lmcompat      # math library (-lm is default)
+
+   FPU_IGNORE=yes  # give up trying to catch floating point exceptions
    NO_PLUGINS=yes  # build yorick with no plugin support
+   LD_STATIC=yes   # force hex and drat packages to be statically loaded
+   NO_PASSWD=yes   # hack for crippled OSes or crosscompilers (catamount)
+   NO_CUSERID=yes  # hack for crippled OSes or crosscompilers (catamount)
    NO_PROCS=yes    # build yorick with no subprocess or poll/select support
-                     (e.g.- for catamount OS)
+                     (catamount) - this cripples yorick event handling
+   NO_POLL=yes     # forces use of select when poll present but broken
+                     (Mac OS X uses this by default)
+
+   NO_XLIB=yes     # build yorick with no onscreen graphics
+   X11BASE=/weird/X11root         # try -I/weird/X11root/include, and
+                                        -L/weird/X11root/lib
+   X11INC=/weird/X11root/include  # directory containing X11/Xlib.h
+   X11LIB=/weird/X11root/lib      # directory containing libX11.a or .so
 
 Other make targets include:
 
@@ -292,6 +323,7 @@ Other make targets include:
       do this after successful install
    distclean  -- clean plus all files generated by the config step
       config does distclean before it begins
+   siteclean  -- distclean plus resets ysite.sh to original settings
    uninstall  -- gets rid of all installed files
       be sure to do uninstall before distclean if you want to
       get rid of the yorick you installed (otherwise you will

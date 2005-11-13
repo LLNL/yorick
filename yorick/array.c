@@ -1,5 +1,5 @@
 /*
- * $Id: array.c,v 1.1 2005-09-18 22:03:46 dhmunro Exp $
+ * $Id: array.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -60,7 +60,7 @@ extern UnaryOp EvalAY, EvalLV;
 
 extern Operand *FormOperandDB(Symbol *owner, Operand *op);
 
-#define MAX_INDICES 10
+#define MAX_INDICES (Y_DIMSIZE-1)
 
 /*
    For several types of DataBlock, the Eval operation means to index

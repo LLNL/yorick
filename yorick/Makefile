@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:04:08 dhmunro Exp $
+# $Id: Makefile,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
 # similar to any yorick package Makefile
 
 # ------------------------------------------------ macros for yor base package
@@ -11,7 +11,7 @@ PKG_I=std.i matrix.i fft.i graph.i
 PKG_I_DEPS=../i0/std.i ../i0/matrix.i ../i0/fft.i ../i0/graph.i
 PKG_I_DIR=-I../i0
 
-OBJS = opsv.o task.o yorick.o yinput.o parse.o ydata.o yio.o fnctn.o \
+OBJS = opsv.o task.o yorick.o yinput.o parse.o ydata.o yapi.o yio.o fnctn.o \
   array.o range.o ops.o ops0.o ops1.o ops2.o ops3.o nonc.o debug.o \
   std0.o std1.o std2.o ascio.o defmem.o yhash.o  yrdwr.o bcast.o binio.o \
   binobj.o binstd.o cache.o convrt.o binpdb.o clog.o ystr.o graph.o \
@@ -29,7 +29,7 @@ DIST_DIRS=../drat ../hex
 # ------------------------------------ standard targets and rules (in Makepkg)
 
 # set macros Makepkg uses in target and dependency names
-H_YWRAP=$(PLAYONLY) ydata.h binio.h hash.h
+H_YWRAP=$(PLAYONLY) ydata.h yapi.h binio.h hash.h
 CODGER_DEP=codger
 EXE_TARGETS=main.o $(YWIN_LIB) prepkg
 LIB_TARGETS=libyor
@@ -91,64 +91,67 @@ distclean::
 	@for d in $(DIST_DIRS); do ( cd $$d; $(MAKE) TGT=exe distclean; ); done
 
 # ------------------------------------- targets and rules for yor base package
-# ydata.h: binio.h hash.h
+# ydata.h: yapi.h binio.h hash.h
 # binio.h: hash.h
 # yio.h: hash.h pstdio.h
 # defmem.h: pstdlib.h
 # bcast.h: ydata.h   binio.h hash.h
 HSHAPI=hash.h ../play/plugin.h
 HSH=hash.h
+YDATA_H=ydata.h yapi.h binio.h $(HSHAPI)
+YDATA_HP=ydata.h yapi.h binio.h $(HSH)
 HGIST=../gist/gist.h ../gist/hlevel.h
 PSLIB=../play/pstdlib.h $(PLAPI)
 PSLIO=../play/pstdlib.h ../play/pstdio.h $(PLAPI)
 PSPLAY=../play/pstdlib.h ../play/play.h $(PLAPI)
 PLAYALL=../play/play.h ../play/pstdlib.h ../play/pstdio.h $(PLAPI)
 
-array.o: ydata.h   binio.h $(HSHAPI)
-ascio.o: ydata.h yio.h defmem.h $(PLAYALL)   binio.h $(HSH)
-autold.o: ydata.h yio.h defmem.h $(PSLIO)   binio.h $(HSH)
-bcast.o: bcast.h   ydata.h binio.h $(HSHAPI)
-binio.o: ydata.h yio.h defmem.h $(PSLIO)   binio.h $(HSH)
-binobj.o: bcast.h defmem.h $(PSLIB)   ydata.h binio.h $(HSH)
-binpdb.o: ydata.h yio.h $(PSLIO)   binio.h $(HSH)
+array.o: $(YDATA_H)
+ascio.o: $(YDATA_HP) yio.h defmem.h $(PLAYALL)
+autold.o: $(YDATA_HP) yio.h defmem.h $(PSLIO)
+bcast.o: bcast.h   $(YDATA_H)
+binio.o: $(YDATA_HP) yio.h defmem.h $(PSLIO)
+binobj.o: bcast.h defmem.h $(PSLIB)   $(YDATA_HP)
+binpdb.o: $(YDATA_HP) yio.h $(PSLIO)
 binstd.o: binio.h $(PSLIB)   $(HSH)
 cache.o: binio.h $(PSLIO)   $(HSH)
-clog.o: ydata.h yio.h $(PSLIO)   binio.h $(HSH)
+clog.o: $(YDATA_HP) yio.h $(PSLIO)
 convrt.o: binio.h $(PSLIB)   $(HSH)
-debug.o: ydata.h yio.h $(PLAYALL)   binio.h $(HSH)
+debug.o: $(YDATA_HP) yio.h $(PLAYALL)
 defmem.o: defmem.h   $(PSLIB)
-fnctn.o: ydata.h   binio.h $(HSHAPI)
+fnctn.o: $(YDATA_H)
 fortrn.o: fortrn.c yasync.h $(PSLIB)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(FORTRAN_LINKAGE) -o $@ -c fortrn.c
-graph.o: graph.c ydata.h yio.h   binio.h $(HSH) $(PLAYALL) $(HGIST)
-graph0.o: ydata.h   binio.h $(HSHAPI)
+graph.o: graph.c $(YDATA_HP) yio.h   $(PLAYALL) $(HGIST)
+graph0.o: $(YDATA_H)
 yhash.o: $(HSH) defmem.h $(PSLIB)
-list.o: ydata.h defmem.h   binio.h $(HSHAPI)
+list.o: $(YDATA_H) defmem.h
 nonc.o: nonc.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(NO_HYPOT) -o $@ -c nonc.c
 ops.o: bcast.h $(PSLIB)   ydata.h binio.h $(HSH)
-ops0.o: ydata.h   binio.h $(HSHAPI)
-ops1.o: ydata.h   binio.h $(HSHAPI)
-ops2.o: ydata.h   binio.h $(HSH) $(PSLIB)
-ops3.o: bcast.h $(PSLIB)   ydata.h binio.h $(HSH)
-opsv.o: ydata.h $(PSLIB) prmtyp.h   binio.h $(HSH)
-parse.o: parse.h ydata.h $(PSLIB)   binio.h $(HSH)
+ops0.o: $(YDATA_H)
+ops1.o: $(YDATA_H)
+ops2.o: $(YDATA_HP)   $(PSLIB)
+ops3.o: bcast.h $(PSLIB)   $(YDATA_HP)
+opsv.o: $(YDATA_HP) $(PSLIB) prmtyp.h
+parse.o: parse.h $(YDATA_HP) $(PSLIB)
 pathfun.o: yio.h $(PSLIO)   $(HSH)
-range.o: ydata.h $(PSLIB)   binio.h $(HSH)
+range.o: $(YDATA_HP) $(PSLIB)
 std0.o: std0.c bcast.h yio.h defmem.h $(PLAYALL)   ydata.h binio.h $(HSH)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_Y_VERSION) -o $@ -c std0.c
-std1.o: ydata.h $(PSPLAY)   binio.h $(HSH)
-std2.o: ydata.h yio.h $(PLAYALL)   binio.h $(HSH)
-style.o: style.c ydata.h $(PSLIB) $(HGIST) ../gist/draw.h   binio.h $(HSH)
-task.o: ydata.h yio.h $(PLAYALL)   binio.h $(HSH)
-ydata.o: bcast.h defmem.h $(PSLIB)   ydata.h binio.h $(HSH)
+std1.o: $(YDATA_HP) $(PSPLAY)
+std2.o: $(YDATA_HP) yio.h $(PLAYALL)
+style.o: style.c $(YDATA_HP) $(PSLIB) $(HGIST) ../gist/draw.h
+task.o: $(YDATA_HP) yio.h $(PLAYALL)
+yapi.o: $(YDATA_HP) yio.h bcast.h $(PSLIB)
+ydata.o: bcast.h defmem.h $(PSLIB)   $(YDATA_HP)
 yinput.o: yio.h parse.h $(HSH) $(PLAYALL)
-yio.o: yio.h defmem.h ydata.h $(PLAYALL)   binio.h $(HSH)
+yio.o: yio.h defmem.h $(YDATA_HP) $(PLAYALL)
 yorick.o: yorick.c parse.h $(PSPLAY)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_STRTOUL) -o $@ -c yorick.c
-yrdwr.o: bcast.h $(PSLIB)   ydata.h binio.h $(HSH)
+yrdwr.o: bcast.h $(PSLIB)   $(YDATA_HP)
 YREH=../regexp/yfnmatch.h ../regexp/yregexp.h
-ystr.o: ystr.c $(YREH) $(PSLIB) ydata.h binio.h $(HSH)
+ystr.o: ystr.c $(YREH) $(PSLIB) $(YDATA_HP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -I../regexp -o $@ -c ystr.c
 
 # codger code generator computes ywrap.c and yinit.c source files

@@ -1,5 +1,5 @@
 /*
- * $Id: debug.c,v 1.1 2005-09-18 22:04:00 dhmunro Exp $
+ * $Id: debug.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  *
  * Define Yorick debugging functions.
  */
@@ -529,7 +529,7 @@ int YpReCompare(Function *func,
 
   match= (func->nPos==nPos && func->nKey==nKey && func->nLocal==nLocal &&
           func->hasPosList==hasPL && func->nConstants==nConsts &&
-          func->nReq==frameSize+maxStackDepth+2);
+          func->nReq==frameSize+maxStackDepth+10);
 
   if (match) {
     codeSize-= frameSize-1;

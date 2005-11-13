@@ -1,5 +1,5 @@
 /*
- * $Id: spawn.c,v 1.1 2005-09-18 22:04:17 dhmunro Exp $
+ * $Id: spawn.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  * yorick spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -34,7 +34,6 @@ struct spawn_proc {
 static spawn_proc *spawn_list = 0;
 
 static void spawn_free(void *vproc);  /* for Unref only */
-static void spawn_stop(spawn_proc *proc);
 static char spawn_desc[] = "spawn-process";
 static void spawn_eval(Operand *op);
 static void spawn_print(Operand *op);
@@ -64,8 +63,6 @@ Y_spawn(int nargs)
   Operand *pop = yarg_op(nargs-2, &op);
   long callout=-1, callerr=-1;
   spawn_proc *proc;
-  pid_t pid;
-  int pipe_in[2], pipe_out[2], pipe_err[2];
 
   if (nargs<2 || nargs>3)
     YError("spawn: accepts precisely two or three arguments");

@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.c,v 1.1 2005-09-18 22:04:16 dhmunro Exp $
+ * $Id: ydata.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  * Implement functions for Yorick-specific types of data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -65,7 +65,8 @@ Function *NewFunction(Symbol *consts, long nConsts, int nPos, int nKey,
   func->ops= &functionOps;
   func->constantTable= consts;
   func->nConstants= nConsts;
-  func->nReq= frameSize+maxStackDepth+2;
+  /* guarantee 8 stack slots available for builtins, plus 2 for good luck */
+  func->nReq= frameSize+maxStackDepth+10;
   func->nPos= nPos;
   func->nKey= nKey;
   func->nLocal= nLocal;
@@ -578,12 +579,6 @@ int YNotNil(Symbol *s)
   if (!s) return 0;  /* for use with YGetKeywords */
   if (s->ops==&referenceSym) ReplaceRef(s);
   return !(s->ops==&dataBlockSym && s->value.db==&nilDB);
-}
-
-int
-yarg_nil(int iarg)
-{
-  return (iarg>=0)? !YNotNil(sp-iarg) : 1;
 }
 
 Symbol *YGetKeywords(Symbol *stack, int nArgs, char **keyNames,

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:03:38 dhmunro Exp $
+# $Id: Makefile,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
 # see README for usage
 
 SHELL=/bin/sh
@@ -52,6 +52,9 @@ ysite:
 	s?^Y_HOME=.*?Y_HOME=\"$(Y_HOME)\"?";\
 	sed -e "$$S" ysite.sh >ysite.sh1; then mv ysite.sh1 ysite.sh; fi
 	@if test -r ysite.grp; then chmod g+w ysite.sh; fi
+
+reloc:
+	$(MAKE) Y_HOME=relocate ysite
 
 clean::
 	@rm -f Make.del yorapi.def

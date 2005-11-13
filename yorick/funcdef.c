@@ -1,5 +1,5 @@
 /*
- * $Id: funcdef.c,v 1.1 2005-09-18 22:04:17 dhmunro Exp $
+ * $Id: funcdef.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  * mini-parser converting simple command line to interpreted function
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -18,9 +18,6 @@ extern VMaction Eval, DropTop, PushNil, Return;
 
 typedef struct yfd_tmp_t yfd_tmp_t;
 struct yfd_tmp_t {
-  int references;
-  Operations *ops;
-  void (*zapper)(void *);
   Symbol *ctab;
   Instruction *code;
 };
@@ -47,21 +44,25 @@ yfd_tmp_free(void *vtmp)
 }
 
 void
-Y_funcdef(int nargs)
+Y_funcdef(int argc)
 {
-  Dimension *dims = 0;
-  char c, *line, *line0, **pline = yarg_q(0, &dims);
+  char *q = ygets_q(0);
+  if (argc!=1 || !q)
+    y_error("funcdef accepts only single scalar string argument");
+  ypush_func(q);
+}
+
+int
+ypush_func(char *line)
+{
+  char c, *line0;
   int pc = 0, mxp = 0, nc = 0, mxc = 0;
   yfd_tmp_t *tmp = 0;
   Array *qa;
+  int nargs = -1;
 
-  if (nargs!=1 || !pline || dims)
-    YError("funcdef: accepts only single scalar string argument");
-
-  line = pline[0];
   if (!line) goto parserr;
 
-  nargs = -1;
   for (;;) {
     while (line[0]==' ' || line[0]=='\t') line++;
     c = line[0];
@@ -74,7 +75,7 @@ Y_funcdef(int nargs)
                (c<='9' ||
                 (c>='A' || (c<='Z' || c=='_' || (c>='a' && c<='z')))));
       if (!tmp) {
-        tmp = y_new_tmpobj(sizeof(yfd_tmp_t), yfd_tmp_free);
+        tmp = ypush_scratch(sizeof(yfd_tmp_t), yfd_tmp_free);
         tmp->ctab = 0;
         mxp = 32;
         tmp->code = p_malloc(sizeof(Instruction)*mxp);
@@ -84,7 +85,7 @@ Y_funcdef(int nargs)
       }
       tmp->code[pc].Action = pc? &PushReference : &PushVariable;
       pc++;
-      tmp->code[pc++].index = Globalize(line0, line-line0);
+      tmp->code[pc++].index = yget_global(line0, line-line0);
 
     } else {
       if (!tmp) goto parserr;   /* first token must be a symbol */
@@ -194,15 +195,20 @@ Y_funcdef(int nargs)
   tmp->code[pc++].Action = 0;
   tmp->code[pc].index = pc+1;
   /* NewFunction moves following code to beginning */
-  tmp->code[++pc].index = Globalize("*anonymous*", 0L);
+  tmp->code[++pc].index = yget_global("*anonymous*", 0L);
 
   {
     Symbol *ctab = tmp->ctab;
+    DataBlock *dbtmp = sp->value.db;
+    sp->value.db =
+      (DataBlock *)NewFunction(ctab, nc, 0, 0, 0, 0, nargs+1, tmp->code, pc);
     tmp->ctab = 0;  /* new function takes over reference to this table */
-    PushDataBlock(NewFunction(ctab, nc, 0, 0, 0, 0, nargs+1, tmp->code, pc));
+    Unref(dbtmp);
   }
-  return;
+  return 0;
 
  parserr:
+  if (tmp) yarg_drop(1);
   PushDataBlock(RefNC(&nilDB));
+  return 1;
 }

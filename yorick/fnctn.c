@@ -1,5 +1,5 @@
 /*
- * $Id: fnctn.c,v 1.1 2005-09-18 22:04:05 dhmunro Exp $
+ * $Id: fnctn.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -274,13 +274,13 @@ void EvalFN(Operand *op)
 
   /* Be sure the stack is long enough for a worst-case invocation of this
      function.  nReq= nPos + (hasPosList&1) + nKey + nLoc + (deepest stack
-                      required for expression evaluation) + 2
+                      required for expression evaluation) + 10
                       + 1 for return address for this function
      The nPos and nKey terms must be present because they may not be
      actual arguments, and because even if they are supplied they may
      be referenceSyms which must be copied for use during return.
-     The extra 2 is so that builtin procedures are always guaranteed
-     two free stack slots without calling CheckStack.  */
+     The extra 10 is so that builtin procedures are always guaranteed
+     8(+2 for luck) free stack slots without calling CheckStack.  */
   if (CheckStack(nReq)) stack= sp-n;
 
   /* Handle all actual parameters.
