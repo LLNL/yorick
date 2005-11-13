@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.2 2005-11-13 23:28:49 dhmunro Exp $
+ * $Id: mpy.i,v 1.3 2005-11-13 23:35:51 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -694,7 +694,7 @@ func get_command_line(void)
     }
     if (mp_rank) {
       batch, 1;
-      set_idler, mpy_idler;
+      set_idler, mpy_idler, 1;
       grow, command_line, ["-q"];
     } else if (mp_size) {
       write, "MPI started with "+print(mp_size)(1)+" processes.";
