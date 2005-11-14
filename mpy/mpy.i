@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.3 2005-11-13 23:35:51 dhmunro Exp $
+ * $Id: mpy.i,v 1.4 2005-11-14 00:32:23 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -318,6 +318,9 @@ func mpy_idler
   batch, 1;
   why = _mpy_catch;
   _mpy_catch = 1;
+  if (is_void(_mpy_count)) _mpy_count = 0;
+  else _mpy_count++;
+  if (_mpy_count < 10) set_idler, mpy_idler, 1;
   if (why) {
     if (why == 2) {  /* this used to be mp_abort */
       if (mp_debug)
@@ -325,7 +328,6 @@ func mpy_idler
       if (catch_message!=".SYNC.") mpy_sync, catch_message;
       if (mp_debug)
         write,"(**mp_idlera) rank "+print(mp_rank)(1)+" done with mpy_sync";
-      _mpy_catch = 1;
       if (mp_rank) error, ".SYNC.";
       else error, "(bailing out of parallel task)";
     }
@@ -334,7 +336,6 @@ func mpy_idler
     if (catch_message!=".SYNC.") mpy_sync, catch_message;
     if (mp_debug)
       write,"(**mpy_idler) rank "+print(mp_rank)(1)+" done with mpy_sync";
-    set_idler, mpy_idler, 1;
     return;
   }
   if (mp_debug)
@@ -348,7 +349,7 @@ func mpy_idler
   _mpy_catch = 2;
   task;
   _mpy_catch = [];
-  set_idler, mpy_idler, 1;
+  _mpy_count = 0;
 }
 
 func mp_include(filename)
