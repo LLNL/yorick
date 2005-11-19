@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.1 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: yapi.c,v 1.2 2005-11-19 06:59:03 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1237,7 +1237,7 @@ void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
 {
   y_uo_t *uo;
   if (!uo_type->uo_ops) {
-    Operations *ops = uo_type->uo_ops = p_malloc(sizeof(y_userobj_t));
+    Operations *ops = uo_type->uo_ops = p_malloc(sizeof(Operations));
     memcpy(ops, &y_scratch_ops, sizeof(Operations));
     ops->typeName = uo_type->type_name;
   }
@@ -1245,6 +1245,7 @@ void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
   memset(uo, 0, sizeof(y_uo_t) - sizeof(union y_uo_body_t) + size);
   uo->ops = uo_type->uo_ops;
   uo->uo_type = uo_type;
+  PushDataBlock(uo);
   return uo->body.c;
 }
 
@@ -1253,7 +1254,7 @@ y_uo_free(void *vuo)
 {
   y_uo_t *uo = vuo;
   if (uo->uo_type->uo_ops != uo->ops)
-    y_error("(BUG) corrupt user object in y_uo_free");
+    y_error("(BUG) corrupted user object in y_uo_free");
   if (uo->uo_type->on_free)
     uo->uo_type->on_free(uo->body.c);
   p_free(uo);
@@ -1264,11 +1265,18 @@ y_uo_eval(Operand *op)
 {
   y_uo_t *uo = op->value;
   if (uo->uo_type->uo_ops != uo->ops)
-    y_error("(BUG) corrupt user object in y_uo_eval");
-  if (uo->uo_type->on_eval)
+    y_error("(BUG) corrupted user object in y_uo_eval");
+  if (uo->uo_type->on_eval) {
+    Symbol *stack, *owner = op->owner;
     uo->uo_type->on_eval(uo->body.c, op->references); /*argc in references*/
-  else
+    PopTo(owner);
+    while (sp - owner > 0) {
+      stack = sp--; /* sp decremented BEFORE stack element is deleted */
+      if (stack->ops == &dataBlockSym) Unref(stack->value.db);
+    }
+  } else {
     y_error("user object has no on_eval method");
+  }
 }
 
 static void
@@ -1276,9 +1284,10 @@ y_uo_extract(Operand *op, char *name)
 {
   y_uo_t *uo = op->value;
   if (uo->uo_type->uo_ops != uo->ops)
-    y_error("(BUG) corrupt user object in y_uo_eval");
+    y_error("(BUG) corrupted user object in y_uo_extract");
   if (uo->uo_type->on_extract) {
     uo->uo_type->on_extract(uo->body.c, yget_global(name, 0L));
+    PopTo(op->owner);
   } else {
     y_error("user object has no on_extract method");
   }
@@ -1289,7 +1298,7 @@ y_uo_print(Operand *op)
 {
   y_uo_t *uo = op->value;
   if (uo->uo_type->uo_ops != uo->ops)
-    y_error("(BUG) corrupt user object in y_uo_eval");
+    y_error("(BUG) corrupted user object in y_uo_print");
   if (uo->uo_type->on_print) {
     ForceNewline();
     uo->uo_type->on_print(uo->body.c);
@@ -1311,7 +1320,7 @@ yget_obj(int iarg, y_userobj_t *uo_type)
       } else if (s->value.db->ops == uo_type->uo_ops) {
         y_uo_t *uo = (y_uo_t *)s->value.db;
         if (uo->uo_type->uo_ops != uo->ops)
-          y_error("(BUG) corrupt user object in yget_obj");
+          y_error("(BUG) corrupted user object in yget_obj");
         return uo->body.c;
       }
     }
@@ -1354,18 +1363,18 @@ ypush_scratch(unsigned long size, void (*on_free)(void *))
 }
 
 void
-y_error(char *msg)
+y_error(const char *msg)
 {
   YError(msg);
 }
 
 void
-y_errorn(char *msg_format, long n)
+y_errorn(const char *msg_format, long n)
 {
   char msg[192];
   long nmax = 130;
   long nmsg = 0;
-  char *fmt = strstr(msg_format, "%ld");
+  const char *fmt = strstr(msg_format, "%ld");
   if (!fmt) {
     fmt = strstr(msg_format, "%d");
     if (!fmt) fmt = msg_format + strlen(msg_format);
@@ -1390,12 +1399,12 @@ y_errorn(char *msg_format, long n)
 }
 
 void
-y_errorq(char *msg_format, char *q)
+y_errorq(const char *msg_format, char *q)
 {
   char msg[192];
   long nmax = 130;
   long nmsg = 0;
-  char *fmt = strstr(msg_format, "%s");
+  const char *fmt = strstr(msg_format, "%s");
   if (!fmt)
     fmt = msg_format + strlen(msg_format);
   msg[0] = '\0';

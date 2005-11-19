@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.1 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: yapi.h,v 1.2 2005-11-19 06:58:06 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -418,9 +418,9 @@ original YError API.  The y_errorn and y_errorq variants handle the
 frequent cases for which the message is a format string including a
 %ld or %s descriptor.
 */
-PLUG_API void y_error(char *msg);
-PLUG_API void y_errorn(char *msg_format, long n);
-PLUG_API void y_errorq(char *msg_format, char *q);
+PLUG_API void y_error(const char *msg);
+PLUG_API void y_errorn(const char *msg_format, long n);
+PLUG_API void y_errorq(const char *msg_format, char *q);
 
 END_EXTERN_C
 

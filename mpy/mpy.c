@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
+ * $Id: mpy.c,v 1.3 2005-11-19 06:59:03 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -13,6 +13,7 @@
 #include "ydata.h"
 #include "pstdlib.h"
 #include "defmem.h"
+#include <string.h>
 
 #ifdef DEBUG
 #include <stdio.h>
