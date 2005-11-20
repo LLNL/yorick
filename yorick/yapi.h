@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.2 2005-11-19 06:58:06 dhmunro Exp $
+ * $Id: yapi.h,v 1.3 2005-11-20 22:19:23 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -17,6 +17,7 @@
 
 typedef char *ystring_t;
 typedef void *ypointer_t;
+typedef void ybuiltin_t(int argc);
 
 BEGIN_EXTERN_C
 /*
