@@ -1,9 +1,10 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:05:08 dhmunro Exp $
+# $Id: Makefile,v 1.2 2005-11-20 21:14:24 dhmunro Exp $
 # you need the makeinfo and texi2dvi programs from gnu.org
 # and the tex typesetting system from tug.org
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
-TEXI2PDF = texi2pdf
+#TEXI2PDF = texi2pdf
+TEXI2PDF = texi2dvi --pdf
 TEX = tex
 PDFTEX = pdftex
 YORICK = ../yorick/yorick

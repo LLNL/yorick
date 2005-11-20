@@ -1,4 +1,4 @@
-\input texinfo.tex    @c -*-Texinfo-*-
+\input texinfo.tex    @c -*-texinfo-*-
 @comment %**start of header (This is for running Texinfo on a region.)
 @setfilename yorick.info
 @settitle Yorick
@@ -9,98 +9,104 @@
 @setchapternewpage odd
 @comment %**end of header (This is for running Texinfo on a region.)
 
-@comment $Id: yorick.tex,v 1.1 2005-09-18 22:05:08 dhmunro Exp $
+@comment $Id: yorick.tex,v 1.2 2005-11-20 21:14:24 dhmunro Exp $
 @comment -----------------------------------------------------------------
 
-@ifinfo
+@copying
 This file documents Yorick, an interpreted language specialized for
 numerical analysis.  Yorick can prepare input to or process output from
 another physics simulation code.  New simulation codes can also be
 constructed as a part of the Yorick interpreted environment.
 
-Copyright @copyright{} 2005.  The Regents of the University of California.
-			 All rights reserved.
+@b{BSD License}
 
-Permission to use, copy, modify, and distribute this software for any
-purpose without fee is hereby granted, provided that this entire
-notice is included in all copies of any software which is or includes
-a copy or modification of this software and in all copies of the
-supporting documentation for such software.
+Copyright @copyright{} 2005, The Regents of the University of California.
+Produced at the Lawrence Livermore National Laboratory.
+Written by David H. Munro <dhmunro at users.sourceforge.net>.
+UCRL-CODE-155996
+All rights reserved.
 
-This work was produced at the University of California, Lawrence
-Livermore National Laboratory under contract no. W-7405-ENG-48 between
-the U.S. Department of Energy and The Regents of the University of
-California for the operation of UC LLNL.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
 
+@itemize @bullet
+@item
+Redistributions of source code must retain the above copyright
+notice, this list of conditions and the disclaimer below.
+@item
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the disclaimer (as noted below)
+in the documentation and/or other materials provided with the
+distribution.
+@item
+Neither the name of the UC/LLNL nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+@end itemize
 
-			      DISCLAIMER
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OF
+THE UNIVERSITY OF CALIFORNIA, THE U.S. DEPARTMENT OF ENERGY OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-This software was prepared as an account of work sponsored by an
-agency of the United States Government.  Neither the United States
-Government nor the University of California nor any of their
-employees, makes any warranty, express or implied, or assumes any
-liability or responsibility for the accuracy, completeness, or
-usefulness of any information, apparatus, product, or process
-disclosed, or represents that its use would not infringe
-privately-owned rights.  Reference herein to any specific commercial
-products, process, or service by trade name, trademark, manufacturer,
-or otherwise, does not necessarily constitute or imply its
-endorsement, recommendation, or favoring by the United States
-Government or the University of California.  The views and opinions of
-authors expressed herein do not necessarily state or reflect those of
-the United States Government or the University of California, and
-shall not be used for advertising or product endorsement purposes.
-@end ifinfo
+@b{Additional BSD Notice}
+
+@enumerate
+@item
+This notice is required to be provided under our contract with the
+U.S. Department of Energy (DOE). This work was produced at the
+University of California, Lawrence Livermore National Laboratory under
+Contract No. W-7405-ENG-48 with the DOE.
+@item
+Neither the United States Government nor the University of
+California nor any of their employees, makes any warranty, express or
+implied, or assumes any liability or responsibility for the accuracy,
+completeness, or usefulness of any information, apparatus, product, or
+process disclosed, or represents that its use would not infringe
+privately-owned rights.
+@item
+Also, reference herein to any specific commercial products,
+process, or services by trade name, trademark, manufacturer or
+otherwise does not necessarily constitute or imply its endorsement,
+recommendation, or favoring by the United States Government or the
+University of California. The views and opinions of authors expressed
+herein do not necessarily state or reflect those of the United States
+Government or the University of California, and shall not be used for
+advertising or product endorsement purposes.
+@end enumerate
+@end copying
 
 @comment -----------------------------------------------------------------
 
 @titlepage
-@sp 10
-@center @titlefont{Yorick: An Interpreted Language}
-@sp 2
-@center David H. Munro
+@title Yorick: An Interpreted Language
+@author David H. Munro
 
 @comment  The following two commands start the copyright page.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994.  The Regents of the University of California.
-			 All rights reserved.
-
-Permission to use, copy, modify, and distribute this software for any
-purpose without fee is hereby granted, provided that this entire
-notice is included in all copies of any software which is or includes
-a copy or modification of this software and in all copies of the
-supporting documentation for such software.
-
-This work was produced at the University of California, Lawrence
-Livermore National Laboratory under contract no. W-7405-ENG-48 between
-the U.S. Department of Energy and The Regents of the University of
-California for the operation of UC LLNL.
-
-
-			      DISCLAIMER
-
-This software was prepared as an account of work sponsored by an
-agency of the United States Government.  Neither the United States
-Government nor the University of California nor any of their
-employees, makes any warranty, express or implied, or assumes any
-liability or responsibility for the accuracy, completeness, or
-usefulness of any information, apparatus, product, or process
-disclosed, or represents that its use would not infringe
-privately-owned rights.  Reference herein to any specific commercial
-products, process, or service by trade name, trademark, manufacturer,
-or otherwise, does not necessarily constitute or imply its
-endorsement, recommendation, or favoring by the United States
-Government or the University of California.  The views and opinions of
-authors expressed herein do not necessarily state or reflect those of
-the United States Government or the University of California, and
-shall not be used for advertising or product endorsement purposes.
+@insertcopying
 @end titlepage
 
+@contents
 
 @comment -----------------------------------------------------------------
 
-@node Top, Basics, (dir), (dir)
+@ifnottex
+@node Top
+@top Yorick: An Interpreted Language
+
+@insertcopying
+@end ifnottex
 
 @menu
 * Basics::                      A tutorial-like introductory chapter.
@@ -262,6 +268,17 @@ Queries, edits, and legends
 * 3D gnomon::                   Gnomon indicates axis orientation.
 * plwf::                        The plot wire frame interface.
 * slice3::                      The slice and isosurface interface.
+
+Embedding
+
+* Mechanics of embedding::      How to use the make utility.
+* API for embedding::           Using the yapi.h interface.
+* Embedding example::           Three ways to implement a function.
+
+Embedding example
+
+* Using PROTOTYPE::             Example of PROTOTYPE comment.
+* Using yapi.h::                Example of @file{yapi.h} API.
 @end menu
 
 @comment -----------------------------------------------------------------
@@ -344,25 +361,25 @@ raising to a power.  The other common arithmetic operators are
 modulo).  The rules for forming arithmetic expressions with these
 operators and parentheses are the same in Yorick as in Fortran or C
 (but note that @kbd{^} does not mean raise to a power in C, and
-Fortran uses the symbol @kbd{**} for that operation).@refill
+Fortran uses the symbol @kbd{**} for that operation).
 
 The @kbd{span} function returns 200 equally spaced values beginning
 with @kbd{0} and ending with @kbd{6*pi}.  The variable @kbd{pi} is
-predefined as 3.14159...@refill
+predefined as 3.14159...
 
 The @kbd{create} function returns an object representing the new file.
 The variable @kbd{file} specifies where output functions should write
 their data.  Besides numbers like @kbd{c}, @kbd{m}, and @kbd{E}, or
 arrays of numbers like @kbd{theta}, or files like @kbd{file}, Yorick
 variables may represent several other sorts of objects, taken up in
-later chapters.@refill
+later chapters.
 
 The @kbd{=} operator is itself a binary operator, which has the side
 effect of redefining its left operand.  It associates from right to
 left, that is, the rightmost @kbd{=} operation is performed first (all
 other binary operators except @kbd{^} associate from left to right).
 Hence, several variables may be set to a single value with a single
-statement:@refill
+statement:
 
 @example
 psi = phi = theta = span(0, 6*pi, 200)
@@ -390,16 +407,16 @@ close, file
 
 The @kbd{plg} function plots a graph on your screen --- in this case,
 three cycles of a damped sine wave.  The graph is made by connecting
-200 closely spaced points by straight lines.@refill
+200 closely spaced points by straight lines.
 
 The @kbd{write} function writes a two column, 200 line table of values
 of the same damped sine wave to the file @file{damped.txt}.  Then
 @kbd{close} closes the file, making it unavailable for any further
-@kbd{write} operations.@refill
+@kbd{write} operations.
 
 A line which ends with a comma will be continued, to allow procedures
 with long argument lists.  For example, the @kbd{write} statement could
-have been written:@refill
+have been written:
 
 @example
 write, file, theta,
@@ -419,7 +436,7 @@ a ``hardcopy file'' for later retrieval or printing.  The @kbd{fma}
 function stands for ``frame advance'' --- subsequent plotting commands
 will draw on a fresh page.  Normally, plotting commands such as
 @kbd{plg} draw on top of whatever has been drawn since the previous
-@kbd{fma}.@refill
+@kbd{fma}.
 
 
 @node Print expression,  , Call procedure, Simple Statements
@@ -433,7 +450,7 @@ what you type, but what Yorick prints.  To begin with, Yorick prompts
 you for input with a @kbd{>} followed by a space (@pxref{Prompts}).  In
 the examples in this section, therefore, the lines which begin with
 @kbd{>} are what you typed; the other line(s) are Yorick's
-responses.@refill
+responses.
 
 @example
 > E
@@ -458,7 +475,7 @@ would be legal in a Yorick statement; you must use the @kbd{write}
 function if you want ``prettier'' output.  Beware of typing an
 expression or variable name which is a large array; it is easy to
 generate lots of output (you can interrupt Yorick by typing control-c
-if you do this accidentally, @pxref{Starting}).@refill
+if you do this accidentally, @pxref{Starting}).
 
 Most non-numeric objects print some useful descriptive information;
 for example, before it was closed, the @kbd{file} variable above would
@@ -536,7 +553,7 @@ function.  They and the variables @kbd{nu} and @kbd{omega} defined in
 the first two lines of the function body are @emph{local} to the
 function.  That is, calling @kbd{damped_wave} will not change the
 values of any variables named @kbd{phase}, @kbd{Q}, @kbd{nu}, or
-@kbd{omega} in the calling environment.@refill
+@kbd{omega} in the calling environment.
 
 In fact, the only effect of calling @kbd{damped_wave} is to return its
 result, which is accomplished by the @kbd{return} statement in the
@@ -562,13 +579,13 @@ input; hence @kbd{q5} will be an array of 200 numbers.  Nor is Yorick
 confused by the fact that the @kbd{phase} argument (@kbd{theta}) is an
 array, while the @kbd{Q} argument (@kbd{5}) is a scalar.  The precise
 rules for ``conformability'' between two arrays will be described
-later (@pxref{Broadcasting}); usually you get what you expected.@refill
+later (@pxref{Broadcasting}); usually you get what you expected.
 
 In this case, as Yorick evaluates @kbd{damped_wave}, @kbd{nu} and
 @kbd{omega} will both be scalars, since @kbd{Q} is a scalar.  On the
 other hand, @kbd{omega*phase} and @kbd{nu*phase} become arrays, since
 @kbd{phase} is an array.  Whenever an operand is an array, an
-arithmetic operation produces an array as its result.@refill
+arithmetic operation produces an array as its result.
 
 
 @node Define procedure, Conditionals, Define function, Flow control
@@ -578,7 +595,7 @@ Any Yorick function may be invoked as a procedure; the return value is
 simply discarded.  Calling @kbd{damped_wave} as a procedure would be
 pointless, since it has no side effects.  The converse case is a
 function to be called @emph{only} for its side effects.  Such a
-function need not have an explicit @kbd{return} statement:@refill
+function need not have an explicit @kbd{return} statement:
 
 @example
 func q_out(Q, file_name)
@@ -611,11 +628,11 @@ to the function.  Here, @kbd{theta} is the 200 element array of phase
 angles defined before q_out was called.  You can change theta (both
 its dimensions and its values) before the next call to @kbd{q_out};
 that is, an external reference may change between calls to a function
-that uses it.@refill
+that uses it.
 
 Second, @kbd{file} is never explicitly closed.  When a function
 returns, its local variables (such as @kbd{file}) disappear; when a
-file object disappears, the associated file automatically closes.@refill
+file object disappears, the associated file automatically closes.
 
 
 @node Conditionals, Loops, Define procedure, Flow control
@@ -641,7 +658,7 @@ The @kbd{if} statement executes its body (the redefinition of
 @kbd{file}) if and only if its condition
 (@kbd{structof(file)==string}) is true.  Any scalar number may serve
 as a condition -- a non-zero value is ``true'', and the value zero is
-``false''.@refill
+``false''.
 
 The @kbd{structof()} function returns the data type object when its
 argument is an array, and nil (@kbd{[]}) otherwise.  In particular, if
@@ -649,7 +666,7 @@ argument is an array, and nil (@kbd{[]}) otherwise.  In particular, if
 returns string, which is the data type of strings.  The binary
 operator @kbd{==} (as distinguished from assignment @kbd{=}) tests for
 equality, returning ``true'' or ``false''.  Note that the test works
-even for non-numeric objects, like the data type string.@refill
+even for non-numeric objects, like the data type string.
 
 Hence, if the @kbd{file} argument is a string, the new @kbd{q_out}
 presumes it is the name of a file, which it creates, redefining
@@ -657,10 +674,10 @@ presumes it is the name of a file, which it creates, redefining
 of the function body, @kbd{file} will be a file object, even if a file
 name was passed into the function.  Furthermore, since the parameter
 @kbd{file} is local to @kbd{q_out}, none of this hocus pocus will have
-any effect outside @kbd{q_out}.@refill
+any effect outside @kbd{q_out}.
 
 The second trick in the new @kbd{q_out} is the reappearance of a
-@kbd{return} statement.  The original calling sequence:@refill
+@kbd{return} statement.  The original calling sequence:
 @example
 q_out, 3, "q.out"
 @end example
@@ -670,7 +687,7 @@ the file is created, then the wave data is written.  This time the
 file object is returned, only to be discarded because @kbd{q_out}
 was invoked as a procedure.  When the file object disappears, the
 file closes.  But if @kbd{q_out} were invoked as a function, the file
-object can be saved, which keeps the file open:@refill
+object can be saved, which keeps the file open:
 
 @example
 f = q_out(3,"q.out")
@@ -687,7 +704,7 @@ file does not close when the return value from the second (or third)
 call is discarded; the variable @kbd{f} refers to the same file object
 as the discarded return value.  Without an explicit call to
 @kbd{close}, a file only closes when the @emph{final} reference to it
-disappears.@refill
+disappears.
 
 
 @menu
@@ -706,7 +723,7 @@ else statement_if_false;
 @end example
 
 When you need to choose among several alternatives, make the @kbd{else}
-clause itself an @kbd{if} statement:@refill
+clause itself an @kbd{if} statement:
 
 @example
 if (condition_1) statement_if_1;
@@ -717,7 +734,7 @@ else statement_if_none;
 @end example
 
 The final @kbd{else} is always optional -- if it is not present,
-nothing at all happens if none of the conditions is satisfied.@refill
+nothing at all happens if none of the conditions is satisfied.
 
 Often you need to execute more than one statement conditionally.
 Quite generally in Yorick, you may group several statements into a
@@ -733,7 +750,7 @@ membership in the compound more obvious.  Further, in an if-else
 construction, when one branch requires more than one statement, you
 should write every branch as a compound statement with curly braces.
 Therefore, for a four branch @kbd{if} in which the second @kbd{if}
-requires two statements, and the @kbd{else} three, write this:@refill
+requires two statements, and the @kbd{else} three, write this:
 
 @example
 if (condition_1) @{
@@ -757,7 +774,7 @@ statements outside functions (and compound statements) are executed
 immediately, you must be very careful using @kbd{else} in such a
 situation.  If the @kbd{if} has already been executed (as it would be
 in the examples without curly braces), the following @kbd{else} leads
-to a syntax error!@refill
+to a syntax error!
 
 The best way to avoid this puzzling problem is to always use the curly
 brace syntax of the latest example when you use @kbd{else} outside a
@@ -770,17 +787,17 @@ function.  (You don't often need it in such a context anyway.)
 The logical operators @kbd{&&} (``and'') and @kbd{||} (``or'') combine
 conditional expressions; the @kbd{!} (``not'') operator negates them.
 The @kbd{!} has the highest precedence, then @kbd{&&}, then @kbd{||};
-you will need parentheses to force a different order.@refill
+you will need parentheses to force a different order.
 
 (Beware of the bitwise ``and'' and ``or'' operators @kbd{&} and
 @kbd{|} -- these should @emph{never} be used to combine conditions;
-they are for set-and-mask bit fiddling.)@refill
+they are for set-and-mask bit fiddling.)
 
 The operators for comparing numeric values are @kbd{==} (equal),
 @kbd{!=} (not equal), @kbd{>} (greater), @kbd{<} (less), @kbd{>=}
 (greater or equal), and @kbd{<=} (less or equal).  These all have
 higher precedence than @kbd{&&}, but lower than @kbd{!} or any
-arithmetic operators.@refill
+arithmetic operators.
 
 @example
 if ((a<b && x>a && x<b) || (a>b && x<a && x>b))
@@ -794,12 +811,12 @@ Therefore, it is important to order the operands of @kbd{&&} and
 @kbd{||} to put the most computationally expensive expression on the
 right --- even though the logical ``and'' and ``or'' functions are
 commutative, the order of the operands to @kbd{&&} and @kbd{||} can be
-critical.@refill
+critical.
 
 In the example, if @kbd{a>b}, the @kbd{x>a} and @kbd{x<b}
 subexpressions will not actually execute since @kbd{a<b} proved false.
 Since the left operand to @kbd{||} was false, its right operand will
-be evaluated.@refill
+be evaluated.
 
 Despite the cleverness of the @kbd{&&} and @kbd{||} operators in not
 executing the expression for their right operands unless absolutely
@@ -807,7 +824,7 @@ necessary, the example has obvious inefficiencies: First, if
 @kbd{a>=b}, then both @kbd{a<b} and @kbd{a>b} are checked.  Second, if
 @kbd{a<b}, but @kbd{x} is not between @kbd{a} and @kbd{b}, the right
 operand to @kbd{||} is evaluated anyway.  Yorick has a ternary operator
-to avoid this type of inefficiency:@refill
+to avoid this type of inefficiency:
 
 @example
 expr_A_or_B= (condition? expr_A_if_true : expr_B_if_false);
@@ -838,7 +855,7 @@ of incremental revision of a function is very common in Yorick program
 development.  As you use a function, you notice that the surrounding
 code is often the same, suggesting a savings if it were incorporated
 into the function.  Again, a careful job leaves all of the previous
-behavior of @kbd{q_out} intact:@refill
+behavior of @kbd{q_out} intact:
 
 @example
 func q_out(Q, file)
@@ -859,7 +876,7 @@ the length of the array @kbd{Q}, and the array indexing syntax
 @kbd{Q(i)}, which extracts the @kbd{i}-th element of the array
 @kbd{Q}.  If @kbd{Q} is scalar (as it had to be before this latest
 revision), @kbd{numberof} returns 1, and @kbd{Q(1)} is the same as
-@kbd{Q}, so scalar @kbd{Q} works as before.@refill
+@kbd{Q}, so scalar @kbd{Q} works as before.
 
 But the most important new feature is the @kbd{for} loop.  It says to
 initialize @kbd{i} to 1, then, as long as @kbd{i} remains less than or
@@ -867,12 +884,12 @@ equal to @kbd{n}, to execute the loop body, which is a compound of
 three write statements.  Finally, after each pass, the increment
 expression @kbd{++i} is executed before the @kbd{i<=n} condition is
 evaluated.  @kbd{++i} is equivalent to @kbd{i=i+1}; @kbd{--i} means
-@kbd{i=i-1}.@refill
+@kbd{i=i-1}.
 
 A loop body may also be a single statement, in which case the curly
 braces are unecessary.  For example, the following lines will write
 the Q=3, Q=2, and Q=1 curves to the file @file{q.out}, then plot
-them:@refill
+them:
 
 @example
 q_list = [3,2,1]
@@ -903,11 +920,11 @@ while (condition) body_statement
 The @kbd{body_statement} --- very oten a compound statement enclosed
 in curly braces --- executes over and over until the @kbd{condition}
 becomes false.  If the @kbd{condition} is false to begin with,
-@kbd{body_statement} never executes.@refill
+@kbd{body_statement} never executes.
 
 Occasionally, you want the @kbd{body_statement} to execute and set the
 @kbd{condition} @emph{before} it is tested for the first time.  In
-this case, use the @kbd{do while} statement:@refill
+this case, use the @kbd{do while} statement:
 
 @example
 do @{
@@ -923,7 +940,7 @@ do @{
 
 The @kbd{for} statement is a ``packaged'' form of a @kbd{while} loop.
 The meaning of this generic @kbd{for} statement is the same as the
-following @kbd{while}:@refill
+following @kbd{while}:
 
 @example
 for (start_statements ; condition ; step_statements) body_statements
@@ -941,7 +958,7 @@ initialized and incremented, rather than relegating the increment
 operation (@kbd{step_statements}) to the end of the loop.  Secondly,
 the @kbd{continue} statement (@pxref{goto}) branches just past the body of
 the loop, which would include the @kbd{step_statements} in a
-@kbd{while} loop, but not in a @kbd{for} loop.@refill
+@kbd{while} loop, but not in a @kbd{for} loop.
 
 In order to make Yorick loop syntax agree with C, Yorick's @kbd{for}
 statement has a syntactic irregularity: If the @kbd{start_statements}
@@ -951,7 +968,7 @@ operator is not available in any other context in Yorick.)  The two
 semicolons separate the start, condition, and step clauses and must
 always be present, but any or all of the three clauses themselves may
 be blank.  For example, in order to increment two variables @kbd{i}
-and @kbd{j}, a loop might look like this:@refill
+and @kbd{j}, a loop might look like this:
 
 @example
 for (i=1000, j=1 ; i>j ; i+=1000, j*=2);
@@ -962,13 +979,13 @@ omitted; the point of this loop is merely to compute the first @kbd{i}
 and @kbd{j} for which the condition is not satisfied.  The trailing
 semicolon is necessary in this case, since otherwise the line would
 be continued (on the assumption that the loop body was to follow).
-@refill
+
 
 The @kbd{+=} and @kbd{*=} are special forms of the @kbd{=} operator;
 @kbd{i=i+1000} and @kbd{j=j*2} mean the same thing.  Any binary
 operator may be used in this short-hand form in order to increment a
 variable.  Like @kbd{++i} and @kbd{--i}, these are particularly useful
-in loop increment expressions.@refill
+in loop increment expressions.
 
 
 @node goto,  , for, Loops
@@ -980,7 +997,7 @@ The @kbd{break} statement jumps out of the loop containing it.  The
 deeply nested loops --- which are extremely rare in Yorick programs
 --- you can jump to more general places using the @kbd{goto}
 statement.  For example, here is how to break out or continue from one
-or both levels of a doubly nested loop:@refill
+or both levels of a doubly nested loop:
 
 @example
  for (i=1 ; i<=n ; ++i) @{
@@ -1000,16 +1017,16 @@ done:
 
 @noindent
 The @kbd{continue} jumps just after @kbd{more_statements_A}, the
-@kbd{break} just before @kbd{more_statements_B}.@refill
+@kbd{break} just before @kbd{more_statements_B}.
 
 Break and continue statements may be used to escape from @kbd{while}
-or @kbd{do while} loops as well.@refill
+or @kbd{do while} loops as well.
 
 If @kbd{while} tests the condition before the loop body, and @kbd{do
 while} checks after the loop body, you may have wondered what to do
 when you need to check the condition in the middle of the loop body.
 The answer is the ``do forever'' construction, plus the @kbd{break}
-statement (note the inversion of the sense of the condition):@refill
+statement (note the inversion of the sense of the condition):
 
 @example
 for (;;) @{
@@ -1057,7 +1074,7 @@ respectively.
 
 Suppose you want to write a function which sets the value of the
 @kbd{theta} array used by all the variants of the @kbd{q_out}
-function:@refill
+function:
 
 @example
 func q_out_domain(start, stop, n)
@@ -1072,7 +1089,7 @@ variable, whose external value is restored when @kbd{q_out_domain}
 returns (thus, the function would be a no-op).  With the @kbd{extern}
 statement, @kbd{q_out_domain} has the intended side effect of setting
 the value of @kbd{theta}.  The new @kbd{theta} would be used by
-subsequent calls to @kbd{q_out}.@refill
+subsequent calls to @kbd{q_out}.
 
 Any number of variables may appear in a single @kbd{extern} statement:
 
@@ -1087,7 +1104,7 @@ extern var1, var2, var3, var4;
 The @kbd{save} and @kbd{restore} functions store and retrieve Yorick
 variables in self-descriptive binary files (called PDB files).  To
 create a binary file @file{demo.pdb}, save the variables @kbd{theta},
-@kbd{E}, @kbd{m}, and @kbd{c} in it, then close the file:@refill
+@kbd{E}, @kbd{m}, and @kbd{c} in it, then close the file:
 
 @example
 f = createb("demo.pdb")
@@ -1106,7 +1123,7 @@ property that it redefines its parameters (except the first).  Thus,
 @kbd{theta} is redefined by this @kbd{restore} statement, just as it
 would have been by a @kbd{theta=} statement.  The Yorick parser does not
 understand this, which means that you must be careful when you place
-such a function call inside a function:@refill
+such a function call inside a function:
 
 @example
 func q_out_file(infile, Q, outfile)
@@ -1125,7 +1142,7 @@ of @kbd{theta}.  This way, when @kbd{q_out_file} calls @kbd{q_out}, it
 has remembered the external value of @kbd{theta}, but @kbd{q_out}
 ``sees'' the value of @kbd{theta} restored from @kbd{infile}.  When
 @kbd{q_out_file} finally returns, it replaces the original value of
-@kbd{theta} intact.@refill
+@kbd{theta} intact.
 
 Any number of variables may appear in a single @kbd{local} statement:
 
@@ -1162,7 +1179,7 @@ This section begins with additional stylistic suggestions concerning
 include files.  In particular, Yorick's @kbd{help} command can find
 documentation comments in your include files if you format them
 properly.  All of the built-in Yorick functions, such as @kbd{sin},
-@kbd{write}, or @kbd{plg}, come equipped with such comments.@refill
+@kbd{write}, or @kbd{plg}, come equipped with such comments.
 
 
 @menu
@@ -1193,7 +1210,7 @@ an immediate runtime error (@pxref{Errors}).  (Your terminal emulator
 and operating system must be able to send Yorick a SIGINT signal in
 order for this to work.  On UNIX systems, you can set this character
 using the @kbd{intr} option of the @kbd{stty} command; Control-C is the
-usual setting.)@refill
+usual setting.)
 
 
 @node Include, Help, Starting, Environment
@@ -1232,7 +1249,7 @@ Yorick's built in functions.  Many such libraries come with Yorick ---
 Bessel functions, cubic spline interpolators, and other goodies.
 Most of these functions are available without the need to explicitly
 @kbd{#include} the required package, via yorick's @kbd{autoload}
-function (@pxref{Customizing}).@refill
+function (@pxref{Customizing}).
 
 @menu
 * Sample include::              
@@ -1389,33 +1406,33 @@ to any other comment, there is a function called @kbd{help} which does.
 What Yorick does do when it sees a @kbd{func}, @kbd{extern}, or
 @kbd{local} (outside of any function body), is to record the include
 file name and line number where that function or variable(s) are
-defined.@refill
+defined.
 
 Later, when you ask for help on some topic, the @kbd{help} function
 asks Yorick whether it knows the file and line number where that topic
 (a function or variable) was defined.  If so, it opens the file, goes
 to the line number, and scans forward a few lines looking for a
 @kbd{DOCUMENT} comment.  If it finds one, it prints the entire
-comment.@refill
+comment.
 
 The file @kbd{damped.i} has three @kbd{DOCUMENT} comments: one for a
 fictitious variable called @kbd{damped}, so that someone who saw the
 file but didn't know the names of the functions inside could find out,
 and one each for the @kbd{damped_wave} and @kbd{q_out} functions.
-@refill
+
 
 Near the end of most @kbd{DOCUMENT} comments, you will find a
 @kbd{SEE ALSO:} field which feeds the reader the names of related
 functions or variables which also have @kbd{DOCUMENT} comments.  If
 you use these wisely, you can lead someone (often an older self) to
-all of the documentation she needs to be able to use your package.@refill
+all of the documentation she needs to be able to use your package.
 
 This low-tech form of online documentation is surprisingly effective:
 easy to create, maintain, and use.  As an automated step toward a more
 formal document, the @kbd{mkdoc} function (in the Yorick library include
 file @file{mkdoc.i}) collects all of the @kbd{DOCUMENT} comments in one
 or more include files, alphabetizes them, adds a table of contents, and
-writes them into a file suitable for printing.@refill
+writes them into a file suitable for printing.
 
 
 @node Include path, Customizing, DOCUMENT, Include
@@ -1431,24 +1448,24 @@ relative to these four directories, in this order:
 Your current working directory.
 @item
 @file{~/yorick}, that is, the @file{yorick} subdirectory of your home
-directory.@refill
+directory.
 @item
 @file{Y_SITE/i}, where @file{Y_SITE} is the directory where
 Yorick was installed at your site (@kbd{help} will tell you where
-this is).@refill
+this is).
 @item
 @file{Y_SITE/contrib}
 @end enumerate
 
 You can use the @kbd{set_path} command in your @file{custom.i} file
 in order to change this path, but you should be very cautious if you
-do this.@refill
+do this.
 
 The @file{~/yorick} directory is where you put all of the Yorick
 include files you frequently use, which have not been placed in the
 include or contrib directories at your site.  You can also override an
 include file in one of these places by placing a file of the same name
-in your @file{~/yorick} directory.@refill
+in your @file{~/yorick} directory.
 
 
 @node Customizing,  , Include path, Include
@@ -1457,7 +1474,7 @@ in your @file{~/yorick} directory.@refill
 When Yorick starts, the last thing it does before prompting you is to
 include the file @file{custom.i}.  The default @file{custom.i} is in the
 @file{Y_SITE/i/custom.i}.  (Yorick's @kbd{help} command will tell
-you the actual name of the @file{Y_SITE} directory at your site.)@refill
+you the actual name of the @file{Y_SITE} directory at your site.)
 
 If you create the directory @file{~/yorick}, you can place your own
 version of @kbd{custom.i} there to override the default.  Always begin
@@ -1465,7 +1482,7 @@ by copying the default file to your directory.  Then add your
 customizations to the bottom of the default file.  Generally, these
 customizations consist of @kbd{#include} directives for function libraries
 you use heavily, plus commands like @kbd{pldefault} to set up your
-plotting style preferences.@refill
+plotting style preferences.
 
 Immediately before @file{custom.i}, yorick includes all files with the
 @file{.i} extension which are present in the @file{Y_SITE/i-start},
@@ -1475,7 +1492,7 @@ function, which tells yorick what file to include in order to get the
 full definition of a function in some package not loaded by default.
 Using the @file{~/yorick/i-start}, you can autoload your own private
 functions, eliminating most of the reason for a @kbd{custom.i} file.
-See @file{Y_SITE/i-start} for examples of how to do this.@refill
+See @file{Y_SITE/i-start} for examples of how to do this.
 
 
 @node Help, Info, Include, Environment
@@ -1496,14 +1513,14 @@ defined at:   LINE: 3  FILE: /home/icf/munro/damped.i
 Every Yorick function (including @kbd{help}!) has a @kbd{DOCUMENT}
 comment which describes what it does.  Most have @kbd{SEE ALSO:}
 references to related help topics, so you can navigate your way
-through a series of related topics.@refill
+through a series of related topics.
 
 Whenever you want more details about a Yorick function, the first
 thing to do is to see what @kbd{help} says about it.  Note that, in
 addition to the @kbd{DOCUMENT} comment, @kbd{help} also reports the
 full file name and line number where the function is defined.  That
 way, if the comment doesn't tell you what you need to know, you can
-go to the file and read the complete definition of the function.@refill
+go to the file and read the complete definition of the function.
 
 The help for @kbd{help} itself, which is the default topic, is of
 particular interest, even to a Yorick expert: it tells you the
@@ -1512,7 +1529,7 @@ library functions.  Just type @kbd{help}, like it says when Yorick
 starts.  One of the things you will find in Yorick's directory tree is
 a @file{doc} directory, which contains not only the source for this
 manual, but also alphabetized listings of all @kbd{DOCUMENT} comments.
-Read the @kbd{README} file in the @file{doc} directory.@refill
+Read the @kbd{README} file in the @file{doc} directory.
 
 
 @node Info, Prompts, Help, Environment
@@ -1521,7 +1538,7 @@ Read the @kbd{README} file in the @file{doc} directory.@refill
 If you want to know the data type and dimensions of a variable, use
 the @kbd{info} function.  Unlike @kbd{help}, which is intended to tell
 you what a thing @emph{means}, @kbd{info} simply tells what a thing
-@emph{is}.@refill
+@emph{is}.
 
 @example
 > info, theta
@@ -1533,7 +1550,7 @@ you what a thing @emph{means}, @kbd{info} simply tells what a thing
 Here, @kbd{double} means ``double precision floating point number'',
 which is the default data type for any real number.  The default
 integer data type is called @kbd{long}.  (Both these names come from
-the C language, which gives them a precise meaning.)@refill
+the C language, which gives them a precise meaning.)
 
 Notice that the scalar value @kbd{E} is, somewhat confusingly, called
 an ``array''.  In fact, a scalar is a special case of an array with
@@ -1542,12 +1559,12 @@ expression which will create a variable of the same data type and
 shape as its argument.  Thus, @kbd{array(double,200)} in an expression
 would evaluate to an array of 200 real numbers, while
 @kbd{array(double)} is a real scalar (the values are always
-zero).@refill
+zero).
 
 Using @kbd{info} on a non-numeric quantity (a file object, a function,
 etc.) results in the same output as the @kbd{print} function.  If an
 array of numbers might be large, try @kbd{info} before
-@kbd{print}.@refill
+@kbd{print}.
 
 
 @node Prompts, Shell commands, Info, Environment
@@ -1622,7 +1639,7 @@ command in a Bourne shell.  If you are used to a different shell, you
 might be surprised at some of the results.  If you have some
 complicated shell commands for which you need, say, the C-shell
 @kbd{csh}, just start a copy of that shell before you issue your
-commands:@refill
+commands:
 
 @example
 > $csh
@@ -1654,7 +1671,7 @@ restricting your program to a particular class of operating systems.
 Instead, use Yorick's @kbd{rename} and @kbd{remove} functions, which
 will work under any operating system.  Yorick also has @kbd{mkdir},
 @kbd{rmdir}, @kbd{lsdir}, @kbd{get_cwd}, and @kbd{get_env}
-functions.@refill
+functions.
 
 
 @node Errors,  , Shell commands, Environment
@@ -1734,7 +1751,7 @@ ERROR (damped_wave) math library exception handler called
 What is an oscillator with a Q of less than one half?  Maybe you don't
 care about the so-called @emph{overdamped} case --- you really wanted
 Q to be 2.5, not 0.25.  On the other hand, maybe you need to modify
-the @kbd{damped_wave} function to handle the overdamped case.@refill
+the @kbd{damped_wave} function to handle the overdamped case.
 
 
 @node Simple debugging,  , Runtime errors, Errors
@@ -1790,7 +1807,7 @@ it with an ordinary Yorick statement.  The @kbd{dbcont} function
 continues execution, beginning by re-executing the statement which
 failed to complete.  Use the @kbd{help} function (@pxref{Help}) to learn
 about the other debugging functions; the help for the @kbd{dbexit}
-function describes them all.@refill
+function describes them all.
 
 
 
@@ -1807,7 +1824,7 @@ arithmetic operations @kbd{+ - * /}, with parentheses to indicate the
 order of operations (when that order is different than or unclear from
 the ordinary rules of precedence in algebra).  Elementary mathematical
 functions such as @kbd{exp(x)}, @kbd{cos(x)}, or @kbd{atan(x)} look just
-like that.@refill
+like that.
 
 Usually, a Yorick variable is a parametric representation of a
 mathematical function.  The variable is an array of numbers which are
@@ -1822,13 +1839,13 @@ theta = span(0.0, 2*pi, 100)
 
 @noindent
 defines a variable @kbd{theta} consisting of 100 evenly spaced values
-starting with @kbd{0.0} and ending with @kbd{2*pi}.@refill
+starting with @kbd{0.0} and ending with @kbd{2*pi}.
 
 Now that @kbd{theta} has been defined as a list of 100 numbers, any
 function of @kbd{theta} has a concrete representation as a list of 100
 numbers --- namely the values of the function at the 100 particular
 values of @kbd{theta}.  Hence, variables @kbd{x} and @kbd{y}
-representing coordinates of the unit circle are defined with:@refill
+representing coordinates of the unit circle are defined with:
 
 @example
 x = cos(theta);   y = sin(theta)
@@ -1838,7 +1855,7 @@ Here, @kbd{cos} and @kbd{sin} are built-in Yorick functions.  Like most
 Yorick functions, they operate on an entire array of numbers, returning
 an array of like shape.  Hence both @kbd{x} and @kbd{y} are now lists of
 100 numbers -- the cosines and sines of the 100 numbers
-@kbd{theta}.@refill
+@kbd{theta}.
 
 The semicolon marks the end of a Yorick statement, allowing several
 statements to share a single line.  The end of a line (i.e.- a newline)
@@ -1879,7 +1896,7 @@ elements of the array in square brackets.  The length of the array is
 the number of values in the list.  An exceptional case is @kbd{[]},
 which is called ``nil''.  A Yorick variable has the value nil before
 it has been defined, and @kbd{[]} is a way to write this special value.
-@refill
+
 
 @item array(value, dimlist)
 Use @kbd{array} to ``broadcast'' (@pxref{Broadcasting}) a value into an
@@ -1887,7 +1904,7 @@ array, increasing its number of dimensions.  A @kbd{dimlist} is a
 standard list of arguments used by several Yorick functions
 (@pxref{Dimension Lists}).  Often, the pseudo-index range function
 (@pxref{Pseudo-Index}) is a clearer alternative to the @kbd{array}
-function.@refill
+function.
 
 @item span(start, stop, number)
 Use @kbd{span} to generate a list of equally spaced values.
@@ -1896,11 +1913,11 @@ Use @kbd{span} to generate a list of equally spaced values.
 @itemx indgen(lower:upper)
 @itemx indgen(start:stop:step)
 Use @kbd{indgen} (``index generator'') instead of @kbd{span} to generate
-equally spaced integer values.  By default, the list starts with 1.@refill
+equally spaced integer values.  By default, the list starts with 1.
 
 @item spanl(start, stop, number)
 Use @kbd{spanl} (``span logarithmically'') to generate a list of numbers
-which increase or decrease by a constant ratio.@refill
+which increase or decrease by a constant ratio.
 @end table
 
 @node    Interpolating, Indexing, Creating Arrays, Arrays
@@ -1932,12 +1949,12 @@ This code fragment produces a @kbd{y} array with the same number of
 points as @kbd{x} (64), with the values of the piecewise linear function
 defined by the points @kbd{(x_circle, y_circle)}.  Outside the range
 covered by @kbd{x_circle}, the piecewise linear function remains
-constant -- the simplest possible extrapolation rule.@refill
+constant -- the simplest possible extrapolation rule.
 
 Regarded as a function of its third argument, @kbd{interp} behaves just
 like the @kbd{sin} or @kbd{cos} function -- its first two arguments are
 really parameters specifying which piecewise linear function
-@kbd{interp} will evaluate.@refill
+@kbd{interp} will evaluate.
 
 The @kbd{integ} function works just like @kbd{interp}, except that it
 returns the integral of the piecewise linear function.  The integration
@@ -1945,7 +1962,7 @@ constant is chosen so that @kbd{integ} returns zero at the first point
 of the piecewise linear function.  (This point will actually have the
 maximum value of x if the x array is decreasing.)  Thus, the integral
 of the piecewise linear approximation to the semicircle and the exact
-integral of the semicircle can be computed by:@refill
+integral of the semicircle can be computed by:
 
 @example
 yi = integ(y_circle, x_circle, x);
@@ -1955,22 +1972,22 @@ yi_exact = 0.5*(acos(max(min(x,1),-1)) - x*sqrt(1-min(x^2,1)));
 Again, the piecewise linear function is assumed to remain constant
 beyond the first and last points specified.  Hence, @kbd{integ} is a
 linear function when extrapolating, and piecewise parabolic when
-interpolating.@refill
+interpolating.
 
 Use @kbd{integ} only when you need the indefinite integral of a
 piecewise linear function.  Yorick has more efficient ways to compute
 definite integrals.  Again, think of @kbd{integ}, like @kbd{interp}, as
 a continuous function of its third argument; the first two arguments are
-parameters specifying which function.@refill
+parameters specifying which function.
 
 Neither @kbd{interp} nor @kbd{integ} makes sense unless its second
 argument is either increasing or decreasing.  There is no way to decide
-which branch of a multi-valued function should be returned.@refill
+which branch of a multi-valued function should be returned.
 
 Internally, both @kbd{interp} and @kbd{integ} need a lookup function --
 that is, a function which finds the index of the point in x_circle just
 beyond each of the x values.  This lookup function can also be called
-directly; its name is @kbd{digitize}.@refill
+directly; its name is @kbd{digitize}.
 
 
 
@@ -1996,7 +2013,7 @@ corresponding array dimension.
 @item
 An index range of the form @kbd{start:stop} or @kbd{start:stop:step}
 refers to an evenly spaced subset of the corresponding array
-dimension.@refill
+dimension.
 
 @item
 An array of integers refers to an arbitrary subset, possibly including
@@ -2007,7 +2024,7 @@ The special symbol @kbd{-}, or @kbd{-:start:stop}, is the pseudo-index.
 It inserts an index in the result which was not present in the array
 being indexed.  Although this sounds recondite, the pseudo-index is
 often necessary in order to make two arrays conformable for a binary
-operation.@refill
+operation.
 
 @item
 The special symbol @kbd{..} or @kbd{*} is a rubber-index.  A
@@ -2016,7 +2033,7 @@ indexed.  This syntax allows you to specify a value for the final index
 of an array, even when you don't know how many dimensions the array has.
 The @kbd{..} version leaves the original dimension count intact; the
 @kbd{*} version collapses all dimensions into a single long dimension in
-the result.@refill
+the result.
 
 @item
 The special symbol @kbd{+} marks an index for matrix multiplication.
@@ -2024,13 +2041,13 @@ The special symbol @kbd{+} marks an index for matrix multiplication.
 @item
 Many statistical functions, such as @kbd{sum}, @kbd{avg}, and @kbd{max}
 can be applied along a specific dimension of an array.  These reduce the
-rank of the resulting array, just like a scalar integer index value.@refill
+rank of the resulting array, just like a scalar integer index value.
 
 @item
 Several finite difference functions, such as @kbd{zcen} (zone center)
 and @kbd{cum} (cumulative sums) can be applied along a specific array
 dimension.  You can use these to construct numerical analogues to the
-operations of differential and integral calculus.@refill
+operations of differential and integral calculus.
 @end itemize
 
 @menu
@@ -2056,7 +2073,7 @@ in three consecutive slots in memory.  A three-by-two array @kbd{y}
 means nothing more than an array of two arrays of three numbers each.
 Thus, the six numbers are stored in two contiguous blocks of three
 numbers each: @kbd{[[x(1,1), x(2,1), x(3,1)], [x(1,2), x(2,2),
-x(3,2)]]}.@refill
+x(3,2)]]}.
 
 A multi-dimensional array may be referenced using fewer indices than its
 number of dimensions.  Hence, in the previous example, @kbd{x(5)} is the
@@ -2093,34 +2110,34 @@ corresponding physical direction.
 
 You can refer to several consecutive array elements by an index range:
 @kbd{x(3:6)} means the four element subarray @kbd{[x(3), x(4), x(5),
-x(6)]}.@refill
+x(6)]}.
 
 Occasionally, you also want to refer to a sparse subset of an array; you
 can add an increment to an index range by means of a second colon:
 @kbd{x(3:7:2)} means the three element subarray @kbd{[x(3), x(5),
-x(7)]}.@refill
+x(7)]}.
 
 A negative increment reverses the order of the elements: @kbd{x(7:3:-2)}
 represents the same three elements, but in the opposite order
 @kbd{[x(7), x(5), x(3)]}.  The second element mentioned in the index
 range may not actually be present in the resulting subset, for example,
 @kbd{x(7:2:-2)} is the same as @kbd{x(7:3:-2)}, and @kbd{x(3:6:2)}
-represents the two element subarray @kbd{[x(3), x(5)]}.@refill
+represents the two element subarray @kbd{[x(3), x(5)]}.
 
 Just as the increment defaults to 1 if it is omitted, the start and stop
 elements of an index range also have default values, namely the first
 and last possible index values.  Hence, if @kbd{x} is a one-dimensional
 array with 10 elements, @kbd{x(8:)} is the same as @kbd{x(8:10)}.  With
 a negative increment, the defaults are reversed, so that @kbd{x(:8:-1)}
-is the same as @kbd{x(10:8:-1)}.@refill
+is the same as @kbd{x(10:8:-1)}.
 
 A useful special case of the index range default rules is @kbd{x(::-1)},
-which represents the array @kbd{x} in reverse order.@refill
+which represents the array @kbd{x} in reverse order.
 
 Beware of a minor subtlety: @kbd{x(3:3)} is not the same thing as
 @kbd{x(3)}.  An index range always represents an array of values, while
 a scalar index represents a single value.  Hence, @kbd{x(3:3)} is an
-array with a single element, @kbd{[x(3)]}.@refill
+array with a single element, @kbd{[x(3)]}.
 
 
 
@@ -2145,7 +2162,7 @@ array of all of the elements of @kbd{x} whose second indices are 5, 6,
 or 7.  In the third example, @kbd{y(,::-1,)} is the @kbd{y} array with
 the elements in reverse order along its middle index.  The fourth
 expression, @kbd{x(,)}, means the entire 2-D array @kbd{x}, unchanged.
-@refill
+
 
 
 
@@ -2156,7 +2173,7 @@ expression, @kbd{x(,)}, means the entire 2-D array @kbd{x}, unchanged.
 An index list is an array of index values.  Use an index list to specify
 an arbitrary subset of an array: @kbd{x([5,1,2,1])} means the four
 element array @kbd{[x(5), x(1), x(2), x(1)]}.  The @kbd{where} function
-returns an index list:@refill
+returns an index list:
 
 @example
 list= where(x > 3.5)
@@ -2165,14 +2182,14 @@ y= x(list)
 
 @noindent
 These lines define the array @kbd{y} to be the subset of the @kbd{x}
-array, consisting of the elements greater than 3.5.@refill
+array, consisting of the elements greater than 3.5.
 
 Like the result of an index range, the result of an index list is itself
 an array.  However, the index list follows a more general rule: The
 dimensionality of the result is the same as the dimensionality of the
 index list.  Hence, @kbd{x([[5, 1], [2, 1]])} refers to the two
 dimensional array @kbd{[[x(5), x(1)], [x(2), x(1)]]}.  The general rule
-for index lists is:@refill
+for index lists is:
 
 @display
 Dimensions from the dimensions of the index list; values from the array
@@ -2186,7 +2203,7 @@ according to this rule.
 The rule applies to multi-dimensional arrays as well: If @kbd{x} is a
 five-by-nine array, then @kbd{x(, [[5, 1], [2, 1]])} is a
 five-by-two-by-two array.  And @kbd{x([[5, 1], [2, 1]], 3:6)} is a
-two-by-two-by-four array.@refill
+two-by-two-by-four array.
 
 
 
@@ -2198,13 +2215,13 @@ of results in Yorick -- the operation is performed once for each
 corresponding pair of elements of the operands.  Hence, if @kbd{rho} and
 @kbd{vol} are each four-by-three arrays, the expression @kbd{rho*vol}
 will be a four-by-three array of products, starting with
-@kbd{rho(1,1)*vol(1,1)}.@refill
+@kbd{rho(1,1)*vol(1,1)}.
 
 This extension of binary operations to array operands is not always
 appropriate.  Instead of operating on the corresponding elements of
 arrays of the same shape, you may want to perform the operation between
 all pairs of elements.  The most common example is the outer product
-of two vectors @kbd{x} and @kbd{y}:@refill
+of two vectors @kbd{x} and @kbd{y}:
 
 @example
 outer= x*y(-,);
@@ -2215,11 +2232,11 @@ Here, if @kbd{x} were a four element vector, and @kbd{y} were a three
 element vector, @kbd{outer} would be the four-by-three array
 @kbd{[[x(1)*y(1), x(2)*y(1), x(3)*y(1), x(4)*y(1)], [x(1)*y(2),
 x(2)*y(2), x(3)*y(2), x(4)*y(2)], [x(1)*y(3), x(2)*y(3), x(3)*y(3),
-x(4)*y(3)]]}.@refill
+x(4)*y(3)]]}.
 
 In Yorick, this type of multiplication is still commutative.  That is,
 @kbd{x*y(-,)} is the same as @kbd{y(-,)*x}.  To produce the three-by-four
-transpose of the array @kbd{outer}, you would write @kbd{x(-,)*y}.@refill
+transpose of the array @kbd{outer}, you would write @kbd{x(-,)*y}.
 
 I call the @kbd{-} sign, when used as an index, a pseudo-index because
 it actually inserts an additional dimension into the result array which
@@ -2229,7 +2246,7 @@ three element vector @kbd{y}).  You may insert as many pseudo-indices
 into a list of subscripts as you like, at any location you like relative
 to the actual dimensions of the array you are indexing.  Hence,
 @kbd{outer(-,-,,-,)} would be a one-by-one-by-four-by-one-by-three array.
-@refill
+
 
 By default, a pseudo-index produces a result dimension of length one.
 However, by appending an index range to the @kbd{-} sign, separated by
@@ -2247,10 +2264,10 @@ grid of points in the xy-plane.  The pseudo-index @kbd{-:1:50} has 50
 elements, and @kbd{-:1:100} has 100.  For a pseudo-index of non-unit
 length, the values along the actual dimensions are simply copied, so
 that @kbd{span(-10, 10, 100)(,-:1:50)} is a 100-by-50 array consisting
-of 50 copies of @kbd{span(-10, 10, 100)}.@refill
+of 50 copies of @kbd{span(-10, 10, 100)}.
 
 If only the result @kbd{gauss2d} were required, a single default
-pseudo-index would have sufficed:@refill
+pseudo-index would have sufficed:
 
 @example
 gauss2d = exp(-0.5*( span(-10,10,100)^2 +
@@ -2258,7 +2275,7 @@ gauss2d = exp(-0.5*( span(-10,10,100)^2 +
 @end example
 
 However, the rectangular grid of points (@kbd{x},@kbd{y}) is often
-required -- as input to plotting routines for example.@refill
+required -- as input to plotting routines for example.
 
 
 
@@ -2275,7 +2292,7 @@ In order to remedy this asymmetry, Yorick interprets numbers less than 1
 relative to the final element of an array.  Hence, @kbd{x(1)} and
 @kbd{x(2)} are the first and second elements of @kbd{x}, while
 @kbd{x(0)} and @kbd{x(-1)} are the last and next to last elements, and
-so on.@refill
+so on.
 
 With this convention for negative indices, many Yorick programs can
 be written without the need to determine the length of a dimension:
@@ -2289,7 +2306,7 @@ computes a point-centered estimate of the derivative of a function
 @kbd{f} with values known at points @kbd{x}.  (A better way to compute
 this derivative is to use the @kbd{pcen} and @kbd{dif} range functions
 described below.  @xref{Finite Difference, , Rank preserving (finite
-difference) range functions}.)@refill
+difference) range functions}.)
 
 In this example, the extra effort required to compute the array length
 would be slight:
@@ -2342,11 +2359,11 @@ brightness(..,i)
 
 @noindent
 will always place the @kbd{i} index in the spectral dimension, whether
-@kbd{brightness} itself is a 1-D, 2-D, or 3-D array.@refill
+@kbd{brightness} itself is a 1-D, 2-D, or 3-D array.
 
 Similarly, @kbd{x(i,..)} selects a value of the first index of @kbd{x},
 leaving intact all following dimensions, if any.  Constructions such as
-@kbd{x(i,j,..,k,l)} are also legal, albeit rarely necessary.@refill
+@kbd{x(i,j,..,k,l)} are also legal, albeit rarely necessary.
 
 A second form of rubber-index collapses zero or more dimensions into a
 single index.  The length of the collapsed dimension will be the product
@@ -2355,7 +2372,7 @@ replaces zero dimensions).  The symbol for this type of rubber index is
 an asterisk @kbd{*}.  For example, if @kbd{x} were a
 five-by-three-by-four-by-two array, then @kbd{x(*)} would be a 1-D array
 of 120 elements, while @kbd{x(,*,)} would be a five-by-twelve-by-two
-array.@refill
+array.
 
 If the last actual index in a subscripted array is nil, and if this
 index does not correspond to the final actual dimension of the array,
@@ -2367,7 +2384,7 @@ subscripting stable, and I am mightily tempted to remove it on grounds
 of linguistic purity.  When you mean, ``and any other dimensions which
 might be present,'' use the @kbd{..} rubber-index, not a nil index.  Use
 a trailing nil index only when you mean, ``and the single remaining
-dimension (which I know is present).''@refill
+dimension (which I know is present).''
 
 
 
@@ -2397,7 +2414,7 @@ The third example shows how to form the inner product of two vectors
 contract the second dimension of a 4-D array @kbd{P} with the third
 dimension of the 3-D array @kbd{Q}.  If @kbd{P} were 2-by-3-by-4-by-5
 and @kbd{Q} were 6-by-7-by-3, the result array would be
-2-by-4-by-5-by-6-by-7.@refill
+2-by-4-by-5-by-6-by-7.
 
 Unlike all of the other special subscript symbols (nil, @kbd{-},
 @kbd{..}, and @kbd{*} so far), the @kbd{+} sign marking an index for use
@@ -2409,7 +2426,7 @@ Yorick's usual element-by-element multiplication.  A parse error will
 also result if only one of the operands has a dimension marked by
 @kbd{+}.  Both operands must have exactly one marked dimension, and the
 marked dimensions must turn out to be of equal length at run
-time.@refill
+time.
 
 
 
@@ -2466,7 +2483,7 @@ the extreme value, the result will be the smallest index.
 The @kbd{min}, @kbd{max}, @kbd{sum}, and @kbd{avg} functions may also
 be applied using ordinary function syntax, which is preferred if you
 want the function to be applied across all the dimensions of an array
-to yield a single scalar result.@refill
+to yield a single scalar result.
 
 Given the @kbd{brightness} array representing the spectrum incident on a
 detector or set of detectors, the @kbd{mxx} function can be used to find
@@ -2474,7 +2491,7 @@ the photon energy at which the incident light is brightest.  Assume that
 the final dimension of @kbd{brightness} is always the spectral
 dimension, and that the 1-D array @kbd{gav} of photon energies (with the
 same length as the final dimension of @kbd{brightness}) is also
-given:@refill
+given:
 
 @example
 max_index_list = brightness(.., mxx);
@@ -2485,14 +2502,14 @@ gav_at_max = gav(max_index_list);
 Note that @kbd{gav_at_max} would be a scalar if @kbd{brightness} were
 a 1-D spectrum for a single detector, a 2-D array if @kbd{brightness}
 were a 3-D array of spectra for each point of an image, and so on.
-@refill
+
 
 An arbitrary index range (@kbd{start:stop} or @kbd{start:stop:step}) may
 be specified for any range function, by separating the function name
 from the range by another colon.  For example, to select only a relative
 maximum of @kbd{brightness} for photon energies above 1.0, ignoring
 possible larger values at smaller energies, you could use:
-@refill
+
 
 @example
 i = min(where(gav > 1.0));
@@ -2506,7 +2523,7 @@ line of this example.  (Recall that @kbd{where} returns a list of
 indices where some conditional expression is true.)  In the second line,
 @kbd{mxx:i:0} is equivalent to @kbd{mxx:i:}.  Because of the details of
 Yorick's current implementation, the former executes slightly faster.
-@refill
+
 
 More than one range function may appear in a single subscript list.  If
 so, they are computed from left to right.  In order to execute them in
@@ -2536,7 +2553,7 @@ which return a scalar result, the finite difference range functions do
 not reduce the rank of the subscripted array.  Instead, they preserve
 rank, in the same way that a simple index range @kbd{start:stop}
 preserves rank.  The available finite difference functions are:
-@refill
+
 
 @table @kbd
 @item cum
@@ -2548,14 +2565,14 @@ has a length one greater than the dimension in the subscripted array.
 returns the partial sum (sum of all values at equal or smaller index)
 up to each element.  The result dimension has the same length as the
 dimension in the subscripted array.  This is the same as @kbd{cum},
-except that the leading 0 value in the result is omitted.@refill
+except that the leading 0 value in the result is omitted.
 
 @item dif
 returns the pairwise difference between successive elements, positive
 when the function values increase along the dimension, negative when
 they decrease.  The result dimension has a length one less than the
 dimension of the subscripted array.  The @kbd{dif} function is the
-inverse of the @kbd{cum} function.@refill
+inverse of the @kbd{cum} function.
 
 @item zcen
 returns the pairwise average between successive elements.  The result
@@ -2577,7 +2594,7 @@ is short for ``uncenter point centered''.
 @end table
 
 The derivative @i{dy/dx} of a function @i{y(x)}, where @i{y} and @i{x}
-are represented by 1-D arrays @kbd{y} and @kbd{x} of equal length is:@refill
+are represented by 1-D arrays @kbd{y} and @kbd{x} of equal length is:
 
 @example
 deriv = y(dif)/x(dif);
@@ -2587,14 +2604,14 @@ deriv = y(dif)/x(dif);
 Note that @kbd{deriv} has one fewer element than either @kbd{y} or
 @kbd{x}.  The derivative is computed as if @i{y(x)} were the piecewise
 linear function passing through the given points @kbd{(x,y)}; there is
-one fewer line segment (slope) than point.@refill
+one fewer line segment (slope) than point.
 
 The values @kbd{x} and @kbd{y} can be called ``point-centered'', while the
 values @kbd{deriv} can be called ``zone-centered''.  The @kbd{zcen} and
 @kbd{pcen} functions provide a simple mechanism for moving back and
 forth between point-centered and zone-centered quantities.  Usually,
 there will be several reasonable ways to point-center zone centered data
-and vice-versa.  For example:@refill
+and vice-versa.  For example:
 
 @example
 deriv_pc1 = deriv(pcen);
@@ -2610,7 +2627,7 @@ that produced @kbd{x} and @kbd{y} in the first place.  If @kbd{x} and
 @kbd{y} represent @i{y(x)} more accurately that this, then you must know
 a better model of the shape of @i{y(x)} than the simple piecewise linear
 model, and you should use that model to select @kbd{deriv_pc1},
-@kbd{deriv_pc2}, and @kbd{deriv_pc3}, or some other expression.@refill
+@kbd{deriv_pc2}, and @kbd{deriv_pc3}, or some other expression.
 
 An indefinite integral may be estimated using the trapezoidal rule:
 
@@ -2628,7 +2645,7 @@ of @i{y(x)} as a point centered array of definite integrals from
 @kbd{x(1)} up to each of the @kbd{x(i)}.  In this case (which actually
 arises more frequently), use the @kbd{cum} function instead of
 @kbd{psum} in order to produce a result @kbd{def_integs} with the same
-number of points as the @kbd{x} and @kbd{y} arrays:@refill
+number of points as the @kbd{x} and @kbd{y} arrays:
 
 @example
 def_integs = (y(zcen)*x(dif))(cum);
@@ -2645,7 +2662,7 @@ dimension of an array @kbd{brightness} represents an incident spectrum
 an imaging detector).  The 1-D array @kbd{gb} represents the group
 boundary energies -- that is, the photon energies at the boundaries of
 the spectral groups represented in @kbd{brightness}.  The following
-Yorick statements compute the detector response:@refill
+Yorick statements compute the detector response:
 
 @example
 filter = integ(ff, ef, gb)(dif);
@@ -2661,7 +2678,7 @@ pairwise differences.  Since the @kbd{gb} array naturally has one more
 element than the final dimension of @kbd{brightness} (there is one more
 group boundary energy than group), and since @kbd{dif} reduces the
 length of a dimension by one, the @kbd{filter} array has the same length
-as the final dimension of @kbd{brightness}.@refill
+as the final dimension of @kbd{brightness}.
 
 Note that the @kbd{cum} function cannot be used to integrate
 @kbd{ff(ef)}, because the points @kbd{gb} at which the integral must be
@@ -2670,7 +2687,7 @@ is known.  Whenever the points at which the integral is required are the
 same (or a subset of) the points at which the integrand is known, you
 should perform the integral using the @kbd{zcen}, @kbd{dif}, and
 @kbd{cum} index functions, instead of the more general @kbd{integ}
-interpolator.@refill
+interpolator.
 
 
 
@@ -2687,7 +2704,7 @@ list = sort(x);
 The list has the same length as the input vector @kbd{x}, and list(1) is
 the index of the smallest element of @kbd{x}, list(2) the index of the
 next smallest, and so on.  Thus, @kbd{x(list)} will be @kbd{x} sorted
-into ascending order.@refill
+into ascending order.
 
 By returning an index list instead of the sorted array, @kbd{sort}
 simplifies the co-sorting of other arrays.  For example, consider a
@@ -2724,12 +2741,12 @@ sorted so that the elements along its first dimension are in ascending
 order.  In order to sort along another dimension, pass @kbd{sort} a
 second argument -- @kbd{x(sort(x,2))} will be @kbd{x} sorted into
 increasing order along its second dimension, @kbd{x(sort(x,3))} along
-its third dimension, and so on.@refill
+its third dimension, and so on.
 
 A related function is @kbd{median}.  It takes one or two arguments, just
 like @kbd{sort}, but its result -- which is, of course, the median
 values along the dimension being sorted -- has one fewer dimension than
-its input.@refill
+its input.
 
 
 
@@ -2755,7 +2772,7 @@ will be rare).  The same array with its first and last dimensions
 transposed is called @kbd{x623451}; this is the default result of
 @kbd{transpose}.  The @kbd{transpose} function can take any number of
 additional arguments to describe an arbitrary permutation of the indices
-of its first argument -- the array to be transposed.@refill
+of its first argument -- the array to be transposed.
 
 A scalar integer value, as in the second and third lines, represents a
 cyclic permutaion of all the dimensions; the first dimension of the
@@ -2767,7 +2784,7 @@ specified dimensions.  Hence, in the fifth example, @kbd{[2,5,3,4]}
 means that the second dimension becomes the fifth, the fifth becomes the
 third, the third becomes the fourth, and the fourth becomes the second.
 An arbitrary permutation may be built up of a number of cyclic
-permutations, as shown in the sixth example.@refill
+permutations, as shown in the sixth example.
 
 One additional problem can arise in Yorick -- you may not know how many
 dimensions the array to be transposed has.  In order to deal with this
@@ -2804,16 +2821,16 @@ y = a*x^3 + b*x^2 + c*x + d;
 
 The obvious intent of this assignment statement is that @kbd{y} should
 have the same shape as @kbd{x}, each value of @kbd{y} being the value of
-the polynomial at the corresponding @kbd{y}.@refill
+the polynomial at the corresponding @kbd{y}.
 
 Alternatively, array valued coefficients @kbd{a}, @kbd{b}, ...,
 represent an array of several polynomials -- perhaps Legendre
 polynomials.  Then, if @kbd{x} is a scalar value, the meaning is again
 obvious; @kbd{y} should have the same shape as the coefficient arrays,
-each @kbd{y} being the value of the corresponding polynomial.@refill
+each @kbd{y} being the value of the corresponding polynomial.
 
 A binary operation is performed once for each element, so that
-@kbd{a+b}, say, means@refill
+@kbd{a+b}, say, means
 
 @example
 a(i,j,k,l) + b(i,j,k,l)
@@ -2822,10 +2839,10 @@ a(i,j,k,l) + b(i,j,k,l)
 for every @kbd{i, j, k, l} (taking @kbd{a} and @kbd{b} to be four
 dimensional).  The lengths of corresponding indices must match in order
 for this procedure to make sense; Yorick signals a ``conformability
-error'' when the shapes of binary operands do not match.@refill
+error'' when the shapes of binary operands do not match.
 
 However, if @kbd{a} had only three dimensions, @kbd{a+b} still makes
-sense as:@refill
+sense as:
 
 @example
 a(i,j,k) + b(i,j,k,l)
@@ -2851,14 +2868,14 @@ second (@kbd{j}) dimension of the @kbd{b} array as its last (@kbd{l})
 dimension.  To handle this case, Yorick will broadcast any unit-length
 dimension in addition to a missing final dimension.  Hence, if the
 @kbd{a} array has a second dimension of length one, @kbd{a+b}
-means:@refill
+means:
 
 @example
 a(i,1,k,l) + b(i,j,k,l)
 @end example
 
 for every @kbd{i, j, k, l}.  The pseudo-index can be used to generate
-such unit length indices when necessary (@pxref{Pseudo-Index}).@refill
+such unit length indices when necessary (@pxref{Pseudo-Index}).
 
 
 
@@ -2882,12 +2899,12 @@ returns a list consisting of the number of dimensions of the array @kbd{x},
 followed by the length of each of those dimensions.  Thus, if @kbd{x} were
 a nine-by-two-by-six array, @kbd{dimsof(x)} would return @kbd{[3,9,2,6]},
 while if @kbd{x} were a scalar value, @kbd{dimsof(x)} would return
-@kbd{[0]}.@refill
+@kbd{[0]}.
 
 @item dimsof(x, y, z, ...)
 With multiple arguments, the @kbd{dimsof} function returns the dimension
 list of the array @kbd{x+y+z+...}, or @kbd{[]} if the input arrays are not
-conformable.@refill
+conformable.
 @end table
 
 The @kbd{array} function (@pxref{Creating Arrays}), and the more arcane
@@ -2897,7 +2914,7 @@ parameters.  Each parameter in a dimension list can be either a scalar
 integer value, representing the length of a single dimension, or a
 list of integers in the format returned by @kbd{dimsof} to represent
 zero or more dimensions.  Several arguments can be used to build up
-a complicated dimension list:@refill
+a complicated dimension list:
 
 @example
 x1 = array(0.0, 9, 2, 6);     /* 9-by-2-by-6 array of 0.0 */
@@ -2941,7 +2958,7 @@ strategy is the @file{pl3d.i} interface, which I describe at the end of
 this chapter.  Not every new graphics interface needs to be a major
 production like @file{pl3d.i}, however.  Modest little functions are
 arguably more useful; the plh function discussed below is an
-example.@refill
+example.
 
 As you will see, the simplest possible graphics model is still very
 complicated.  Unfortunately, I don't see any easy remedies, but I can
@@ -2998,7 +3015,7 @@ plg, y, x
 @noindent
 plots a sequence of line segments from @kbd{(x(1),y(1))} to
 @kbd{(x(2),y(2))} to @kbd{(x(3),y(3))}, and so on until
-@kbd{(x(N),y(N))}, when x and y are N element arrays.@refill
+@kbd{(x(N),y(N))}, when x and y are N element arrays.
 
 The ``backwards'' order of the arguments to plg (y,x instead of x,y)
 allows for a default value of x.  Namely,
@@ -3011,7 +3028,7 @@ plg, y
 plots y against 1, 2, 3, ..., N, or @kbd{indgen(numberof(y))} in Yorick
 parlance.  You often want a plot of an array y with the horizontal
 axis (y is plotted vertically) merely indicating the sequence of
-values in the array.@refill
+values in the array.
 
 Optional keyword arguments adjust line type (solid, dashed, etc.), line
 color, markers placed along the line, whether to connect the last point
@@ -3044,7 +3061,7 @@ pldj, x0, y0, x1, y1
 connects @kbd{(x0(1),y0(1))} to @kbd{(x1(1),y1(1))}, then
 @kbd{(x0(2),y0(2))} to @kbd{(x1(2),y1(2))}, and so on.  Unlike plg,
 where y and x are one dimensional arrays, the four arguments to pldj may
-have any dimensionality, as long as all four are the same shape.@refill
+have any dimensionality, as long as all four are the same shape.
 
 @node plm, plc, pldj, Plotting primitives
 @subsection plm
@@ -3060,7 +3077,7 @@ This corner zone has two edge-sharing neighbors -- one with nodes
 @kbd{(2,1)}, @kbd{(3,1)}, @kbd{(2,2)}, and @kbd{(3,2)}, and the other
 with nodes @kbd{(1,2)}, @kbd{(2,2)}, @kbd{(1,3)}, and @kbd{(2,3)}.  Most
 zones share edges four neighbors, one sharing each edge of the
-quadrilateral.  The plm command:@refill
+quadrilateral.  The plm command:
 
 @example
 plm, y, x
@@ -3069,7 +3086,7 @@ plm, y, x
 @noindent
 draws all @kbd{(M-1)*N+M*(N-1)} edges of the quadrilateral mesh.  Optional
 keywords allow for separate color and linetype adjustments for both
-families of lines (those with constant first or second index).@refill
+families of lines (those with constant first or second index).
 
 An optional third argument is an existence map -- not all
 @kbd{(M-1)*(N-1)} zones need actually be drawn.  Logically, the
@@ -3083,7 +3100,7 @@ number'' (non-existent zones belong to region zero) of the zone bounded
 by mesh nodes @kbd{(i-1,j-1)}, @kbd{(i,j-1)}, @kbd{(i-1,j)}, and
 @kbd{(i,j)}.  The @kbd{boundary=} keyword causes plm to draw only the
 edges which are boundaries of a single region (the @kbd{region=} keyword
-value).@refill
+value).
 
 As a simple example, here is how you can draw a four by four zone
 mesh missing its central two by two zones:
@@ -3104,7 +3121,7 @@ The plc, plf, and plfc commands plot functions on a quadrilateral mesh.
 
 The plc command plots contours of a function @kbd{z(x,y)}.  If z is a two
 dimensional array of the same shape as the x and y mesh coordinate
-arrays, then@refill
+arrays, then
 
 @example
 plc, z, y, x
@@ -3115,7 +3132,7 @@ plots contours of z.  The @kbd{levs=} keyword specifies particular contour
 levels, that is, the values of z at which contours are drawn; by
 default you get eight equally spaced contours spanning the full range
 of z.  Each contour is actually a set of polylines.  Here is the
-algorithm Yorick uses to find contour polylines:@refill
+algorithm Yorick uses to find contour polylines:
 
 Each edge of the mesh has a z value specified at either end.  For
 those edges with one end above and the other below the desired contour
@@ -3152,7 +3169,7 @@ used both to force a particular triangulation of any or all zones in
 the mesh, and to return automatic triangulation decisions made during
 the course of the plc command.  Again, if triangulation decisions
 become important to you, your mesh is probably not fine enough to
-resolve the contour you are trying to draw.@refill
+resolve the contour you are trying to draw.
 
 Making a good contour plot is an art, not an algorithm.  Contours work
 best if used sparingly; more than a half dozen levels is likely to
@@ -3202,7 +3219,7 @@ will only see the color of the last-drawn zone containing that point.
 The drawing order is the same as the storage order of the z array,
 namely @kbd{(1,1)}, @kbd{(2,1)}, @kbd{(3,1)}, ..., @kbd{(1,2)},
 @kbd{(2,2)}, @kbd{(3,2)}, ..., @kbd{(1,3)}, @kbd{(2,3)}, @kbd{(3,3)},
-...@refill
+...
 
 One or two contours plotted in a contrasting color on top of a filled
 mesh is one of the least puzzling ways to present a function of two
@@ -3234,7 +3251,7 @@ pli, z, x0, y0, x1, y1
 plots the image with @kbd{(x0,y0)} as the corner nearest @kbd{z(1,1)}
 and @kbd{(x1,y1)} the corner nearest @kbd{z(M,N)}, assuming z is an M by
 N array of image pixel values.  The optional x0, y0, x1, y1 arguments
-default to 0, 0, M, N.@refill
+default to 0, 0, M, N.
 
 As of yorick 1.5, z may also be a 3 by M by N array of type char in
 order to make a true color filled mesh.  The first index of z is (red,
@@ -3257,7 +3274,7 @@ corners (or sides) for each successive polygon in the list.  All four
 arguments are now one dimensional arrays; the length of z and n is the
 number of polygons, while the length of x and y is the total number of
 corners, which is @kbd{sum(n)}.  Again, plfp draws the polygons in the
-order of the z (or n) array.@refill
+order of the z (or n) array.
 
 As a special case, if all of the lengths n after the first are 1, the
 first polygon coordinates are taken to be in NDC units, and the
@@ -3267,7 +3284,7 @@ function.
 
 As of yorick 1.5, z may also be a 3 by @kbd{sum(n)} array of type char
 in order to make a true color filled mesh.  The first index of z is
-(red, green, blue), with 0 minimum intensity and 255 maximum.@refill
+(red, green, blue), with 0 minimum intensity and 255 maximum.
 
 @node plv, plt, plfp, Plotting primitives
 @subsection plv
@@ -3314,12 +3331,12 @@ your data (what planet is your data from?), you must use the @kbd{tosys=1}
 keyword.  If you do locate text in your world coordinate system, only
 its position will follow your data as you zoom and pan through it;
 don't expect text size to grow as you zoom in, or your characters to
-become hideously distorted when you switch to log axis scaling.@refill
+become hideously distorted when you switch to log axis scaling.
 
 Text may be rotated by multiples of 90 degrees by means of the
 @kbd{orient=} keyword.  Arbitrary rotation angles are not supported, and
 the speed that rotated text is rendered on your screen may be
-dramatically slower than ordinary unrotated text.@refill
+dramatically slower than ordinary unrotated text.
 
 You can get superscripts, subscripts, and symbol characters by means
 of escape sequences in the text.  Yorick is not a typesetting program,
@@ -3339,7 +3356,7 @@ is the symbol for perpendicular.  The exclamation point, underscore, and
 right bracket characters are themselves in the symbol font, and
 shouldn't be necessary as escaped symbols.  If the last character
 in the text is an exclamation point, it has no special meaning; you
-do not need to escape a trailing exclamation point.@refill
+do not need to escape a trailing exclamation point.
 
 Caret @kbd{"^"} introduces superscripts and underscore @kbd{"_"}
 introduces subscripts.  There are no multiple levels of superscripting;
@@ -3347,7 +3364,7 @@ every character in the text string is either ordinary, a superscript, or
 a subscript.  A caret switches from ordinary or subscript characters to
 superscript, or from superscript to ordinary.  An underscore switches
 from ordinary or superscript characters to subscript, or from subscript
-back to ordinary.@refill
+back to ordinary.
 
 If the text has multiple lines (separated by newline @kbd{"\n"}
 characters), plt will plot it in multiple lines, with each line
@@ -3675,7 +3692,7 @@ The palette command allows you to change palettes.  The Yorick
 distribution comes with predefined palettes called @file{earth.gp} (the
 default palette), @file{gray.gp}, @file{yarg.gp}, @file{heat.gp},
 @file{stern.gp}, and @file{rainbow.gp}.  To load the gray palette, you
-would type:@refill
+would type:
 
 @example
 palette, "gray.gp"
@@ -3692,7 +3709,7 @@ have been trained to think have an order.  The @file{heat.gp} palette is
 a red-orange scale resembling the colors of an iron bar as it grows
 hotter.  The default @file{earth.gp} is loosely based on mapmaker's
 colors from dark blue deep ocean to green lowlands to brown highlands to
-white mountains.@refill
+white mountains.
 
 Instead of a file name, you may pass palette three arrays of numbers
 ranging from 0 to 255, which are relative intensities of red, green,
@@ -3705,7 +3722,7 @@ palette, scale,scale,scale;
 
 @noindent
 produces the same palette as @file{gray.gp}, but by direct specification
-of RGB values, rather than by reading a palette file.@refill
+of RGB values, rather than by reading a palette file.
 
 Yorick internally uses the bytscl function to map the z values in a
 plf, pli, or plfp command into a (0-origin) index into the palette.
@@ -3717,7 +3734,7 @@ produce your own.  If you create a directory @file{~/Gist} and put your
 custom palette files there, Yorick will find them no matter what its
 current working directory.  The library include file @file{color.i}
 includes functions to help you construct palettes, and a dump_palette
-function which writes a palette in Yorick's standard format.@refill
+function which writes a palette in Yorick's standard format.
 
 You can use the @kbd{query=} keyword to retrieve the RGB values for the
 currently installed palette:
@@ -3729,7 +3746,7 @@ palette,query=1, r,g,b;
 
 There is also a @kbd{private=} keyword to palette, which you should
 investigate if you are interested in color table animation, or if
-other programs steal all your colors.@refill
+other programs steal all your colors.
 
 @node Color model,  , palette, Plot limits
 @subsection Color model
@@ -3739,7 +3756,7 @@ The line drawing primitives plg, pldj, plm, plc, and plv accept a
 which case the color of the line becomes dependent on the palette.
 However, you can also choose one of ten colors which are always
 defined, and which do not change when the palette changes.  For
-example,@refill
+example,
 
 @example
 plg, sin(theta),cos(theta), color="red"
@@ -3749,7 +3766,7 @@ plg, sin(theta),cos(theta), color="red"
 draws a red circle (assuming theta runs from zero to two pi).  The
 colors you can specify in this way are: @kbd{"black"}, @kbd{"white"},
 @kbd{"red"}, @kbd{"green"}, @kbd{"blue"}, @kbd{"cyan"}, @kbd{"magenta"},
-@kbd{"yellow"}, @kbd{"fg"}, and @kbd{"bg"}.@refill
+@kbd{"yellow"}, @kbd{"fg"}, and @kbd{"bg"}.
 
 Black and white, and the primary and secondary colors need no further
 explanation.  But @kbd{"fg"} stands for foreground and @kbd{"bg"} for
@@ -3913,14 +3930,14 @@ window system, which cannot draw anything until a newly created window
 actually appears.  If you write a program (such as Yorick's demo
 programs) which will produce graphical output, but you are not sure
 whether there have been any previous graphics commands, you should start
-with the statement:@refill
+with the statement:
 
 @example
 window, wait=1;
 @end example
 
 The @kbd{style=} keyword to window specifies a particular graphics style
-for the window.  I'll return to graphics styles later.@refill
+for the window.  I'll return to graphics styles later.
 
 The @kbd{dpi=100} keyword specifies a 100 dot per inch window, rather
 than the default 75 dot per inch window.  The window you see on your
@@ -3928,7 +3945,7 @@ screen is a replica of a portion of an 8.5 by 11 inch sheet of paper,
 and the dpi (either 75 or 100) refers to the number of screen pixels
 which will correspond to one inch on that sheet of paper if you were to
 tell Yorick to print the picture (see hcp).  Owing to the fonts
-available with X11R4, Yorick permits only the two scale factors.@refill
+available with X11R4, Yorick permits only the two scale factors.
 
 Initially, a Yorick window is a six inch by six inch window on the 8.5
 by 11 sheet, centered at the center of the upper 8.5 by 8.5 inch square
@@ -3940,7 +3957,7 @@ of the graphics style you choose.  Six inches is 450 pixels at 75 dpi or
 your window manager), but Yorick will always use either the 75 or 100
 dot per inch scaling, so resizing a Yorick window is not very useful
 unless you want to use more than the six by six inch square that is
-initially visible.@refill
+initially visible.
 
 The @kbd{display=} keyword specifies a display other than your default
 display.  For example, if you have two screens you might use
@@ -4008,7 +4025,7 @@ the file type; names of the form @file{*.ps} will be PostScript files,
 while a file name of the form @file{*.cgm} will be a binary CGM.  If
 you do not specify a file name, Yorick chooses a name will not clobber
 any existing file; if you specify a name and that file already exists,
-Yorick will silently overwrite the existing file.@refill
+Yorick will silently overwrite the existing file.
 
 @menu
 * Color hardcopy::              Dumping palettes into hardcopy files.
@@ -4040,7 +4057,7 @@ hcp_file, dump=0
 (you could also specify the name for the next hardcopy file).  Unlike
 the name of the hardcopy file, the palette dumping flag persists across
 any number of hardcopy files.  To turn on dumping again, you need to
-call hcp_file with @kbd{dump=1}.@refill
+call hcp_file with @kbd{dump=1}.
 
 All Yorick PostScript files will print on any PostScript printer, black
 and white or color.  However, if you set @kbd{dump=0}, the palette was
@@ -4049,7 +4066,7 @@ If you print a @kbd{dump=1} file on a black and white printer, the
 result will be very similar to @kbd{dump=0}; your colors will be
 translated to grays.  You can put the call to hcp_file setting
 @kbd{dump=0} in your @file{custom.i} file if you rarely want to dump the
-palette.@refill
+palette.
 
 @node CGM hardcopy, EPS hardcopy, Color hardcopy, Hardcopy
 @subsection Binary CGM caveats
@@ -4101,7 +4118,7 @@ eps, "yowza"
 to create an EPS file called @file{yowza.eps} containing that picture.
 If you don't want to fork Yorick, you can also use the hcps command,
 which creates a PostScript file containing just the current picture; you
-can then run ps2epsi by hand to convert this to an EPS file.@refill
+can then run ps2epsi by hand to convert this to an EPS file.
 
 Page layout programs such as FrameMaker or xfig can import EPS files
 generated by Yorick.  You can then use the page layout program to
@@ -4156,7 +4173,7 @@ Yorick distribution (installed in @kbd{Y_SITE+"gist"}) as examples and
 starting points for your own designs.  The following sections should
 help you to understand the meaning of the various style parameters, but
 I am not going to attempt to lead you through an actual design.
-Yorick's predefined graphics styles usually suffice.@refill
+Yorick's predefined graphics styles usually suffice.
 
 @menu
 * style keyword::               Accessing predefined graphics styles.
@@ -4187,7 +4204,7 @@ the right hand side of the plot, independent of the ones on the left
 side.  (This is a little cumbersome in Yorick, but if you really need
 it, that's how you're supposed get it.)  Finally, @file{l_nobox.gs} is a
 variant of the nobox style in landscape orientation; all the other
-styles give portrait orientation.@refill
+styles give portrait orientation.
 
 For example,
 
@@ -4195,7 +4212,7 @@ For example,
 window, style="nobox.gs"
 @end example
 
-@refill
+
 switches to the nobox style.  This clears the current display list;
 the new style will take effect with your next plot.  If you have
 several different windows, they may have different styles; each window
@@ -4206,7 +4223,7 @@ The style files are in the @kbd{Y_SITE+"gist"} directory; the file
 how to write your own variants of the distribution style files.  You can
 put variants into either that public directory, or into a private
 directory called @file{~/Gist}, or in Yorick's current working directory
-to enable the style= keyword to find them.@refill
+to enable the style= keyword to find them.
 
 @node style.i, plsys, style keyword, Graphics style
 @subsection @file{style.i} functions
@@ -4391,7 +4408,7 @@ plg, cos(x), x
 
 will have the default legend @kbd{"A: plg, cos(x), x"}, assuming that
 the curve marker for this curve is @kbd{"A"}.  You can specify a more
-descriptive legend with the @kbd{legend=} keyword:@refill
+descriptive legend with the @kbd{legend=} keyword:
 
 @example
 plg, cos(x), x, legend="oscillating driving force"
@@ -4401,7 +4418,7 @@ If you want the legend to have the curve marker prepended, so it is
 @kbd{"A: oscillating driving force"} if the curve marker is @kbd{"A"},
 but @kbd{"F: oscillating driving force"} if the curve marker is
 @kbd{"F"}, you can begin the legend string with the special character
-@kbd{"\1"}:@refill
+@kbd{"\1"}:
 
 @example
 plg, cos(x), x, legend="\1: oscillating driving force"
@@ -4415,7 +4432,7 @@ B, and so on.  This is only relevant for the plg and plc commands.  This
 default style is ugly; use it for working plots, not polished graphics.
 You should turn the markers off by means of the @kbd{marks=0} keyword
 for high quality plots, and distinguish your curves by line type.  For
-example,@refill
+example,
 
 @example
 plg, cos(x), x, marks=0, type="dash",
@@ -4430,7 +4447,7 @@ This is because legends are ugly.  Legends take the place of a proper
 figure caption in working plots.  For high quality output, I expect you
 to take the trouble to add a proper caption.  You can use the
 @kbd{legends=0} keyword to the window command in order to eliminate the
-legends even from those graphics styles where they normally appear.@refill
+legends even from those graphics styles where they normally appear.
 
 @node plq and pledit,  , legends, Query and edit
 @subsection plq and pledit
@@ -4476,18 +4493,18 @@ windows, and other properties of graphics windows and objects.
 You can use pldefault interactively to set new, but temporary, default
 values before embarking on a series of plots.  Or place a pldefault
 command in your @file{~/yorick/custom.i} file if your personal
-preferences differ from Yorick's defaults.@refill
+preferences differ from Yorick's defaults.
 
 You must use the hcp_file command to set values for the @kbd{dump=} or
 @kbd{ps=} keywords (which determine whether to dump the palette to
 hardcopy files and whether automatically created hardcopy files are
 PostScript or binary CGM), and these settings remain in effect until you
-explicitly change them.@refill
+explicitly change them.
 
 For example, if you want to use the @file{vg.gs} style, with unmarked
 wide lines, and you want PostScript hardcopy files (by default)
 including the palette for each frame, you can put the following two
-lines in your @file{custom.i} file:@refill
+lines in your @file{custom.i} file:
 
 @example
 pldefault, style="vg.gs", marks=0, width=4;
@@ -4499,7 +4516,7 @@ override them on each separate call to window or a plotting primitive,
 but the default value remains in effect unless you reset it with a
 second call to pldefault.  Conversely, you can't temporarily override a
 @kbd{dump=} or @kbd{ps=} value you set with hcp_file -- you just have to
-set them to a new value.@refill
+set them to a new value.
 
 @node Custom plot functions, Animation, pldefault, Graphics
 @section Writing new plotting functions
@@ -4605,7 +4622,7 @@ your movie and returns a flag saying whether there are any more frames.
 You can easily build and test this function a frame at a time in
 ordinary non-animation mode.  Study the @file{demo2.i}, @file{demo3.i},
 and @file{demo5.i} demonstration programs that come with the Yorick
-distribution to learn more about making movies.@refill
+distribution to learn more about making movies.
 
 @node 3D graphics,  , Animation, Graphics
 @section 3D graphics interfaces
@@ -4622,7 +4639,7 @@ of two variables (like plc or plf).  The @file{slice3.i} interface
 allows you to plot isosurfaces and slices of scalar functions of three
 variables.  The @file{demo5.i} demonstration program in the Yorick
 distribution has examples of both; study it to see how they work in
-detail.@refill
+detail.
 
 @menu
 * 3D mapping::                  Changing your viewpoint.
@@ -4752,7 +4769,7 @@ Yorick's pseudocolor model cannot describe a shaded color object.  (You
 need to be able to specify arbitrary colors for that.)  Therefore, if
 you want shading to suggest a 3D shape, you must settle for black and
 white (or any single color -- the @file{heat.gp} palette works about as
-well as @file{gray.gp} for shading).@refill
+well as @file{gray.gp} for shading).
 
 You also need to worry about more variables -- namely the position and
 relative brightness of any lights illuminating your object.  You call
@@ -4765,7 +4782,7 @@ of polygonal facets.  Yorick assigns a 3D normal vector to each facet
 lighting model, which you set up by light3 calls, maps normal directions
 to surface brightness.  If the facet is oriented so that it reflects one
 of your light sources directly toward your camera, that facet will
-appear very bright.@refill
+appear very bright.
 
 The functional form of this specular reflection model is
 @kbd{(1+cos(alpha))^n}, where alpha is the angle between your camera and
@@ -4774,7 +4791,7 @@ the power n.  Large n gives a polished metallic look; small n gives a
 matte look.  You can specify as many light sources as you want.
 However, the light sources are all infinitely far away.  Also, although
 you can specify a different n for each light source, you cannot get
-dfferent values of n for different surfaces or parts of surfaces.@refill
+dfferent values of n for different surfaces or parts of surfaces.
 
 Instead of or in addition to these specular light sources, you can
 also get diffuse lighting.  In this model, the brightness of a surface
@@ -4867,7 +4884,7 @@ model.  The idea is to split your palette into a gray scale you can use
 to shade isosurfaces, followed by a color palette you can use to
 pseudocolor slices.  The split_palette routine in @file{slice3.i}
 generates such a split palette.  Again, read @file{demo5.i} for
-details.@refill
+details.
 
 
 
@@ -4889,9 +4906,7 @@ ANSI C and Fortran.  You should be able to write C++ packages for Yorick
 by using the @kbd{extern "C"} statement for the interface routines
 called by the interpreter.  I don't encourage this, however, since the
 interpreted language removes many of the motives for programming in C++
-in the first place.  I won't say any more about C++ packages for Yorick;
-you will need to use a modified @kbd{Y_HOME/Makepkg} file to make it
-work, but it shouldn't present insurmountable difficulties.@refill
+in the first place.
 
 If you do choose Fortran, stick to a strict subset of ANSI Fortran 77.
 Do not attempt to pass character variables into or out of interface
@@ -4903,6 +4918,19 @@ presumably you'll enjoy figuring out a portable way to do this.)
 Whether you write in Fortran or C, @emph{do not} attempt to do I/O of
 any sort in your compiled code.  The whole idea of embedding routines
 inside Yorick is to let Yorick handle all I/O -- text and graphics.
+Another way to say this is, that you want the interface between the
+interpreted and compiled code to be arrays of numbers.  Let the
+interpreter handle reading text to produce the input arrays, or
+writing graphics to display the output arrays.
+
+@menu
+* Mechanics of embedding::      How to use the make utility.
+* API for embedding::           Using the yapi.h interface.
+* Embedding example::           Three ways to implement a function.
+@end menu
+
+@node Mechanics of embedding, API for embedding, Embedding, Embedding
+@section Mechanics of embedding
 
 In the following discussion, I refer to three directories:
 @file{Y_SITE} is the directory where the architecture independent
@@ -4925,11 +4953,11 @@ the case of a purely interpreted package, you write an include file
 defining your interface.  So, too, you must lay out the interpreted
 interface for a compiled package in an interpreted include file, which
 we call here @file{mypkg.i}.  Including @file{mypkg.i} makes the
-compiled package available to the interpreter.@refill
+compiled package available to the interpreter.
 
 The compiled package include file @file{mypkg.i} must contain one
 statement, executed before any code that uses the compiled routines,
-which distinguishes it from an interpreted package:@refill
+which distinguishes it from an interpreted package:
 
 @example
 plug_in, "mypkg";
@@ -4943,9 +4971,8 @@ different pieces of the interface to a single compiled package, say
 contain the above @kbd{plug_in} call.  In a single compiled package
 source directory, however, there can be at most one package name.  (If
 you want to build more than one binary library, use more than one
-directory to hold the source.)@refill
+directory to hold the source.)
 
-@noindent
 An alternative form is permitted to make it possible to design package
 include files which are compatible with pre-version-1.6 yorick:
 
@@ -4953,6 +4980,7 @@ include files which are compatible with pre-version-1.6 yorick:
 if (!is_void(plug_in)) plug_in, "mypkg";
 @end example
 
+@noindent
 Unlike an interpreted package, before you can use a compiled package,
 you naturally need to compile it!  This is done using the UNIX make
 utility.  Yorick has tools to assist in this build process.  The first
@@ -4960,7 +4988,7 @@ is the (interpreted) package @kbd{make.i} which generates, or at least
 provides a starting point for, the @file{Makefile}, which is the input
 to the make utility.  The second is @kbd{codger}, a (compiled) yorick
 utility which generates the C source code that bridges between your
-compiled code and yorick's internal compiled code.@refill
+compiled code and yorick's internal compiled code.
 
 First, you need to put your C (and/or Fortran) source and header files
 in the directory containing the @file{mypkg.i} interface definition
@@ -4971,12 +4999,12 @@ point, because the interpreter would need to call it in a loop to
 compute a vector of values, most likely erasing the entire advantage
 of writing your special function in compiled code.  At the very least,
 therefore, you want your compiled functions to accept a (potentially
-long) list of inputs an produce the corresponding list of outputs.@refill
+long) list of inputs an produce the corresponding list of outputs.
 
 When all the @kbd{.i}, @kbd{.c}, and @kbd{.h} (and Fortran) source
 files for your package have been collected in this package source
 directory (and any unrelated source removed), execute the command
-(in that directory):@refill
+(in that directory):
 
 @example
 yorick -batch make.i
@@ -4986,7 +5014,7 @@ This creates a @file{Makefile} for your package.  In simple cases,
 this @file{Makefile} will be all you need to build your compiled
 package; in more complicated situations, you will need to edit it by
 hand to fill in critical information the @file{make.i} package is
-unable to determine by its examination of the source files.@refill
+unable to determine by its examination of the source files.
 
 The main reason you may need to edit @file{Makefile} by hand is to add
 the loader flags (-l and -L) for dependencies, that is, third party
@@ -5001,13 +5029,13 @@ which you will need to design and write.  This can be far more
 difficult than writing the compiled package in the first place.  The
 message is, do not rely on dependent libraries other than libc, libm,
 and the utilities in yorick's own @file{play/} portability layer if
-you can possibly avoid it.@refill
+you can possibly avoid it.
 
 Once you have the @file{Makefile}, use the make utility to actually
 build your compiled package.  The @file{Makefile} invokes a more
 extensive input file, @file{Y_HOME/Makepkg}, which provides a number
 of useful ``targets'' you can build.  Here are several useful make
-command lines; read @file{Y_HOME/Makepkg} to learn about others:@refill
+command lines; read @file{Y_HOME/Makepkg} to learn about others:
 
 @example
 make           # build release version
@@ -5055,18 +5083,15 @@ extern my_func;
  */
 @end example
 
+@noindent
 in the @file{mypkg.i} file, it connects the interpreted symbol
-@kbd{my_func} to a compiled function @kbd{Y_my_func} of type BuiltIn,
-which you are responsible for writing.  See @file{Y_HOME/ydata.h} for
-the definition of the BuiltIn function type.  This function must pop
-its arguments off of Yorick's interpreter stack using routines
-declared in @file{Y_HOME/ydata.h}, and push its result back onto the
-stack.  The distribution source code in @file{yorick/ystr.c} is the
-most up to date example of how to write BuiltIn functions directly.@refill
+@kbd{my_func} to a compiled function @kbd{Y_my_func} with a specific
+prototype, which you are responsible for writing, as described in the
+following section.
 
 Often you can avoid all these details; codger can generate
-@file{Y_my_func} for you automatically.  To do this, put PROTOTYPE
-comments in your startup include file:@refill
+@kbd{Y_my_func} for you automatically.  To do this, put PROTOTYPE
+comments in your startup include file:
 
 @example
 func my_func(input)
@@ -5137,9 +5162,9 @@ reshape, my_global, datatype;
 To attach to a Fortran common block, say
 
 @example
-	double var1, var2, var3
-	common /my_common/ var1, var2, var3
-	save /my_common/
+        double var1, var2, var3
+        common /my_common/ var1, var2, var3
+        save /my_common/
 @end example
 
 (note that this doesn't make sense unless the common block is saved outside
@@ -5169,6 +5194,255 @@ or dynamically loaded, and the same source code must work for either
 case.  The secondary goal is that the final users should do nothing
 different to use a compiled package than they would to use an
 interpreted package.
+
+@node API for embedding, Embedding example, Mechanics of embedding, Embedding
+@section API for embedding
+
+Instead of letting @kbd{codger} generate simple wrapper functions
+for you, you can omit the @kbd{PROTOTYPE} comment, and write
+@kbd{Y_my_func} yourself.  Its prototype is
+
+@example
+extern void Y_my_func(int argc);
+@end example
+
+The @kbd{argc} argument is the count of the number of items on the stack
+containing the arguments the interpreter is passing to @kbd{Y_my_func}.
+This would be simply the number of arguments the caller is passing to
+your function, were it not for the possibility of keyword arguments.
+Each actual keyword argument takes two spaces on the stack -- one for
+the name of the keyword and a second for its value.  If your function
+does not accept keywords, you can ignore the distinction between
+@kbd{argc} and the number of arguments being passed to your function.
+
+When your function exits, whatever you leave on top of the stack becomes
+its return value.  This section explains the programming interface (or
+API) which permits you to get your arguments off the stack, push new
+items onto the stack, set or get global variable values, and otherwise
+interact with the yorick interpreter.  All of these functions are
+declared in the @file{yapi.h} header, which your C (or C++) source file
+should include.
+
+The following examples do not illustrate all of the functions in
+@file{yapi.h}; you need to read the header file itslef for a
+comprehensive list.  For more examples of @file{yapi.h} usage, read
+the yorick source file @file{yorick/ystr.c}.
+
+@node Embedding example,  , API for embedding, Embedding
+@section Embedding example
+
+Suppose you want to write a function which returns
+@kbd{sqrt(r^2-x^2)}, with some of the nice features of the @kbd{abs}
+function, to be called @kbd{rtleg} for ``right triangle leg''.  Your
+first option is to simply write an interpreted function:
+
+@example
+func rtleg(r,x,..)
+@{
+  rr = 1./r;
+  x *= rr;  /* prevent overflow for very large or small r */
+  y = 1. - x*x;
+  while (!is_void((x=next_arg()))) @{ x *= rr; y -= x*x; @}
+  return r*sqrt(y);
+@}
+@end example
+
+This interpreted function is likely the best solution, because the
+required function is simple and vectorizes naturally.  For the sake of
+argument, however, suppose that you wanted to create a compiled
+version of @kbd{rtleg} instead.  Now you need not only interpreted
+code, in a file @file{rtleg.i}, but also compiled code in a file
+@file{rtleg.c}.  Let's consider two cases: First, let's use the
+@kbd{PROTOTYPE} comment and let codger generate the required wrapper
+code.  Second, let's write the wrapper code using @file{yapi.h}
+directly.
+
+@menu
+* Using PROTOTYPE::             Example of PROTOTYPE comment.
+* Using yapi.h::                Example of @file{yapi.h} API.
+@end menu
+
+@node Using PROTOTYPE, Using yapi.h, , Embedding example
+@subsection Using @kbd{PROTOTYPE}
+
+Suppose you really didn't need the feature that @kbd{rtleg} accepts
+more than two input arguments.  In that case, you can very quickly
+write a C function to compute the required two argument result:
+
+@example
+#include <mathlib.h>
+extern void crtleg(double *r, double *x, long n);
+void
+crtleg(double *r, double *x, long n)
+@{
+  double y;
+  while (n-- > 0) @{
+    y = *(x++) / r[0];
+    *(r++) *= sqrt(1. - y*y);  /* result overwrites r input */
+  @}
+@}
+@end example
+
+You can now use a @kbd{PROTOTYPE} comment to have @kbd{codger}
+generate the C wrapper code to make your @kbd{crtleg} function
+callable from interpreted code.  However, you also need to write an
+interpreted wrapper that will fill in the correct length @kbd{n}, and
+ensure that the @kbd{r} and @kbd{x} arguments really do have that
+length, and are conformable arrays.  You do all of that in your
+interface definition file, @file{rtleg.i}, which might look like this:
+
+@example
+plug_in, "rtleg";
+func rtleg(r, x)
+@{
+  /* convert r to double, broadcast it to result shape */
+  r = double(r) + array(0.0, dimsof(r, x));
+  /* broadcast x to result shape, blow up if not conformable */
+  x += 0.*r;
+  _crtleg, r, x, numberof(r);
+  return r;
+@}
+extern _crtleg;
+/* PROTOTYPE
+   void crtleg(double array r, double array x, long n)
+ */
+@end example
+
+When you use this approach, your C source code makes no references at
+all to yorick.  It is both an advantage and a disadvantage that you
+need to write an interpreted wrapper to handle all of the bookkeeping
+tasks to ensure that arguments have correct types, shapes, are
+conformable, and the like.  The disadvantage is that you now have to
+maintain both a compiled and an interpreted piece of code.  The
+advantage is that, as you will see in the next section, the compiled
+code for consistency and conformability checks is even more tedious
+than the interpreted code.
+
+@node Using yapi.h,  , Using PROTOTYPE, Embedding example
+@subsection Using @file{yapi.h}
+
+When you use the @kbd{PROTOTYPE} comment to generate C code wrappers,
+you cannot take advantage of many of the features of the yorick
+language.  In this example, there is no easy way to pass an
+indeterminate number of arguments to your function.  When you write
+your own C code wrapper, all such limitations disappear.  The price is
+that you need to use the yorick-specific C functions declared in
+@file{yapi.h} to interact with the intepreter.
+
+Since you no longer need an interpreted wrapper (although you might
+still choose to have one -- some tasks are easier, occasionally
+dramatically easier, in interpreted code than in compiled code), your
+inteface definition file @file{rtleg.i} becomes trivial:
+
+@example
+plug_in, "rtleg";
+extern rtleg;
+@end example
+
+But your C source becomes much more complicated:
+
+@example
+#include "yapi.h"
+#include <mathlib.h>
+extern void Y_rtleg(int argc);
+void
+Y_rtleg(int argc)
+@{
+  int iarg;
+  long i, n, dimsr[Y_DIMSIZE], dims[Y_DIMSIZE];
+  double *r, *rr, **px, *x, *a, xval;
+  int *flag, flagr;
+  if (argc < 2) y_error("rtleg needs at least two arguments");
+
+  /* get some scratch space to deal with the indeterminate
+   * argument count, this increases iarg for arguments by 1
+   */
+  px = ypush_scratch((argc-1)*(sizeof(double)+sizeof(int)), 0);
+  flag = (int *)&px[argc];
+
+  /* get r argument as double */
+  r = ygeta_d(argc, 0, dimsr);
+
+  /* first pass through remaining arguments checks they are
+   * conformable, and builds the result dimension list
+   */
+  for (flagr=0, iarg=argc-1 ; iarg>0 ; iarg--) @{
+    flagr |= flag[iarg-1] = yarg_dims(iarg, dims, dimsr);
+    if (flag[iarg-1] < 0)
+      y_errorn("rtleg argument %ld not conformable", argc-iarg);
+  @}
+
+  /* broadcast r argument to result shape if necessary */
+  if (flagr & 1) yarg_bcast(argc, dimsr);
+
+  /* second pass broadcasts all arguments to result shape
+   * and converts to type double
+   */
+  for (iarg=argc-1 ; iarg>0 ; iarg--) @{
+    if (flag[iarg-1] & 2) yarg_bcast(iarg, dimsr);
+    px[iarg-1] = ygeta_d(iarg, &n, 0);
+    flag[iarg-1] = yarg_scratch(iarg);
+    if (flag[iarg-1]) flagr = iarg;
+  @}
+
+  /* push new array and fill with reciprocal of r */
+  rr = ypush_d(dimsr);
+  for (i=0 ; i<n ; i++)
+    if (r[i] > 0.) rr[i] = 1./r[i];
+    else if (r[i] < 0.) rr[i] = -1./r[i];
+    else rr[i] = -1.;
+
+  if (flagr) @{  /* use scratch x as accumulator */
+    a = px[flagr-1];
+    for (i=0 ; i<n ; i++) @{
+      xval = a[i]*rr[i];
+      a[i] = -xval*xval;
+    @}
+  @} else @{      /* need to create accumulator on stack */
+    a = ypush_d(dimsr);
+  @}
+
+  /* compute 1 - sum((x/r)^2) */
+  for (i=0 ; i<n ; i++) a[i] += (rr[i]<0.)? 0. : 1.;
+  for (iarg=0 ; iarg<argc-1 ; iarg++) @{
+    x = px[iarg];
+    if (x == a) continue;
+    for (i=0 ; i<n ; i++) @{
+      xval = x[i]*rr[i];
+      a[i] -= xval*xval;
+    @}
+  @}
+
+  /* compute final result */
+  for (i=0 ; i<n ; i++) a[i] = r[i]*sqrt(a[i]);
+
+  /* discard overlying stack elements to leave result on top */
+  if (flagr) yarg_drop(flagr+1);
+@}
+@end example
+
+The @kbd{ypush_scratch} function enables you to create scratch space
+that is safe against asynchronous interrupt.  You have to write every
+compiled function assuming that the user will type Control-C and
+interrupt your function.  If you used @kbd{malloc} to obtain scratch
+space, and your function were asynchronously interrupted before the
+matching @kbd{free}, your routine would leak memory.  In this case,
+the scratch space is only required to cope with the fact that the
+function accepts an indeterminate number of arguments.
+
+The implementation unavoidably requires a temporary array to hold the
+reciprocal of the first argument, which is used to normalize the
+remaining arguments to prevent overflows or erronious underflows when
+the other arguments are squared.  However, there is an opportunity to
+reuse an argument array which happens to be a temporary (either
+because it is the result of an expression, or because it had to be
+type converted or broadcast) as the result.  Taking advantage of that
+optimization also costs a few additional lines of source code towards
+the end of the function.
+
+What you get for this modest complexity is an @kbd{rtleg} function
+that is equal in performance and features to the built in @kbd{abs}
+function.
 
 @comment -----------------------------------------------------------------
 
