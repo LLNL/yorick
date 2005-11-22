@@ -1,5 +1,5 @@
 /*
- * $Id: upoll.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: upoll.c,v 1.2 2005-11-22 17:36:40 dhmunro Exp $
  *
  * UNIX poll function implemented with select
  */
@@ -26,6 +26,8 @@
 #endif
 
 #ifdef HAVE_SYS_SELECT_H
+/* sys/types.h workaround for MacOS X 10.3 header bug */
+# include <sys/types.h>
 # include <sys/select.h>
 #else
 /* struct timeval should be in sys/time.h, select often there too */
