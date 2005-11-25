@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.4 2005-11-13 23:28:49 dhmunro Exp $
+ * $Id: task.c,v 1.5 2005-11-25 22:18:45 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -99,8 +99,7 @@ static int caughtTask= 0;
 /* stuff to implement set_idler */
 extern BuiltIn Y_set_idler;
 Function *y_idler_function= 0;
-extern int y_idler_flag;
-int y_idler_flag = 0;
+static int y_idler_fault = 0;
 
 /*--------------------------------------------------------------------------*/
 
@@ -371,6 +370,7 @@ y_on_idle(void)
 {
   int more_work = 0;
   int pending_stdin = 0;
+  int idler_fault = 0;
 
   if (!taskCodeInit) {
     taskCode[0].Action = &Eval;
@@ -396,7 +396,11 @@ y_on_idle(void)
           y_idler_function) {
         Function *f = y_idler_function;
         y_idler_function = 0;
-        y_idler_flag = 0;
+        /* this does not really detect when the after_error function
+         * itself has completed - a catch inside after_error can get
+         * complicated and probably defeat this loop detection attempt
+         */
+        idler_fault = y_idler_fault;
         PushTask(f);
         Unref(f);
       }
@@ -405,6 +409,7 @@ y_on_idle(void)
 
   if (nTasks+caughtTask) DoTask();
   if (ym_state & Y_QUITTING) goto die_now;
+  if (idler_fault) y_idler_fault = 0;
   more_work = (nTasks+caughtTask || nYpIncludes || nYpInputs ||
                pending_stdin || y_idler_function);
 
@@ -886,7 +891,8 @@ static char *includeFile= 0;
 static long mainIndex= -1;
 Instruction *yErrorPC= 0;   /* for dbup function in debug.c */
 
-static void ypush_catchmsg(char *tmsg);
+static void yset_catchmsg(char *tmsg);
+static long after_index = -1;
 
 void
 YError(const char *msg)
@@ -900,6 +906,8 @@ YError(const char *msg)
   Instruction *pcUp= yErrorPC;
   int category;
   int no_abort = y_do_not_abort;
+  int no_print = 0;
+  char tmsg[84];
 
   int recursing= inYError;
   inYError++;
@@ -911,13 +919,6 @@ YError(const char *msg)
 
   ym_state &= ~Y_PENDING;
   ym_dbenter = 0;
-
-  if (y_idler_function && !y_idler_flag) {
-    /* remove any idler on error - catch can reset if desired */
-    Function *f= y_idler_function;
-    y_idler_function= 0;
-    Unref(f);
-  }
 
   if (recursing>8 || yImpossible>8) {
     YputsErr("****FATAL**** YError looping -- quitting now");
@@ -940,6 +941,29 @@ YError(const char *msg)
     caughtTask= 0;
     YputsErr("****OOPS**** error on read resume or throw/catch");
   }
+
+  if (y_idler_function) {
+    /* remove any idler on error - after_error can reset if desired */
+    Function *f= y_idler_function;
+    y_idler_function= 0;
+    Unref(f);
+  }
+  if (after_index < 0) after_index = yget_global("after_error", 0L);
+  if (!y_idler_fault
+      && globTab[after_index].ops == &dataBlockSym
+      && globTab[after_index].value.db->ops == &functionOps) {
+    /* if after_error function present, make it the idler */
+    y_idler_function = (Function *)Ref(globTab[after_index].value.db);
+    y_idler_fault = 1;
+    if (msg) strncpy(tmsg, msg, 80), tmsg[80] = '\0';
+    else tmsg[0] = '\0';
+  } else {
+    y_idler_fault = 0;
+    tmsg[0] = '\0';
+  }
+
+  /* this is a nasty hack for mpy and after_error */
+  no_print = (msg && !strcmp(msg, ".SYNC."));
 
   func= (((ym_state&Y_RUNNING)||no_abort) && !recursing &&
          pcUp!=&taskCode[2])? FuncContaining(pcDebug) : 0;
@@ -986,7 +1010,7 @@ YError(const char *msg)
   strcat(yErrorMsg, ") ");
   if (!pcUp || recursing)
     strncat(yErrorMsg, msg, 80);
-  YputsErr(yErrorMsg);
+  if (!no_print) YputsErr(yErrorMsg);
 
   if (recursing) {
     func= 0;
@@ -1003,7 +1027,7 @@ YError(const char *msg)
   ym_suspc = 0;
   if (yg_blocking==3 || yg_blocking==4) yg_blocking = 0;
 
-  if (func) {
+  if (func && !no_print) {
     /* Try to find the source code for this function.  */
     long index= func->code[0].index;
     if (mainIndex<0) mainIndex= Globalize("*main*", 0L);
@@ -1041,15 +1065,11 @@ YError(const char *msg)
     }
 
     if (y_idler_function) {
-      /* special idler function will forge on after error message */
-      char tmsg[84];
-      strncpy(tmsg, msg, 80);
-      tmsg[80] = '\0';
+      /* special after_error function will get control */
       ResetStack(1);
       yr_reset();
       yg_got_expose();
       p_clr_alarm(0, 0);
-      ypush_catchmsg(tmsg);
     } else if (!yBatchMode && !pcUp && (!yAutoDebug || yDebugLevel>1)) {
       if (yDebugLevel>1) {
         YputsErr(" To enter recursive debug level, type <RETURN> now");
@@ -1063,8 +1083,9 @@ YError(const char *msg)
   } else {
     /* Clear the stack back to the most recent debugging level,
      * or completely clear if aborting a read() operation.  */
-    if (recursing<5) ResetStack(y_read_prompt!=0);
-    else {
+    if (recursing<5) {
+      ResetStack(y_read_prompt!=0);
+    } else {
       YputsErr("****SEVERE**** YError unable to reset stack -- "
                "probably lost variables");
       sp= spBottom;
@@ -1088,6 +1109,9 @@ YError(const char *msg)
     ResetStack(0);
     ym_state|= Y_QUITTING;
   }
+
+  /* set catch_message variable for after_error function */
+  if (y_idler_function) yset_catchmsg(tmsg);
 
   /* Go back to the main loop.  */
   inYError= 0;
@@ -1188,6 +1212,7 @@ void Y_error(int nArgs)
   else YError("<interpreted error function called>");
 }
 
+/* FIXME: this shold also turn off on_stdin event handling */
 void Y_batch(int nArgs)
 {
   int flag= 2;
@@ -1262,7 +1287,7 @@ static Catcher *CatchScan(const char *msg, int category)
     PushIntValue(1);
 
     /* set catch_message variable (after stack cleared) */
-    ypush_catchmsg(tmsg);
+    yset_catchmsg(tmsg);
 
     return &catchers[i];
 
@@ -1272,7 +1297,7 @@ static Catcher *CatchScan(const char *msg, int category)
 }
 
 static void
-ypush_catchmsg(char *tmsg)
+yset_catchmsg(char *tmsg)
 {
   Array *array;
   long cmsg = Globalize("catch_message", 0L);
@@ -1321,21 +1346,18 @@ void Y_catch(int nArgs)
 void Y_set_idler(int nArgs)
 {
   Function *f;
-  if (nArgs>2)
-    YError("set_idler function takes zero, one, or two arguments");
+  if (nArgs>1)
+    YError("set_idler function takes zero or one arguments");
 
   if (nArgs>0 && YNotNil(sp-nArgs+1)) {
-    int flag = (nArgs>1)? YGetInteger(sp) : 0;
     f = (Function *)sp[1-nArgs].value.db;
     if (sp[1-nArgs].ops!=&dataBlockSym || f->ops!=&functionOps)
       YError("expecting function as argument");
     y_idler_function = Ref(f);
-    y_idler_flag = flag;
 
   } else if (y_idler_function) {
     f = y_idler_function;
     y_idler_function = 0;
-    y_idler_flag = 0;
     Unref(f);
   }
 }

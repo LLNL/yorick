@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.4 2005-11-13 23:28:49 dhmunro Exp $
+ * $Id: std.i,v 1.5 2005-11-25 22:19:05 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3513,7 +3513,10 @@ extern catch;
      you completely during operations involving nested levels of
      include files.
 
-   SEE ALSO: error
+     In some cases, after_error is a more appropriate way to recover
+     from errors.
+
+   SEE ALSO: error, after_error
  */
 
 extern batch;
@@ -3533,12 +3536,11 @@ extern batch;
      function) rather than entering debug mode.  Also, any attempt to
      read from the keyboard is an error.
 
-   SEE ALSO: process_argv, get_argv, set_idler
+   SEE ALSO: process_argv, get_argv, set_idler, after_error
  */
 
 extern set_idler;
 /* DOCUMENT set_idler, idler_function
-         or set_idler, idler_function, no_reset
      sets the idler function to IDLER_FUNCTION.  Instead of waiting
      for keyboard input when all its tasks are finished, the interpreter
      will invoke IDLER_FUNCTION with no arguments.  The idler function
@@ -3546,12 +3548,23 @@ extern set_idler;
      after one call to the idler.  Of course, an idler is free to call
      set_idler again before it returns, which will have the effect of
      calling that function in a loop.
-     If NO_RESET is present and non-zero, an error will not remove
-     the idler function; instead of entering debug mode, the idler
-     function will be called after an error.  After an error (which
-     you must arrange to detect), catch_message will contain the
-     error message, which was also printed.
-   SEE ALSO: batch, maybe_prompt, after
+   SEE ALSO: batch, maybe_prompt, after, after_error
+ */
+
+local after_error;
+/* DOCUMENT after_error = error_handler_func
+     If the variable AFTER_ERROR is set to an interpreted function
+     with no parameters, that function will be invoked after an error,
+     before the next prompt, instead of entering or offering to enter
+     debug mode.  The error message will be printed, and also will be
+     stored in the catch_message variable.  A fault during the execution
+     of the after_error function will not invoke after_error, but
+     otherwise after_error is persistent (unlike set_idler).  An error
+     resets any functions scheduled using after or set_idler, so the
+     after_error function must reschedule these if necessary.
+     The catch function is a more appropriate way to recover from
+     some errors.
+   SEE ALSO: set_idler, catch, after
  */
 
 extern maybe_prompt;
@@ -3697,7 +3710,7 @@ extern after;
      functions.  ON_ELAPSE is called with no arguments; it must be an
      intepreted function, and it will be invoked via the name it was
      defined with (in its func statement).
-   SEE ALSO: spawn, set_idler
+   SEE ALSO: spawn, set_idler, after_error
 */
 
 /*--------------------------------------------------------------------------*/

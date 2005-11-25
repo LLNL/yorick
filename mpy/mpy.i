@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.4 2005-11-14 00:32:23 dhmunro Exp $
+ * $Id: mpy.i,v 1.5 2005-11-25 22:19:05 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -13,9 +13,6 @@ SRCS = mpy.c
 LIB = mpy
 DEPLIBS =
 */
-
-/* mp_debug= 1; */
-/* system,"/bin/hostname"; */
 
 if (is_void(plug_in)) plug_in, "mpy";
 
@@ -200,7 +197,6 @@ func mp_task(task)
 
         func TASK(arg1, arg2, ...)
         {
-          if (catch(-1)) mp_abort;
           mp_start, TASK;
           if (mp_rank) {
             ...TASK will be invoked as a subroutine with no    ...
@@ -218,14 +214,6 @@ func mp_task(task)
             ...results from all other processes.  when the rank 0...
             ...process decides the task is finished it returns a ...
             ...result (or has side effects) which the user wants ...
-            ...the catch line is optional; if not present an     ...
-            ...error in the rank 0 process will leave the other  ...
-            ...processes running.  if the other processes        ...
-            ...might run communicating with each other and       ...
-            ...meaninglessly consuming resources, you should     ...
-            ...worry about this; if the other processes will     ...
-            ...halt without continuing messages from rank 0      ...
-            ...you don't need to bother with this                ...
             return significant_value;
           }
         }
@@ -240,12 +228,12 @@ func mp_task(task)
      interactive action (e.g.- a #include or an unregistered function
      which calls the registered TASK function).
 
-     The mp_include, mp_cd, and mp_pool functions are initially the only
-     registered tasks; other tasks are generally defined and registered
-     in source files included as startup files for other packages or by
-     means of mp_include.
+     The mp_include, mp_cd, mp_set_debug, and mp_pool functions are
+     initially the only registered tasks; other tasks are generally
+     defined and registered in source files included as startup files
+     for other packages or by means of mp_include.
 
-   SEE ALSO: mp_include, mp_cd, mp_pool, mp_rank, mp_start, mp_abort, catch
+   SEE ALSO: mp_include, mp_cd, mp_pool, mp_rank, mp_start, mp_set_debug
  */
 {
   if (!is_func(task))
@@ -285,25 +273,20 @@ func mp_start(task)
 
 /* this function is now never called, remove it eventually */
 func mp_abort(void)
-/* DOCUMENT if (catch(-1)) mp_abort
+/* xxDOCUMENT if (catch(-1)) mp_abort
      must be the first line of any function registered with mp_task.
      This clears all pending messages, then blows up with an error,
      so it does not return to the calling task.
+     THIS IS OBSOLETE -- DO NOT USE IN NEW CODE
    SEE ALSO: mp_task, mp_start
  */
 {
-  if (mp_debug)
-    write,"(**mp_abort) rank "+print(mp_rank)(1)+" caught "+catch_message;
-  if (catch_message!=".SYNC.") mpy_sync, catch_message;
-  if (mp_debug)
-    write,"(**mp_abort) rank "+print(mp_rank)(1)+" done with mpy_sync";
-  if (mp_rank) error, ".SYNC.";
-  else error, "(bailing out of parallel task)";
+  error, "(this function removed in this version of mpy)";
 }
 
 /* temporary hack so that existing task code works properly
  * in future, catch no longer necessary in task functions
- * - potentially this breaks code that was using catch for other reasons
+ * - this hack breaks code that was using catch for other reasons
  */
 func mp_catch(x) { return 0; }
 if (is_void(_orig_catch)) { _orig_catch = catch; catch = mp_catch; }
@@ -312,32 +295,11 @@ if (is_void(_orig_catch)) { _orig_catch = catch; catch = mp_catch; }
  * when Yorick is finished with all its tasks.  This idler is intended
  * for use by non-rank 0 processes.  It's purpose is to catch any errors
  * and attempt to restart the virtual machine by alerting the rank 0
- * process (which in turn will try to generate errors in the others).  */
+ * process (which in turn will try to generate errors in the others).
+ */
 func mpy_idler
 {
   batch, 1;
-  why = _mpy_catch;
-  _mpy_catch = 1;
-  if (is_void(_mpy_count)) _mpy_count = 0;
-  else _mpy_count++;
-  if (_mpy_count < 10) set_idler, mpy_idler, 1;
-  if (why) {
-    if (why == 2) {  /* this used to be mp_abort */
-      if (mp_debug)
-        write,"(**mp_idlera) rank "+print(mp_rank)(1)+" caught "+catch_message;
-      if (catch_message!=".SYNC.") mpy_sync, catch_message;
-      if (mp_debug)
-        write,"(**mp_idlera) rank "+print(mp_rank)(1)+" done with mpy_sync";
-      if (mp_rank) error, ".SYNC.";
-      else error, "(bailing out of parallel task)";
-    }
-    if (mp_debug)
-      write,"(**mpy_idler) rank "+print(mp_rank)(1)+" caught "+catch_message;
-    if (catch_message!=".SYNC.") mpy_sync, catch_message;
-    if (mp_debug)
-      write,"(**mpy_idler) rank "+print(mp_rank)(1)+" done with mpy_sync";
-    return;
-  }
   if (mp_debug)
     write,"rank "+print(mp_rank)(1)+" at sync in mpy_idler";
   mpy_sync;
@@ -346,11 +308,33 @@ func mpy_idler
   if (mp_debug)
     write,"rank "+print(mp_rank)(1)+" executing "+task;
   task= symbol_def(task);
-  _mpy_catch = 2;
   task;
-  _mpy_catch = [];
   _mpy_count = 0;
+  set_idler, mpy_idler;
 }
+_mpy_count = 0;
+
+func mpy_after_error
+{
+  if (mp_debug) write,"(**mpy_after_error) rank " +
+    print(mp_rank)(1) + " caught " + catch_message;
+  if (catch_message!=".SYNC.") mpy_sync, catch_message;
+  if (mp_debug)
+    write,"(**mpy_after_error) rank "+print(mp_rank)(1)+" done with mpy_sync";
+  if (mp_rank) {
+    if (_mpy_count++ < 10) {
+      set_idler, mpy_idler;
+    } else {
+      extern after_error;
+      after_error = [];
+      error,"(FATAL) rank " + print(mp_rank)(1) + " quitting on fault loop";
+    }
+  } else {
+    write, "ERROR (rank 0 bailing out of parallel task)";
+    if (is_func(mpy_recovery)) mpy_recovery;
+  }
+}
+after_error = mpy_after_error;
 
 func mp_include(filename)
 /* DOCUMENT mp_include, filename
@@ -370,7 +354,6 @@ func mp_include(filename)
    SEE ALSO: mp_task, mp_rank, mp_cd
  */
 {
-  if (catch(-1)) mp_abort;
   mp_start, mp_include;
   if (mp_rank) {
     filename= mp_bcast(0);
@@ -401,7 +384,6 @@ func mp_cd(dirname)
    SEE ALSO: mp_task, mp_rank, mp_include
  */
 {
-  if (catch(-1)) mp_abort;
   mp_start, mp_cd;
   if (mp_rank) {
     dirname= mp_bcast(0);
@@ -415,6 +397,34 @@ func mp_cd(dirname)
 }
 
 mp_task, mp_cd;
+
+func mp_set_debug(onoff)
+/* DOCUMENT mp_set_debug, onoff
+
+     Set mp_debug to ONOFF on all ranks.  ONOFF non-zero turns on
+     copious debugging messages, printed on stdout, with all ranks
+     jumbled together.
+
+     The mp_set_debug function is registered as a parallel task, so
+     it may only be invoked interactively from the rank 0 process
+     or from another file included there (see mp_task for a more
+     elaborate description).
+
+   SEE ALSO: mp_task, mp_rank, mp_include
+ */
+{
+  mp_start, mp_set_debug;
+  if (mp_rank) {
+    onoff = mp_bcast(0);
+  } else {
+    onoff = !(!onoff);
+    mp_bcast, 0, onoff;
+  }
+  extern mp_debug;
+  mp_debug = onoff;
+}
+
+mp_task, mp_set_debug;
 
 /* ------------------------------------------------------------------------ */
 
@@ -512,7 +522,6 @@ func mp_pool(_p_ntasks, _mp_sow, _mp_work, _mp_reap, _mp_work0)
    SEE ALSO: mp_task, mp_partition, mp_prange
  */
 {
-  if (catch(-1)) mp_abort;
   mp_start, mp_pool;
 
   if (!mp_rank) {                                       /* MASTER */
@@ -695,10 +704,13 @@ func get_command_line(void)
     }
     if (mp_rank) {
       batch, 1;
-      set_idler, mpy_idler, 1;
-      grow, command_line, ["-q"];
+      set_idler, mpy_idler;
+      if (numberof(command_line) && noneof(command_line=="-q"))
+        grow, command_line, ["-q"];
     } else if (mp_size) {
       write, "MPI started with "+print(mp_size)(1)+" processes.";
+      if (numberof(command_line) && anyof(command_line=="-debug"))
+        mp_set_debug, 1;
     }
   } else {
     command_line= command_line(list);

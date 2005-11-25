@@ -1,5 +1,5 @@
 /*
- * $Id: testmp.i,v 1.1 2005-09-18 22:05:00 dhmunro Exp $
+ * $Id: testmp.i,v 1.2 2005-11-25 22:19:05 dhmunro Exp $
  * Small test suite for MPY testing.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -29,7 +29,6 @@ func testmp(npass, nfan)
    SEE ALSO: testpool
  */
 {
-  if (catch(-1)) mp_abort;
   mp_start, testmp;
 
   mess1= "The rain in spain falls mainly in the plain.";
@@ -287,7 +286,6 @@ func testpool(ntrips)
 
 func testsync(void)
 {
-  if (catch(-1)) mp_abort;
   mp_start, testsync;
   if (!mp_rank) {
     line= rdline(prompt=" (1) synchronous send test -- hit RET to receive");
