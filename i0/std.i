@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.5 2005-11-25 22:19:05 dhmunro Exp $
+ * $Id: std.i,v 1.6 2005-11-26 20:17:56 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3618,20 +3618,47 @@ extern funcdef;
      autoload mechanisms.  Generally, you will have to design
      an interpreted toolkit somewhat differently if it is to be
      invoked by funcdef.  For example, funcdef does not allow
-     you to set variables as in x=value, but you can easily
-     create functions to do that:
-       func set_value(&var, value) { var = value; }
-     then use funcdef to create a function which sets the value
-     with an expression like this:
-       funcdef("set_value x value")
+     you to set variables as in x=value, but you can use the
+     funcset (or similarly designed) function to set variables
+     like this:
+       funcdef("funcset x value")
 
      Do not attempt to use funcdef to input vast amounts of data.
      As a rule of thumb, if your funcdef strings have more than a
      couple of dozen tokens, you probably haven't thought hard
      enough about what you are doing.
 
-   SEE ALSO: include, spawn
+   SEE ALSO: include, spawn, funcset
 */
+
+func funcset(&v1,x1,&v2,x2,&v3,x3,&v4,x4,&v5,x5,&v6,x6,&v7,x7,&v8,x8)
+/* DOCUMENT funcset var1 val1 var2 val2 ...
+ *
+ *   Equivalent to
+ *     var1=val1; var2=val2; ...
+ *
+ *   This function it is not useful for yorick programs.  It is intended
+ *   to be used to create functions with funcdef that set variable values.
+ *
+ *   Handles at most 8 var/val pairs.
+ *   As a special case, if given an odd number of arguments, funcset
+ *   sets the final var to [], e.g.-
+ *     funcset var1 12.34 var2
+ *   is equivalent to
+ *     var1=12.34; var2=[];
+ *
+ * SEE ALSO: funcdef
+ */
+{
+  v1 = x1;
+  if (is_void(x1)) return; else v2 = x2;
+  if (is_void(x2)) return; else v3 = x3;
+  if (is_void(x3)) return; else v4 = x4;
+  if (is_void(x4)) return; else v5 = x5;
+  if (is_void(x5)) return; else v6 = x6;
+  if (is_void(x6)) return; else v7 = x7;
+  if (is_void(x7)) return; else v8 = x8;
+}
 
 extern spawn;
 /* DOCUMENT process = spawn(argv, on_stdout)
@@ -3682,8 +3709,58 @@ extern spawn;
 
      Note: funcdef may be extremely useful for writing ON_STDOUT.
 
-   SEE ALSO: popen, system, suspend, funcdef, after
+   SEE ALSO: popen, system, suspend, funcdef, after, spawn_callback
 */
+
+func spawn_callback(&prev, line)
+/* DOCUMENT spawn_callback -->
+            func on_stdout(msg) {
+              extern fragment; <or otherwise manage fragment>
+              lines = spawn_callback(fragment, msg);
+              for (i=1 ; i<=numberof(lines) ; i++) {
+                line = lines(i);
+                if (!line) {
+                  <handle process has died>
+                } else {
+                  <handle complete line emitted by process>
+                }
+              }
+            }
+     Here is a template for a callback function to be passed to spawn.
+     The spawn_callback function buffers any fragmentary lines,
+     delivering only complete lines as output.  Note that FRAGMENT
+     must somehow be managed between calls to on_stdout; it should
+     be intialized to [] before calling spawn.
+
+   SEE ALSO: spawn
+ */
+{
+  dead = !line;  /* spawned process has died */
+
+  /* must be prepared for process output to dribble back a fraction of
+   * a line at a time, or multiple lines at a time
+   * prev holds the most recent incomplete line,
+   *   assuming the the remainder will arrive in future callbacks
+   */
+  if (is_void(prev)) prev = string(0);
+  prev += line;
+  selist = strword(prev, "\r\n", 256);
+  line = strpart(prev, selist);
+  line = line(where(line));
+  n = numberof(line);
+  if (n && selist(2*n)==strlen(prev)) {
+    /* final character of input not \n, store fragment in prev */
+    prev = line(0);
+    line = (n==1)? [] : line(1:-1);
+  } else {
+    prev = string(0);
+  }
+
+  if (dead) {
+    if (is_void(line) || !line(0)) grow, line, [string(0)];
+  }
+  return line;
+}
 
 extern suspend;
 extern resume;
