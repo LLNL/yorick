@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.3 2005-11-20 22:19:23 dhmunro Exp $
+ * $Id: yapi.h,v 1.4 2005-11-26 20:04:43 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -335,21 +335,31 @@ return.
 */
 PLUG_API long yget_ref(int iarg);
 /*
-You can create a list on the top of the stack with ypush_list.  Its
-argument n is the number of elements at the top of the stack to use as
-list elements; they disappear form the stack before the resulting list
-appears, like the interpreted _lst function.  If its argument n<0,
-ypush_list catenates the top -n stack elements like _cat.  If n==0,
-ypush_list creates an empty list.  The ypush_car function pushes the
-n-th car of the list at iarg onto the top of the stack, while yput_car
-replaces the n-th car of the list at iarg with the object at jarg.  If
-jarg<0, -jarg elements of the list starting at n are removed.  Finally,
-yarg_nlist returns the length of the list at iarg.
+Six API functions manipulate lists:
+
+ypush_list replaces the n elements at the top of the stack by a single
+  stack element which is a list containing them, like the _lst
+  interpreted function.  If n<0, -n elements are replaced but like
+  the _cat interpreted function, namely, any lists are concatenated
+  rather than becoming single list elements.  Finally, if n==0, ypush_list
+  is the same as ypush_nil.
+yarg_nlist returns the length of the list iarg.
+ypush_car pushes the n-th car of iarg onto the top of the stack.
+yput_car sets the n-th car of iarg to jarg.
+ypush_cdr pushes the n-th cdr of iarg onto the top of the stack, if n>=0.
+  If n==-1, ypush_cdr pushes a copy of the whole list, like _cpy.
+yput_cdr sets the n-th cdr of iarg to jarg.
+
+If iarg is not a list or nil, yarg_list returns -1, and ypush_car, yput_car,
+ypush_cdr, and yput_cdr return non-zero.  The yput_cdr function also returns
+non-zero if jarg is not a list or nil.
 */
 PLUG_API void ypush_list(int n);
-PLUG_API int ypush_car(int iarg, int n);
-PLUG_API int yput_car(int iarg, int n, int jarg);
 PLUG_API long yarg_nlist(int iarg);
+PLUG_API int ypush_car(int iarg, long n);
+PLUG_API int yput_car(int iarg, long n, int jarg);
+PLUG_API int ypush_cdr(int iarg, long n);
+PLUG_API int yput_cdr(int iarg, long n, int jarg);
 /*
 Many packages need to create persistent objects to store state
 information for future calls.  In order to do that, you must create an

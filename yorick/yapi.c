@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.2 2005-11-19 06:59:03 dhmunro Exp $
+ * $Id: yapi.c,v 1.3 2005-11-26 20:04:43 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -196,18 +196,6 @@ yarg_scratch(int iarg)
     return 2;
   }
   return -1;
-}
-
-int
-yarg_list(int iarg)
-{
-  if (iarg >= 0) {
-    Symbol *s = sp - iarg;
-    if (s->ops==&referenceSym) s = &globTab[s->index];
-    if (s->ops == &dataBlockSym)
-      return s->value.db->ops == &listOps;
-  }
-  return 0;
 }
 
 static void *ygeta_array(int iarg, Operations **pops, Member **ptype);
@@ -1174,31 +1162,6 @@ yget_ref(int iarg)
   else
     return -1;
 }
-
-/*
-You can create a list on the top of the stack with ypush_list.  Its
-argument n is the number of elements at the top of the stack to use as
-list elements; they disappear form the stack before the resulting list
-appears, like the interpreted _lst function.  If its argument n<0,
-ypush_list catenates the top -n stack elements like _cat.  If n==0,
-ypush_list creates an empty list.  The ypush_car function pushes the
-n-th car of the list at iarg onto the top of the stack, while yput_car
-replaces the n-th car of the list at iarg with the object at jarg.  If
-jarg<0, -jarg elements of the list starting at n are removed.  Finally,
-yarg_nlist returns the length of the list at iarg.
-*/
-PLUG_API void ypush_list(int n);
-PLUG_API int ypush_car(int iarg, int n);
-PLUG_API int yput_car(int iarg, int n, int jarg);
-PLUG_API long yarg_nlist(int iarg);
-
-/*
-The ypush_func function is the compiled version of the interpreted
-funcdef function; the resulting anonymous function is pushed onto the
-top of the stack.  If the funcdef string cannot be parsed, ypush_func
-returns non-zero and pushes nil [] onto the stack.
-*/
-PLUG_API int ypush_func(char *funcdef);
 
 typedef struct y_userinst_t y_userinst_t;
 

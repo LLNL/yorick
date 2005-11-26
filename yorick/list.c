@@ -1,5 +1,5 @@
 /*
- * $Id: list.c,v 1.1 2005-09-18 22:04:07 dhmunro Exp $
+ * $Id: list.c,v 1.2 2005-11-26 20:04:43 dhmunro Exp $
  * Rudimentary list data type for Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -11,7 +11,7 @@
 #include "ydata.h"
 #include "defmem.h"
 
-extern BuiltIn Y__lst, Y__cat, Y__cpy, Y__car, Y__cdr, Y__len;
+extern BuiltIn Y__lst, Y__cat, Y__cpy, Y__car, Y__cdr, Y__len, Y_is_list;
 
 /* Implement lists as a foreign Yorick data type.  */
 typedef struct List_Cell List_Cell;
@@ -44,15 +44,15 @@ static MemryBlock listBlock= {0, 0, sizeof(List_Cell),
 
 List_Cell *NewList_Cell(Symbol *sym)
 {
-  List_Cell *list_cell= NextUnit(&listBlock);
-  list_cell->references= 0;
-  list_cell->ops= &listOps;
-  list_cell->next= 0;
+  List_Cell *list_cell = NextUnit(&listBlock);
+  list_cell->references = 0;
+  list_cell->ops = &listOps;
+  list_cell->next = 0;
   /* as in ydata.c:PushCopy */
-  list_cell->sym.ops= sym->ops;
-  if (sym->ops==&dataBlockSym) list_cell->sym.value.db= Ref(sym->value.db);
-  else list_cell->sym.value= sym->value;
-  list_cell->sym.index= 1000000000;  /* for stack use only, not List_Cell */
+  list_cell->sym.ops = sym->ops;
+  if (sym->ops==&dataBlockSym) list_cell->sym.value.db = Ref(sym->value.db);
+  else list_cell->sym.value = sym->value;
+  list_cell->sym.index = 1000000000;  /* for stack use only, not List_Cell */
   return list_cell;
 }
 
@@ -81,159 +81,285 @@ void FreeList_Cell(void *list)  /* ******* Use Unref(list) ******* */
   }
 }
 
-void Y__lst(int nArgs)
+void
+ypush_list(int n)
 {
-  Symbol *s= sp-nArgs+1;
-  List_Cell *list= 0;
-  if (nArgs<1) YError("_lst function needs at least one argument");
-  do {
-    /* actually, could make keyword sytax produce an alist... */
-    if (!s->ops) YError("unexpected keyword argument in _lst");
-    if (s->ops==&referenceSym) ReplaceRef(s);
-    if (s->ops==&dataBlockSym && s->value.db->ops==&lvalueOps)
-      FetchLValue(s->value.db, s);
-    if (!list)
-      list= PushDataBlock(NewList_Cell(s));
-    else
-      list= list->next= NewList_Cell(s);
-  } while (++s<sp);
-}
-
-void Y__cat(int nArgs)
-{
-  Symbol *s= sp-nArgs+1;
-  List_Cell *list= 0;
-  int is_list;
-  if (nArgs<1) YError("_cat function needs at least one argument");
-  do {
-    /* actually, could make keyword sytax produce an alist... */
-    if (!s->ops) YError("unexpected keyword argument in _cat");
-    if (YNotNil(s)) {
-      is_list= 0;
-      if (s->ops==&dataBlockSym) {
-        if (s->value.db->ops==&lvalueOps) FetchLValue(s->value.db, s);
-        else if (s->value.db->ops==&listOps) is_list= 1;
+  if (n) {
+    int cat = (n<0);
+    int is_list = 0;
+    List_Cell *list = 0;
+    Symbol *s;
+    if (cat) n = -n;
+    for (s=sp-n+1 ; n ; s++,n--) {
+      /* actually, could make keyword sytax produce an alist... */
+      if (!s->ops) y_error("unexpected keyword argument in _lst or _cat");
+      if (s->ops==&referenceSym) ReplaceRef(s);
+      if (s->ops==&dataBlockSym && s->value.db->ops==&lvalueOps)
+        FetchLValue(s->value.db, s);
+      if (cat) {
+        if (s->ops == &dataBlockSym) {
+          if (s->value.db==&nilDB) continue;
+          is_list = (s->value.db->ops == &listOps);
+        } else {
+          is_list = 0;
+        }
       }
       if (!list) {
-        list= PushDataBlock(is_list? Ref(s->value.db) :
-                            (DataBlock *)NewList_Cell(s));
+        sp[1].ops = &dataBlockSym;
+        if (is_list)
+          sp[1].value.db = Ref(s->value.db);
+        else
+          sp[1].value.db = (DataBlock *)NewList_Cell(s);
+        list = (List_Cell *)sp[1].value.db;
+        sp++;
+      } else if (is_list) {
+        list = list->next = (List_Cell *)Ref(s->value.db);
       } else {
-        list= list->next=
-          is_list? (List_Cell *)Ref(s->value.db) : NewList_Cell(s);
+        list = list->next = NewList_Cell(s);
       }
-      if (is_list) while (list->next) list= list->next;
+      if (is_list) while (list->next) list = list->next;
     }
-    s++;
-  } while (--nArgs);
-  if (!list) PushDataBlock(RefNC(&nilDB));
-}
-
-void Y__cpy(int nArgs)
-{
-  Symbol *s= sp-nArgs+1;
-  long i= -1;
-  if (nArgs==2 && YNotNil(sp)) i= YGetInteger(sp);
-  else if (nArgs!=1) YError("_cpy function takes one or two arguments");
-  if (!YNotNil(s) || i==0) {
-    PushDataBlock(RefNC(&nilDB));
+    if (cat && !list) ypush_nil();
   } else {
-    List_Cell *list, *copy;
-    if (s->ops!=&dataBlockSym || s->value.db->ops!=&listOps)
-      YError("first argument to _cpy must be a list or nil");
-    list= (List_Cell *)s->value.db;
-    copy= PushDataBlock(NewList_Cell(&list->sym));
-    while ((list= list->next) && --i)
-      copy= copy->next= NewList_Cell(&list->sym);
+    ypush_nil();
   }
 }
 
-void Y__car(int nArgs)
+void
+Y__lst(int argc)
 {
-  Symbol *s= sp-nArgs+1;
-  List_Cell *list;
-  int is_db;
-  long i= 1;
-  if (nArgs<1 || nArgs>3)
-    YError("_car function takes one, two, or three arguments");
-  if (nArgs>=2 && YNotNil(s+1)) i= YGetInteger(s+1);
-  if (!s->ops) YError("unexpected keyword argument in _car");
-  if (s->ops==&referenceSym) ReplaceRef(s);
-  if (s->ops!=&dataBlockSym || s->value.db->ops!=&listOps)
-      YError("first argument to _car must be a list");
-  list= (List_Cell *)s->value.db;
-  if (i<=0) YError("no such list item in _car");
-  while (list && --i) list= list->next;
-  if (!list) YError("no such list item in _car");
-  /* result is always original value */
-  is_db= PushCopy(&list->sym);
-  if (nArgs==3) {
-    /* set new item value for this cell */
-    if (is_db) {
-      list->sym.ops= &intScalar;
-      Unref(list->sym.value.db);
+  if (argc<1) y_error("_lst function needs at least one argument");
+  ypush_list(argc);
+}
+
+void
+Y__cat(int argc)
+{
+  if (argc<1) y_error("_cat function needs at least one argument");
+  ypush_list(-argc);
+}
+
+void
+Y__cpy(int argc)
+{
+  Symbol *s= sp-argc+1;
+  long n = -1;
+  if (argc==2 && !yarg_nil(0)) n = ygets_l(0);
+  else if (argc!=1) y_error("_cpy function takes one or two arguments");
+  if (!n || yarg_nil(argc-1)) {
+    ypush_nil();
+  } else {
+    if (n < 0) n = 0;
+    if (ypush_cdr(argc-1, -n-1))
+      y_error("first argument to _cpy must be a list or nil");
+  }
+}
+
+static List_Cell *yl_nthcdr(List_Cell *list, long n);
+
+static List_Cell *
+yl_nthcdr(List_Cell *list, long n)
+{
+  List_Cell *next = 0;
+  if (n > 0) {
+    while (list && --n) list = list->next;
+    if (list) next = list->next;
+  } else {
+    next = list;
+  }
+  return next;
+}
+
+int
+ypush_car(int iarg, long n)
+{
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops == &referenceSym) s = &globTab[s->index];
+    if (s->ops==&dataBlockSym && s->value.db->ops==&listOps) {
+      if (n > 0) {
+        List_Cell *cell = yl_nthcdr((List_Cell *)s->value.db, n-1);
+        if (cell) {
+          if (cell->sym.ops == &dataBlockSym)
+            sp[1].value.db = Ref(cell->sym.value.db);
+          else
+            sp[1].value = cell->sym.value;
+          sp[1].ops = cell->sym.ops;
+          sp++;
+          return 0;
+        }
+      }
+      return 2;
     }
-    s+= 2;
-    if (s->ops==&referenceSym) ReplaceRef(s);
-    if (s->ops==&dataBlockSym && s->value.db->ops==&lvalueOps)
-      FetchLValue(s->value.db, s);
-    if (s->ops==&dataBlockSym) list->sym.value.db= Ref(s->value.db);
-    else list->sym.value= s->value;
-    list->sym.ops= s->ops;
+  }
+  return 1;
+}
+
+int
+yput_car(int iarg, long n, int jarg)
+{
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops == &referenceSym) s = &globTab[s->index];
+    if (s->ops==&dataBlockSym && s->value.db->ops==&listOps) {
+      if (n > 0) {
+        List_Cell *cell = yl_nthcdr((List_Cell *)s->value.db, n-1);
+        if (cell) {
+          s = sp - jarg;
+          if (!sp->ops) return 3;
+          if (s->ops == &referenceSym) s = &globTab[s->index];
+          if (s->ops==&dataBlockSym && s->value.db->ops==&lvalueOps)
+            FetchLValue(s->value.db, s);
+          if (cell->sym.ops == &dataBlockSym) {
+            cell->sym.ops = &intScalar;
+            Unref(cell->sym.value.db);
+            sp[1].value.db = Ref(cell->sym.value.db);
+          }
+          if (s->ops==&dataBlockSym) cell->sym.value.db = Ref(s->value.db);
+          else cell->sym.value = s->value;
+          cell->sym.ops = s->ops;
+          return 0;
+        }
+      }
+      return 2;
+    }
+  }
+  return 1;
+}
+
+void
+Y__car(int argc)
+{
+  int flag;
+  long n = 1;
+  if (argc<1 || argc>3)
+    y_error("_car function takes one, two, or three arguments");
+  if (argc >= 2 && !yarg_nil(argc-2)) n = ygets_l(argc-2);
+  flag = ypush_car(argc-1, n);
+  if (flag == 2) y_error("no such list item in _car");
+  else if (flag) y_error("first argument to _car must be a list");
+  if (argc == 3) {
+    if (yput_car(argc, n, 1)) y_error("(BUG) impossible error in _car");
   }
 }
 
-void Y__cdr(int nArgs)
+int
+ypush_cdr(int iarg, long n)
 {
-  Symbol *s= sp-nArgs+1;
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops == &referenceSym) s = &globTab[s->index];
+    if (s->ops==&dataBlockSym && s->value.db->ops==&listOps) {
+      if (n >= 0) {
+        List_Cell *next = yl_nthcdr((List_Cell *)s->value.db, n);
+        sp[1].value.db = next? (DataBlock *)Ref(next) : RefNC(&nilDB);
+        sp[1].ops = &dataBlockSym;
+        sp++;
+      } else {
+        List_Cell *list = (List_Cell *)s->value.db;
+        List_Cell *copy = NewList_Cell(&list->sym);
+        sp[1].value.db = (DataBlock *)Ref(copy);
+        sp[1].ops = &dataBlockSym;
+        sp++;
+        n = -n - 1;
+        while ((list=list->next) && --n)
+          copy = copy->next = NewList_Cell(&list->sym);
+      }
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int
+yput_cdr(int iarg, long n, int jarg)
+{
+  if (iarg>=0 && jarg>=0) {
+    Symbol *s = sp - iarg;
+    if (s->ops == &referenceSym) s = &globTab[s->index];
+    if (s->ops==&dataBlockSym && s->value.db->ops==&listOps) {
+      List_Cell *list = yl_nthcdr((List_Cell *)s->value.db, n-1);
+      if (!list || n<1)
+        return 2;
+      s = sp - jarg;
+      if (s->ops == &referenceSym) s = &globTab[s->index];
+      if (s->ops == &dataBlockSym) {
+        int is_nil = (s->value.db == &nilDB);
+        if (is_nil || s->value.db->ops==&listOps) {
+          List_Cell *tmp = list->next;
+          list->next = 0;
+          Unref(tmp);
+          if (!is_nil)
+            list->next = (List_Cell *)Ref(s->value.db);
+          return 0;
+        }
+      }
+    }
+  }
+  return 1;
+}
+
+void
+Y__cdr(int argc)
+{
   List_Cell *list, *next;
-  long i= 1;
-  int not_nil;
-  if (nArgs<1 || nArgs>3)
-    YError("_cdr function takes one, two, or three arguments");
-  if (nArgs>=2 && YNotNil(s+1)) i= YGetInteger(s+1);
-  if (nArgs>2? (i<1) : (i<0))
-    YError("second argument too small in _cdr");
-  if (!s->ops) YError("unexpected keyword argument in _cdr");
-  if (s->ops==&referenceSym) ReplaceRef(s);
-  if (s->ops!=&dataBlockSym || s->value.db->ops!=&listOps)
-      YError("first argument to _cdr must be a list");
-  list= (List_Cell *)s->value.db;
-  next= 0;
-  if (i>0) {
-    while (list && --i) list= list->next;
-    if (list) next= list->next;
-  } else {
-    next= list;
+  long n = 1;
+  if (argc<1 || argc>3)
+    y_error("_cdr function takes one, two, or three arguments");
+  if (argc >= 2) {
+    if (!yarg_nil(argc-2)) n = ygets_l(argc-2);
+    if (n<0 || (n<1 && argc>2)) y_error("second argument too small in _cdr");
   }
-  /* result is always original value or nil */
-  PushDataBlock(next? (DataBlock *)Ref(next) : RefNC(&nilDB));
-  if (nArgs==3) {
-    /* set new list continuation for this cell */
-    List_Cell *tmp;
-    s+= 2;
-    if (s->ops==&referenceSym) ReplaceRef(s);
-    not_nil= YNotNil(s);
-    if (not_nil &&
-        (s->ops!=&dataBlockSym || s->value.db->ops!=&listOps))
-      YError("third argument to _cdr must be a list or nil");
-    if (!list) YError("no such list to set in _cdr");
-    tmp= list->next;  /* zero list->next before Unref */
-    list->next= 0;
-    Unref(tmp);
-    if (not_nil) list->next= (List_Cell *)Ref(s->value.db);
+  if (ypush_cdr(argc-1, n)) y_error("first argument to _cdr must be a list");
+  if (argc==3) {
+    int flag = yput_cdr(argc, n, 1);
+    if (flag == 2) y_error("no such list to set in _cdr");
+    else if (flag) y_error("third argument to _cdr must be a list or nil");
   }
 }
 
-void Y__len(int nArgs)
+long
+yarg_nlist(int iarg)
 {
-  Symbol *s= sp-nArgs+1;
-  long len= 0;
-  if (nArgs!=1) YError("_len function takes exactly one argument");
-  if (YNotNil(s)) {
-    List_Cell *list;
-    if (s->ops!=&dataBlockSym || s->value.db->ops!=&listOps)
-      YError("first argument to _len must be a list or nil");
-    for (list=(List_Cell *)s->value.db ; list ; list=list->next) len++;
+  long len = -1;
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops==&referenceSym) s = &globTab[s->index];
+    if (s->ops == &dataBlockSym
+        && (s->value.db==&nilDB || s->value.db->ops==&listOps)) {
+      List_Cell *list = (s->value.db==&nilDB)?  0 : (List_Cell *)s->value.db;
+      len = 0;
+      for ( ; list ; list=list->next) len++;
+    }
   }
-  PushLongValue(len);
+  return len;
+}
+
+void
+Y__len(int argc)
+{
+  long len = 0;
+  if (argc!=1) y_error("_len function takes exactly one argument");
+  len = yarg_nlist(0);
+  if (len < 0) y_error("argument to _len must be a list or nil");
+  ypush_long(len);
+}
+
+int
+yarg_list(int iarg)
+{
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops==&referenceSym) s = &globTab[s->index];
+    if (s->ops == &dataBlockSym)
+      return s->value.db->ops == &listOps;
+  }
+  return 0;
+}
+
+void
+Y_is_list(int argc)
+{
+  if (argc!=1) y_error("is_list function takes exactly one argument");
+  ypush_int(yarg_list(0));
 }
