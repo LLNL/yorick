@@ -1,5 +1,5 @@
 /*
- * $Id: drat.i,v 1.1 2005-09-18 22:04:55 dhmunro Exp $
+ * $Id: drat.i,v 1.2 2005-11-27 21:07:28 dhmunro Exp $
  * Yorick interface definitions for Drat transport equation solver.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -854,10 +854,12 @@ func gaussian_gate(t0, tsigma, max_trans)
   drat_gate= gauss_gate;
 }
 
-func reset_options
+func reset_options(only)
 /* DOCUMENT reset_options
+         or reset_options, 1
      resets all options for the streak, snap, and streak_save functions
-     to their default values.
+     to their default values.  With a non-zero, non-nil argument, only
+     resets options which are currently nil, but have non-nil defaults.
  */
 {
   { extern drat_rt, drat_zt, drat_ireg, drat_akap, drat_ekap; }
@@ -868,26 +870,26 @@ func reset_options
   { extern drat_compress, drat_backlight, drat_channel, drat_gate; }
   { extern drat_static, drat_ocompute, drat_oadjust, drat_integrate; }
   { extern drat_quiet; }
-  drat_rt= "rt";
-  drat_zt= "zt";
-  drat_ireg= "ireg";
-  drat_akap= "akap";
-  drat_ekap= "ekap";
-  drat_isymz= "isymz";
-  drat_khold= "khold";
-  drat_lhold= "lhold";
-  drat_gb= "gb";
-  drat_gav= "gav";
-  drat_amult= drat_emult= drat_omult= drat_ireg_adj= drat_start= drat_stop=
-    drat_symmetry= drat_glist= drat_linear= drat_nomilne=
+  if (!only || is_void(drat_rt)) drat_rt= "rt";
+  if (!only || is_void(drat_zt)) drat_zt= "zt";
+  if (!only || is_void(drat_ireg)) drat_ireg= "ireg";
+  if (!only || is_void(drat_akap)) drat_akap= "akap";
+  if (!only || is_void(drat_ekap)) drat_ekap= "ekap";
+  if (!only || is_void(drat_isymz)) drat_isymz= "isymz";
+  if (!only || is_void(drat_khold)) drat_khold= "khold";
+  if (!only || is_void(drat_lhold)) drat_lhold= "lhold";
+  if (!only || is_void(drat_gb)) drat_gb= "gb";
+  if (!only || is_void(drat_gav)) drat_gav= "gav";
+  if (!only) drat_amult= drat_emult= drat_omult= drat_ireg_adj= drat_start=
+    drat_stop= drat_symmetry= drat_glist= drat_linear= drat_nomilne=
     drat_compress= drat_backlight= drat_channel= drat_static= [];
-  drat_gate= default_gate;
-  drat_ocompute= default_ocompute;
-  drat_oadjust= [];
-  drat_integrate= default_integrate;
-  drat_quiet= [];
+  if (!only || is_void(drat_gate)) drat_gate= default_gate;
+  if (!only || is_void(drat_ocompute)) drat_ocompute= default_ocompute;
+  if (!only) drat_oadjust= [];
+  if (!only || is_void(drat_integrate)) drat_integrate= default_integrate;
+  if (!only) drat_quiet= [];
 }
-reset_options;
+reset_options, 1;
 
 func is_present(vars, name)
 /* DOCUMENT is_present(get_vars(f), name)
