@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.6 2005-11-26 20:17:56 dhmunro Exp $
+ * $Id: std.i,v 1.7 2005-11-27 20:39:51 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -553,6 +553,12 @@ extern is_stream;
      is_stream returns non-zero.  Note that is_stream returns 0 for a
      text stream -- you need the typeof function to test for those.
   SEE ALSO: is_array, is_func, is_void, is_range, is_struct
+ */
+
+extern is_list;
+/* DOCUMENT is_list(object)
+     returns 1 if OBJECT is a list or nil, else 0 (see _lst).
+  SEE ALSO: is_array, is_func, is_void, is_range, is_struct, _lst
  */
 
 /*--------------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.1 2005-09-18 22:04:02 dhmunro Exp $
+ * $Id: std0.c,v 1.2 2005-11-27 20:39:51 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -334,6 +334,8 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
       p_strcpy(ylaunch);
     path2 = p_strncat(path1, PATH_SEP, 0);
     p_free(path1);
+  } else {
+    path2 = p_strcpy("." PATH_SEP);
   }
   path1 = p_strncat(path2, "~/yorick" PATH_SEP "~/Yorick" PATH_SEP, 0);
   if (path2) p_free(path2);
