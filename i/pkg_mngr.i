@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.1 2005-12-03 10:50:16 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.2 2005-12-04 10:54:12 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -325,6 +325,8 @@ func pkg_save
   write,f,format="PKG_RUN_CHECK = %d;\n",PKG_RUN_CHECK;
   close,f;
 
+  if (PKG_VERBOSE)
+    write,format="Parameters saved in:\n%spackages/pkg_setup.i\n",Y_HOME;
 }
 
 
@@ -459,7 +461,18 @@ func pkg_setup
    SEE ALSO: pkg_mngr, pkg_save.
  */
 {
-  write,format="PKG_OS = %s\n",PKG_OS;
+  write,format="%s\n","Enter set-up parameters for pkg_mngr";
+  write,format="%s\n","Press return to select default between []"
+  PKG_OS = kinput("PKG_OS (\"linux\"|\"macosx\"|\"windows\")",PKG_OS);
+  PKG_FETCH_CMD = kinput("PKG_FETCH_CMD",PKG_FETCH_CMD);
+  PKG_SERVER = kinput("PKG_SERVER",PKG_SERVER);
+  PKG_GUNTAR_CMD = kinput("PKG_GUNTAR_CMD",PKG_GUNTAR_CMD);
+  PKG_TMP_DIR = kinput("PKG_TMP_DIR",PKG_TMP_DIR);
+  PKG_VERBOSE = kinput("PKG_VERBOSE (0|1|2)",PKG_VERBOSE);
+  PKG_ASK_CONFIRM = kinput("PKG_ASK_CONFIRM (0|1)",PKG_ASK_CONFIRM);
+  PKG_RUN_CHECK = kinput("PKG_RUN_CHECK",PKG_RUN_CHECK);
+
+  write,format="\nPKG_OS = %s\n",PKG_OS;
   write,format="PKG_FETCH_CMD = %s\n",PKG_FETCH_CMD;
   write,format="PKG_SERVER = %s\n",PKG_SERVER;
   write,format="PKG_GUNTAR_CMD = %s\n",PKG_GUNTAR_CMD;
@@ -467,9 +480,33 @@ func pkg_setup
   write,format="PKG_VERBOSE = %d\n",PKG_VERBOSE;
   write,format="PKG_ASK_CONFIRM = %d\n",PKG_ASK_CONFIRM;
   write,format="PKG_RUN_CHECK = %d\n",PKG_RUN_CHECK;
+
+  pkg_save;
 }
 
+func kinput(prompt,default)
+{
+  if (typeof(default)=="string") {
+    s = swrite(format=prompt+" [\"%s\"]: ",default);
+    sres = rdline(,1,prompt=s)(1);
+    if (sres == "") return default;
+    res = sres;
+  } else if ((typeof(default)=="long")||(typeof(default)=="int")) {
+    s = swrite(format=prompt+" [%d]: ",long(default));
+    sres = rdline(,1,prompt=s)(1);
+    if (sres == "") return default;
+    res = 1l;
+    sread,sres,res;
+  } else if ((typeof(default)=="double")||(typeof(default)=="float")) {
+    s = swrite(format=prompt+" [%f]: ",double(default));
+    sres = rdline(,1,prompt=s)(1);
+    if (sres == "") return default;
+    res = 1.0;
+    sread,sres,res;
+  } else error,"type not supported";
 
+  return res;
+}
 
 func pkg_install(pkgname,verbose=,check=,force=,_recur=,_version=,_vrel=)
 /* DOCUMENT pkg_install,pkgname,force=,check=,verbose=
