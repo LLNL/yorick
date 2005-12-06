@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.2 2005-12-04 10:54:12 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.3 2005-12-06 08:15:35 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -17,7 +17,7 @@ local pkg_mngr;
  * The following functions are available:
  *
  * pkg_setup 
- *   prints out PKG variables (see default below):
+ *   set up pkg_mngr session variables.
  *   PKG_OS              : OS. "macosx","linux","windows"
  *   PKG_SERVER          : URL of central server with info files
  *   PKG_FETCH_CMD       : system cmd to fetch a file through an
@@ -47,7 +47,7 @@ local pkg_mngr;
  *
  * pkg_save                Saves PKG global variables in default file,
  *                          which will be re-read each time pkg-mngr.i
- *                          is included.
+ *                          is included. Called by pkg_setup.
  * 
  *  --- INTRODUCTION TO THE YORICK PACKAGE INSTALLER
  * 
@@ -55,29 +55,11 @@ local pkg_mngr;
  * 
  *  FIRST TIME USE:
  * 
- *  >>>>> YOU HAVE TO SET PKG_OS TO THE CORRECT VALUE FOR YOUR SYSTEM <<<<<
- *
- *  To do so, either
- *  a) edit pkg_mngr.i and change the main parameters to your liking (search
- *  for PKG after the help section). The most important one to set is PKG_OS.
- *  
- *  OR:
- *  b)
  *  > pkg_setup
- *  ... will print out the parameters
- *  ... modify the parameters online (e.g. PKG_OS="linux";)
- *  ... do
- *  > pkg_save
- *  ... this will save a Y_HOME/packages/pkg_setup.i, which will be read
- *      each time pkg_mngr.i is included. Note that is this file exists
- *      changing the PKG variable assignment below will not serve any
- *      purpose (see comment by the PKG variable assignment).
+ *  ... will ask for parameters for your OS/installation
+ *  ... just set the OS, most of the other defaults should be OK.
  *
  *  ---
- * 
- *  > pkg_test
- *  ...will go through some tests to check that pkg_mngr is working on
- *     your system [not yet implemented]
  * 
  *  > pkg_list
  *  ...fetch all packages .info files on the server, and prints out
@@ -279,26 +261,15 @@ struct pkginfo_str{
   string homepage;
   string desc_details;
   long   version(20);
-}
+};
 
-
+setup_done=0;
 
 // read packages/pkg_setup.i if it exists
-if (open(Y_HOME+"packages/pkg_setup.i","r",1)) \
+if (open(Y_HOME+"packages/pkg_setup.i","r",1)) {
   require,Y_HOME+"packages/pkg_setup.i";
-
-
-
-// MODIFYING VARIABLES BELOW WILL NOT EFFECT ANYTHING IF PKG_SETUP.I
-// EXISTS (SEE ABOVE). It will be created if you do a "pkg_save".
-if (!PKG_OS)             PKG_OS="macosx";
-if (!PKG_FETCH_CMD)      PKG_FETCH_CMD="curl -s";
-if (!PKG_GUNTAR_CMD)     PKG_GUNTAR_CMD="tar zxf";
-if (!PKG_SERVER)         PKG_SERVER="http://www.maumae.net/yorick/packages/";
-if (!PKG_TMP_DIR)        PKG_TMP_DIR=Y_HOME+"packages/tmp/";
-if (PKG_VERBOSE==[])     PKG_VERBOSE=1; // 0 (none),1 (minimal), 2 (chatty)
-if (PKG_ASK_CONFIRM==[]) PKG_ASK_CONFIRM=1;
-if (PKG_RUN_CHECK==[])   PKG_RUN_CHECK=0;
+  setup_done=1;
+}
 
 
 func pkg_save
@@ -338,6 +309,8 @@ func pkg_sync(server,verbose=)
    SEE ALSO: pkg_mngr, pkg_list, pkg_install
  */
 {
+  if (!setup_done) pkg_setup,first=1;
+  
   if (!server) server = PKG_SERVER;
   if (verbose==[]) verbose=PKG_VERBOSE;
 
@@ -391,6 +364,8 @@ func pkg_list(server,nosync=,verbose=)
    SEE ALSO: pkg_mngr, pkg_sync, pkg_install
  */
 {
+  if (!setup_done) pkg_setup,first=1;
+
   if (!nosync) pkg_sync,server,verbose=verbose;
   if (verbose==[]) verbose=PKG_VERBOSE;
   
@@ -441,6 +416,8 @@ func pkg_info(pkgname)
    SEE ALSO:
  */
 {
+  if (!setup_done) pkg_setup,first=1;
+
   infodir = Y_HOME+"packages/info/";
   
   pkg = parse_info_file(infodir+pkgname+".info");
@@ -454,15 +431,30 @@ func pkg_info(pkgname)
   write,format="\n%s\n","\"pkg_list[,nosync=1]\" to see installed status";
 }
 
-func pkg_setup
+func pkg_setup(first=)
 /* DOCUMENT pkg_setup
    Simply print out the global variables relative to this
    package manager.
    SEE ALSO: pkg_mngr, pkg_save.
  */
 {
+  extern setup_done;
+  if (first) {
+    write,format="%s\n\n",
+    "pkg_mngr was not setup. You need to go through this minimum set-up once";
+  }
   write,format="%s\n","Enter set-up parameters for pkg_mngr";
-  write,format="%s\n","Press return to select default between []"
+  write,format="%s\n","Press return to select default between []";
+
+  if (!PKG_OS) PKG_OS="macosx";
+  if (!PKG_FETCH_CMD) PKG_FETCH_CMD="curl -s";
+  if (!PKG_GUNTAR_CMD) PKG_GUNTAR_CMD="tar zxf";
+  if (!PKG_SERVER) PKG_SERVER="http://www.maumae.net/yorick/packages/";
+  if (!PKG_TMP_DIR) PKG_TMP_DIR=Y_HOME+"packages/tmp/";
+  if (PKG_VERBOSE==[]) PKG_VERBOSE=1;
+  if (PKG_ASK_CONFIRM==[]) PKG_ASK_CONFIRM=1;
+  if (PKG_RUN_CHECK==[]) PKG_RUN_CHECK=0;
+    
   PKG_OS = kinput("PKG_OS (\"linux\"|\"macosx\"|\"windows\")",PKG_OS);
   PKG_FETCH_CMD = kinput("PKG_FETCH_CMD",PKG_FETCH_CMD);
   PKG_SERVER = kinput("PKG_SERVER",PKG_SERVER);
@@ -481,6 +473,7 @@ func pkg_setup
   write,format="PKG_ASK_CONFIRM = %d\n",PKG_ASK_CONFIRM;
   write,format="PKG_RUN_CHECK = %d\n",PKG_RUN_CHECK;
 
+  setup_done = 1;
   pkg_save;
 }
 
@@ -526,6 +519,8 @@ func pkg_install(pkgname,verbose=,check=,force=,_recur=,_version=,_vrel=)
  */
 {
   extern _pkg_recur_tree; // to avoid recursion
+
+  if (!setup_done) pkg_setup,first=1;
 
   if (!_recur)      _pkg_recur_tree=[];
   if (verbose==[])  verbose=PKG_VERBOSE;
@@ -668,6 +663,8 @@ func pkg_remove(pkgname,verbose=)
    SEE ALSO: pkg_mngr, pkg_install
  */
 {
+  if (!setup_done) pkg_setup,first=1;
+
   if (verbose==[]) verbose=PKG_VERBOSE;
   if (pkgname==[]) error,"Must specify a string-type package name";
 
