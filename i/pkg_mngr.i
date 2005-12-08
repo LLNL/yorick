@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.4 2005-12-08 11:02:02 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.5 2005-12-08 11:14:17 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -233,6 +233,8 @@ local pkg_mngr;
  *    in 2 different packages)
  * 
  */
+
+require,"string.i";
 
 struct pkginfo_str{
   string name;
