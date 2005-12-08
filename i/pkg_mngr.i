@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.3 2005-12-06 08:15:35 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.4 2005-12-08 11:02:02 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -12,39 +12,17 @@
 local pkg_mngr;
 /* DOCUMENT pkg_mngr.i
  *
- * Yorick Package Manager:
+ * Yorick Package Manager. Main functions
  *
- * The following functions are available:
- *
- * pkg_setup 
- *   set up pkg_mngr session variables.
- *   PKG_OS              : OS. "macosx","linux","windows"
- *   PKG_SERVER          : URL of central server with info files
- *   PKG_FETCH_CMD       : system cmd to fetch a file through an
- *                          internet connection [ex: curl]
- *   PKG_GUNTAR_CMD      : system cmd to gunzip and untar a tgz file
- *                          [ex; "tar -zxf"]
- *   PKG_TMP_DIR         : temporary directory. Normaly Y_HOME/packages/tmp
- *   PKG_VERBOSE         : verbose level
- *   PKG_ASK_CONFIRM     : ask for confirmation in critical operations
- *   PKG_RUN_CHECK       : run check after install
- *
- *
+ * pkg_setup               Set up pkg_mngr parameters (see below for details)
  * pkg_sync                Sync the local package repository with server
- *
- * pkg_list                List all available packages.
- *                         Col1: An "i" indicate an installed packge
- *                         Col2: Package name
- *                         Col3: Latest available version
- *                         Col4: Installed version (when applicable)
- *                         Col5: Short description of package
- *
+ * pkg_list                List all available packages (list install status
+ *                         ("i" marks installed packages), the package name,
+ *                         the last available version, the installed version
+ *                         (when applicable) and a short description.
  * pkg_install,"pkg_name"  Install package "pkg_name"
- *
  * pkg_remove,"pkg_name"   Remove package "pkg_name"
- *
  * pkg_info,"pkg_name"     Print detail info about package "pkg_name"
- *
  * pkg_save                Saves PKG global variables in default file,
  *                          which will be re-read each time pkg-mngr.i
  *                          is included. Called by pkg_setup.
@@ -58,6 +36,21 @@ local pkg_mngr;
  *  > pkg_setup
  *  ... will ask for parameters for your OS/installation
  *  ... just set the OS, most of the other defaults should be OK.
+ *
+ *   PKG_OS              : OS. "macosx","linux","windows"
+ *   PKG_SERVER          : URL of central server with info files
+ *   PKG_FETCH_CMD       : system cmd to fetch a file through an
+ *                          internet connection [ex: curl]
+ *   PKG_GUNTAR_CMD      : system cmd to gunzip and untar a tgz file
+ *                          [ex; "tar -zxf"]
+ *   PKG_TMP_DIR         : temporary directory. Normaly Y_HOME/packages/tmp
+ *   PKG_VERBOSE         : verbose level
+ *   PKG_ASK_CONFIRM     : ask for confirmation in critical operations
+ *   PKG_RUN_CHECK       : run check after install
+ *
+ *  > pkg_sync
+ *  ...to sync your local info file repository with the server
+ *  ...this should be done from time to time.
  *
  *  ---
  * 
@@ -294,10 +287,12 @@ func pkg_save
   write,f,format="PKG_VERBOSE = %d;\n",PKG_VERBOSE;
   write,f,format="PKG_ASK_CONFIRM = %d;\n",PKG_ASK_CONFIRM;
   write,f,format="PKG_RUN_CHECK = %d;\n",PKG_RUN_CHECK;
+  if (PKG_SYNC_DONE)
+    write,f,format="PKG_SYNC_DONE = \"%s\";\n",PKG_SYNC_DONE;
   close,f;
 
   if (PKG_VERBOSE)
-    write,format="Parameters saved in:\n%spackages/pkg_setup.i\n",Y_HOME;
+    write,format="%s\n","Parameters saved in Y_HOME/packages/pkg_setup.i";
 }
 
 
@@ -309,6 +304,7 @@ func pkg_sync(server,verbose=)
    SEE ALSO: pkg_mngr, pkg_list, pkg_install
  */
 {
+  extern PKG_SYNC_DONE;
   if (!setup_done) pkg_setup,first=1;
   
   if (!server) server = PKG_SERVER;
@@ -329,14 +325,14 @@ func pkg_sync(server,verbose=)
     mkdir,Y_HOME+"packages/tmp";
 
 
-  if (verbose) write,format="%s","Fetching info from server";
-  if (verbose>=2) write,"";
+  if (verbose) write,format="%s","Syncing with server";
+  if (verbose>=3) write,"";
 
 
   pkg_fetch_url,server+PKG_OS+"/info/",PKG_TMP_DIR+"info.html",
     verbose=verbose;
   
-  if (verbose==1) write,format="%s",".";
+  if (verbose<3) write,format="%s",".";
 
   ctn = rdfile(PKG_TMP_DIR+"info.html");
   files = strpart(ctn,strgrep("[a-zA-Z0-9\_\.\+\-]+\\.info",ctn));
@@ -346,15 +342,31 @@ func pkg_sync(server,verbose=)
   for (i=1;i<=numberof(files);i++) {
     pkg_fetch_url,server+PKG_OS+"/info/"+files(i),      \
       Y_HOME+"packages/info/"+files(i),verbose=verbose;
-    if (verbose==1) write,format="%s",".";
+    if (verbose<3) write,format="%s",".";
   }
 
-  if (verbose==1) write,format="%s\n","done";
+  if (verbose<3) write,format="done (%d info files fetched)\n",numberof(files);
+  PKG_SYNC_DONE = getdate();
+  pkg_save;
 }
 
+func get_international_date(date)
+/* DOCUMENT get_intern_date(date)
+   meant to convert date returned by getdate() into something
+   clear and understandable by people from europe and US
+   SEE ALSO:
+ */
+{
+  if (!date) return;
+  d = strtok(date,"/",3);
+  n = 0;
+  sread,d(2),n;
+  month = ["Jan","Feb","Mar","Apr","May","Jun",
+           "Jul","Aug","Sep","Oct","Nov","Dec"];
+  return d(1)+" "+month(n)+" 20"+d(3); //valid for 95 years
+}
 
-
-func pkg_list(server,nosync=,verbose=)
+func pkg_list(server,sync=,verbose=)
 /* DOCUMENT pkg_list,server,nosync=
    Print out a list of available packages, including
    version number, whether it is installed (installed
@@ -364,27 +376,25 @@ func pkg_list(server,nosync=,verbose=)
    SEE ALSO: pkg_mngr, pkg_sync, pkg_install
  */
 {
+  extern PKG_SYNC_DONE;
   if (!setup_done) pkg_setup,first=1;
+  if (!PKG_SYNC_DONE) pkg_sync;
 
-  if (!nosync) pkg_sync,server,verbose=verbose;
+  if (sync) {
+    pkg_sync,server,verbose=verbose;
+  } else {
+    write,format="last sync %s (\"pkg_sync\" to sync)\n",get_international_date(PKG_SYNC_DONE);
+  }
   if (verbose==[]) verbose=PKG_VERBOSE;
   
   infodir = Y_HOME+"packages/info/";
   instdir = Y_HOME+"packages/installed/";
 
-  all = lsdir(infodir);
-  if (anyof(all)) {
-    w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",all,sub=[1]);
-    infoname = strpart(all,w);
-  }
+  infoname = get_avail_pkg();
   if (numberof(infoname)==0) error,"No info file found in "+infodir;
-  
 
-  ins = lsdir(instdir);
-  if (anyof(ins)) {
-    w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",ins,sub=[1]);
-    instname = strpart(ins,w);
-  } else instname="";
+  instname = get_inst_pkg();
+  if (instname==0) instname="";
   
   for (i=1;i<=numberof(infoname);i++) {
     // for all info file, parse file:
@@ -417,6 +427,7 @@ func pkg_info(pkgname)
  */
 {
   if (!setup_done) pkg_setup,first=1;
+  if (!PKG_SYNC_DONE) pkg_sync;
 
   infodir = Y_HOME+"packages/info/";
   
@@ -441,10 +452,9 @@ func pkg_setup(first=)
   extern setup_done;
   if (first) {
     write,format="%s\n\n",
-    "pkg_mngr was not setup. You need to go through this minimum set-up once";
+    "pkg_mngr was not setup! You need to go through this set-up once";
   }
-  write,format="%s\n","Enter set-up parameters for pkg_mngr";
-  write,format="%s\n","Press return to select default between []";
+  write,format="%s\n","Enter set-up parameters for pkg_mngr ([] = default)";
 
   if (!PKG_OS) PKG_OS="macosx";
   if (!PKG_FETCH_CMD) PKG_FETCH_CMD="curl -s";
@@ -459,8 +469,8 @@ func pkg_setup(first=)
   PKG_FETCH_CMD = kinput("PKG_FETCH_CMD",PKG_FETCH_CMD);
   PKG_SERVER = kinput("PKG_SERVER",PKG_SERVER);
   PKG_GUNTAR_CMD = kinput("PKG_GUNTAR_CMD",PKG_GUNTAR_CMD);
-  PKG_TMP_DIR = kinput("PKG_TMP_DIR",PKG_TMP_DIR);
-  PKG_VERBOSE = kinput("PKG_VERBOSE (0|1|2)",PKG_VERBOSE);
+  //  PKG_TMP_DIR = kinput("PKG_TMP_DIR",PKG_TMP_DIR);
+  PKG_VERBOSE = kinput("PKG_VERBOSE (0|1|2|3)",PKG_VERBOSE);
   PKG_ASK_CONFIRM = kinput("PKG_ASK_CONFIRM (0|1)",PKG_ASK_CONFIRM);
   PKG_RUN_CHECK = kinput("PKG_RUN_CHECK",PKG_RUN_CHECK);
 
@@ -468,7 +478,7 @@ func pkg_setup(first=)
   write,format="PKG_FETCH_CMD = %s\n",PKG_FETCH_CMD;
   write,format="PKG_SERVER = %s\n",PKG_SERVER;
   write,format="PKG_GUNTAR_CMD = %s\n",PKG_GUNTAR_CMD;
-  write,format="PKG_TMP_DIR = %s\n",PKG_TMP_DIR;
+  //  write,format="PKG_TMP_DIR = %s\n",PKG_TMP_DIR;
   write,format="PKG_VERBOSE = %d\n",PKG_VERBOSE;
   write,format="PKG_ASK_CONFIRM = %d\n",PKG_ASK_CONFIRM;
   write,format="PKG_RUN_CHECK = %d\n",PKG_RUN_CHECK;
@@ -477,219 +487,304 @@ func pkg_setup(first=)
   pkg_save;
 }
 
-func kinput(prompt,default)
-{
-  if (typeof(default)=="string") {
-    s = swrite(format=prompt+" [\"%s\"]: ",default);
-    sres = rdline(,1,prompt=s)(1);
-    if (sres == "") return default;
-    res = sres;
-  } else if ((typeof(default)=="long")||(typeof(default)=="int")) {
-    s = swrite(format=prompt+" [%d]: ",long(default));
-    sres = rdline(,1,prompt=s)(1);
-    if (sres == "") return default;
-    res = 1l;
-    sread,sres,res;
-  } else if ((typeof(default)=="double")||(typeof(default)=="float")) {
-    s = swrite(format=prompt+" [%f]: ",double(default));
-    sres = rdline(,1,prompt=s)(1);
-    if (sres == "") return default;
-    res = 1.0;
-    sread,sres,res;
-  } else error,"type not supported";
 
-  return res;
-}
-
-func pkg_install(pkgname,verbose=,check=,force=,_recur=,_version=,_vrel=)
+func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
 /* DOCUMENT pkg_install,pkgname,force=,check=,verbose=
-   Install package "pkgname" (string)
+   Install package "pkgname" (string vector)
    Grabs the tarball from a central server, untar it, copy the files
    according to the directory structure specified in the untared
    package, possibly run a preflight and postflight include files (for
    special needs), and place the package info file and a list of
    installed files in package/installed/.
 
+   pkgname can be a string scalar, vector, and contains wildcard to
+   install multiple packages in one call.
+   examples: pkg_install,"y*" or pkg_install,["soy","yao"] or pkg_install,"*"
+   
    Keywords:
    force: force installation
    check: run checks after install
-   verbose: 0 (silent), 1 (some messages) or 2 (very chatty)
+   verbose: 0 (silent), 1 (some messages), 2 (chatty), 3 (more chatty)
    
    SEE ALSO: pkg_mngr, pkg_remove.
  */
 {
   extern _pkg_recur_tree; // to avoid recursion
+  if (!PKG_SYNC_DONE) pkg_sync;
 
-  if (!setup_done) pkg_setup,first=1;
+  if (!_recur) { // first call in possible recursion
+    // the following is to expand the possible wildcards
+    // in elements of the vector pkgnames
+    // e.g. a call can be pkg_install,["y*","soy"]
+    instpkg = get_avail_pkg();
+    allpkg = [];
+    for (np=1;np<=numberof(pkgnames);np++) {
+      w = where(strglob(pkgnames(np),instpkg));
+      if (numberof(w)==0) continue;
+      grow,allpkg,instpkg(w);
+    }
+    
+    pkgnames = allpkg;
+    if (numberof(pkgnames)==0) return 0;
 
-  if (!_recur)      _pkg_recur_tree=[];
-  if (verbose==[])  verbose=PKG_VERBOSE;
-  if (_version==[]) _version="0.0";
-  if (_vrel==[])    _vrel=">=";
-  if (check==[])    check=PKG_RUN_CHECK;
-  if (pkgname==[])  error,"Must specify a string-type package name";
+    if (PKG_ASK_CONFIRM) {
+      write,format="%s\n","Packages to install :";
+      write,pkgnames;
+      if (kinput("OK? ","y")!="y") return 0;
+    }
+  }
 
-  infodir = Y_HOME+"packages/info/";
-  instdir = Y_HOME+"packages/installed/";
-  tarbdir = Y_HOME+"packages/tarballs/";
+  for (np=1;np<=numberof(pkgnames);np++) {
 
-  if (anyof(_pkg_recur_tree) && anyof(strmatch(_pkg_recur_tree,pkgname)))
-    //we just installed it, to avoid recursing, we should exit.
-    return 0;
+    pkgname = pkgnames(np);
+    
+    if (!setup_done) pkg_setup,first=1;
 
-  // is this package already installed with a version > requested version ?
-  ins = lsdir(instdir);
-  if (!force && anyof(ins)) {
-    w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",ins,sub=[1]);
-    instname = strpart(ins,w);
-    w = where(instname==pkgname);
-    if (numberof(w)!=0) {
-      // this package has been installed. check version:
-      ins=parse_info_file(instdir+pkgname+".info");
-      if (vers_cmp(ins.vers,_vrel,_version)) {
-        if (verbose) {
-          write,format="Package %s already installed (%s, needed %s)\n", \
-            pkgname,ins.vers,_version;
+    if (!_recur)      _pkg_recur_tree=[];
+    if (verbose==[])  verbose=PKG_VERBOSE;
+    if (_version==[]) _version="0.0";
+    if (_vrel==[])    _vrel=">=";
+    if (check==[])    check=PKG_RUN_CHECK;
+    if (pkgname==[])  error,"Must specify a string-type package name";
+
+    infodir = Y_HOME+"packages/info/";
+    instdir = Y_HOME+"packages/installed/";
+    tarbdir = Y_HOME+"packages/tarballs/";
+
+    if (anyof(_pkg_recur_tree) && anyof(strmatch(_pkg_recur_tree,pkgname)))
+      //we just installed it, to avoid recursing, we should exit.
+      continue;
+
+    // is this package already installed with a version > requested version ?
+    ins = lsdir(instdir);
+    if (!force && anyof(ins)) {
+      w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",ins,sub=[1]);
+      instname = strpart(ins,w);
+      w = where(instname==pkgname);
+      if (numberof(w)!=0) {
+        // this package has been installed. check version:
+        ins=parse_info_file(instdir+pkgname+".info");
+        if (vers_cmp(ins.vers,_vrel,_version)) {
+          if (verbose && !_recur) {
+            write,format="Package %s already installed (%s, needed %s)\n", \
+              pkgname,ins.vers,_version;
+          }
+          continue;
         }
-        return 0;
       }
     }
-  }
   
-  // upgrade: here, check if last version of package already installed
-  
-  pkg=parse_info_file(infodir+pkgname+".info");
+    // upgrade: here, check if last version of package already installed
+    
+    pkg=parse_info_file(infodir+pkgname+".info");
+    
+    // works out dependencies:
+    for (i=1;i<=numberof(where(pkg.depends_pkg));i++) {
+      
+      // yorick version number:
+      if (pkg.depends_pkg(i)=="yorick") {
+        if (!vers_cmp(Y_VERSION,pkg.depends_rel(i),pkg.depends_vers))   \
+          error,"This package needs yorick version "+
+            pkg.depends_rel(i)+" "+pkg.depends_vers(i);
+        continue;
+      }
 
-  // works out dependencies:
-  for (i=1;i<=numberof(where(pkg.depends_pkg));i++) {
-
-    // yorick version number:
-    if (pkg.depends_pkg(i)=="yorick") {
-      if (!vers_cmp(Y_VERSION,pkg.depends_rel(i),pkg.depends_vers)) \
-        error,"This package needs yorick version "+
-          pkg.depends_rel(i)+" "+pkg.depends_vers(i);
-      continue;
+      // here work out the possible recursion. use _pkg_uptree
+      // other dependencies:
+      pkg_install,pkg.depends_pkg(i),verbose=verbose,force=force,
+        _recur=1,_version=pkg.depends_vers(i),_vrel=pkg.depends_rel(i);
+      
+      // add the name to tree to avoid recursion
+      grow,_pkg_recur_tree,pkg.depends_pkg(i);
     }
 
-    // here work out the possible recursion. use _pkg_uptree
-    // other dependencies:
-    pkg_install,pkg.depends_pkg(i),verbose=verbose,force=force,
-      _recur=1,_version=pkg.depends_vers(i),_vrel=pkg.depends_rel(i);
-
-    // add the name to tree to avoid recursion
-    grow,_pkg_recur_tree,pkg.depends_pkg(i);
-  }
-
-  name = strtok(pkg.source,"/",10);
-  name = name(where(name))(0);
+    pkgtgz = strtok(pkg.source,"/",10);
+    pkgtgz = pkgtgz(where(pkgtgz))(0);
   
-  cd,tarbdir;
+    cd,tarbdir;
 
-  // fetch the tarball
-  if (verbose) write,format="%s\n","Fetching tarball";
-  pkg_fetch_url,pkg.source,tarbdir+name,verbose=verbose;
+    // fetch the tarball
+    localtarballs = lsdir(".");
+    if ((noneof(localtarballs))||
+        (noneof(strmatch(localtarballs,pkgtgz)))||(force) ) {
+      // this package does not exist locally.
+      if (verbose==1) {
+        write,format="%-20s: %s",pkgname,"Fetching tarball..";
+      } else if (verbose>=2) {
+        write,format="%s\n","--------------------------";
+        write,format="%s: %s\n",pkgname,"Fetching tarball";
+      }
+      pkg_fetch_url,pkg.source,tarbdir+pkgtgz,verbose=verbose;
+    } else {
+      if (verbose==1) {
+        write,format="%-20s: %s",pkgname,"Using local tarball..";
+      } else if (verbose>=2) {
+        write,format="%s\n","--------------------------";
+        write,format="%s: %s\n",pkgname,"Using local tarball";
+      }
+      // the tarball exist locally, we'll use it (unless force=1)
+    }
 
-  // gunzip and untar:
-  if (verbose) write,format="%s\n","Inflating tarball";
-  pkg_sys,PKG_GUNTAR_CMD+" "+tarbdir+name,verbose=verbose;
-
-  // run preflight.i
-  if (open(pkgname+"/preflight.i","r",1)) {
-    if (verbose) write,format="%s\n","Running preflight.i";
-    include,pkgname+"/preflight.i",1;
+    // gunzip and untar:
+    if (verbose==1) {
+      write,format="%s","Inflating..";
+    } else if (verbose>=2) {
+      write,format="%s: %s\n",pkgname,"Inflating tarball";
+    }
+    pkg_sys,PKG_GUNTAR_CMD+" "+tarbdir+pkgtgz,verbose=verbose;
+    
+    // run preflight.i
+    if (open(pkgname+"/preflight.i","r",1)) {
+      if (verbose) write,format="\n%s\n","Running preflight.i";
+      include,pkgname+"/preflight.i",1;
+    }
+    
+    list1=list2=[];
+    
+    // copy to Y_SITE:
+    if (anyof(lsdir(pkgname+"/dist/y_site/"))) {
+      recursive_rename,pkgname+"/dist/y_site",Y_SITE,
+        list1,verbose=verbose,init=1;
+    }
+    
+    // copy to Y_HOME:
+    if (anyof(lsdir(pkgname+"/dist/y_home/"))) {
+      recursive_rename,pkgname+"/dist/y_home",Y_HOME,
+        list2,verbose=verbose,init=1;
+    }
+    
+    list = _(list1,list2);
+    
+    if (verbose>=2) {
+      write,format="%s\n","Installed files:";
+      write,format="  + %s\n",list;
+    }
+    
+    // copy info file:
+    rename,pkgname+"/"+pkgname+".info",instdir+"/"+pkgname+".info";
+    if (verbose>=3) write,format="Executing rename,%s,%s\n",
+      pkgname+"/"+pkgname+".info",instdir+"/"+pkgname+".info";
+    
+    f = open(instdir+"/"+pkgname+".flist","w");
+    write,f,format="%s\n",list;
+    close,f;
+    
+    if (open(pkgname+"/postflight.i","r",1)) {
+      if (verbose) write,format="%s\n","Running postflight.i";
+      include,pkgname+"/postflight.i",1;
+    }
+    
+    //run check if requested and pkgname/check.i file present
+    if (check && open(pkgname+"/check.i","r",1)) {
+      if (verbose==1) {
+        write,format="%s","Checking..";
+      } else if (verbose>=2) {
+        write,format="%s\n","Checking package";
+      }
+      cd,pkgname;
+      include,"check.i";
+    }
+    
+    // clean up after ourselves
+    recursive_rmdir,tarbdir+pkgname+"/dist",verbose=verbose;
+    
+    // if we got there, it ought to be OK
+    if (verbose==1) {
+      write,format="%s","installed\n";
+    } else if (verbose>=2) {
+      write,format="%s installed sucessfully\n",pkgname;
+    }
+    
   }
-
-  list1=list2=[];
-  
-  // copy to Y_SITE:
-  if (anyof(lsdir(pkgname+"/dist/y_site/"))) {
-    recursive_rename,pkgname+"/dist/y_site",Y_SITE,
-      list1,verbose=verbose,init=1;
-  }
-
-  // copy to Y_HOME:
-  if (anyof(lsdir(pkgname+"/dist/y_home/"))) {
-    recursive_rename,pkgname+"/dist/y_home",Y_HOME,
-      list2,verbose=verbose,init=1;
-  }
-
-  list = _(list1,list2);
-
-  if (verbose) {
-    write,format="%s\n","Installed files:";
-    write,format="  + %s\n",list;
-  }
-  
-  // copy info file:
-  rename,pkgname+"/"+pkgname+".info",instdir+"/"+pkgname+".info";
-  if (verbose>=2) write,format="Executing rename,%s,%s\n",
-    pkgname+"/"+pkgname+".info",instdir+"/"+pkgname+".info";
-
-  f = open(instdir+"/"+pkgname+".flist","w");
-  write,f,format="%s\n",list;
-  close,f;
-
-  if (open(pkgname+"/postflight.i","r",1)) {
-    if (verbose) write,format="%s\n","Running postflight.i";
-    include,pkgname+"/postflight.i",1;
-  }
-
-  //run check if requested and pkgname/check.i file present
-  if (check && open(pkgname+"/check.i","r",1)) {
-    if (verbose) write,format="%s\n","Checking package";
-    cd,pkgname;
-    include,"check.i";
-  }
-  
-  // clean up after ourselves
-  recursive_rmdir,tarbdir+pkgname+"/dist",verbose=verbose;
-  
-  // if we got there, it ought to be OK
-  if (verbose) write,format="%s installed sucessfully\n",pkgname;
-
   return 0;
 }
 
 
 
-func pkg_remove(pkgname,verbose=)
+func pkg_remove(pkgnames,verbose=)
 /* DOCUMENT pkg_remove,pkgname,verbose=
    Remove package "pkgname" (string)
    Remove all files (libraries, include files, autoload)
    that were installed by the installer.
 
+   pkgname can be a string scalar, vector, and contains wildcard to
+   remove multiple packages in one call.
+   examples: pkg_remove,"y*" or pkg_remove,["soy","yao"] or pkg_remove,"*"
+   
    help,pkg_mngr for more details.
    
    SEE ALSO: pkg_mngr, pkg_install
  */
 {
-  if (!setup_done) pkg_setup,first=1;
+  if (!PKG_SYNC_DONE) pkg_sync;
 
-  if (verbose==[]) verbose=PKG_VERBOSE;
-  if (pkgname==[]) error,"Must specify a string-type package name";
-
-  instdir = Y_HOME+"packages/installed/";
-
-  if (verbose) write,format="Removing package %s\n",pkgname;
-
-  files = rdfile(instdir+pkgname+".flist");
-
-  for (i=1;i<=numberof(files);i++) {
-    if (verbose) write,format=" - %s\n",files(i);
-    remove,files(i);
+  instpkg = get_inst_pkg();
+  if (noneof(instpkg)) return;
+  
+  allpkg = [];
+  for (np=1;np<=numberof(pkgnames);np++) {
+    w = where(strglob(pkgnames(np),instpkg));
+    if (numberof(w)==0) {
+      write,format="No package corresponding to %s\n",pkgnames(np);
+      continue;
+    }
+    grow,allpkg,instpkg(w);
   }
 
-  file = instdir+pkgname+".info";
-  if (verbose) write,format=" - %s\n",file;
-  remove,file;
+  pkgnames = allpkg;
+  if (numberof(pkgnames)==0) return 0;
 
-  file = instdir+pkgname+".flist";
-  if (verbose) write,format=" - %s\n",file;
-  remove,file;
+  if (PKG_ASK_CONFIRM) {
+    write,format="%s\n","Packages to remove :";
+    write,pkgnames;
+    if (kinput("OK? ","y")!="y") return 0;
+  }
+  
+  for (np=1;np<=numberof(pkgnames);np++) {
+    pkgname = pkgnames(np);
 
-  // if we got there, we ought to be OK
-  if (verbose) write,format="%s removed sucessfully\n",pkgname;
+    if (!setup_done) pkg_setup,first=1;
+    
+    if (verbose==[]) verbose=PKG_VERBOSE;
+    if (pkgname==[]) error,"Must specify a string-type package name";
+    
+    instdir = Y_HOME+"packages/installed/";
+    
+    if (verbose==1) {
+      write,format="%-20s: Removing...",pkgname;
+    } else if (verbose>=2) {
+      write,format="%s\n","--------------------------";
+      write,format="Removing package %s\n",pkgname;
+    }
+    
+    instpkg = get_inst_pkg();
+    if (noneof(strmatch(instpkg,pkgname))) {
+      if (verbose) write,format="\nPackage %s is not installed\n",pkgname;
+      continue;
+    }
+    
+    files = rdfile(instdir+pkgname+".flist");
 
+    for (i=1;i<=numberof(files);i++) {
+      if (verbose>=2) write,format=" - %s\n",files(i);
+      remove,files(i);
+    }
+
+    file = instdir+pkgname+".info";
+    if (verbose>=2) write,format=" - %s\n",file;
+    remove,file;
+
+    file = instdir+pkgname+".flist";
+    if (verbose>=2) write,format=" - %s\n",file;
+    remove,file;
+
+    // if we got there, we ought to be OK
+    if (verbose==1) {
+      write,format="%s\n","done";
+    } else if (verbose>=2) {
+      write,format="%s removed successfully\n",pkgname;
+    }
+  }
   return 0;
 }
 
@@ -698,6 +793,31 @@ func pkg_remove(pkgname,verbose=)
  *           UTILITARY FUNCTIONS            *
 \********************************************/
 
+func get_avail_pkg(void)
+{
+  infodir = Y_HOME+"packages/info/";
+
+  all = lsdir(infodir);
+  if (anyof(all)) {
+    w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",all,sub=[1]);
+    infoname = strpart(all,w);
+    infoname = infoname(where(infoname));
+  }
+  return infoname;
+}
+
+func get_inst_pkg(void)
+{
+  instdir = Y_HOME+"packages/installed/";
+
+  all = lsdir(instdir);
+  if (anyof(all)) {
+    w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",all,sub=[1]);
+    instname = strpart(all,w);
+    instname = instname(where(instname));
+  }
+  return instname;
+}
 
 func recursive_rmdir(dir,verbose=)
 /* DOCUMENT recursive_rmdir,dir,verbose=
@@ -723,7 +843,7 @@ func recursive_rmdir(dir,verbose=)
 
     if ( (noneof(f)) && (noneof(subdirs)) ) {
       // no files, no subdirs, ok to remove dir:
-      if (verbose>=2) write,format="Removing directory %s\n",dir;
+      if (verbose>=3) write,format="Removing directory %s\n",dir;
       rmdir,dir;
       if (lsdir(dir)!=0) error,"Can't remove directory "+dir;
       // and exit (cul-de-sac):
@@ -733,14 +853,14 @@ func recursive_rmdir(dir,verbose=)
     if (anyof(f)) {
       // some files in here, remove them
       for (i=1;i<=numberof(f);i++) {
-        if (verbose>=2) write,format="Removing %s\n",dir+f(i);
+        if (verbose>=3) write,format="Removing %s\n",dir+f(i);
         remove,dir+f(i);
       }
     }
 
     // no more files. If no subdirs, remove dir and exit:
     if (noneof(subdirs)) {
-      if (verbose>=2) write,format="Removing directory %s\n",dir;
+      if (verbose>=3) write,format="Removing directory %s\n",dir;
       rmdir,dir;
       break;
     } else {
@@ -769,7 +889,7 @@ func recursive_rename(dir1,dir2,&list,verbose=,init=)
   if (init) list=[];
   if (verbose==[]) verbose=PKG_VERBOSE;
 
-  if (verbose>=2) write,format="Recursive rename %s to %s\n",dir1,dir2;
+  if (verbose>=3) write,format="Recursive rename %s to %s\n",dir1,dir2;
   
   // make sure dir ends by slash
   if (strpart(dir1,0:0)!="/") dir1+="/";
@@ -785,12 +905,12 @@ func recursive_rename(dir1,dir2,&list,verbose=,init=)
   if (allof(f2)==0) {
     mkdir,dir2;
     if (lsdir(dir2)==0) error,"Creating "+dir2+" failed (check permission)";
-    if (verbose>=1) write,format="%s\n","Created "+dir2;
+    if (verbose>=2) write,format="%s\n","Created "+dir2;
   }
 
   // finally, move the files:
   for (i=1;i<=numberof(f1);i++) {
-    if (verbose>=2)
+    if (verbose>=3)
       write,format="Executing rename,%s,%s\n",dir1+f1(i),dir2+f1(i);
     rename,dir1+f1(i),dir2+f1(i);
     grow,list,dir2+f1(i);
@@ -963,7 +1083,7 @@ func pkg_sys(cmd,verbose=)
 {
   if (verbose==[]) verbose=PKG_VERBOSE;
 
-  if (verbose>=2) write,format="Spawning %s\n",cmd;
+  if (verbose>=3) write,format="Spawning %s\n",cmd;
 
   system,cmd;
 
@@ -998,4 +1118,29 @@ func pkg_fetch_url(url,dest,verbose=)
   }
 
   return 0;
+}
+
+
+func kinput(prompt,default)
+{
+  if (typeof(default)=="string") {
+    s = swrite(format=prompt+" [\"%s\"]: ",default);
+    sres = rdline(,1,prompt=s)(1);
+    if (sres == "") return default;
+    res = sres;
+  } else if ((typeof(default)=="long")||(typeof(default)=="int")) {
+    s = swrite(format=prompt+" [%d]: ",long(default));
+    sres = rdline(,1,prompt=s)(1);
+    if (sres == "") return default;
+    res = 1l;
+    sread,sres,res;
+  } else if ((typeof(default)=="double")||(typeof(default)=="float")) {
+    s = swrite(format=prompt+" [%f]: ",double(default));
+    sres = rdline(,1,prompt=s)(1);
+    if (sres == "") return default;
+    res = 1.0;
+    sread,sres,res;
+  } else error,"type not supported";
+
+  return res;
 }
