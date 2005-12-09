@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.5 2005-12-08 11:14:17 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.6 2005-12-09 06:14:45 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -8,6 +8,8 @@
  * This file is part of yorick (http://yorick.sourceforge.net).
  * Read the accompanying LICENSE file for details.
  */
+
+PKG_MNGR_VERSION = 0.6;
 
 local pkg_mngr;
 /* DOCUMENT pkg_mngr.i
