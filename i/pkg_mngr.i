@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.7 2005-12-10 10:16:22 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.8 2005-12-10 12:19:05 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -695,7 +695,11 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
         write,format="%s\n","Checking package";
       }
       cd,pkgname;
-      include,"check.i";
+      if (anyof(pkgname==["imutil","curses","yorz"])) {
+        include,"check.i";
+      } else {
+        include,"check.i",1;
+      }
     }
     
     // clean up after ourselves
