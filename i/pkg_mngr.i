@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.6 2005-12-09 06:14:45 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.7 2005-12-10 10:16:22 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -28,6 +28,7 @@ local pkg_mngr;
  * pkg_save                Saves PKG global variables in default file,
  *                          which will be re-read each time pkg-mngr.i
  *                          is included. Called by pkg_setup.
+ * pkg_reset               Delete all tarballs (in case of problem).
  * 
  *  --- INTRODUCTION TO THE YORICK PACKAGE INSTALLER
  * 
@@ -66,7 +67,14 @@ local pkg_mngr;
  *  FURTHER USE:
  * pkg_list, pkg_install, and pkg_remove are the only 3 functions
  * that should be necessary for further use.
- * 
+ *
+ *  --- IN CASE OF PROBLEMS:
+ *  In case something went wrong and you downloaded a bad tarball:
+ *  Go in Y_HOME/packages/tarballs
+ *  and remove the offensive tgz file. In doubt, you can just wipe
+ *  up the whole directory content. tarballs will be downloaded again
+ *  if pkg_mngr does not find existing local ones.
+ *
  *  --- SERVER / CLIENT ORGANIZATION
  * 
  *  The yorick package manager (pkg_mngr.i) is organized with several
@@ -609,8 +617,9 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
 
     // fetch the tarball
     localtarballs = lsdir(".");
-    if ((noneof(localtarballs))||
-        (noneof(strmatch(localtarballs,pkgtgz)))||(force) ) {
+    if ((noneof(localtarballs))|| // no tarballs OR
+        (noneof(strmatch(localtarballs,pkgtgz)))|| //no match in loc. tarballs
+        (force) ) { // we were asked to force the install anyway
       // this package does not exist locally.
       if (verbose==1) {
         write,format="%-20s: %s",pkgname,"Fetching tarball..";
@@ -704,6 +713,25 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
 }
 
 
+func pkg_reset(verbose=)
+/* DOCUMENT pkg_reset(verbose=)
+   Brute force solution: if a bad tarball has been downloaded,
+   pkg_mngr will try and try using it and fail. One can remove
+   it by hand in Y_HOME/packages/tarballs/ or use this routine
+   to remove them all.
+   SEE ALSO:
+ */
+{
+  if (verbose==[]) verbose=PKG_VERBOSE;
+
+  rep=kinput("Delete all pkg_mngr tarballs and start from scratch","n");
+  if (rep!="y") return
+  
+  tarbdir = Y_HOME+"packages/tarballs/";
+  recursive_rmdir,tarbdir,verbose=verbose;
+  mkdir,tarbdir;
+}
+
 
 func pkg_remove(pkgnames,verbose=)
 /* DOCUMENT pkg_remove,pkgname,verbose=
@@ -720,7 +748,10 @@ func pkg_remove(pkgnames,verbose=)
    SEE ALSO: pkg_mngr, pkg_install
  */
 {
+  if (!setup_done) pkg_setup,first=1;
+  if (verbose==[]) verbose=PKG_VERBOSE;
   if (!PKG_SYNC_DONE) pkg_sync;
+  if (pkgnames==[]) error,"Must specify a string-type package name";
 
   instpkg = get_inst_pkg();
   if (noneof(instpkg)) return;
@@ -744,16 +775,11 @@ func pkg_remove(pkgnames,verbose=)
     if (kinput("OK? ","y")!="y") return 0;
   }
   
+  instdir = Y_HOME+"packages/installed/";
+    
   for (np=1;np<=numberof(pkgnames);np++) {
     pkgname = pkgnames(np);
 
-    if (!setup_done) pkg_setup,first=1;
-    
-    if (verbose==[]) verbose=PKG_VERBOSE;
-    if (pkgname==[]) error,"Must specify a string-type package name";
-    
-    instdir = Y_HOME+"packages/installed/";
-    
     if (verbose==1) {
       write,format="%-20s: Removing...",pkgname;
     } else if (verbose>=2) {
