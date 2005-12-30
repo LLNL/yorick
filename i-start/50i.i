@@ -1,6 +1,8 @@
 autoload, "basfix.i", obasis, baset, baget;
 autoload, "bessel.i", bessj0, bessj1, bessj, bessy0, bessy1, bessy;
 autoload, "bessel.i", bessi0, bessi1, bessi, bessk0, bessk1, bessk;
+autoload, "calendar.i", calendar, unix_time, julian_day;
+autoload, "calendar.i", datestamp, base60, tz_set;
 autoload, "cheby.i", cheby_fit, cheby_eval;
 autoload, "cheby.i", cheby_integ, cheby_deriv, cheby_poly;
 autoload, "convol.i", convol, fft_good;

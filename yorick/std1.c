@@ -1,5 +1,5 @@
 /*
- * $Id: std1.c,v 1.1 2005-09-18 22:04:15 dhmunro Exp $
+ * $Id: std1.c,v 1.2 2005-12-30 21:50:55 dhmunro Exp $
  * More Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -1004,15 +1004,20 @@ void Y__(int nArgs)
 extern char *Ytimestamp(void);  /* 25 character return */
 
 void
-Y_timestamp(int nArgs)
+Y_timestamp(int argc)
 {
-  time_t n_time;
-  Array *array;
-  if (nArgs!=1 || YNotNil(sp))
-    YError("timestamp takes exactly one nil argument");
-  array = PushDataBlock(NewArray(&stringStruct, (Dimension *)0));
-  n_time = time((void *)0);
-  array->value.q[0] = p_strcpy(strtok(ctime(&n_time), "\n"));
+  time_t n_time = time((void *)0);
+  char *time = ctime(&n_time);
+  long index = yget_ref(0);
+  if (argc != 1) y_error("timestamp takes exactly one argument");
+  if (index >= 0) {
+    ypush_long((long)n_time);
+    yput_global(index, 0);
+  }
+  if (!yarg_subroutine()) {
+    char **q = ypush_q(0);
+    q[0] = p_strcpy(strtok(time, "\n"));
+  }
 }
 
 static double y_wall0 = 0.;

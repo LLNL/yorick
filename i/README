@@ -139,6 +139,8 @@
      Function:  make
    kepler.i   - simple solar system models
      Functions: kepler, solar_system, moon
+   calendar.i - functions for dealing with dates and times
+     Functions: calendar, unix_time, julian_day, datestamp, base60, tz_set
 
    Demonstration programs:
    -----------------------

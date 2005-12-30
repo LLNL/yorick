@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.7 2005-11-27 20:39:51 dhmunro Exp $
+ * $Id: std.i,v 1.8 2005-12-30 21:50:55 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3800,8 +3800,11 @@ extern after;
 
 extern timestamp;
 /* DOCUMENT timestamp()
+         or timestamp(utime)
+         or timestamp, utime
      returns string of the form "Sun Jan  3 15:14:13 1988" -- always
-     has 24 characters.
+     has 24 characters.  If a simple variable reference UTIME is supplied,
+     it will be set to the number of seconds since 1970 Jan 1 0000 UT.
    SEE ALSO: timer
  */
 
