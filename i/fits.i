@@ -6,16 +6,29 @@
  * Copyright (c) 2000-2002 Eric THIEBAUT.
  *
  * History:
- *	$Id: fits.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ *	$Id: fits.i,v 1.2 2006-01-26 08:10:28 thiebaut Exp $
  *	$Log: fits.i,v $
- *	Revision 1.1  2005-09-18 22:06:00  dhmunro
- *	Initial revision
+ *	Revision 1.2  2006-01-26 08:10:28  thiebaut
+ *	fixed errmode arg in fits_check_file and improved doc of fits_read
+ *
+ *	Revision 1.19  2006/01/26 08:06:07  eric
+ *	 - fixed "errmode" argument in fits_check_file;
+ *	 - improved documentation of fits_read function.
+ *
+ *	Revision 1.18  2005/03/29 13:57:54  eric
+ *	 - fix guessing of column type when TFORM# keyword is already defined
+ *	 - fix fits_is_... routines
+ *
+ *	Revision 1.17  2004/10/22 15:19:29  eric
+ *	 - fits_write_bintable takes into account existing "TFORM#" FITS
+ *	   cards to format the columns (thanks to Clémentine Béchet).
+ *	 - New function: fits_strcmp.
  *
  *	Revision 1.16  2004/09/03 09:13:27  eric
  *	 - New function fits_pad_hdu to round up file size to a multiple
  *	   of FITS blocking factor.
  *	 - fits_new_hdu: fix offset of data part by calling fits_pad_hdu
- *	   (thanks to Antoine Merand for pointing this bug).
+ *	   (thanks to Antoine Mérand for pointing this bug).
  *	 - fits_close: call fits_pad_hdu to finalize stream open for
  *	   writing.
  *	 - fits_new_image: bitpix and dimension list can be guessed from
@@ -48,11 +61,11 @@
  *
  *	Revision 1.12  2004/07/09 09:30:37  eric
  *	 - Fixed bug in fits_move and typo in error message for fits_create
- *	   (thanks to Clementine Bechet).
+ *	   (thanks to Clémentine Béchet).
  *
  *	Revision 1.11  2004/06/22 16:22:49  eric
  *	 - Fix a bug in fits_write_bintable which prevents writing strings in
- *	   a binary table (thanks to Clementine Bechet).
+ *	   a binary table (thanks to Clémentine Béchet).
  *
  *	Revision 1.10  2004/03/19 18:28:45  eric
  *	 - New functions: fits_current_hdu, fits_info, fits_eof, fits_list.
@@ -97,7 +110,7 @@
 
 /*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.1 $";
+fits = "$Revision: 1.2 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
@@ -161,7 +174,7 @@ fits = "$Revision: 1.1 $";
 
      There is a (very) simplified driver fits_write (which see) to create a
      new  FITS  file to  store  a  Yorick  array.  The  following  examples
-     demontrate  how to write a moderately complex FITS file with the basic
+     demontrates how to write a moderately complex FITS file with the basic
      routines (assuming DATA1 is a 2-dimensional array):
 
        fh = fits_open(name, 'w');      // create new file
@@ -194,7 +207,7 @@ fits = "$Revision: 1.1 $";
      Alternatively, The function fits_create can be used to open a new file
      and setup  a basic primary header.   In this case, the  first lines of
      the above examples become:
-     
+
        fh = fits_create(name, 'w', extend=1,
                         bitpix=fits_bitipix_of(data1),
                         dimslist=dimsof(data1));
@@ -294,6 +307,7 @@ fits = "$Revision: 1.1 $";
        fits_tolower        - convert string(s) to lower case letters
        fits_toupper        - convert string(s) to upper case letters
        fits_trim           - removes trailing spaces
+       fits_strcmp         - compare strings according to FITS conventions
 
 
    CHANGES WITH RESPECT TO "OLD" FITS PACKAGES
@@ -394,7 +408,7 @@ func fits_info(fh, hdu)
      Prints header contents of current HDU in FITS handle FH or all HDU's
      in FITS file FILENAME.  If argument HDU is given, only this header unit
      get printed out (HDU may be an array).
-     
+
    SEE ALSO: fits, fits_open. */
 {
   local cards, offset;
@@ -440,16 +454,20 @@ func _fits_info_worker(fh)
 
 func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
                pack=, select=)
-/* DOCUMENT fits_read(filename)
+/* DOCUMENT           a = fits_read(filename)
        -or- local fh; a = fits_read(filename, fh)
+
      Open  FITS file  FILENAME and  read data.   FH is  an  optional output
      symbol where  the FITS handle  will be stored  for future use  such as
      moving  to  a  FITS  extension  in  the  same  file  and  reading  its
      header/data.  (Note:  a FITS handle is  a Yorick list  that contains a
-     file handle and all header information from the current HDU.)
-
-     By  default, the data  get read  from the  first HDU  but this  can be
-     changed with the HDU keyword (default HDU=1, i.e. primary HDU).
+     file  handle and  all header  information from  the current  HDU.)  By
+     default, the data get read from  the first HDU but this can be changed
+     with the HDU keyword (default  HDU=1, i.e., primary HDU).  If data get
+     read  from the  primary  HDU or  a  FITS image  extension, the  result
+     returned  by  the  function  fits_read()  is a  numerical  array  (see
+     fits_read_array); if the data get  read from a binary table extension,
+     the result is a vector of pointers (see fits_read_bintable).
 
      Keyword ENCODING has the same meaning as in fits_open (which see).
 
@@ -459,6 +477,7 @@ func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
 
      Keywords   PACK   and   SELECT   have   the   same   meaning   as   in
      fits_read_bintable (which see).
+
 
    SEE ALSO: fits, fits_write, fits_open,
              fits_read_array, fits_read_bintable. */
@@ -495,6 +514,7 @@ func fits_write(filename, data, encoding=, overwrite=,
      type (8, 16 or 32) and neither BSCALE nor BZERO are specified, optimal
      BSCALE  and BZERO  values  will be  automatically  computed thanks  to
      fits_best_scale (which see).
+
 
    SEE ALSO: fits, fits_best_scale, fits_bitpix_of, fits_create,
              fits_write_header, fits_write_array. */
@@ -653,7 +673,7 @@ func fits_close(fh)
 
 func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
                  template=, history=, comment=, bzero=, bscale=)
-/* DOCUMENT fits_create(filename)   
+/* DOCUMENT fits_create(filename)
      Creates  a new  FITS  file FILENAME  and  returns a  FITS handle  with
      mandatory cards (i.e. SIMPLE, BITPIX, NAXIS, NAXISn) and some optional
      cards (i.e. EXTEND, BSCALE and BZERO) already initialized.
@@ -674,7 +694,7 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
      "NAXIS#" (with  # an integer),  "BSCALE" and "BZERO"; the  other cards
      get copied.  See keywords BSCALE and BZERO if you specifically want to
      set these values.
-     
+
      Keywords BSCALE and BZERO can  be used to specify physical value scale
      and offset.   See fits_write_array to figure out  how keywords BITPIX,
      BSCALE and BZERO are used to convert data values into file values.
@@ -705,7 +725,7 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
 
   /* Some constants. */
   scale_comment = "data_value = BZERO + BSCALE*file_value";
-  
+
   /* Create new file and set minimal header. */
   fh = fits_open(filename, 'w', encoding=encoding, overwrite=overwrite);
   fits_set, fh, "SIMPLE", 'T',   "true FITS file created by Yorick";
@@ -740,7 +760,7 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
         _car, fh, 1, grow([], _car(fh, 1)(j), _car(template, 1)(i));
         _car, fh, 2, grow([], _car(fh, 2)(j), _car(template, 2)(i));
       }
-    }    
+    }
     template = [];
   }
   if (! is_void(bscale)) fits_set, fh, "BSCALE", bscale, scale_comment;
@@ -759,9 +779,9 @@ func fits_check_file(filename, errmode)
      is very simple: it is sufficient that the first FITS card in the first
      2880 bytes has keyword "SIMPLE" with logical value 'T' (true).
 
-  SEE ALSO: fits. */
+  SEE ALSO: fits, open. */
 {
-  stream = open(filename, "rb", errmode);
+  stream = open(filename, "rb", (errmode ? 1n : 0n));
   if (! stream) return 0n;
   block_size = sizeof((block = array(char, 80, 36)));
   if (_read(stream, 0, block) != block_size) return 0n;
@@ -1363,7 +1383,7 @@ func fits_pad_hdu(fh)
   if (file_size - data_offset < fits_get_data_size(fh)) {
     error, "no data written or short data part";
   }
-  
+
   /* Possibly pad file with null bytes or spaces. */
   rounded_size = ((file_size + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE;
   if (rounded_size > file_size) {
@@ -1376,7 +1396,7 @@ func fits_pad_hdu(fh)
 
 func fits_new_hdu(fh, xtension, comment)
 /* DOCUMENT fits_new_hdu(fh, xtension)
-       -or- fits_new_hdu(fh, xtension, comment)       
+       -or- fits_new_hdu(fh, xtension, comment)
      Starts a new extension in FITS  file open for writing.  FH is the FITS
      handle, XTENSION is  the name of the FITS extension  and COMMENT is an
      optional string comment.  After calling fits_new_hdu, there is no need
@@ -1824,7 +1844,7 @@ func fits_write_array(fh, data, which=, rescale=)
        for (i=1 ; i<=nslices ; ++i)
          fits_write_array, fh, random(100, 45), which=i;
        fits_close, fh;
-                        
+
 
    SEE ALSO: fits, fits_write, fits_write_header. */
 {
@@ -1934,7 +1954,7 @@ func fits_set_dims(fh, dimlist)
 {
   if (is_void(dimlist)) {
     fits_set, fh, "NAXIS", 0, "this HDU contains no data";
-  } else {    
+  } else {
     if ((s = structof(dimlist)) != long && s != int && s != short && s != char)
       error, "non-integer data type for DIMLIST";
     n = dimsof(dimlist)(1);
@@ -1964,7 +1984,7 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
      BITPIX, DIMLIST, BZERO, and BSCALE.   If argument DATA is given, it is
      used  to guess  the  bits per  pixel  and the  dimension  list if  not
      specified by the keywords BITPIX and DIMSLIST respectively.
-     
+
    SEE ALSO: fits, fits_write_array. */
 {
   fits_new_hdu, fh, "IMAGE", "this HDU contains FITS image extension";
@@ -1987,7 +2007,7 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
 func fits_new_bintable(fh, comment)
 /* DOCUMENT fits_new_bintable(fh)
        -or- fits_new_bintable(fh, comment)
-       
+
      Starts a new  binary table FITS extension.  This  routine starts a new
      FITS extension with  name "BINTABLE" and pre-set FITS  cards needed to
      describe the  table with fake values  (the correct values  will be set
@@ -2020,7 +2040,7 @@ func fits_write_bintable(fh, ptr, logical=)
                  where  NROWS  is the  number  of  rows  in the  table  and
                  NCOLS(i) is  the repeat  count of the  i-th field;  it can
                  also be simply a NROWS element vector if NCOLS(i) = 1.
-     
+
      In the current  version of the routine, only  arrays of numbers (char,
      short, int,  long, float,  double or complex)  and vectors  of strings
      (you  can  use several  vectors  to  circumvent  this limitation)  are
@@ -2032,9 +2052,11 @@ func fits_write_bintable(fh, ptr, logical=)
         fits_set, ...;
         fits_write_bintable, fh, ptr; // write binary table
 
-     fits_write_bintable automatically  guess the  format of the  fields in
-     the binary table and accordingly set FITS cards "TFORM#" (with # equal
-     to the field number) in the header of the binary table.
+     If  FITS cards "TFORM#"  (with #  equal to  the field  number) already
+     exists   in  the  current   header,  fits_write_bintable   checks  the
+     consistency of the  corresponding data field in PTR  (and performs any
+     required conversion);  otherwise, the format  is automatically guessed
+     and set accordingly in the header of the binary table.
 
      If keyword LOGICAL is true (non nil and non-zero) then arrays of int's
      in  PTR  are considered  as  logical arrays  and  saved  as arrays  of
@@ -2063,87 +2085,209 @@ func fits_write_bintable(fh, ptr, logical=)
     error, "expecting array or pointer to save in BINTABLE";
   }
 
-  /* Guess the format. */
+  /* Find the format. */
   tfields = numberof(ptr);
-  tform = array(string, tfields);
   mult = size = array(long, tfields);
   nrows = -1;
   for (i=1 ; i<=tfields ; ++i) {
     local a; eq_nocopy, a, *ptr(i);
-    if (! is_array(a)) error, "unexpected non-array field for BINTABLE";
-    dims = dimsof(a);
-    ndims = dims(1);
-    if (ndims != 2 && ndims != 1)
-      error, "only 1 or 2-dimensional arrays can be a field of a BINTABLE";
-    if (i == 1) nrows = dims(2);
-    else if (dims(2) != nrows)
-      error, "all fields of a BINTABLE must have the same number of rows";
+    if (is_void(a)) {
+      ncols = 0;
+    } else {
+      if (! is_array(a)) error, "unexpected non-array field for BINTABLE";
+      dims = dimsof(a);
+      ndims = dims(1);
+      if (ndims != 2 && ndims != 1)
+        error, "only 1 or 2-dimensional arrays can be a field of a BINTABLE";
+      if (i == 1) nrows = dims(2);
+      else if (dims(2) != nrows)
+        error, "all fields of a BINTABLE must have the same number of rows";
+      ncols = (ndims == 2 ? dims(3) : 1);
+    }
     type = structof(a);
-    ncols = (ndims == 2 ? dims(3) : 1);                      
-    if (type == double) {
-      t = 'D';
-      size(i) = 8;
-    } else if (type == long) {
-      t = 'J';
-      size(i) = 4;
-    } else if (type == char) {
-      t = 'B';
-      size(i) = 1;
-    } else if (type == complex) {
-      t = 'M';
-      size(i) = 16;
-    } else if (type == int) {
-      if (logical) {
-        t = 'L';
-        size(i) = 1;
-        tmp = array('F', dims); /* array of "false" values */
-        if (logical == 2) {
-          /* Treats strictly negative values as "bad" values and strictly
-             positive values as "true" values. */
-          if (is_array((j = where(a < 0)))) tmp(j) = '\0';
-          if (is_array((j = where(a > 0)))) tmp(j) = 'T';
+    if (type == string && ncols != 1) {
+      error, "only string vectors implemented in BINTABLE";
+    }
+
+    /* Get/check the format if already specified */
+    key = swrite(format="TFORM%d", i);
+    tform = fits_get(fh, key);
+    if (structof(tform) == string) {
+
+      /**
+      *** Parse TFORM# FITS cards.
+      **/
+
+      m = -1;
+      s = nil = string(0);
+      if (sread(format="%d%1s%s", tform, m, s, nil) != 2) {
+        m = (sread(format="%1s%s", tform, s, nil) == 1 ? 1 : -1);
+      }
+      if (m < 0) error, "bad format string in FITS card \""+key+"\"";
+      if ((type == string ? m <= 0 : ncols != m)) {
+        error, ("bad number of columns in "+fits_nth(i)
+                +" field of binary table");
+      }
+      mult(i) = m;
+      t = (*pointer(s))(1);
+      if (ncols) {
+        if (t == 'A') {
+          size(i) = 1;
+          bad_type = (type != (cast = char) && type != string);
+          if (type == string) {
+            len = strlen(a);
+            tmp = array(char, nrows, m);
+            for (k=1 ; k<=nrows ; ++k) {
+              if ((l = min(len(k), m))) {
+                tmp(k, 1:l) = (*pointer(a(k)))(1:l);
+              }
+            }
+            ptr(i) = &tmp; /* only affect local (private) copy */
+            a = [];
+            type = cast; /* prevent conversion below */
+          }
+        } else if (t == 'B') {
+          size(i) = 1;
+          bad_type = (type != (cast = char) &&
+                      type != long && type != int && type != short);
+        } else if (t == 'I') {
+          size(i) = 2;
+          bad_type = (type != (cast = short) &&
+                      type != long && type != int && type != char);
+        } else if (t == 'J') {
+          size(i) = 4;
+          bad_type = (type != (cast = long) &&
+                      type != int && type != short && type != char);
+        } else if (t == 'E') {
+          size(i) = 4;
+          bad_type = (type != (cast = float) &&
+                      type != double && type != long &&
+                      type != int && type != short && type != char);
+        } else if (t == 'D') {
+          size(i) = 8;
+          bad_type = (type != (cast = double) &&
+                      type != float && type != long &&
+                      type != int && type != short && type != char);
+        } else if (t == 'C') {
+          size(i) = 8;
+          bad_type = (type != complex &&
+                      type != double && type != float && type != long &&
+                      type != int && type != short && type != char);
+          if (! bad_type) {
+            tmp = array(float, nrows, 2*ncols);
+            tmp(,1::2) = float(a);
+            if (type == complex) tmp(,2::2) = a.im;
+            ptr(i) = &tmp;
+            a = [];
+            type = cast = float; /* prevent conversion below */
+          }
+        } else if (t == 'M') {
+          size(i) = 16;
+          bad_type = (type != (cast = complex) &&
+                      type != double && type != float && type != long &&
+                      type != int && type != short && type != char);
+        } else if (t == 'L') {
+          size(i) = 1;
+          bad_type = (type != (cast = char) &&
+                      type != long && type != int && type != short);
+          if (! bad_type && type != cast) {
+            tmp = array('T', nrows, ncols);
+            if (is_array((a = where(! a)))) tmp(a) = 'F';
+            ptr(i) = &tmp;
+            a = [];
+            type = cast; /* prevent conversion below */
+          }
+        } else if (t == 'X') {
+          error, "bit array in FITS binary table not yet implemented";
+        } else if (t == 'P') {
+          error, "pointer array in FITS binary table not yet implemented";
         } else {
-          /* Treats non-zero values as "true" values. */
-          if (is_array((j = where(a)))) tmp(j) = 'T';
+          error, "bad format letter in FITS card "+key;
         }
-        ptr(i) = &tmp; /* only affect local (private) copy */
-      } else {
+
+        /* Maybe convert data type. */
+        if (bad_type) {
+          error, "unconsistent data formats for "+fits_nth(i)+" field";
+        }
+        if (cast != type) {
+          ptr(i) = &cast(a);
+          a = [];
+        }
+      }
+
+    } else if (is_void(tform)) {
+
+      /**
+      *** Otherwise guess it from data tables contents.
+      **/
+
+      if (ncols == 0) {
+        t = 'A';
+        size(i) = 1;
+      } else if (type == double) {
+        t = 'D';
+        size(i) = 8;
+      } else if (type == long) {
         t = 'J';
         size(i) = 4;
+      } else if (type == char) {
+        t = 'B';
+        size(i) = 1;
+      } else if (type == complex) {
+        t = 'M';
+        size(i) = 16;
+      } else if (type == int) {
+        if (logical) {
+          t = 'L';
+          size(i) = 1;
+          tmp = array('F', dims); /* array of "false" values */
+          if (logical == 2) {
+            /* Treats strictly negative values as "bad" values and strictly
+               positive values as "true" values. */
+            if (is_array((j = where(a < 0)))) tmp(j) = '\0';
+            if (is_array((j = where(a > 0)))) tmp(j) = 'T';
+          } else {
+            /* Treats non-zero values as "true" values. */
+            if (is_array((j = where(a)))) tmp(j) = 'T';
+          }
+          ptr(i) = &tmp; /* only affect local (private) copy */
+        } else {
+          t = 'J';
+          size(i) = 4;
+        }
+      } else if (type == float) {
+        t = 'E';
+        size(i) = 4;
+      } else if (type == short) {
+        t = 'I';
+        size(i) = 2;
+      } else if (type == string) {
+        t = 'A';
+        size(i) = 1;
+        ncols = max((len = strlen(a)));
+        tmp = array(char, nrows, ncols);
+        for (k=1 ; k<=nrows ; ++k) {
+          if ((l = len(k))) tmp(k, 1:l) = (*pointer(a(k)))(1:l);
+        }
+        ptr(i) = &tmp; /* only affect local (private) copy */
+      } else if (type == pointer) {
+        error, "pointer fields not yet implemented in BINTABLE";
+      } else {
+        error, "unsupported data type in BINTABLE";
       }
-    } else if (type == float) {
-      t = 'E';
-      size(i) = 4;
-    } else if (type == short) {
-      t = 'I';
-      size(i) = 2;
-    } else if (type == string) {
-      t = 'A';
-      size(i) = 1;
-      if (ncols != 1) error, "only string vectors implemented in BINTABLE";
-      ncols = max((len = strlen(a)));
-      tmp = array(char, nrows, ncols);
-      for (k=1 ; k<=nrows ; ++k) {
-        if ((l = len(k))) tmp(k, 1:l) = (*pointer(a(k)))(1:l);
-      }
-      ptr(i) = &tmp; /* only affect local (private) copy */
-    } else if (type == pointer) {
-      error, "pointer fields not yet implemented in BINTABLE";
+      mult(i) = ncols;
+      fits_set, fh, key, swrite(format="%d%c", ncols, t),
+        "format of " + fits_nth(i) + " field";
+
     } else {
-      error, "unsupported data type in BINTABLE";
+      error, "bad value for FITS card "+key;
     }
-    mult(i) = ncols;
-    tform(i) = swrite(format="%d%c", ncols, t);
   }
 
   /* Update header information then write header. */
   size *= mult; /* number of bytes per rows for each field */
   nbytes = sum(size);
   pcount = _fits_bintable_header(fh, nbytes, nrows, tfields);
-  for (i=1 ; i<=tfields ; ++i) {
-    fits_set, fh, swrite(format="TFORM%d", i), tform(i),
-      "format of " + fits_nth(i) + " field";
-  }
   fits_write_header, fh;
 
   /* Write data. */
@@ -2191,11 +2335,11 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
      (see fits_write_bintable).  If NCOLS(i)  = 1, the i-th pointer element
      is the address of a NROWS vector, i.e. not a NROWS-by-1 array.
 
-     Keyword SELECT  can be  used to retain  only some fields  (or re-order
-     them) of the  table.  For instance, use SELECT=[2,5,3]  to return only
-     2nd, 5th and 3rd fields (in  that order) of the table.  The fields can
-     also be selected by their names, e.g. SELECT=["flux","distance"] (note
-     that trailing spaces and case is not significant for the field names).
+     Keyword SELECT can be used to retain only some fields of the table (or
+     re-order them).  For instance,  use SELECT=[2,5,3] to return only 2nd,
+     5th and 3rd fields (in that  order) of the table.  The fields can also
+     be selected by their names, e.g. SELECT=["flux","distance"] (note that
+     trailing spaces and case is not significant for the field names).
 
      If keyword  PACK is  true, fits_pack_bintable (which  see) is  used to
      pack the  columns of  the binary table  into a single  array (possibly
@@ -2227,26 +2371,11 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
 
   /* May-be we just want some fields given their names. */
   if (structof(select) == string) {
-    ttype = array(string, tfields);
-    for (i=1 ; i<=tfields ; ++i) {
-      s = fits_get(fh, swrite(format="TTYPE%d", i));
-      if (structof(s) == string) {
-        s = fits_trim(s); // FIXME: not needed (see fits_parse)
-        if (strlen(s)) ttype(i) = fits_tolower(s);
-      }
-    }
-    n = numberof(select);
-    tmp = array(long, dimsof(select)); // result will have same geometry
-    for (i=1 ; i<=n ; ++i) {
-      j = where(fits_tolower(fits_trim(select(i))) == ttype);
-      if (numberof(j) != 1) {
-        if (is_array(j)) error, "more than one field match \""+select(i)+"\"";
-        error, "no field matches \""+select(i)+"\"";
-      }
-      tmp(i) = j(1);
-    }
-    select = tmp;
-    tmp = ttype = []; // free some memory
+    select = fits_index_of_table_field(fh, select);
+    keep = array(0n, tfields);
+    keep(select) = 1n;
+  } else {
+    keep = array(1n, tfields);
   }
 
   /* Extract formats. */
@@ -2256,7 +2385,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
   is_logical = array(int, tfields);
   is_complex = array(int, tfields);
   is_not_byte = array(int, tfields);
-  size = array(long, tfields);
+  size = array(long, tfields); /* number of bytes per column per row */
   mult = array(long, tfields);
   s = nil = string(0);
   m = 0;
@@ -2320,11 +2449,13 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
     } else {
       error, "unknown format \""+tform+"\" in FITS binary table";
     }
-    ncols = mult(i);
-    if (ncols) {
+    if (mult(i) && keep(i)) {
+      ncols = mult(i);
       ptr(i) = &(ncols == 1 ? array(type, nrows) : array(type, nrows, ncols));
       if (nrows > 1) row(i) = &array(type, ncols);
       is_not_byte(i) = (type != char);
+    } else {
+      keep(i) = 0n; /* will not read this column */
     }
   }
 
@@ -2340,7 +2471,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
        table can in a single call to _read if TFIELDS=1 and there are no
        padding bytes. */
     for (i=1 ; i<=tfields ; ++i) {
-      if (mult(i)) {
+      if (keep(i)) {
         eq_nocopy, a, *ptr(i);
         if (is_not_byte(i)) _read, stream, address, a;
         else if (_read(stream, address, a) != size(i)) error, "short file";
@@ -2352,7 +2483,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
        one field at a time. */
     for (k=1 ; k<=nrows ; ++k) {
       for (i=1 ; i<=tfields ; ++i) {
-        if (mult(i)) {
+        if (keep(i)) {
           eq_nocopy, a, *row(i);
           if (is_not_byte(i)) _read, stream, address, a;
           else if (_read(stream, address, a) != size(i))
@@ -2366,7 +2497,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
   }
 
   /* Fix single precision complex array. */
-  if ((n = numberof((i = where(is_complex)))) > 0) {
+  if ((n = numberof((i = where(is_complex & keep)))) > 0) {
     for (k=1 ; k<=n ; ++k) {
       j = i(k);
       eq_nocopy, a, *ptr(j);
@@ -2377,7 +2508,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
 
   /* Fix logical array: 'T' -> 1 (true), 'F' -> 0 (false), and any other
      character -> -1 (bad). */
-  if (! raw_logical && (n = numberof((i = where(is_logical)))) > 0) {
+  if (! raw_logical && (n = numberof((i = where(is_logical & keep)))) > 0) {
     if (is_void(bad)) bad = -1;
     for (k=1 ; k<=n ; ++k) {
       j = i(k);
@@ -2388,7 +2519,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
   }
 
   /* Fix string array. */
-  if (! raw_string && (n = numberof((i = where(is_string)))) > 0) {
+  if (! raw_string && (n = numberof((i = where(is_string & keep)))) > 0) {
     local a;
     for (k=1 ; k<=n ; ++k) {
       j = i(k);
@@ -2427,9 +2558,9 @@ func fits_pack_bintable(ptr)
      array  is NROWS-by-NCOLS  where NROWS  is the  first dimension  of all
      fields (which  must be the  same) and NCOLS  is the sum of  the second
      dimension of all fields.
-     
+
    SEE ALSO: fits_read_bintable. */
-{  
+{
   if (structof(ptr) != pointer) error, "expecting array of pointer argument";
   n = numberof(ptr);
   begin = array(long, n + 1);
@@ -2438,11 +2569,13 @@ func fits_pack_bintable(ptr)
   ncols = 0;
   type = [];
   for (i=1 ; i<=n ; ++i) {
-    if ((s = structof(*ptr(i))) != char && s != short && s != int &&
-        s != long && s!=float && s!=double && s != string) {
+    local a; eq_nocopy, a, *ptr(i);
+    if (is_void(a)) continue; /* ignore empty field */
+    if ((s = structof(a)) != char && s != short && s != int &&
+        s != long && s != float && s != double && s != string) {
       error, "bad data type in table column";
     }
-    dims = dimsof(*ptr(i));
+    dims = dimsof(a);
     ndims = dims(1);
     if (ndims == 1) {
       ++ncols;
@@ -2519,12 +2652,17 @@ func fits_read_bintable_as_hashtable(fh, h, format=,
      one directive to write an  integer and no other format directives.  If
      a card 'TUNITn' exists, its  value is stored into member with "_units"
      appended to the corresponding field name.
-     
+
      Keywords SELECT, RAW_STRING, RAW_LOGICAL and BAD have the same meaning
      as in fits_read_bintable.
-     
+
    SEE ALSO: fits_read_bintable, swrite, h_new. */
 {
+  local names;
+  if (structof(select) == string) {
+    eq_nocopy, names, select; /* save literal names for further use */
+    select = fits_index_of_table_field(fh, select);
+  }
   ptr = fits_read_bintable(fh, select=select, bad=bad,
                            raw_string=raw_string, raw_logical=raw_logical);
   n = numberof(ptr);
@@ -2535,14 +2673,24 @@ func fits_read_bintable_as_hashtable(fh, h, format=,
   }
   if (is_void(format)) format = "_%d";
   for (i=1 ; i<=n ; ++i) {
-    name = fits_get(fh, swrite(format="TTYPE%d", i));
-    if (structof(name) == string && strlen(name)) {
-      name = fits_tolower(name);
+    /* J is the column number for I-th element in PTR. */
+    j = (is_void(select) ? i : select(i));
+
+    /* Get member name. */
+    if (is_void(names)) {
+      name = fits_get(fh, swrite(format="TTYPE%d", j));
+      if (structof(name) == string && strlen(name)) {
+        name = fits_tolower(name);
+      } else {
+        name = swrite(format=format, j);
+      }
     } else {
-      name = swrite(format=format, i);
+      name = names(i);
     }
+
+    /* Instanciate hash members for column data and units. */
     h_set, h, name, *ptr(i);
-    units = fits_get(fh, swrite(format="TUNIT%d", i));
+    units = fits_get(fh, swrite(format="TUNIT%d", j));
     name_units = name + "_units";
     if (structof(units) == string && strlen(units)) {
       h_set, h, name_units, units;
@@ -2551,6 +2699,36 @@ func fits_read_bintable_as_hashtable(fh, h, format=,
     }
   }
   return h;
+}
+
+func fits_index_of_table_field(fh, name)
+/* DOCUMENT fits_index_of_table_field(fh, name)
+     Returns index(es) of FITS table columns with their TTYPE# value
+     matching array of string(s) NAME.  The table header is read from
+     current HDU of FITS handle FH.
+
+   SEE ALSO: fits, fits_read_bintable. */
+{
+  if (structof(name) != string) error, "expecting table column name(s)";
+  tfields = fits_get(fh, "TFIELDS");
+  ttype = array(string, tfields);
+  for (i=1 ; i<=tfields ; ++i) {
+    s = fits_get(fh, swrite(format="TTYPE%d", i));
+    if (structof(s) == string && strlen(s)) {
+      ttype(i) = fits_tolower(s);
+    }
+  }
+  n = numberof(name);
+  index = array(long, dimsof(name)); // result will have same geometry
+  for (i=1 ; i<=n ; ++i) {
+    j = where(fits_tolower(fits_trim(name(i))) == ttype);
+    if (numberof(j) != 1) {
+      if (is_array(j)) error, "more than one field match \""+name(i)+"\"";
+      error, "no field matches \""+name(i)+"\"";
+    }
+    index(i) = j(1);
+  }
+  return index;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -2593,6 +2771,27 @@ func fits_trim(s)
   if (! (i = numberof((c = *pointer(s))))) return string(0);
   while (--i) { if (c(i) != ' ') return string(&c(1:i)); }
   return "";
+}
+
+func fits_strcmp(a,b)
+/* DOCUMENT fits_strcmp(a, b)
+     Returns non-zero where (array of) strings A and B are the same in FITS
+     sense, i.e., ignore case and trailing ordinary spaces (code 0x20). For
+     instance, "Hello" and "HELLO " are the same strings.
+
+   SEE ALSO: fits, fits_toupper. */
+{
+  n = numberof((r = array(int, dimsof(a,b))));
+  for (i=1 ; i<=n ; ++i) {
+    if ((na = numberof((ca = *pointer(a(i))))))
+      while (--na && ca(na) == ' ') ;
+    if ((nb = numberof((cb = *pointer(b(i))))))
+      while (--nb && cb(nb) == ' ') ;
+    if (na == nb)
+      r(i) = (na ? allof(_fits_toupper(1 + ca(1:na)) ==
+                         _fits_toupper(1 + cb(1:nb))) : 1n);
+  }
+  return r;
 }
 
 func fits_map(op, src)
@@ -3264,7 +3463,7 @@ func fits_init(sloopy=, allow=, blank=)
 /* DOCUMENT fits_init;
      (Re)initializes FITS private  data.  Normally you do not  have to call
      this  routine  because  this  routine  is  automatically  called  when
-     "fits2.i" is  parsed by Yorick.   You may however need  to explicitely
+     "fits.i" is  parsed by Yorick.   You may however need  to explicitely
      call  fits_init  if  you  suspect  that some  FITS  private  data  get
      corrupted or if you want to tune FITS strict/sloopy behaviour.
 
@@ -3412,7 +3611,7 @@ func fitsObsolete(..,stamp=,data_min=,data_max=,rescale=,pack=,which=)
        fitsHeader
        fitsFixHeader
        fitsRescale
-       
+
    SEE ALSO: fits. */
 { error, "update your code to use new FITS API (type \"help, fits\")"; }
 fitsHeader = fitsFixHeader = fitsAddComment = fitsAddHistory =
@@ -3421,12 +3620,12 @@ fitsRescale = fitsWrite = fitsRead = fitsObsolete;
 func fitsRead(name, &header, which=, pack=, rescale=)
 /* DOCUMENT a= fitsRead(filename, header)
 
-     *** WARNING: Obsolete fits routine (see fits_read) *** 
-   
+     *** WARNING: Obsolete fits routine (see fits_read) ***
+
      Returns the data of the  FITS file FILENAME.  If present, the optional
      argument HEADER will be used to  store the contents of the FITS header
      file (a FitsHeader structure).
-     
+
      Keyword  WHICH may  be  used  to indicate  which  sub-array should  be
      returned.  For instance, if the array DATA with dimensions (235,453,7)
      is stored in the FITS file "data.fits", the sub-array DATA(,,4) can be
@@ -3497,7 +3696,7 @@ func fitsMakeOldHeader(fh)
 /* DOCUMENT fitsMakeOldHeader(fh)
      Convert header information in FITS handle FH into the obsolete FitsHeader
      structure.
-     
+
    SEE ALSO: fits, FitsHeader. */
 {
   hdr = FitsHeader();
