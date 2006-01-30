@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: yorapi.sh,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# $Id: yorapi.sh,v 1.2 2006-01-30 08:30:59 thiebaut Exp $
 # MSWindows and AIX both require lists of all symbols declared as PLUG_API
 # in order to properly link plugins.
 
@@ -20,7 +20,7 @@ rm -f cfg.* yorapi.def
 grep -h PLUG_API >cfg.00 \
  play/play.h play/phash.h play/pstdlib.h play/pstdio.h play/$WIN/playwin.h \
  yorick/ydata.h yorick/binio.h yorick/yio.h yorick/defmem.h yorick/hash.h \
- yorick/bcast.h yorick/parse.h regexp/yfnmatch.h regexp/yregexp.h \
+ yorick/bcast.h yorick/parse.h yorick/yapi.h regexp/yfnmatch.h regexp/yregexp.h \
  matrix/cblasy.h matrix/dg.h fft/cfft.h gist/gist.h gist/hlevel.h gist/draw.h \
  gist/engine.h gist/cgm.h gist/ps.h gist/gtext.h gist/xbasic.h gist/xfancy.h
 
@@ -54,7 +54,7 @@ s/://g
 s/[ 	]*//g
 EOF
 
-sed -f cfg.01 cfg.00 >yorapi.def
+sed -f cfg.01 cfg.00 | sort -u >yorapi.def
 rm -f cfg.*
 
 # original MSWindows script
