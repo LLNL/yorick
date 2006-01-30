@@ -1,6 +1,6 @@
 ;;; yorick.el --- Yorick Development Environment for Emacs
 ;;; for emacs versions >=19 (UNIX or MS Windows)
-;;; $Id: yorick.el,v 1.1 2005-09-18 22:05:53 dhmunro Exp $
+;;; $Id: yorick.el,v 1.2 2006-01-30 08:33:03 thiebaut Exp $
 
 ;; Copyright (c) 2000 David H. Munro.
 
@@ -1158,7 +1158,7 @@ pathnames; these are searched until a file of the given NAME is found."
 (defun yofile-pop ()
   "Pop up the file for the most recent Yorick error message."
   (interactive)
-  (let ((yofile-regexp "LINE: *\\([0-9]+\\) *FILE: *\\([^ \n]+\\)")
+  (let ((yofile-regexp "LINE: *\\([0-9]+\\) *FILE: *\\([^\r\n]+\\)")
         (yofile-line 1)
         (yofile-file 2)
         yofile-expander)
