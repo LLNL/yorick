@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: yorapi.sh,v 1.2 2006-01-30 08:30:59 thiebaut Exp $
+# $Id: yorapi.sh,v 1.3 2006-02-02 09:17:06 thiebaut Exp $
 # MSWindows and AIX both require lists of all symbols declared as PLUG_API
 # in order to properly link plugins.
 
@@ -54,7 +54,7 @@ s/://g
 s/[ 	]*//g
 EOF
 
-sed -f cfg.01 cfg.00 | sort -u >yorapi.def
+sed -f cfg.01 cfg.00 >yorapi.def
 rm -f cfg.*
 
 # original MSWindows script
