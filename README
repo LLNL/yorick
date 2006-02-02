@@ -134,6 +134,9 @@ following directory structure:
       executable yorick (or any sibling of lib/, such as bin/)
     bin/
       yorick executable (this may be installed elsewhere sometimes)
+    packages/
+      directory containing information about packages which extend
+      yorick beyond this basic distribution
 
 ********** DO NOT set either Y_SITE or Y_HOME to a directory you value.
 * DANGER * (In particular, Y_HOME should NEVER be your HOME directory.)
@@ -146,47 +149,28 @@ The contents of Y_HOME depend on architecture, that is, on the
 hardware and operating system; different machines on the same network
 may require different Y_HOME directories.
 
-On MS Windows systems Y_HOME and Y_SITE must be the same directory.
-This is also a reasonable way to install yorick on single architecture
-platforms.  For test versions of yorick, Y_HOME and Y_SITE can be
-identical to the top-level distribution directory containing this
-README.  When Y_HOME = Y_SITE and the yorick executable is in
-Y_HOME/bin, yorick can always find its interpreted library and startup
-files relative to the "launch directory" where the executable lives.
-(A program can figure out where it's executable is on all systems.)
-
-When you build yorick, the values of Y_HOME and Y_SITE are compiled
-in.  As long as the compiled-in values of Y_HOME and Y_SITE are
-correct, you can install the executable anywhere; it doesn't have to
-go in Y_HOME/bin.  (This does no good on systems such as Windows,
-where different users will install the program in different places,
-which is why you must make Y_SITE and Y_HOME the same directory and
-put the executable in Y_HOME/bin/.)
+Sharing Y_SITE among several installations of yorick with different
+Y_HOME turns out to be a poor idea in practice.  It was inspired by
+the /usr/local versus /usr/share distinction in the Linux file system
+standard, but separate Y_SITE and Y_HOME directories have created far
+more trouble that could possibly be justified either by the tiny
+savings in disk space or the apparent maintenance advantage of a
+common Y_SITE.  In practice, the versions of yorick sharing a common
+Y_SITE have tended to diverge enough that the interpreted code
+intended for one version of yorick becomes inappropriate for another.
+Therefore, I strongly recommend setting Y_SITE = Y_HOME in all new
+yorick installations.  On MS Windows systems, this identity is
+mandatory.  In fact, the best idea is to use "make reloc" or
+"make relocatable", which do not build in any fixed directory, but
+force yorick to discover Y_SITE and Y_HOME at runtime.
 
 In any case, you also need to arrange for users to be able to find and
-start yorick.  Under MS Windows, you do that by making an alias that
+start yorick.  Under MS Windows, you do that by making a shortcut that
 starts $Y_HOME/bin/yorick.  Under UNIX, you either need to make sure
 that yorick users have $Y_HOME/bin on their PATH environment variable,
 or put a softlink or script that points to $Y_HOME/bin/yorick in some
 standard place like /usr/bin or /usr/local/bin that is likely to be on
 everyones PATH.
-
-Heterogeneous networks or development sites maintaining several
-versions of yorick naturally require more complicated arrangements.
-Here are two suggestions:
-
-(1) With prefix = /usr or /usr/local and Y_VERSION = 1.5, 2.0, etc.:
-
-  Y_SITE = $prefix/share/yorick/$Y_VERSION
-  Y_HOME = $prefix/lib/yorick/$Y_VERSION
-
-(2) With prefix = any directory cross-mounted to all architectures
-(e.g.- /usr/share) and Y_PLATFORM = any designation unique to all
-machines which can run the same binaries (e.g.- compaq, sunos, hpux,
-linux86, i386-debian-linux):
-
-  Y_SITE = $prefix/yorick/$Y_VERSION
-  Y_HOME = $prefix/yorick/$Y_VERSION/$Y_PLATFORM
 
 ********** DO NOT set either Y_SITE or Y_HOME to a directory you value.
 * DANGER * (In particular, Y_HOME should NEVER be your HOME directory.)
@@ -200,18 +184,14 @@ BUILDING YORICK
 
 To build yorick on a MS Windows machine, read win/README.
 
-If you want to install yorick in a directory other than the one you
-are building in, you must first set Y_SITE and Y_HOME, as described
-above.  (Otherwise, just skip to the next paragraph.)
+The best choice for Y_SITE and Y_HOME (see INSTALLING YORICK above) is
+Y_HOME=Y_SITE=relocate, which you can specify with
 
-A good, generic choice for Y_SITE and Y_HOME is Y_HOME=Y_SITE=relocate,
-which you can specify with
-
-   make Y_HOME=relocate ysite
-or with the equivalent shorthand:
    make reloc
+which is equivalent to
+   make Y_HOME=relocate ysite
 
-The relocate choice forces the runtime fallback to compute Y_HOME and
+The relocate choice forces the runtime computation of Y_HOME and
 Y_SITE.
 
 To set Y_HOME and Y_SITE to hardwired values, you can either edit the
