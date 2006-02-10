@@ -1,5 +1,5 @@
 /*
- * $Id: list.c,v 1.2 2005-11-26 20:04:43 dhmunro Exp $
+ * $Id: list.c,v 1.3 2006-02-10 00:11:18 dhmunro Exp $
  * Rudimentary list data type for Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -213,7 +213,6 @@ yput_car(int iarg, long n, int jarg)
           if (cell->sym.ops == &dataBlockSym) {
             cell->sym.ops = &intScalar;
             Unref(cell->sym.value.db);
-            sp[1].value.db = Ref(cell->sym.value.db);
           }
           if (s->ops==&dataBlockSym) cell->sym.value.db = Ref(s->value.db);
           else cell->sym.value = s->value;
