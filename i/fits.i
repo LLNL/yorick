@@ -6,10 +6,14 @@
  * Copyright (c) 2000-2002 Eric THIEBAUT.
  *
  * History:
- *	$Id: fits.i,v 1.2 2006-01-26 08:10:28 thiebaut Exp $
+ *	$Id: fits.i,v 1.3 2006-02-14 08:42:36 thiebaut Exp $
  *	$Log: fits.i,v $
- *	Revision 1.2  2006-01-26 08:10:28  thiebaut
- *	fixed errmode arg in fits_check_file and improved doc of fits_read
+ *	Revision 1.3  2006-02-14 08:42:36  thiebaut
+ *	make FITS a little bit more tolerant with invalid FITS header
+ *
+ *	Revision 1.20  2006/02/07 12:09:46  eric
+ *	 - be more tolerant for non-compliant FITS file: completely
+ *	   ignore header bytes after the "END" card;
  *
  *	Revision 1.19  2006/01/26 08:06:07  eric
  *	 - fixed "errmode" argument in fits_check_file;
@@ -110,7 +114,7 @@
 
 /*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.2 $";
+fits = "$Revision: 1.3 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
@@ -832,6 +836,18 @@ func fits_read_header(fh)
        fits_id for efficiency reasons and because any errors will be
        raised later). */
     block_id = _fits_id(block);
+    
+    /* Pre-search for the END keyword to cleanup header after the END card
+       (in case invalid/corrupted FITS cards have been left after this
+       card). */
+    if (is_array((end_index = where(block_id == _fits_id_end)))) {
+      end_index = end_index(1);
+      if (end_index < 36) {
+        block_id(end_index+1:36) = 0;
+      }
+    } else {
+      end_index = -1;
+    }
 
     /* Check 1st card of 1st header block. */
     if (nblocks == 1) {
@@ -856,13 +872,12 @@ func fits_read_header(fh)
     }
 
     /* Search for the END keyword. */
-    if (is_array((i = where(block_id == _fits_id_end)))) {
+    if (end_index > 0) {
       /* Append last cards and corresponding identifiers, convert
          cards to strings and store things in FITS handle. */
-      i = i(1) - 1; /* discard the END card */
-      if (i >= 1) {
-        grow, hdr, block(,:i);
-        grow, ids, block_id(:i);
+      if (end_index > 1) {
+        grow, hdr, block(,:end_index-1);
+        grow, ids, block_id(:end_index-1);
       }
       block = [];
       if (is_array((i = where(hdr=='\a')))) {
