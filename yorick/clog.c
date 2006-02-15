@@ -1,5 +1,5 @@
 /*
- * $Id: clog.c,v 1.1 2005-09-18 22:03:57 dhmunro Exp $
+ * $Id: clog.c,v 1.2 2006-02-15 04:31:04 dhmunro Exp $
  * Define routines to handle Contents Log (CLOG) language
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1394,14 +1394,17 @@ static void CLputIdent(p_file *stream, char *identifier)
         } else {
           i++;
         }
-        p_fputs(stream, p_wkspc.c);
       }
-      sprintf(p_wkspc.c, "%s\"", identifier); p_fputs(stream, p_wkspc.c);
+      /* FIXME: buffer overrun? */
+      sprintf(p_wkspc.c, "%s\"", identifier);
+      p_fputs(stream, p_wkspc.c);
     }
 
   } else {
     /* no need for quotes */
-    sprintf(p_wkspc.c, "%s", identifier); p_fputs(stream, p_wkspc.c);
+    /* FIXME: buffer overrun? */
+    sprintf(p_wkspc.c, "%s", identifier);
+    p_fputs(stream, p_wkspc.c);
   }
 }
 
@@ -1410,7 +1413,8 @@ static void CLputChunk(p_file *stream, char *identifier, long n)
   if (n>=1024) YError("impossibly long identifier in CLputChunk");
   idScratch[0]= '\0';
   strncat(idScratch, identifier, n);
-  sprintf(p_wkspc.c, "%s", idScratch); p_fputs(stream, p_wkspc.c);
+  sprintf(p_wkspc.c, "%s", idScratch);
+  p_fputs(stream, p_wkspc.c);
 }
 
 /* ------------------------------------------------------------------------ */
