@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.1 2005-09-18 22:05:25 dhmunro Exp $
+ * $Id: graph.i,v 1.2 2006-02-15 03:57:07 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1688,6 +1688,7 @@ func plfc(z, y, x, ireg, levs=, colors=, region=, triangle=)
   if (is_void(levs)) {
     levs= spann(zmin, zmax, 20, fudge=-0.05);
   } else if (numberof(levs)>1) {
+    levs = double(levs);
     dz= levs(dif); /* blows up if <2 or not numeric */
     reverse= max(dz);
     if (numberof(dz)!=numberof(levs)-1 ||
