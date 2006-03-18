@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.2 2005-11-27 20:39:51 dhmunro Exp $
+ * $Id: std0.c,v 1.3 2006-03-18 21:58:25 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -136,7 +136,7 @@ YInit(char *home, char *site, y_pkg_t **pkgs)
      the switch to the normal include file search path is done in
      stdx.i, which is included just before custom.i
      -- create the default path here:
-        .:~/yorick:~/Yorick:ySiteDir/i:ySiteDir/contrib  */
+        .:~/.yorick:~/yorick:~/Yorick:ySiteDir/i:ySiteDir/contrib  */
   yLaunchDir = p_strcpy(ym_argc>0? ym_argv[0] : 0);
   if (yLaunchDir) {
     int i;
@@ -325,7 +325,7 @@ Y_set_site(int nArgs)
 static char *
 y_make_ipath(char *ylaunch, char *ysite, char *yhome)
 {
-  /* ~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib */
+  /*~/.yorick:~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib*/
   char *path1 = 0, *path2 = 0;
   if (ylaunch && ylaunch[0]) {
     /* prepend Y_LAUNCH for paths.i only */
@@ -337,7 +337,8 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
   } else {
     path2 = p_strcpy("." PATH_SEP);
   }
-  path1 = p_strncat(path2, "~/yorick" PATH_SEP "~/Yorick" PATH_SEP, 0);
+  path1 = p_strncat(path2, "~/.yorick" PATH_SEP
+                    "~/yorick" PATH_SEP "~/Yorick" PATH_SEP, 0);
   if (path2) p_free(path2);
   path2 = p_strncat(path1, ysite, 0);
   p_free(path1);
