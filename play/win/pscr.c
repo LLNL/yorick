@@ -1,5 +1,5 @@
 /*
- * $Id: pscr.c,v 1.1 2005-09-18 22:05:37 dhmunro Exp $
+ * $Id: pscr.c,v 1.2 2006-03-25 03:32:36 dhmunro Exp $
  * routines to initialize graphics for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -105,8 +105,7 @@ p_connect(char *server_name)
         int j;
         for (i=0 ; i<15 ; i++) {
           j = GetNearestPaletteIndex(syspal, w_screen.sys_colors[i]);
-          if (j == CLR_INVALID) PALETTEINDEX(0);
-          w_screen.sys_index[i] = PALETTEINDEX(j);
+          w_screen.sys_index[i] = PALETTEINDEX((j==CLR_INVALID)? 0 : j);
         }
         DeleteObject(syspal);
       }

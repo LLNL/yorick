@@ -1,5 +1,5 @@
 /*
- * $Id: pwin.c,v 1.1 2005-09-18 22:05:37 dhmunro Exp $
+ * $Id: pwin.c,v 1.2 2006-03-25 03:32:36 dhmunro Exp $
  * routines to create graphics devices for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -195,7 +195,6 @@ p_menu(p_scr *s, int width, int height, int x, int y,
 {
   p_win *pw = w_pwin(ctx, s, 0, 0, bg);
   HWND hw;
-  HWND parent = 0;
   DWORD xstyle = WS_EX_TOPMOST;
   DWORD style = WS_POPUP | WS_VISIBLE;
 
@@ -203,8 +202,8 @@ p_menu(p_scr *s, int width, int height, int x, int y,
   pw->menu = 1;
 
   hw = CreateWindowEx(xstyle, w_menu_class, 0, style,
-                     x+s->x0, y+s->y0, width, height, w_main_window, 0,
-                     w_app_instance, pw);
+                      x+s->x0, y+s->y0, width, height, w_main_window, 0,
+                      w_app_instance, pw);
   /* see p_window comment */
   if (hw) {
     SetActiveWindow(hw);

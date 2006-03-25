@@ -1,5 +1,5 @@
 /*
- * $Id: pcell.c,v 1.1 2005-09-18 22:05:36 dhmunro Exp $
+ * $Id: pcell.c,v 1.2 2006-03-25 03:32:36 dhmunro Exp $
  * p_ndx_cell, p_rgb_cell for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -96,7 +96,7 @@ w_cell(p_win *w, unsigned char *ndxs, unsigned char *rgbs,
       long i, j;
       if (nbits == 8) {
         unsigned int offset = w->s->sys_offset;
-        COLORREF cr, *sys_index = w->s->sys_index;
+        COLORREF cr;
         int n = w->rgb_mode? 225 :
           (w->parent? w->parent->n_pixels : w->n_pixels);
         for (i=0 ; i<n ; i++) h.ndx[i] = (WORD)(offset + i);
