@@ -1,5 +1,5 @@
 /*
- *$Id: uspawn.c,v 1.1 2005-09-18 22:05:41 dhmunro Exp $
+ *$Id: uspawn.c,v 1.2 2006-03-29 17:14:03 dhmunro Exp $
  * play spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -13,8 +13,8 @@
 #include "pstdio.h"
 #include "playu.h"
 
-#ifndef NO_PROCS
 #include <sys/types.h>
+#ifndef NO_PROCS
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
