@@ -1,5 +1,5 @@
 /*
- * $Id: make.i,v 1.1 2005-09-18 22:06:17 dhmunro Exp $
+ * $Id: make.i,v 1.2 2006-04-09 01:05:45 dhmunro Exp $
  * create or update a Makefile for a yorick package (compiled extension)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -64,6 +64,20 @@ func make(path, template=)
  *  These steps will be sufficient to produce a finished Makefile in
  *  many simple cases; an example is given in the extend/ directory of
  *  the yorick distribution (a compiled complementary error function).
+ *
+ *  These same steps will be attempted for C++ source code.  The gcc
+ *  compiler recognizes the file extensions .cc, .cp, .cxx, .cpp, .c++,
+ *  .C, and .CPP as C++ source code, and so does this make function.
+ *  Similarly, .hh and .H are recognized as C++ header files, in addition
+ *  to .h.  Microsoft Visual C++ recognizes only the .cpp and .cxx
+ *  extensions, and several other popular Windows compilers recognize
+ *  only .cpp (which is the extension used by Trolltech's Qt library).
+ *  All of this is by way of warning you to be prepared for portability
+ *  problems if you attempt to use C++.  The make function will emit
+ *  rules for building C++ objects (cribbed from gmake); see the comments
+ *  at that point in the Makefile if these don't work for you.  Be sure
+ *  that any C++ compiled functions which will be called by yorick are
+ *  declared as extern "C" in your C++ source.
  *
  *  However, it is impossible for yorick to automatically discover
  *  complicated Makefile rules your package may require.  The most
@@ -208,7 +222,29 @@ func make(path, template=)
    */
   c = files(where(strglob("*.c", files)));
   if (numberof(c)) c = c(where((c!="yinit.c")&(c!="ywrap.c")));
+  cxx_list = [];
+  exts = numberof(c)? strpart(c, -1:0) : [];
+  for (k=1 ; k<=numberof(_make_cxx_exts) ; k++) {
+    list = where(strglob("*"+_make_cxx_exts(k), files));
+    if (numberof(list)) {
+      grow, cxx_list, [_make_cxx_exts(k)];
+      grow, exts, array(_make_cxx_exts(k), numberof(list));
+      grow, c, files(list);
+    }
+  }
+
   h = files(where(strglob("*.h", files)));
+  o = strpart(c,1:-1) + "o";
+  if (numberof(cxx_list)) {
+    for (i=1 ; i<=numberof(_make_hxx_exts) ; i++) {
+      list = where(strglob("*"+_make_hxx_exts(i), files));
+      if (numberof(list)) grow, h, files(list);
+    }
+    len = strlen(exts);
+    list = where(len > 2);
+    for (k=1 ; k<=numberof(list) ; k++)
+      o(list(k)) = strpart(o(list(k)), 1:1-len(list(k))) + "o";
+  }
   if (numberof(h)) {
     h = h(sort(h));
     hh = indgen(numberof(h));
@@ -241,7 +277,7 @@ func make(path, template=)
     cdep = cdep(list);
     if (numberof(chdep)) {
       for (k=1 ; k<=numberof(chdep) ; k++)
-        chdep(k) = strpart(chdep(k),1:-1) + "o:" + sum(" "+(*cdep(k)));
+        chdep(k) = o(k) + ":" + sum(" "+(*cdep(k)));
     }
     mkfile = grow(mkfile(1:-1), chdep, [""], mkfile(0:0));
   }
@@ -250,17 +286,18 @@ func make(path, template=)
     fort = files(where(strglob("*.[fFm]", files)));
     if (numberof(fort) && !fortran_supported) {
       write, format="***WARNING*** fortran source not fully supported%s","\n";
+      grow, exts, strpart(fort, -1:0);
       grow, c, fort;
     }
   }
   if (!numberof(c))
     error,
-      "***FATAL*** no C (or Fortran) source files in this directory";
+      "***FATAL*** no C, C++, or Fortran source files in this directory";
 
   /* generate the OBJS= line, assuming all source files are
    * to become part of the package
    */
-  objnm = strpart(c,1:-1)+"o ";
+  objnm = o+" ";
   if (!dimsof(objnm)(1)) objnm = [objnm];
   objs = array(string, numberof(objnm));
   for (k=1 ; ; k++) {
@@ -281,6 +318,14 @@ func make(path, template=)
   k = where(strglob("OBJS=*", mkfile))(1);
   mkfile = grow(mkfile(1:k-1), objs, mkfile(k+1:0));
 
+  if (numberof(cxx_list)) {
+    cxx_lines = _make_cxx_lines(1:-1);
+    grow, cxx_lines, swrite(format=_make_cxx_rule, cxx_list);
+    grow, cxx_lines, _make_cxx_lines(0:0);
+    k = where(strglob("Y_SITE=*", mkfile))(1);
+    mkfile = grow(mkfile(1:k+1), cxx_lines, mkfile(k+1:0));
+  }
+
   write, create(path+name), format="%s\n", linesize=65535, mkfile;
   write, ((path!="./")?path:"")+name, format="created %s\n";
   write, "automatically generated make macros and dependencies:";
@@ -290,6 +335,28 @@ func make(path, template=)
   if (!is_void(chdep)) write, format="%s\n", chdep;
   write, "edit "+name+" by hand to provide PKG_DEPLIBS or other changes";
 }
+
+/* default C++ source extensions recognized by make() */
+_make_cxx_exts = [".cxx", ".cpp", ".cc", ".c++", ".C", ".CPP"];
+_make_hxx_exts = [".hh", ".hxx", ".H"];  /* .h also checked */
+_make_cxx_rule =
+  "%s.o:\n\t$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@ $<";
+_make_cxx_lines =
+ ["# ------------begin C++ source hacks",
+  "# must use C++ to load yorick with this C++ package",
+  "# this assumes make default CXX macro points to C++ compiler",
+  "CXXFLAGS=$(CFLAGS)",
+  "LD_DLL=$(CXX) $(LDFLAGS) $(PLUG_SHARED)",
+  "LD_EXE=$(CXX) $(LDFLAGS) $(PLUG_EXPORT)",
+  "",
+  "# C++ has no standard file extension, supply default make rule(s)",
+  "# --------------end C++ source hacks"
+  ];
+/* typical standalone link rule
+LINK.cc = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(TARGET_ARCH)
+.cc:
+	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
+*/
 
 func make_subst(line)
 {
