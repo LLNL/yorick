@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.9 2005-12-10 12:41:36 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.10 2006-04-27 11:35:25 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -379,12 +379,12 @@ func get_international_date(date)
 }
 
 func pkg_list(server,sync=,verbose=)
-/* DOCUMENT pkg_list,server,nosync=
+/* DOCUMENT pkg_list,server,sync=,verbose=
    Print out a list of available packages, including
    version number, whether it is installed (installed
    version), and a short description.
    server: overrides the PKG_SERVER variable definition
-   nosync= : if set, prevent sync with server
+   sync= : if set, equivalent to "pkg_sync; pkg_list;"
    SEE ALSO: pkg_mngr, pkg_sync, pkg_install
  */
 {
@@ -451,7 +451,7 @@ func pkg_info(pkgname)
   write,format="Depends    : %s\n",pkg.depends;
   write,format="Homepage   : %s\n",pkg.homepage;
   write,format="Description: \n%s\n",pkg.desc_details;
-  write,format="\n%s\n","\"pkg_list[,nosync=1]\" to see installed status";
+  write,format="\n%s\n","\"pkg_list\" to see installed status";
 }
 
 func pkg_setup(first=)
