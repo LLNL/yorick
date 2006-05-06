@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.5 2005-11-25 22:18:45 dhmunro Exp $
+ * $Id: task.c,v 1.6 2006-05-06 20:57:42 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -562,6 +562,23 @@ Y_plug_dir(int nArgs)
   int i;
   if (nArgs > 1)
     YError("plug_dir function takes at most one argument");
+  if (nArgs && !CalledAsSubroutine()) {
+    for (i=0 ; yplug_path && yplug_path[i] ; i++);
+    if (i > 1) {
+      int n = i - 1;
+      Array *rslt;
+      Dimension *tmp = tmpDims;
+      tmpDims = 0;
+      FreeDimension(tmp);
+      tmpDims = NewDimension((long)n, 1L, (Dimension *)0);
+      rslt = (Array *)PushDataBlock(NewArray(&stringStruct, tmpDims));
+      for (i=0 ; i<n ; i++)
+        rslt->value.q[i] = p_strcpy(yplug_path[i]);
+    } else {
+      PushDataBlock(RefNC(&nilDB));
+    }
+    if (!nd) return;
+  }
   if (yplug_path) {
     for (i=0 ; yplug_path[i] ; i++) {
       p_free(yplug_path[i]);

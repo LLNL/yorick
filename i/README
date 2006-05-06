@@ -141,6 +141,8 @@
      Functions: kepler, solar_system, moon
    calendar.i - functions for dealing with dates and times
      Functions: calendar, unix_time, julian_day, datestamp, base60, tz_set
+   pathfun.i  - functions for manipulating filenames
+     Functions: dirname, basename, pathform, pathsplit
 
    Demonstration programs:
    -----------------------

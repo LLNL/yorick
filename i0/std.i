@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.8 2005-12-30 21:50:55 dhmunro Exp $
+ * $Id: std.i,v 1.9 2006-05-06 20:57:42 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2400,10 +2400,18 @@ extern plug_in;
  */
 
 extern plug_dir;
-/* DOCUMENT plug_dir, dirname
+/* DOCUMENT old_dirs = plug_dir(dirname)
+         or plug_dir
+         or current_dirs = plug_dir()
      causes plug_in to look in DIRNAME for dynamic library files, in
      addition to Y_HOME/lib.  DIRNAME may be an array of strings to
-     search multiple directories.
+     search multiple directories.  The return value is the previous
+     list of directories searched by plug_in.  No checks are made
+     for repeats, so be careful not to grow the list indiscriminately.
+     In the second form (or called as a subroutine with DIRNAME []),
+     empties the plug_in search path; in the third form does not
+     alter the current search path.  Note that Y_HOME/lib is omitted
+     from the end of the return value, even though it is searched.
    SEE ALSO: plug_in
  */
 
@@ -2492,8 +2500,30 @@ extern rmdir;
             rmdir, directory_name
      Create DIRECTORY_NAME with mkdir, or remove it with rmdir.
      The rmdir function only works if the directory is empty.
-   SEE ALSO: cd, lsdir, get_cwd, get_home
+   SEE ALSO: mkdirp, cd, lsdir, get_cwd, get_home
  */
+
+func mkdirp(dir)
+/* DOCUMENT mkdirp, directory_name
+     Create DIRECTORY_NAME, creating any missing parent directories
+     (like UNIX utility mkdir -p).  Unlike mkdir, signals error if
+     the creation is unsuccessful.  If DIRECTORY_NAME already exists
+     and is a directory, mkdirp is a no-op.
+   SEE ALSO: mkdir
+ */
+{
+  dir = strtrim(dir, 2, blank="/") + "/";
+  list = strfind("/", dir, n=1024);  /* assume <1024 components in dir */
+  i = list(1:-1:2);
+  list = i(where((i>0) & (list(2:0:2)>0)));
+  for (i=numberof(list) ; i>=1 ; i--) {
+    name = strpart(dir, [0,list(i)]);
+    if (lsdir(name) != 0) break;
+  }
+  for (i++ ; i<=numberof(list) ; i++)
+    mkdir, strpart(dir, [0,list(i)]);
+  if (lsdir(dir) == 0) error, "mkdirp: failed to create "+dir;
+}
 
 extern get_cwd;
 extern get_home;
