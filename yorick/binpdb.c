@@ -1,5 +1,5 @@
 /*
- * $Id: binpdb.c,v 1.1 2005-09-18 22:03:53 dhmunro Exp $
+ * $Id: binpdb.c,v 1.2 2006-05-12 03:35:48 dhmunro Exp $
  * Define Yorick interface to PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -55,16 +55,10 @@ static int yPDBclose;  /* options for closing a PDB file, selected by
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-/*
- * Based on code bearing the following copyright notices:
- *
- * Copyright Stewart A. Brown 1987-1990 (all rights reserved)
- *
- * The U.S. Government, for itself and others acting on its behalf, has
- * been granted a royalty-free, nonexclusive, irrevocable, world-wide
- * license for Governmental purposes to publish, distribute, translate,
- * duplicate, exhibit, and perform this material.
- *
+/* The PDB file format was invented by Stewart Brown of Lawrence
+ * Livermore Laboratory.  This interface to the PDB format is entirely
+ * my own (David Munro); Stewart Brown's PDBlib API is a part of his PACT
+ * library, which you can obtain from http://pact.llnl.gov.
  */
 
 /*--------------------------------------------------------------------------*/
