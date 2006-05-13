@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.3 2005-11-26 20:04:43 dhmunro Exp $
+ * $Id: yapi.c,v 1.4 2006-05-13 17:30:43 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -42,20 +42,18 @@ yarg_kw_init(char **knames, long *kglobs, int *kiargs)
 int
 yarg_kw(int iarg, long *kglobs, int *kiargs)
 {
-  if (iarg>=0 && !sp[-iarg].ops) {
-    long n, *globs, vndex;
-    do {
-      if (iarg <= 0)
-        y_error("(BUG) stack corrupted in yarg_kw");
-      vndex = sp[-iarg].index;
-      n = kglobs[0];
-      for (globs=kglobs+1 ; --n >= 0 ; globs++)
-        if (globs[0] == vndex) break;
-      if (n < 0)
-        y_errorq("unrecognized keyword: %s", globalTable.names[vndex]);
-      kiargs[kglobs[0]-1-n] = --iarg;
-      --iarg;
-    } while (!sp[-iarg].ops);
+  long n, *globs, vndex;
+  while (iarg>=0 && !sp[-iarg].ops) {
+    if (!iarg)
+      y_error("(BUG) stack corrupted in yarg_kw");
+    vndex = sp[-iarg].index;
+    n = kglobs[0];
+    for (globs=kglobs+1 ; --n >= 0 ; globs++)
+      if (globs[0] == vndex) break;
+    if (n < 0)
+      y_errorq("unrecognized keyword: %s", globalTable.names[vndex]);
+    kiargs[kglobs[0]-1-n] = --iarg;
+    --iarg;
   }
   return iarg;
 }
