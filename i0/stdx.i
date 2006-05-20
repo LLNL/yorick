@@ -1,5 +1,5 @@
 /*
- * $Id: stdx.i,v 1.3 2006-05-06 20:57:42 dhmunro Exp $
+ * $Id: stdx.i,v 1.4 2006-05-20 17:21:30 dhmunro Exp $
  * Perform any post-initialization tasks.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -31,6 +31,4 @@ set_path;   /* set compiled-in default include path */
  */
 include_all, Y_SITE+"i-start";
 if (Y_HOME!=Y_SITE) include_all, Y_HOME+"i-start";
-if (!batch()) {
-  include_all, "~/.yorick/i-start", "~/yorick/i-start", "~/Yorick/i-start";
-}
+if (!batch()) include_all, Y_USER+"i-start";

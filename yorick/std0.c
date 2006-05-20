@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.3 2006-03-18 21:58:25 dhmunro Exp $
+ * $Id: std0.c,v 1.4 2006-05-20 17:21:30 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -327,6 +327,11 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
 {
   /*~/.yorick:~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib*/
   char *path1 = 0, *path2 = 0;
+  char *yuser = "~/.yorick:";
+  p_dir *yudir = p_dopen("~/yorick");
+  if (yudir) yuser = "~/yorick:";
+  else if ((yudir = p_dopen("~/Yorick"))) yuser = "~/Yorick:";
+  if (yudir) p_dclose(yudir);
   if (ylaunch && ylaunch[0]) {
     /* prepend Y_LAUNCH for paths.i only */
     long len = strlen(ylaunch);
@@ -337,8 +342,7 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
   } else {
     path2 = p_strcpy("." PATH_SEP);
   }
-  path1 = p_strncat(path2, "~/.yorick" PATH_SEP
-                    "~/yorick" PATH_SEP "~/Yorick" PATH_SEP, 0);
+  path1 = p_strncat(path2, yuser, 0);
   if (path2) p_free(path2);
   path2 = p_strncat(path1, ysite, 0);
   p_free(path1);

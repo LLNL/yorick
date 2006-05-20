@@ -1,5 +1,5 @@
 /*
- * $Id: paths.i,v 1.1 2005-09-18 22:05:25 dhmunro Exp $
+ * $Id: paths.i,v 1.2 2006-05-20 17:21:30 dhmunro Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -83,16 +83,30 @@ extern Y_LAUNCH;
 
 /* set_site, "Y_SITE_DIR", "Y_HOME_DIR"; */
 
+{
+  /* locate yorick user directory, match compiled code in yorick/std0.c */
+  Y_USER = "~/.yorick/";
+  if (lsdir("~/yorick") != 0) Y_USER = "~/yorick/";
+  else if (lsdir("~/Yorick") != 0) Y_USER = "~/Yorick/";
+  /* gist user directory is deprecated in favor of Y_USER+"gist" */
+  Y_GISTDIR = "~/.gist";
+  if (lsdir("~/gist") != 0) Y_GISTDIR = "~/gist";
+  else if (lsdir("~/Gist") != 0) Y_GISTDIR = "~/Gist";
+}
+
 /* ------------------------------------------------------------------------ */
 
 /* The first component of the GISTPATH should always be ~/Gist
    -- you need this line only if the value compiled into the Gist library
       libgist.a is incorrect.  */
 /* GISTPATH= "~/Gist:"+"GIST_SITE_DIR"; */
-GISTPATH= "~/gist:~/Gist:"+Y_SITE+"g";
+GISTPATH = Y_GISTDIR+":"+Y_SITE+"g";
+if (lsdir(Y_USER+"gist") != 0) GISTPATH = Y_USER+"gist:"+GISTPATH;
 
 extern GIST_FORMAT, LPR_FORMAT;
 /* DOCUMENT GIST_FORMAT
+   NOTE: gist is deprecated; postscript output is now the default
+
      is used by the hcp_out function to generate the system call which
      invokes the gist CGM browser and pipes its output to lpr.  This
      format should contain a single %s specification; after this %s is
