@@ -1,5 +1,5 @@
 /*
- * $Id: autold.c,v 1.1 2005-09-18 22:04:17 dhmunro Exp $
+ * $Id: autold.c,v 1.2 2006-05-21 15:36:22 dhmunro Exp $
  * autoload Yorick .i files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -199,9 +199,9 @@ Y_autoload(int nArgs)
   Symbol *s = sp-nArgs+1;
   long isymbol;
   int i;
-  char *file = (nArgs>1)? YGetString(s) : 0;
+  char *file = (nArgs>=1)? YGetString(s) : 0;
   char *name, *tail=0;
-  if (nArgs<2) YError("autoload needs at least two arguments");
+  if (!file) YError("autoload needs non-0 filename argument");
   /* if file has already been included, ignore (same as require) */
   name = YNameTail(file);
   for (i=0 ; i<sourceTab.nItems ; i++) {
