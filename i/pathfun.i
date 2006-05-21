@@ -1,6 +1,6 @@
 /*
  * pathfun.i
- * $Id: pathfun.i,v 1.1 2006-05-12 03:35:48 dhmunro Exp $
+ * $Id: pathfun.i,v 1.2 2006-05-21 17:29:58 paumard Exp $
  * manipulate path names and file names
  */
 /* Copyright (c) 2006, The Regents of the University of California.
@@ -106,9 +106,9 @@ func pathsplit(path, delim=)
   return strpart(path, grow([0],i));
 }
 
-func add_y_home_y_site(y_home,y_site) {
-/* DOCUMENT add_y_home_y_site, y_home, y_site;
-         or add_y_home_y_site, y_both;
+func add_y_home(y_home,y_site) {
+/* DOCUMENT add_y_home, y_home, y_site;
+         or add_y_home, y_both;
 
      Set all Yorick paths to take into account y_home as a new (additional)
      root for architecture-dependent files and y_site as the corresponding
@@ -123,10 +123,10 @@ func add_y_home_y_site(y_home,y_site) {
        - GISTPATH (.gp and .gs files).
        
      In addition, we perform an include_all (which see) on y_home/i-start and
-     y_site/i-start (unless we are not in batch mode and y_home or is
+     y_site/i-start (unless we are not in batch mode and y_home or y_site is
      "~/yorick" or "~/Yorick", in which case this is done by i0/stdx.i).
 
-     "add_y_home_y_site, y_both" is the same as setting y_site=y_home.
+     "add_y_home, y_both" is the same as setting y_site=y_home.
      
      See pkg_mngr.i for more.
  */
@@ -156,18 +156,24 @@ func add_y_home_y_site(y_home,y_site) {
   // plug_dir,Y_HOMES+"lib/";
 
   // include_all part
-  // "~/.yorick", "~/yorick/i-start/" and "~/Yorick/i-start/" are
+  // Y_USER/i-start is
   // include_all'ed by stdx.i unless in batch mode.
-  // If they are defined as Y_HOMES or Y_SITES, we want them include_all'ed in
+  // If it is defined as Y_HOMES or Y_SITES, we want it include_all'ed in
   // any case, but only once.
-  if (batch() |
-      noneof(y_home==grow(get_home()+[".y","y","Y"]+"orick/",
-                          "~/"+[".y","y","Y"]+"orick/")))
+
+  // first put these three strings in a canonical form
+  test_y_user=Y_USER;
+  test_y_home=y_home;
+  test_y_site=y_site;
+  if (strpart(test_y_user,0:0)!="/") test_y_user += "/";
+  if (strpart(test_y_user,1:2) == "~/") streplace,test_y_user,[0,2],get_home();
+  if (strpart(test_y_home,1:2) == "~/") streplace,test_y_home,[0,2],get_home();
+  if (strpart(test_y_site,1:2) == "~/") streplace,test_y_site,[0,2],get_home();
+  if (batch() | test_y_home!=test_y_user)
     include_all, y_home+"i-start/";
+  
   if ((y_site!=y_home) &
-      (batch() |
-      noneof(y_home==grow(get_home()+[".y","y","Y"]+"orick/",
-                          "~/"+[".y","y","Y"]+"orick/"))))
+      (batch() | test_y_site!=test_y_user))
     include_all, y_site+"i-start/";
 
   // GISTPATH
