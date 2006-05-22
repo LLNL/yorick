@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.10 2006-04-27 11:35:25 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.11 2006-05-22 10:26:21 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -9,7 +9,9 @@
  * Read the accompanying LICENSE file for details.
  */
 
-PKG_MNGR_VERSION = 0.6;
+PKG_MNGR_VERSION = 0.7;
+
+if (!PKG_SETUP) PKG_SETUP = Y_HOME+"packages/pkg_setup.i";
 
 local pkg_mngr;
 /* DOCUMENT pkg_mngr.i
@@ -232,12 +234,18 @@ local pkg_mngr;
  *  - Version can only contain integer (e.g. 2.1.4-r2 does *not* work).
  *  
  * 
- *  --- TO DO
+ *  --- HISTORY
  * 
- *  * Allow installations in other locations that the Y_SITE and Y_HOME.
+ *  * v. 0.7, Sun, 21 May 2006 19:00:55 +0200
+ *    Francois Rigaut & Thibaut Paumard
+ *    Allow installations in other locations than the Y_SITE and Y_HOME.
  *    Some users may not have access to these and still want to install
  *    packages for their personnal use.
  * 
+ *  --- TO DO
+ * 
+ *  * Check documentation relative to new functionalities in v. 0.7
+ *
  *  * At one point, we should have, to complement this installer, a 
  *    utility to check for symbols conflicts (e.g. same function names
  *    in 2 different packages)
@@ -245,6 +253,7 @@ local pkg_mngr;
  */
 
 require,"string.i";
+require,"pathfun.i";
 
 struct pkginfo_str{
   string name;
@@ -268,12 +277,57 @@ struct pkginfo_str{
   long   version(20);
 };
 
-setup_done=0;
+func has_write_permissions(dir)
+/* DOCUMENT has_write_permissions(dir)
+   Test if user has write permission in "dir"
+   returns 1 if the user has write permission, 0 if not.
+   Create and delete a file "test_permissions_$USER", with
+   $USER = name of the user as defined in this session environment
+   SEE ALSO:
+ */
+{
+  f=open(dir+"test_permissions_"+get_env("USER"),"w",1);
+  if (!f) return 0;
+  close,f;
+  remove,dir+"test_permissions_"+get_env("USER");
+  return 1;
+}
+
+setup_done=0;        // check is setup variables have been set
+user_setup_done=0;   // has the set-up been done at the user level?
 
 // read packages/pkg_setup.i if it exists
-if (open(Y_HOME+"packages/pkg_setup.i","r",1)) {
-  require,Y_HOME+"packages/pkg_setup.i";
-  setup_done=1;
+if (open(PKG_SETUP,"r",1)) {
+  extern pkg_other_installed;
+  require,PKG_SETUP;
+
+  // start FR: check the pkg_setup just read is the user one.
+  if (has_write_permissions(dirname(PKG_SETUP))) {
+    // all OK: This user has permission on this part of the file system.
+    // If this was not true, then most likely the user has not done
+    // his/her own pkg_setup, but is reading the system one. In that
+    // case, a pkg_sync or pkg_install is likely to end up in error.
+    user_setup_done=1;
+  } else { // else user_setup_done=0 above is kept.
+    write,format="%s\n","Use \"pkg_setup\" to set up pkg_mngr";
+  }
+  // end FR
+
+  // TP: make sure we didn't load an empty file
+  if (PKG_OS) {
+    // backward compatibility
+    if (!PKG_VAR_STATE) PKG_VAR_STATE = Y_HOME+"packages/";
+    if (!PKG_Y_HOME) PKG_Y_HOME = Y_HOME;
+    if (!PKG_Y_SITE) PKG_Y_SITE = Y_SITE;
+    if (!PKG_OTHER_INSTALLED) PKG_OTHER_INSTALLED = "";
+    pkg_other_installed=pathsplit(PKG_OTHER_INSTALLED);
+    setup_done=1;
+  } else {
+    write,format="Warning: Empty file \"%s\"\n",PKG_SETUP;
+  } // end BC
+  // end TP
+} else { // else no set-up file found.
+  write,format="%s\n","Use \"pkg_setup\" to set up pkg_mngr";
 }
 
 
@@ -284,13 +338,9 @@ func pkg_save
    SEE ALSO: pkg_setup
  */
 {
-  if (noneof(lsdir(Y_HOME)=="packages")) 
-    mkdir,Y_HOME+"packages";
-  if (noneof(lsdir(Y_HOME)=="packages")) 
-    error,"Can't create Y_HOME/packages (permissions?)";
-  
-  f = open(Y_HOME+"packages/pkg_setup.i","w",1);
-  if (!f) error,"Can't create Y_HOME/packages/pkg_setup.i (permissions?)";
+  mkdirp,dirname(PKG_SETUP);
+  f = open(PKG_SETUP,"w",1);
+  if (!f) error,"Can't create "+PKG_SETUP+" (permissions?)";
   write,f,format="PKG_OS = \"%s\";\n",PKG_OS;
   write,f,format="PKG_FETCH_CMD = \"%s\";\n",PKG_FETCH_CMD;
   write,f,format="PKG_SERVER = \"%s\";\n",PKG_SERVER;
@@ -299,12 +349,16 @@ func pkg_save
   write,f,format="PKG_VERBOSE = %d;\n",PKG_VERBOSE;
   write,f,format="PKG_ASK_CONFIRM = %d;\n",PKG_ASK_CONFIRM;
   write,f,format="PKG_RUN_CHECK = %d;\n",PKG_RUN_CHECK;
-  if (PKG_SYNC_DONE)
-    write,f,format="PKG_SYNC_DONE = \"%s\";\n",PKG_SYNC_DONE;
+  // TP: here I add my new variables (paths)
+  write,f,format="PKG_VAR_STATE = \"%s\";\n",PKG_VAR_STATE;
+  write,f,format="PKG_Y_HOME = \"%s\";\n",PKG_Y_HOME;
+  write,f,format="PKG_Y_SITE = \"%s\";\n",PKG_Y_SITE;
+  write,f,format="PKG_OTHER_INSTALLED = \"%s\";\n",PKG_OTHER_INSTALLED;
+  // end_TP
+  if (PKG_SYNC_DONE) write,f,format="PKG_SYNC_DONE = \"%s\";\n",PKG_SYNC_DONE;
   close,f;
 
-  if (PKG_VERBOSE)
-    write,format="%s\n","Parameters saved in Y_HOME/packages/pkg_setup.i";
+  if (PKG_VERBOSE) write,format="%s\n","Parameters saved in "+PKG_SETUP;
 }
 
 
@@ -317,24 +371,21 @@ func pkg_sync(server,verbose=)
  */
 {
   extern PKG_SYNC_DONE;
-  if (!setup_done) pkg_setup,first=1;
+  if (!(setup_done & user_setup_done)) pkg_setup,first=1;
   
   if (!server) server = PKG_SERVER;
   if (verbose==[]) verbose=PKG_VERBOSE;
 
-  if (noneof(lsdir(Y_HOME)=="packages")) 
-    mkdir,Y_HOME+"packages";
-  if (noneof(lsdir(Y_HOME)=="packages")) 
-    error,"Can't create Y_HOME/packages (permissions?)";
-
-  if (noneof(lsdir(Y_HOME+"packages/")=="info"))
-    mkdir,Y_HOME+"packages/info";
-  if (noneof(lsdir(Y_HOME+"packages/")=="installed"))
-    mkdir,Y_HOME+"packages/installed";
-  if (noneof(lsdir(Y_HOME+"packages/")=="tarballs"))
-    mkdir,Y_HOME+"packages/tarballs";
-  if (noneof(lsdir(Y_HOME+"packages/")=="tmp"))
-    mkdir,Y_HOME+"packages/tmp";
+  mkdirp,PKG_VAR_STATE;
+  
+  if (noneof(lsdir(PKG_VAR_STATE)=="info"))
+    mkdir,PKG_VAR_STATE+"info";
+  if (noneof(lsdir(PKG_VAR_STATE)=="installed"))
+    mkdir,PKG_VAR_STATE+"installed";
+  if (noneof(lsdir(PKG_VAR_STATE)=="tarballs"))
+    mkdir,PKG_VAR_STATE+"tarballs";
+  if (noneof(lsdir(PKG_VAR_STATE)=="tmp"))
+    mkdir,PKG_VAR_STATE+"tmp";
 
 
   if (verbose) write,format="%s","Syncing with server";
@@ -353,7 +404,7 @@ func pkg_sync(server,verbose=)
   
   for (i=1;i<=numberof(files);i++) {
     pkg_fetch_url,server+PKG_OS+"/info/"+files(i),      \
-      Y_HOME+"packages/info/"+files(i),verbose=verbose;
+      PKG_VAR_STATE+"info/"+files(i),verbose=verbose;
     if (verbose<3) write,format="%s",".";
   }
 
@@ -389,7 +440,7 @@ func pkg_list(server,sync=,verbose=)
  */
 {
   extern PKG_SYNC_DONE;
-  if (!setup_done) pkg_setup,first=1;
+  if (!setup_done) pkg_setup,first=1; // can list if user_setup not done
   if (!PKG_SYNC_DONE) pkg_sync;
 
   if (sync) {
@@ -399,34 +450,59 @@ func pkg_list(server,sync=,verbose=)
   }
   if (verbose==[]) verbose=PKG_VERBOSE;
   
-  infodir = Y_HOME+"packages/info/";
-  instdir = Y_HOME+"packages/installed/";
+  infodir = PKG_VAR_STATE+"info/";
+  instdir = PKG_VAR_STATE+"installed/";
 
   infoname = get_avail_pkg();
   if (numberof(infoname)==0) error,"No info file found in "+infodir;
 
   instname = get_inst_pkg();
   if (instname==0) instname="";
+
+  instnameo=[];
+  for (in=1;in<=numberof(pkg_other_installed);in++) {
+    junk=get_inst_pkg(pkg_other_installed(in));
+    if (junk!=0 & !is_void(junk)) {
+      grow,instnameo,junk;
+      grow,instdiro,array(pkg_other_installed(in),numberof(junk));
+    }
+  }
+  
+  text = [];
   
   for (i=1;i<=numberof(infoname);i++) {
     // for all info file, parse file:
     pkg = parse_info_file(infodir+infoname(i)+".info");
 
+    is_inst = " ";
+    instvers = "-";
+    
     // is this package installed locally?
     w = where(instname==infoname(i));
     // is yes, what version?
     if (numberof(w)) {
       is_inst = "i";
       instvers = (parse_info_file(instdir+instname(w(1))+".info")).vers;
-    } else {
-      is_inst = "";
-      instvers = "-";
+    } 
+
+    // is pkg installed in another place?
+    w = where(instnameo==infoname(i));
+    if (numberof(w)) {
+      is_inst += "o";
+      if (instvers=="-") {
+        instvers = (parse_info_file(instdiro(w(1))+instnameo(w(1))+".info")).vers;
+      }
     }
-    
-    write,format="%1s %-12s %-8s %-8s %-45s\n", is_inst,infoname(i),
+
+    if (am_subroutine()) {
+      write,format="%-2s %-12s %-8s %-8s %-45s\n", is_inst,infoname(i),\
       pkg.vers,instvers,pkg.desc;
+    } else {
+      grow,text,swrite(format="%-2s %-12s %-8s %-8s %-45s\n", is_inst,infoname(i),\
+      pkg.vers,instvers,pkg.desc);
+    }
   }
-  
+  return text;
 }
 
 
@@ -441,7 +517,7 @@ func pkg_info(pkgname)
   if (!setup_done) pkg_setup,first=1;
   if (!PKG_SYNC_DONE) pkg_sync;
 
-  infodir = Y_HOME+"packages/info/";
+  infodir = PKG_VAR_STATE+"info/";
   
   pkg = parse_info_file(infodir+pkgname+".info");
 
@@ -461,42 +537,196 @@ func pkg_setup(first=)
    SEE ALSO: pkg_mngr, pkg_save.
  */
 {
-  extern setup_done;
+  extern setup_done, user_setup_done;
+  extern pkg_other_installed;
+  extern PKG_Y_HOME, PKG_Y_SITE, PKG_TMP_DIR, PKG_VAR_STATE;
+  extern PKG_SYNC_DONE;
   if (first) {
     write,format="%s\n\n",
     "pkg_mngr was not setup! You need to go through this set-up once";
   }
   write,format="%s\n","Enter set-up parameters for pkg_mngr ([] = default)";
+  write,format="%s\n","The default values should be ok, so if you don't know";
+  write,format="%s\n","what to enter, just press return.";
 
-  if (!PKG_OS) PKG_OS="macosx";
+  if (!PKG_Y_HOME) PKG_Y_HOME = Y_HOME;
+  if (!PKG_Y_SITE) PKG_Y_SITE = Y_SITE;
+  
+  // refine a bit the default for PKG_Y_HOME in case user setup has not been 
+  // done, i.e. user is not superuser.
+  if (!user_setup_done) {
+    if (!has_write_permissions(PKG_Y_HOME)) {
+      PKG_Y_HOME = Y_USER;
+      PKG_VAR_STATE = PKG_Y_HOME+"packages/";
+    }
+    if (!has_write_permissions(PKG_Y_SITE)) PKG_Y_SITE=PKG_Y_HOME;
+    if (!PKG_OTHER_INSTALLED) PKG_OTHER_INSTALLED = "";
+    pkg_other_installed=pathsplit(PKG_OTHER_INSTALLED);
+  } // end !user_setup_done
+
+  if (!PKG_VAR_STATE) PKG_VAR_STATE = PKG_Y_HOME+"packages/";
+  if (!PKG_OS) PKG_OS=get_env("OSTYPE")+"-"+get_env("MACHTYPE");
   if (!PKG_FETCH_CMD) PKG_FETCH_CMD="curl -s";
   if (!PKG_GUNTAR_CMD) PKG_GUNTAR_CMD="tar zxf";
   if (!PKG_SERVER) PKG_SERVER="http://www.maumae.net/yorick/packages/";
-  if (!PKG_TMP_DIR) PKG_TMP_DIR=Y_HOME+"packages/tmp/";
+  if (!PKG_TMP_DIR) PKG_TMP_DIR=PKG_VAR_STATE+"tmp/";
   if (PKG_VERBOSE==[]) PKG_VERBOSE=1;
   if (PKG_ASK_CONFIRM==[]) PKG_ASK_CONFIRM=1;
   if (PKG_RUN_CHECK==[]) PKG_RUN_CHECK=0;
-    
-  PKG_OS = kinput("PKG_OS (\"linux\"|\"macosx\"|\"windows\")",PKG_OS);
-  PKG_FETCH_CMD = kinput("PKG_FETCH_CMD",PKG_FETCH_CMD);
-  PKG_SERVER = kinput("PKG_SERVER",PKG_SERVER);
-  PKG_GUNTAR_CMD = kinput("PKG_GUNTAR_CMD",PKG_GUNTAR_CMD);
+
+
+  write,format="\n%s\n","What is your OS-machine type?";
+  PKG_OS = strtrim(kinput("PKG_OS (e.g. linux-x86)",PKG_OS));
+  write,format="\n%s\n","System command syntax to fetch URL?";
+  PKG_FETCH_CMD = strtrim(kinput("PKG_FETCH_CMD",PKG_FETCH_CMD));
+  write,format="\n%s\n","Where to retrieve binary packages?";
+  PKG_SERVER = strtrim(kinput("PKG_SERVER",PKG_SERVER));
+  write,format="\n%s\n","System command syntax to untar the package tarballs?";
+  PKG_GUNTAR_CMD = strtrim(kinput("PKG_GUNTAR_CMD",PKG_GUNTAR_CMD));
   //  PKG_TMP_DIR = kinput("PKG_TMP_DIR",PKG_TMP_DIR);
+  write,format="\n%s\n","Verbose level for pkg_mngr commands (more=more chatty)?";
   PKG_VERBOSE = kinput("PKG_VERBOSE (0|1|2|3)",PKG_VERBOSE);
+  write,format="\n%s\n","Ask confirmation before installing packages?";
   PKG_ASK_CONFIRM = kinput("PKG_ASK_CONFIRM (0|1)",PKG_ASK_CONFIRM);
+  write,format="\n%s\n","Run package check.i when installing?";
   PKG_RUN_CHECK = kinput("PKG_RUN_CHECK",PKG_RUN_CHECK);
 
-  write,format="\nPKG_OS = %s\n",PKG_OS;
-  write,format="PKG_FETCH_CMD = %s\n",PKG_FETCH_CMD;
-  write,format="PKG_SERVER = %s\n",PKG_SERVER;
-  write,format="PKG_GUNTAR_CMD = %s\n",PKG_GUNTAR_CMD;
+  // TP: my new variables
+  old_pkg_home = PKG_Y_HOME;
+  old_var=PKG_VAR_STATE;
+  
+  write,format="\n%s\n",
+    "Path to install architecture-dependent files?";
+  PKG_Y_HOME = strtrim(kinput("PKG_Y_HOME",PKG_Y_HOME));
+  if (strpart(PKG_Y_HOME,0:0)!="/") PKG_Y_HOME+="/";
+  
+  changing_root=(PKG_Y_HOME!=old_pkg_home);
+  if (changing_root) {
+    // PKG_Y_HOME has changed. Use the new value to define defaults for the
+    // rest of our variabes.
+    if (PKG_Y_HOME==Y_HOME) PKG_Y_SITE=Y_SITE; else PKG_Y_SITE=PKG_Y_HOME;
+    if (PKG_VAR_STATE==old_pkg_home+"packages/")
+      PKG_VAR_STATE=PKG_Y_HOME+"packages/";
+    if (PKG_SETUP==old_pkg_home+"packages/pkg_setup.i")
+      PKG_SETUP=PKG_Y_HOME+"packages/pkg_setup.i";
+  }
+
+  write,format="\n%s\n%s\n",
+    "Path to install architecture-independent files?",
+    "It is generally advisable to use PKG_Y_SITE=PKG_Y_HOME.";
+  PKG_Y_SITE = strtrim(kinput("PKG_Y_SITE",PKG_Y_SITE));
+  if (strpart(PKG_Y_SITE,0:0)!="/") PKG_Y_SITE+="/";
+
+  write,format="\n%s\n",
+    "Where should pkg_mngr store its data?";
+  PKG_VAR_STATE = strtrim(kinput("PKG_VAR_STATE",PKG_VAR_STATE));
+  if (strpart(PKG_VAR_STATE,0:0)!="/") PKG_VAR_STATE+="/";
+
+  write,format="\n%s\n",
+    "Where are other package \"installed\" directories on this system?";
+  write,format="%s\n",
+    "Space for empty string. If you don't know what this is, leave it alone.";
+  if (!PKG_OTHER_INSTALLED | changing_root | PKG_OTHER_INSTALLED=="") {
+    if (!is_void(PKG_OTHER_INSTALLED) & PKG_OTHER_INSTALLED!="")
+      write,format="%s%s\n",
+        "Old value of PKG_OTHER_INSTALLED: ",PKG_OTHER_INSTALLED;
+    if (!is_void(Y_HOMES)) {
+      w = where(Y_HOMES==PKG_Y_HOME);
+      if (numberof(w)==0) w=0; else w=w(1);
+      if (w<numberof(Y_HOMES))
+        pkg_other_installed = Y_HOMES(w+1:)+"packages/installed/";
+    }
+    if (PKG_VAR_STATE!=Y_HOME+"packages/")
+      grow,pkg_other_installed,Y_HOME+"packages/installed/";
+    if (pkg_other_installed!=[]) pkg_other_installed = 
+      pkg_other_installed(where(pkg_other_installed!=""));
+    PKG_OTHER_INSTALLED = pathform(pkg_other_installed);
+  }
+  PKG_OTHER_INSTALLED = strtrim(kinput("PKG_OTHER_INSTALLED",PKG_OTHER_INSTALLED));
+
+  if (strlen(PKG_OTHER_INSTALLED)>0) {
+    pkg_other_installed = pathsplit(PKG_OTHER_INSTALLED);
+    w = where(!strglob("*/",pkg_other_installed)&(pkg_other_installed!=""));
+    if (numberof(w)) {
+      pkg_other_installed(w)+="/";
+      PKG_OTHER_INSTALLED = pathform(pkg_other_installed);
+    }
+  }
+
+  if (PKG_SETUP==Y_HOME+"packages/pkg_setup.i")
+    PKG_SETUP=PKG_VAR_STATE+"pkg_setup.i";
+  write,format="\n%s\n",
+    "Where should this information be stored?";
+  PKG_SETUP = kinput("PKG_SETUP",PKG_SETUP);
+  while (!strglob("*[^/].i",PKG_SETUP)) {
+    write,format="%s\n",
+      "Please enter a filename ending in .i";
+    PKG_SETUP = kinput("PKG_SETUP",PKG_SETUP);
+  }
+  // end TP
+  
+  write,format="\nPKG_OS = \"%s\"\n",PKG_OS;
+  write,format="PKG_FETCH_CMD = \"%s\"\n",PKG_FETCH_CMD;
+  write,format="PKG_SERVER = \"%s\"\n",PKG_SERVER;
+  write,format="PKG_GUNTAR_CMD = \"%s\"\n",PKG_GUNTAR_CMD;
   //  write,format="PKG_TMP_DIR = %s\n",PKG_TMP_DIR;
   write,format="PKG_VERBOSE = %d\n",PKG_VERBOSE;
   write,format="PKG_ASK_CONFIRM = %d\n",PKG_ASK_CONFIRM;
   write,format="PKG_RUN_CHECK = %d\n",PKG_RUN_CHECK;
+  write,format="PKG_Y_HOME = \"%s\";\n",PKG_Y_HOME;
+  write,format="PKG_Y_SITE = \"%s\";\n",PKG_Y_SITE;
+  write,format="PKG_VAR_STATE = \"%s\";\n",PKG_VAR_STATE;
+  write,format="PKG_OTHER_INSTALLED = \"%s\";\n",PKG_OTHER_INSTALLED;
 
+  if (PKG_VAR_STATE!=old_var) {
+  }
+  
+  PKG_SYNC_DONE=[];
+  PKG_TMP_DIR=PKG_VAR_STATE+"tmp/";
+  
   setup_done = 1;
+  user_setup_done = 1;
   pkg_save;
+
+  // inform the user about paths
+  
+  if (PKG_Y_HOME != Y_HOME | PKG_Y_SITE != Y_SITE) {
+  write,format="%s\n", "\n"+
+    "You need to make sure the various Yorick paths will take the relevant\n"+
+    "sub-directories of PKG_Y_HOME and PKG_Y_SITE into account, and that future\n"+
+    "runs of pkg_mngr will know where to find PKG_SETUP.\n"+
+    "\n"+
+    "This is easily done by putting the following lines in any startup file,\n"+
+    "e.g. any .i file in Y_HOME/i-start/ or ~/.yorick/i-start/:\n";
+  write,format=" require,\"pathfun.i\";\n"+" PKG_SETUP=\"%s\";\n",PKG_SETUP;
+  if (PKG_Y_HOME==PKG_Y_SITE)
+    write,format=" add_y_home, \"%s\";\n\n",PKG_Y_HOME;
+  else
+    write,format=" add_y_home, \"%s\", \"%s\";\n\n",PKG_Y_HOME,PKG_Y_SITE;
+  write_pkg_setup_start,1;
+  } else if (PKG_SETUP!=Y_HOME+"packages/pkg_setup.i") {
+  write,format="%s\n","\n"+
+    "You need to make sure that future runs of pkg_mngr will know where\n"+
+    "to find PKG_SETUP.\n"+
+    "\n"+
+    "This is easily done by putting the following line in any startup file,\n"+
+    "e.g. any .i file in Y_HOME/i-start/ or ~/.yorick/i-start/:\n";
+  write,format="PKG_SETUP=\"%s\";\n",PKG_SETUP;
+  write_pkg_setup_start,2;
+  }
+  if (PKG_Y_HOME==Y_HOME & PKG_Y_SITE!=Y_SITE) {
+  write,format="%s\n","\n"+
+    "WARNING: you set PKG_Y_HOME==Y_HOME but PKG_Y_SITE!=Y_SITE.\n"+
+    "Expect trouble.\n"+
+    "I strongly advise you to rerun pkg_setup and set PKG_Y_SITE\n"+
+    "and PKG_Y_HOME to sane values.\n\n";
+  } else if (PKG_Y_HOME!=Y_HOME & PKG_Y_SITE==Y_SITE) {
+  write,format="%s\n","\n"+
+    "WARNING: you set PKG_Y_HOME!=Y_HOME but PKG_Y_SITE==Y_SITE.\n"+
+    "Expect trouble.\n"+
+    "I strongly advise you to rerun pkg_setup and set PKG_Y_SITE\n"+
+    "and PKG_Y_HOME to sane values.\n\n";
+  }
 }
 
 
@@ -522,6 +752,7 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
  */
 {
   extern _pkg_recur_tree; // to avoid recursion
+  if (!(setup_done & user_setup_done)) pkg_setup,first=1;
   if (!PKG_SYNC_DONE) pkg_sync;
 
   if (!_recur) { // first call in possible recursion
@@ -532,7 +763,10 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
     allpkg = [];
     for (np=1;np<=numberof(pkgnames);np++) {
       w = where(strglob(pkgnames(np),instpkg));
-      if (numberof(w)==0) continue;
+      if (numberof(w)==0) {
+        write,format="WARNING: No such package \"%s\"\n",pkgnames(np);
+        continue;
+      }
       grow,allpkg,instpkg(w);
     }
     
@@ -559,9 +793,9 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
     if (check==[])    check=PKG_RUN_CHECK;
     if (pkgname==[])  error,"Must specify a string-type package name";
 
-    infodir = Y_HOME+"packages/info/";
-    instdir = Y_HOME+"packages/installed/";
-    tarbdir = Y_HOME+"packages/tarballs/";
+    infodir = PKG_VAR_STATE+"info/";
+    instdir = PKG_VAR_STATE+"installed/";
+    tarbdir = PKG_VAR_STATE+"tarballs/";
 
     if (anyof(_pkg_recur_tree) && anyof(strmatch(_pkg_recur_tree,pkgname)))
       //we just installed it, to avoid recursing, we should exit.
@@ -585,7 +819,36 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
         }
       }
     }
-  
+    // TP: repeat the same in each PKG_OTHER_INSTALLED directory.
+    // Rationale: don't reinstall dependencies that are already installed at
+    // the system level.
+    installed_elsewhere=0;
+    for (in=1;in<=numberof(pkg_other_installed);in++) {
+      ins = lsdir(pkg_other_installed(in));
+      if (!force && anyof(ins)) {
+        w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",ins,sub=[1]);
+        instname = strpart(ins,w);
+        w = where(instname==pkgname);
+        if (numberof(w)!=0) {
+          // this package has been installed. check version:
+          ins=parse_info_file(pkg_other_installed(in)+pkgname+".info");
+          if (vers_cmp(ins.vers,_vrel,_version)) {
+            if (verbose && !_recur) {
+              write,format="Package %s already installed in %s (%s, needed %s)\n", \
+                pkgname,pkg_other_installed(in),ins.vers,_version;
+            }
+            installed_elsewhere=1;
+          }
+          // don't go further: assume this version is the one that will be
+          // used, we don't want to know whether the right one is installed
+          // somewhere where it will be ignored.
+          break;
+        }
+      }
+    }
+    if (installed_elsewhere) continue;
+    // end TP
+
     // upgrade: here, check if last version of package already installed
     
     pkg=parse_info_file(infodir+pkgname+".info");
@@ -656,13 +919,13 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
     
     // copy to Y_SITE:
     if (anyof(lsdir(pkgname+"/dist/y_site/"))) {
-      recursive_rename,pkgname+"/dist/y_site",Y_SITE,
+      recursive_rename,pkgname+"/dist/y_site",PKG_Y_SITE,
         list1,verbose=verbose,init=1;
     }
     
     // copy to Y_HOME:
     if (anyof(lsdir(pkgname+"/dist/y_home/"))) {
-      recursive_rename,pkgname+"/dist/y_home",Y_HOME,
+      recursive_rename,pkgname+"/dist/y_home",PKG_Y_HOME,
         list2,verbose=verbose,init=1;
     }
     
@@ -731,7 +994,7 @@ func pkg_reset(verbose=)
   rep=kinput("Delete all pkg_mngr tarballs and start from scratch","n");
   if (rep!="y") return
   
-  tarbdir = Y_HOME+"packages/tarballs/";
+  tarbdir = PKG_VAR_STATE+"tarballs/";
   recursive_rmdir,tarbdir,verbose=verbose;
   mkdir,tarbdir;
 }
@@ -752,7 +1015,7 @@ func pkg_remove(pkgnames,verbose=)
    SEE ALSO: pkg_mngr, pkg_install
  */
 {
-  if (!setup_done) pkg_setup,first=1;
+  if (!(setup_done & user_setup_done)) pkg_setup,first=1;
   if (verbose==[]) verbose=PKG_VERBOSE;
   if (!PKG_SYNC_DONE) pkg_sync;
   if (pkgnames==[]) error,"Must specify a string-type package name";
@@ -779,7 +1042,7 @@ func pkg_remove(pkgnames,verbose=)
     if (kinput("OK? ","y")!="y") return 0;
   }
   
-  instdir = Y_HOME+"packages/installed/";
+  instdir = PKG_VAR_STATE+"installed/";
     
   for (np=1;np<=numberof(pkgnames);np++) {
     pkgname = pkgnames(np);
@@ -829,7 +1092,7 @@ func pkg_remove(pkgnames,verbose=)
 
 func get_avail_pkg(void)
 {
-  infodir = Y_HOME+"packages/info/";
+  infodir = PKG_VAR_STATE+"info/";
 
   all = lsdir(infodir);
   if (anyof(all)) {
@@ -840,9 +1103,9 @@ func get_avail_pkg(void)
   return infoname;
 }
 
-func get_inst_pkg(void)
+func get_inst_pkg(instdir)
 {
-  instdir = Y_HOME+"packages/installed/";
+  if (!instdir) instdir = PKG_VAR_STATE+"installed/";
 
   all = lsdir(instdir);
   if (anyof(all)) {
@@ -937,7 +1200,7 @@ func recursive_rename(dir1,dir2,&list,verbose=,init=)
 
   // if not, create:
   if (allof(f2)==0) {
-    mkdir,dir2;
+    mkdirp,dir2;
     if (lsdir(dir2)==0) error,"Creating "+dir2+" failed (check permission)";
     if (verbose>=2) write,format="%s\n","Created "+dir2;
   }
@@ -1178,3 +1441,27 @@ func kinput(prompt,default)
 
   return res;
 }
+
+
+
+func write_pkg_setup_start(case)
+{
+  rep=kinput("Do you want me to write this in \""+Y_USER+"i-start/00pkg_mngr.i\" [y/n]?","y");
+  if (rep=="y") {
+    mkdirp,Y_USER+"i-start";
+    f = open(Y_USER+"i-start/00pkg_mngr.i","w");
+    // write,f,format="%s\n",
+    //  "autoload,\"pkg_mngr.i\",pkg_setup,pkg_list,pkg_sync,pkg_remove,pkg_install;";
+    if (case==1) write,f,format="%s\n","require,\"pathfun.i\";";
+    write,f,format="PKG_SETUP=\"%s\";\n",PKG_SETUP;
+    if (case==1) {
+      if (PKG_Y_HOME==PKG_Y_SITE)
+        write,f,format="add_y_home,\"%s\";\n",PKG_Y_HOME;
+      else
+        write,f,format="add_y_home,\"%s\",\"%s\";\n",PKG_Y_HOME,PKG_Y_SITE;
+    }
+    close,f;
+    write,format="NOTE: --> Generated \"%s\"\n",Y_USER+"i-start/00pkg_mngr.i";
+  }
+}
+
