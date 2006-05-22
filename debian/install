@@ -1,0 +1,4 @@
+build/yorick usr/lib
+debian/etc/yorick etc
+emacs/yorick.el usr/share/emacs/site-lisp
+debian/zzdebian.i usr/lib/yorick/i-start

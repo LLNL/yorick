@@ -1,16 +1,17 @@
 Source: yorick
 Section: math
 Priority: optional
-Maintainer: David H. Munro <munro1@llnl.gov>
-Build-Depends: xlibs-dev, texinfo, debmake
-Standards-Version: 3.5.2
+Maintainer: Thibaut Paumard <paumard@users.sourceforge.net>
+Build-Depends: libx11-dev, texinfo, debhelper (>= 4.0.0), dpatch, imagemagick
+Standards-Version: 3.7.2.0
 
 Package: yorick
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Conflicts: yorick-dev, yorick-gist
 Replaces: yorick-dev (<=1.4-15), yorick-gist (<=1.4-15)
-Suggests: gs, xfig, yorick-doc
+Recommends: yorick-yutils, yorick-yeti, curl, rlwrap
+Suggests: yorick-hdf5, yorick-soy, yorick-gl, yorick-z, yorick-imutil, yorick-curses, yorick-yeti-fftw, yorick-yeti-regex, yorick-yeti-tiff, emacsen
 Description: interpreted language and scientific graphics
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -29,4 +30,4 @@ Description: interpreted language and scientific graphics
  This package includes an emacs-based development environment, which
  you can launch by typing M-x yorick in emacs.
  .
- ftp://ftp-icf.llnl.gov/pub/Yorick/doc/index.html
+ http://yorick.sourceforge.net

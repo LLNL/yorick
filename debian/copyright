@@ -1,53 +1,129 @@
-This package was debianized by David H. Munro munro1@llnl.gov on
-Fri, 04 May 2001 17:56:14 -0800.
+This package was debianized by Thibaut Paumard <paumard@users.sourceforge.net> on
+Fri,  5 May 2006 16:43:44 +0200.
 
-It was downloaded from ftp-icf.llnl.gov:/pub/Yorick/
-   yorick-1.5.tgz
+It was downloaded from yorick.cvs.sourceforge.net:/cvsroot/yorick (module yorick)
 
-Copyright:
+Author: David H. Munro
 
-  Copyright (c) 1996.  The Regents of the University of California.
-			 All rights reserved.
+Copyright (c) 2005, The Regents of the University of California.
+Produced at the Lawrence Livermore National Laboratory.
+Written by David H. Munro <dhmunro at users.sourceforge.net>.
+UCRL-CODE-155996
+All rights reserved.
 
-Permission to use, copy, modify, and distribute this software for any
-purpose without fee is hereby granted, provided that this entire
-notice is included in all copies of any software which is or includes
-a copy or modification of this software and in all copies of the
-supporting documentation for such software.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
 
-This work was produced at the University of California, Lawrence
-Livermore National Laboratory under contract no. W-7405-ENG-48 between
-the U.S. Department of Energy and The Regents of the University of
-California for the operation of UC LLNL.
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the disclaimer below.
+
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the disclaimer (as noted below)
+  in the documentation and/or other materials provided with the
+  distribution.
+
+* Neither the name of the UC/LLNL nor the names of its contributors
+  may be used to endorse or promote products derived from this software
+  without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OF
+THE UNIVERSITY OF CALIFORNIA, THE U.S. DEPARTMENT OF ENERGY OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-			      DISCLAIMER
-
-This software was prepared as an account of work sponsored by an
-agency of the United States Government.  Neither the United States
-Government nor the University of California nor any of their
-employees, makes any warranty, express or implied, or assumes any
-liability or responsibility for the accuracy, completeness, or
-usefulness of any information, apparatus, product, or process
-disclosed, or represents that its use would not infringe
-privately-owned rights.  Reference herein to any specific commercial
-products, process, or service by trade name, trademark, manufacturer,
-or otherwise, does not necessarily constitute or imply its
-endorsement, recommendation, or favoring by the United States
-Government or the University of California.  The views and opinions of
-authors expressed herein do not necessarily state or reflect those of
-the United States Government or the University of California, and
-shall not be used for advertising or product endorsement purposes.
 
 
-				AUTHOR
+Additional BSD Notice
 
-David H. Munro wrote Yorick and Gist.  Berkeley Yacc (byacc) generated
-the Yorick parser.  The routines in Math are from LAPACK and FFTPACK;
-MathC contains C translations by David H. Munro.  The algorithms for
-Yorick's random number generator and several special functions in
-Yorick/include were taken from Numerical Recipes by Press, et. al.,
-although the Yorick implementations are unrelated to those in
-Numerical Recipes.  A small amount of code in Gist was adapted from
-the X11R4 release, copyright M.I.T. -- the complete copyright notice
-may be found in the (unused) file Gist/host.c.
+1. This notice is required to be provided under our contract with the
+  U.S. Department of Energy (DOE). This work was produced at the
+  University of California, Lawrence Livermore National Laboratory under
+  Contract No. W-7405-ENG-48 with the DOE.
+
+2. Neither the United States Government nor the University of
+  California nor any of their employees, makes any warranty, express or
+  implied, or assumes any liability or responsibility for the accuracy,
+  completeness, or usefulness of any information, apparatus, product, or
+  process disclosed, or represents that its use would not infringe
+  privately-owned rights.
+
+3. Also, reference herein to any specific commercial products,
+  process, or services by trade name, trademark, manufacturer or
+  otherwise does not necessarily constitute or imply its endorsement,
+  recommendation, or favoring by the United States Government or the
+  University of California. The views and opinions of authors expressed
+  herein do not necessarily state or reflect those of the United States
+  Government or the University of California, and shall not be used for
+  advertising or product endorsement purposes.
+
+
+Authors & copyright for specific files:
+
+David H. Munro wrote Yorick and Gist.
+
+Individual files were contributed by Éric Thiébaut (e.g. i/fits.i), François
+Rigaut (e.g. i/pkg_mngr.i), Bert Still (mpy/).
+i/fits.i is Copyright (c) 2000-2002 Eric THIEBAUT
+
+Berkeley Yacc (byacc) generated the Yorick parser.
+
+The routines in matrix/ and fft/ contain C translations by David H. Munro from
+LAPACK and FFTPACK.  The algorithms for Yorick's random number generator and
+several special functions were taken from Numerical Recipes by Press, et. al.,
+although the Yorick implementations are unrelated to those in Numerical
+Recipes.
+
+i/idlsave.i in the upstream source derivates from work by Craig Markwardt. It
+  is not included in the Debian package due to copyright issues. For the time
+  being, extract it from the upstream source if needed.
+
+regexp/yregexp.c derivates from work by Henry Spencer regexp/yregexp.c is
+  Copyright (c) 1986 University of Toronto.
+  Written by Henry Spencer.  Not derived from licensed software.
+
+  Permission is granted to anyone to use this software for any
+  purpose on any computer system, and to redistribute it in any way,
+  subject to the following restrictions:
+
+  1. The author is not responsible for the consequences of use of
+        this software, no matter how awful, even if they arise
+        from defects in it.
+
+  2. The origin of this software must not be misrepresented, either
+        by explicit claim or by omission.
+
+  3. Altered versions must be plainly marked as such, and must not
+        be misrepresented (by explicit claim or omission) as being
+        the original software.
+
+  4. This notice must not be removed or altered.
+
+doc/refs.tex derivates from work by Stephen Gildea, Copyright (c) 1987 Free
+  Software Foundation, Inc. under GPL v. 1 or later.
+  On Debian systems, the GPL (v. 2) can be found in /usr/share/common-licenses/GPL
+
+play/hacks/hack103.c of the upstream sources derivates from work Copyright (c)
+  1999-2003 Apple Computer, Inc. under the Apple Public Source License Version 2.0
+  (the 'License'). All Rights Reserved. It is not included in the Debian sources as
+  it is not used in the Linux port of Yorick and would prevent Yorick from being
+  DFSG-free.
+
+regexp/yfnmatch.c derivates from work by Guido van Rossum, Copyright (c) 1989,
+  1993, 1994 The Regents of the University of California under BSD license.
+
+The the content of the upstream `opengl' directory may not be DFSG-free as it
+uses GLX. It is not used and is removed from the Debian source tree. For
+OpenGL support, look at yorick-gl in non-free.
+
+The content of the debian/ directory is Copyright (C) 2006 Thibaut Paumard,
+under GPL.

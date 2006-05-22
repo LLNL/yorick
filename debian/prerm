@@ -1,9 +1,12 @@
 #!/bin/sh
- if [ "$1" = "upgrade" -o "$1" = "remove" ]; then
-  if [ -d /usr/doc -a ! -e /usr/doc/yorick -a -d /usr/share/doc/yorick ]; then
-    ln -sf ../share/doc/yorick /usr/doc/yorick
+set -e
+ if [ "$1" = "upgrade" ] || [ "$1" = "remove" ]; then
+  if [ -h /usr/lib/yorick/packages/pkg_setup.i ]; then
+      if [ `ls -l /usr/lib/yorick/packages/pkg_setup.i | awk -F" -> " '{ print $2 }'` = "/etc/yorick/packages/pkg_setup.i" ]; then
+	  rm -f /usr/lib/yorick/packages/pkg_setup.i
+	  rm -f /etc/yorick/packages/pkg_setup_may_use_Y_HOME || true
+      fi
   fi
-  if [ -r /etc/emacs/site-start.d/50yorick-auto.el ]; then
-    rm -f /etc/emacs/site-start.d/50yorick-auto.el
-  fi
+
  fi
+#DEBHELPER#

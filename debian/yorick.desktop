@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=yorick
+GenericName=
+Comment=
+Icon=yicon48.xpm
+Exec=rlwrap yorick || yorick
+Terminal=true
+Categories=X-Debian-Apps-Math

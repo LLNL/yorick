@@ -1,9 +1,28 @@
 #!/bin/sh
- if [ "$1" = "configure" ]; then
-   if [ -L /usr/doc/yorick ]; then
-     rm -f /usr/doc/yorick
-   fi
-   if [ -r /usr/share/yorick/1.6/yorick-auto.el ]; then
-     cp -f /usr/share/yorick/1.6/yorick-auto.el /etc/emacs/site-start.d/50yorick-auto.el
-   fi
- fi
+set -e
+if [ "$1" = "configure" ]; then
+    if [ -e /usr/lib/yorick/packages/pkg_setup.i ]; then
+	if [ ! -e /etc/yorick/packages/pkg_setup_may_use_Y_HOME ]; then
+	    cat <<EOF
+
+   =====================================================================
+
+   Yorick package postinst script:
+   
+   It seems you used pkg_mngr already, not setting up the Debian default
+   configuration.
+   
+   I recommend you read /usr/share/doc/yorick/README.Debian.packages.gz
+
+   =====================================================================
+
+EOF
+	    touch /etc/yorick/packages/pkg_setup_may_use_Y_HOME
+	    read -p "Hit return to continue"
+	fi
+    else ln -s /etc/yorick/packages/pkg_setup.i \
+	/usr/lib/yorick/packages/pkg_setup.i;
+    fi 
+
+fi
+#DEBHELPER#
