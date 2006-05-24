@@ -1,5 +1,4 @@
 etc/emacs/site-start.d
-usr/lib/yorick/packages
 usr/local/lib/yorick
 usr/local/lib/yorick/i
 usr/local/lib/yorick/i0
