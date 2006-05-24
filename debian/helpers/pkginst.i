@@ -1,5 +1,5 @@
 /*
-  $Id: pkginst.i,v 1.1 2006-05-24 06:13:26 paumard Exp $
+  $Id: pkginst.i,v 1.2 2006-05-24 12:55:25 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   yorick -batch debian/pkginst.i $DESTDIR [pkg.info]
@@ -50,6 +50,6 @@ while (is_void(lsdir(temp)) & temp!=DESTDIR+"/") {
 }
 
 if (!is_void(INFILE)) {
-  mkdirp,DEPDIR+"packages/installed";
+  mkdirp,INDEPDIR+"packages/installed";
   syscall,"cp "+INFILE+" "+INDEPDIR+"packages/installed";
 }

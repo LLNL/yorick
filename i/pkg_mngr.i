@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.11 2006-05-22 10:26:21 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.12 2006-05-24 12:55:25 paumard Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -539,7 +539,7 @@ func pkg_setup(first=)
 {
   extern setup_done, user_setup_done;
   extern pkg_other_installed;
-  extern PKG_Y_HOME, PKG_Y_SITE, PKG_TMP_DIR, PKG_VAR_STATE;
+  extern PKG_Y_HOME, PKG_Y_SITE, PKG_TMP_DIR, PKG_VAR_STATE, PKG_OTHER_INSTALLED;
   extern PKG_SYNC_DONE;
   if (first) {
     write,format="%s\n\n",
@@ -556,6 +556,9 @@ func pkg_setup(first=)
   // done, i.e. user is not superuser.
   if (!user_setup_done) {
     if (!has_write_permissions(PKG_Y_HOME)) {
+      if (!is_void(PKG_VAR_STATE))
+        pkg_other_installed=grow([PKG_VAR_STATE+"installed/"],pkg_other_installed);
+      PKG_OTHER_INSTALLED=pathform(pkg_other_installed);
       PKG_Y_HOME = Y_USER;
       PKG_VAR_STATE = PKG_Y_HOME+"packages/";
     }
@@ -653,7 +656,8 @@ func pkg_setup(first=)
     }
   }
 
-  if (PKG_SETUP==Y_HOME+"packages/pkg_setup.i")
+  if (PKG_SETUP==Y_HOME+"packages/pkg_setup.i" |
+      !has_write_permissions(dirname(PKG_SETUP)))
     PKG_SETUP=PKG_VAR_STATE+"pkg_setup.i";
   write,format="\n%s\n",
     "Where should this information be stored?";
