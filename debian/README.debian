@@ -67,12 +67,16 @@ inspiration from this file to install packages in their home directories.
 
 This build of Yorick is relocatable. This means that you can keep a functional
 copy of this version e.g. before upgrading by simply copying the entire
-/usr/lib/yorick directory anywhere. If you do that, you may want want to
-remove i-start/zzdebian.i, which makes an `include_all,"/etc/yorick";'. See
-upstream doc for details. You may also want to have a look at the
-/usr/lib/yorick/packages/pkg_setup.i link and check whether it does something
-useful for you (you probably want to delete it).
-
+/usr/lib/yorick directory anywhere. If you do that:
+  - make sure you dereference symbolic links (-L option to cp);
+  - you may want want to remove i-start/zzdebian.i, which makes an
+    `include_all,"/etc/yorick";';
+  - you may also want to have a look at packages/pkg_setup.i
+    and check whether it does something useful for you (you probably want to
+    delete it).
+  - the yorick binary is in bin/; you may set up a symbolic link, must you
+    cannot change the layout of the directory tree or move the real executable
+    out.
 
 
 5) Suppressed material

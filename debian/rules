@@ -36,10 +36,16 @@ build-stamp: configure-stamp
 	dh_testdir
 	$(MAKE) install
 	-rm relocate/LICENSE
-	cp install.rel relocate/README
 	$(MAKE) -C doc yorick.info
-	mkdir build
-	mv relocate build/yorick
+	mkdir -p build/share
+	mkdir -p build/lib/yorick
+	mv relocate/doc build/doc
+	mv relocate build/share/yorick
+	mkdir -p build/share/yorick/packages/installed
+	mv build/share/yorick/bin build/lib/yorick/
+	mv build/share/yorick/lib build/lib/yorick/
+#	mv build/share/yorick/packages build/lib/yorick/
+	cd build/lib/yorick ; ln -s ../../share/yorick/* ./
 	touch build-stamp
 
 clean: clean-patched unpatch

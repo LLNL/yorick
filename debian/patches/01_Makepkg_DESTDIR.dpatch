@@ -1,5 +1,5 @@
 #! /bin/sh /usr/share/dpatch/dpatch-run
-## 01_Makepkg_DESTDIR.dpatch by  <thibaut@tidirium.alliance.ak>
+## 01_Makepkg_DESTDIR.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
 ##
 ## All lines beginning with `## DP:' are a description of the patch.
 ## DP: Make Makepkg DESTDIR-aware --- Yorick comes with a nice system for 
@@ -17,20 +17,21 @@
 @DPATCH@
 
 diff -urN orig/Makepkg tp/Makepkg
---- orig/Makepkg	2006-05-05 13:31:27.673761552 +0200
-+++ tp/Makepkg	2006-05-05 10:02:34.000000000 +0200
+--- orig/Makepkg	2006-05-23 17:04:39.610801600 +0200
++++ tp/Makepkg	2006-05-23 17:08:59.126349240 +0200
 @@ -39,6 +39,7 @@
  # CODGER, PKG_NAME, PKG_I, PKG_I_DIR, EXTRA_PKGS
  # Y_EXE, Y_SITE, Y_HOME
  # PKG_CLEAN, Y_BINDIR
-+# DESTDIR, DEST_Y_SITE, DEST_Y_HOME, DEST_Y_BINDIR
++# DESTDIR, DEST_Y_SITE, DEST_Y_HOME, DEST_Y_BINDIR (Debian-specific)
  
  # defined in package Makefile (which includes this Makepkg):
  # Y_MAKEDIR  directory containing Make.cfg, Makepkg, Makeexe, Makedll
-@@ -66,6 +67,11 @@
+@@ -66,6 +67,12 @@
  # LIB_TARGETS  optional prerequisites for static library
  # DLL_TARGETS  optional prerequisites for dynamic library
  
++# Note: the DEST* variables below are Debian-specific
 +# DESTDIR       optional (un)install root
 +# DEST_Y_SITE   optional install Y_SITE (default: $(DESTDIR)$(Y_SITE))
 +# DEST_Y_HOME   optional install Y_HOME (default: $(DESTDIR)$(Y_HOME))
@@ -39,10 +40,11 @@ diff -urN orig/Makepkg tp/Makepkg
  # ------------------------------------------------------------------------
  
  # defined in Make.cfg:
-@@ -151,23 +157,27 @@
+@@ -151,23 +158,28 @@
  
  Y_GROUP=`cat $(Y_LIBEXE)/install.grp`
  YNSTALL=$(Y_LIBEXE)/install.sh $(Y_GROUP)
++# Note: the DEST* variables below are Debian-specific
 +DESTDIR=
 +DEST_Y_SITE=$(DESTDIR)$(Y_SITE)
 +DEST_Y_HOME=$(DESTDIR)$(Y_HOME)

@@ -6,11 +6,16 @@
 
   See /usr/share/doc/yorick/README.Debian.packages
   Author: Thibaut Paumard <paumard@users.sourceforge.net>
+
+  The preferred way to customize the configuration is through pkg_setup
+  (within Yorick). The customized configuration will be saved in 
+  /usr/lib/yorick/packages/pkg_setup.i , not here.
+
  */
 
 localtree="/usr/local/lib/yorick/";
 
-PKG_OS = "linux";
+PKG_OS = "linux-x86";
 PKG_FETCH_CMD = "curl -s";
 PKG_SERVER = "http://www.maumae.net/yorick/packages/";
 PKG_GUNTAR_CMD = "tar zxf";
@@ -38,5 +43,5 @@ if (open(PKG_SETUP,"r",1)) {
   require,PKG_SETUP;
   write,format="\n Local setup loaded from %s\n\n",PKG_SETUP;
 } else {
-  write,format="%s\n","Please run pkg_sync\n";
+  write,format="%s\n","Please run pkg_sync.\nIf your architecture is not i386, please run pkg_setup before.\n";
 }
