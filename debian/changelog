@@ -1,4 +1,4 @@
-yorick (2.1.01cvs20060522-1) unstable; urgency=low
+yorick (2.1.01cvs20060524-1) unstable; urgency=low
 
   * new maintainer. Closes: #357679
   * acknowledged NMU. Closes: #346861
@@ -16,7 +16,7 @@ yorick (2.1.01cvs20060522-1) unstable; urgency=low
      * idlsave.i removed due to copyright issues.
   * Makepkg is patched to accept a DESTDIR option (helpful for packaging add-ons)
 
- -- Thibaut Paumard <paumard@users.sourceforge.net>  Sat, 13 May 2006 23:55:12 +0200
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Wed, 24 May 2006 08:13:47 +0200
 
 yorick (1.5.14-1.1) unstable; urgency=high
 
