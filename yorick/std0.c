@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.4 2006-05-20 17:21:30 dhmunro Exp $
+ * $Id: std0.c,v 1.5 2006-05-27 23:09:15 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -254,7 +254,7 @@ Y_set_site(int nArgs)
   } else {
 #ifndef NO_FALLBACK_TEST
     p_file *test = 0;
-    if (ySiteDir && ySiteDir[0]) {
+    if (ySiteDir && ySiteDir[0] && YIsAbsolute(ySiteDir)) {
       path = p_strncat(ySiteDir, "i0/std.i", 0);
       test = p_fopen(path, "r");
       p_free(path);
