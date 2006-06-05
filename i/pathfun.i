@@ -1,6 +1,6 @@
 /*
  * pathfun.i
- * $Id: pathfun.i,v 1.2 2006-05-21 17:29:58 paumard Exp $
+ * $Id: pathfun.i,v 1.3 2006-06-05 00:12:25 dhmunro Exp $
  * manipulate path names and file names
  */
 /* Copyright (c) 2006, The Regents of the University of California.
@@ -103,7 +103,26 @@ func pathsplit(path, delim=)
   i = strfind(delim, path, n=1024);
   i = i(1:min(where(i<0))-1);  /* blow up if more than 1023 items */
   if (numberof(i) <= 1) return [path];
-  return strpart(path, grow([0],i));
+  path = strpart(path, grow([0],i));
+  if (delim == ":") {
+    /* msdos drive letter repair */
+    list = where(strlen(path) == 1);
+    if (numberof(list)) {
+      if (list(0) == numberof(path)) {
+        if (numberof(list) < 2) return path;
+        list = list(1:-1);
+      }
+      i = strcase(0, path(list));
+      list = list(where((i>="a") & (i<="z")));
+      if (numberof(list)) {
+        path(list+1) = path(list) + ":" + path(list+1);
+        mask = array(1n, numberof(path));
+        mask(list) = 0;
+        path = path(where(mask));
+      }
+    }
+  }
+  return path;
 }
 
 func add_y_home(y_home,y_site) {
