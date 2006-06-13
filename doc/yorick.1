@@ -4,14 +4,14 @@
 yorick \- interpreted language for numerical analysis and postprocessing
 .SH SYNOPSIS
 .B yorick
-[ -i
+[ \-i
 .I file1.i
-[ -i
+[ \-i
 .I file2.i
 [ ... ]]]
 .br
 .B yorick
--batch
+\-batch
 .I file.i
 .br
 .SH DESCRIPTION
@@ -100,13 +100,13 @@ library by typing (as a command to Yorick):
 library
 .SS Options
 .TP 20
-.RI -i \0file.i
+.RI \-i \0file.i
 includes the Yorick source file
 .I file.i
 as Yorick starts.  This is equivalent to the #include directive after
 Yorick has started.
 .TP
-.RI -batch \0file.i
+.RI \-batch \0file.i
 includes the Yorick source file
 .I file.i
 as Yorick starts.  Your customization file custom.i, if any, is
