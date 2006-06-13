@@ -1,4 +1,4 @@
-# $Id: Makepkg,v 1.1 2005-09-18 22:03:40 dhmunro Exp $
+# $Id: Makepkg,v 1.2 2006-06-13 18:37:37 paumard Exp $
 # standard parts of yorick package Makefile
 SHELL=/bin/sh
 MAKE=make
@@ -39,6 +39,7 @@ MAKE=make
 # CODGER, PKG_NAME, PKG_I, PKG_I_DIR, EXTRA_PKGS
 # Y_EXE, Y_SITE, Y_HOME
 # PKG_CLEAN, Y_BINDIR
+# DESTDIR, DEST_Y_SITE, DEST_Y_HOME, DEST_Y_BINDIR
 
 # defined in package Makefile (which includes this Makepkg):
 # Y_MAKEDIR  directory containing Make.cfg, Makepkg, Makeexe, Makedll
@@ -65,6 +66,11 @@ MAKE=make
 # EXE_TARGETS  optional prerequisites for executable
 # LIB_TARGETS  optional prerequisites for static library
 # DLL_TARGETS  optional prerequisites for dynamic library
+
+# DESTDIR       optional (un)install root
+# DEST_Y_SITE   optional install Y_SITE (default: $(DESTDIR)$(Y_SITE))
+# DEST_Y_HOME   optional install Y_HOME (default: $(DESTDIR)$(Y_HOME))
+# DEST_Y_BINDIR optional install Y_BINDIR (default: $(DESTDIR)$(Y_BINDIR))
 
 # ------------------------------------------------------------------------
 
@@ -151,23 +157,27 @@ dist: distclean
 
 Y_GROUP=`cat $(Y_LIBEXE)/install.grp`
 YNSTALL=$(Y_LIBEXE)/install.sh $(Y_GROUP)
+DESTDIR=
+DEST_Y_SITE=$(DESTDIR)$(Y_SITE)
+DEST_Y_HOME=$(DESTDIR)$(Y_HOME)
+DEST_Y_BINDIR=$(DESTDIR)$(Y_BINDIR)
 install:: install-$(TGT)
-	$(YNSTALL) $(PKG_I_DEPS) $(Y_SITE)/i0
-	if test -n "$(PKG_I_START)"; then $(YNSTALL) $(PKG_I_START) $(Y_HOME)/i-start; fi
-	if test -n "$(PKG_I_EXTRA)"; then $(YNSTALL) $(PKG_I_EXTRA) $(Y_SITE)/i; fi
+	$(YNSTALL) $(PKG_I_DEPS) $(DEST_Y_SITE)/i0
+	if test -n "$(PKG_I_START)"; then $(YNSTALL) $(PKG_I_START) $(DEST_Y_HOME)/i-start; fi
+	if test -n "$(PKG_I_EXTRA)"; then $(YNSTALL) $(PKG_I_EXTRA) $(DEST_Y_SITE)/i; fi
 install-exe: $(PKG_EXE)
-	$(YNSTALL) $(PKG_EXE) $(Y_BINDIR)
-	$(YNSTALL) $(PKG_LIB) $(Y_HOME)/lib
-	$(RANLIB) $(Y_HOME)/lib/$(PKG_LIB)
+	$(YNSTALL) $(PKG_EXE) $(DEST_Y_BINDIR)
+	$(YNSTALL) $(PKG_LIB) $(DEST_Y_HOME)/lib
+	$(RANLIB) $(DEST_Y_HOME)/lib/$(PKG_LIB)
 install-dll: $(PKG_DLL)
-	$(YNSTALL) $(PKG_DLL) $(Y_HOME)/lib
+	$(YNSTALL) $(PKG_DLL) $(DEST_Y_HOME)/lib
 
 uninstall::
-	if test $(PKG_EXE) != yorick; then rm -f $(Y_BINDIR)/$(PKG_EXE); fi
-	rm -f $(Y_HOME)/lib/$(PKG_LIB) $(Y_HOME)/lib/$(PKG_DLL)
-	cd $(Y_SITE)/i0; rm -f $(PKG_I)
-	if test -n "$(PKG_I_START)"; then cd $(Y_HOME)/i-start; rm -f $(PKG_I_START); fi
-	if test -n "$(PKG_I_EXTRA)"; then cd $(Y_SITE)/i; rm -f $(PKG_I_EXTRA); fi
+	if test $(PKG_EXE) != yorick; then rm -f $(DEST_Y_BINDIR)/$(PKG_EXE); fi
+	rm -f $(DEST_Y_HOME)/lib/$(PKG_LIB) $(DEST_Y_HOME)/lib/$(PKG_DLL)
+	cd $(DEST_Y_SITE)/i0; rm -f $(PKG_I)
+	if test -n "$(PKG_I_START)"; then cd $(DEST_Y_HOME)/i-start; rm -f $(PKG_I_START); fi
+	if test -n "$(PKG_I_EXTRA)"; then cd $(DEST_Y_SITE)/i; rm -f $(PKG_I_EXTRA); fi
 
 debug:
 	@$(MAKE) TGT=exe COPT=-g
