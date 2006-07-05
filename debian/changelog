@@ -1,3 +1,9 @@
+yorick (2.1.01cvs20060524-2) unstable; urgency=low
+
+  * split package into yorick, yorick-data and yorick-dev
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Mon, 29 May 2006 11:55:59 +0200
+
 yorick (2.1.01cvs20060524-1) unstable; urgency=low
 
   * new maintainer. Closes: #357679

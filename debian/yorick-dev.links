@@ -1,0 +1,5 @@
+usr/share/yorick/include usr/lib/yorick/include
+usr/share/yorick/Make.cfg usr/lib/yorick/Make.cfg
+usr/share/yorick/Makedll usr/lib/yorick/Makedll
+usr/share/yorick/Makeexe usr/lib/yorick/Makeexe
+usr/share/yorick/Makepkg usr/lib/yorick/Makepkg

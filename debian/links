@@ -1,2 +1,9 @@
 usr/lib/yorick/bin/yorick usr/bin/yorick
 usr/lib/yorick/bin/gist usr/bin/gist
+usr/share/doc/yorick-data/doc usr/share/doc/yorick/doc
+usr/share/doc/yorick-data/doc usr/lib/yorick/doc
+usr/share/yorick/g usr/lib/yorick/g
+usr/share/yorick/i usr/lib/yorick/i
+usr/share/yorick/i0 usr/lib/yorick/i0
+usr/share/yorick/i-start usr/lib/yorick/i-start
+usr/share/yorick/packages usr/lib/yorick/packages

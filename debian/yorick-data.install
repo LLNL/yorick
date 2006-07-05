@@ -1,0 +1,6 @@
+build/share usr
+debian/etc/yorick etc
+debian/zzdebian.i usr/share/yorick/i-start
+emacs/yorick.el usr/share/emacs/site-lisp
+build/50yorick-auto.el etc/emacs/site-start.d
+build/yorick*.xpm usr/share/pixmaps

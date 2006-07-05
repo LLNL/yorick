@@ -1,6 +1,1 @@
 build/lib usr
-build/share usr
-debian/etc/yorick etc
-emacs/yorick.el usr/share/emacs/site-lisp
-debian/zzdebian.i usr/share/yorick/i-start
-debian/helpers/* usr/share/yorick/i/debian

@@ -74,8 +74,10 @@ To install packages using the pkg_mngr, simply install the Debian package
 
 
 
- 2.2 compiling from source
+ 2.2 Compiling from source
  -------------------------
+
+First make sure you installed the yorick-dev package.
 
 Packages usually come with instructions on how to install them, which for
 simpler packages boils down to:
@@ -98,8 +100,7 @@ step to install at a custom place. For instance:
       DEST_Y_HOME=~/.yorick \
       install
 
-See /usr/lib/yorick/Makepkg for details. Note: the variables DEST* are
-currently Debian specific.
+See /usr/lib/yorick/Makepkg for details.
 
 
  2.3 adjusting your paths

@@ -1,19 +1,22 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # Sample debian/rules that uses debhelper.
+#
 # This file was originally written by Joey Hess and Craig Small.
 # As a special exception, when this file is copied by dh-make into a
 # dh-make output file, you may use that output file without restriction.
 # This special exception was added by Craig Small in version 0.37 of dh-make.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-include /usr/share/dpatch/dpatch.make
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
 
-PACKAGE=yorick
-PKGDIR=debian/$(PACKAGE)
-SHELL=/bin/bash
+include /usr/share/dpatch/dpatch.make
 
 CFLAGS = -Wall -g
 
@@ -23,13 +26,12 @@ else
 	CFLAGS += -O2
 endif
 
-export CFLAGS
-
 configure: configure-stamp
 configure-stamp: patch-stamp
 	dh_testdir
 	make Y_HOME=relocate ysite
 	touch configure-stamp
+
 
 build: build-stamp
 build-stamp: configure-stamp 
@@ -44,36 +46,36 @@ build-stamp: configure-stamp
 	mkdir -p build/share/yorick/packages/installed
 	mv build/share/yorick/bin build/lib/yorick/
 	mv build/share/yorick/lib build/lib/yorick/
-#	mv build/share/yorick/packages build/lib/yorick/
-	cd build/lib/yorick ; ln -s ../../share/yorick/* ./
+	mkdir -p build/yorick-dev/share/yorick/
+	mkdir -p build/yorick-dev/lib/yorick/lib/
+	mv build/share/yorick/Make* build/yorick-dev/share/yorick/
+	mv build/share/yorick/include build/yorick-dev/share/yorick/
+	cd build/lib/yorick/lib; \
+	   mv codger install.grp install.sh libdep.sh libyor.a main.o \
+              $(CURDIR)/build/yorick-dev/lib/yorick/lib
+	cp emacs/yorick-auto.el build/50yorick-auto.el
+	convert icons/yicon32.png build/yorick32x32.xpm
+	convert icons/yicon16.png build/yorick16x16.xpm
 	touch build-stamp
 
-clean: clean-patched unpatch
+clean: configure-stamp clean-patched unpatch
 clean-patched:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
-	-rm -Rf build relocate
+	-rm -Rf build-stamp configure-stamp build relocate
 	$(MAKE) distclean
-	-rm -f `find . -name "*~"`
 	$(MAKE) Y_HOME=. ysite
 	dh_clean
 
-install: build
+# Must not depend on anything. This is to be called by
+# binary-arch/binary-indep
+# in another 'make' thread.
+binary-common:
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
 	dh_install
-	cp emacs/yorick-auto.el $(PKGDIR)/etc/emacs/site-start.d/50yorick-auto.el
-	convert icons/yicon32.png $(PKGDIR)/usr/share/pixmaps/yorick32x32.xpm
-	convert icons/yicon16.png $(PKGDIR)/usr/share/pixmaps/yorick16x16.xpm
-
-binary-indep: build install
-
-binary-arch: build install
-	dh_testdir
-	dh_testroot
 	dh_installchangelogs 
 	dh_installdocs
 	dh_installexamples
@@ -83,7 +85,7 @@ binary-arch: build install
 	dh_link
 	dh_strip
 	dh_usrlocal
-	dh_compress
+	dh_compress 
 	dh_fixperms
 	dh_installdeb
 	dh_shlibdeps
@@ -91,23 +93,34 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
+# Build architecture independant packages using the common target.
+#binary-indep: build-indep install-indep
+binary-indep: build-stamp
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
 
-CVSVERS=`head -1 orig-sources/yorick/VERSION`.`tail -1 orig-sources/yorick/VERSION | awk '{ printf "%02.0f", $$1-1 }'`cvs`date +"%Y%m%d"`.orig
+#binary-indep:
+
+# Build architecture dependant packages using the common target.
+binary-arch: build-stamp
+	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
+
+CVSVERS=`cd $(CURDIR) ; dpkg-parsechangelog | grep Version | sed 's/Version: //' | sed 's/-.*//'`.orig
 CVSROOT=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
+CVSDATE=`cd $(CURDIR) ; dpkg-parsechangelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }'`
 get-orig-source:
 	-rm -Rf orig-sources
 	mkdir orig-sources
 	cvs -d$(CVSROOT) login
-	cd orig-sources ; cvs -z3 -d$(CVSROOT) export -D now $(PACKAGE)
+	cd orig-sources ; cvs -z3 -d$(CVSROOT) export -D $(CVSDATE) yorick
 	rm orig-sources/yorick/play/hacks/hack103.c
 	rm orig-sources/yorick/i/idlsave.i
 	rm -Rf orig-sources/opengl
 	-rm -Rf yorick-$(CVSVERS)
-	cp -a orig-sources/yorick yorick-$(CVSVERS)
-	tar cvzf yorick_$(CVSVERS).tar.gz yorick-$(CVSVERS)
+	mv orig-sources/yorick yorick-$(CVSVERS)
+	tar cvzf ../yorick_$(CVSVERS).tar.gz yorick-$(CVSVERS)
 	rm -Rf yorick-$(CVSVERS)
 	rm -Rf orig-sources
 
 
-.PHONY: build clean binary-indep binary-arch binary install configure
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary configure
