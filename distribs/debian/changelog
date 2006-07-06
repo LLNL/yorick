@@ -1,10 +1,4 @@
-yorick (2.1.01cvs20060524-2) unstable; urgency=low
-
-  * split package into yorick, yorick-data and yorick-dev
-
- -- Thibaut Paumard <paumard@users.sourceforge.net>  Mon, 29 May 2006 11:55:59 +0200
-
-yorick (2.1.01cvs20060524-1) unstable; urgency=low
+yorick (2.1.01cvs20060706-1) unstable; urgency=low
 
   * new maintainer. Closes: #357679
   * acknowledged NMU. Closes: #346861
@@ -15,14 +9,15 @@ yorick (2.1.01cvs20060524-1) unstable; urgency=low
      * now builds a "relocatable" tree with Y_SITE=Y_HOME=/usr/lib/yorick
        (see README.Debian); request from DH Munro (upstream author and
        former maintainer);
+     * split package into yorick, yorick-data and yorick-dev;	
      * yorick is now accessible through the Debian menu;
      * system-wide configuration can now be done in /etc/yorick/,
        user-wide in ~/.yorick/i-start/;
      * now always installs the emacs helpers (yorick.el and yorick-auto.el);
      * idlsave.i removed due to copyright issues.
-  * Makepkg is patched to accept a DESTDIR option (helpful for packaging add-ons)
+     * repackaged with debhelper (Closes: #372975)
 
- -- Thibaut Paumard <paumard@users.sourceforge.net>  Wed, 24 May 2006 08:13:47 +0200
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Thu, 06 Jul 2006 13:28:54 +0200
 
 yorick (1.5.14-1.1) unstable; urgency=high
 

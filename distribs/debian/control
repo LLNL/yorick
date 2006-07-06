@@ -7,11 +7,11 @@ Standards-Version: 3.7.2.0
 
 Package: yorick
 Architecture: any
-Depends: yorick-data (=${Source-Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: yorick-data (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Conflicts: yorick-gist
 Replaces: yorick-gist (<=1.4-15)
-Recommends: yorick-yutils, yorick-yeti, curl, rlwrap
-Suggests: yorick-dev, yorick-hdf5, yorick-soy, yorick-gl, yorick-z, yorick-imutil, yorick-curses, yorick-yeti-fftw, yorick-yeti-regex, yorick-yeti-tiff, emacsen
+Recommends: rlwrap
+Suggests: yorick-yutils, yorick-yeti, curl, yorick-dev, yorick-hdf5, yorick-soy, yorick-gl, yorick-z, yorick-imutil, yorick-curses, yorick-yeti-fftw, yorick-yeti-regex, yorick-yeti-tiff, emacsen
 Description: interpreted language and scientific graphics
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -30,11 +30,12 @@ Description: interpreted language and scientific graphics
  This package includes an emacs-based development environment, which
  you can launch by typing M-x yorick in emacs.
  .
- http://yorick.sourceforge.net
+ Homepage: http://yorick.sourceforge.net
 
 Package: yorick-data
 Architecture: all
-Depends: yorick (=${Source-Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: yorick (=${binary:Version})
 Description: interpreted library for the Yorick language
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -46,11 +47,11 @@ Description: interpreted library for the Yorick language
  is mostly the standard interpreted library and the (text and PDF)
  documentation.
  .
- http://yorick.sourceforge.net
+ Homepage: http://yorick.sourceforge.net
 
 Package: yorick-dev
 Architecture: any
-Depends: yorick (=${Source-Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: yorick (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Conflicts: yorick-gist
 Description: development files for the Yorick interpreted language
  Yorick is an interpreted programming language for:
@@ -62,4 +63,4 @@ Description: development files for the Yorick interpreted language
  The yorick-dev package contains the files needed to compile (or package)
  plug-ins or custom `yorick' executables.
  .
- http://yorick.sourceforge.net
+ Homepage: http://yorick.sourceforge.net
