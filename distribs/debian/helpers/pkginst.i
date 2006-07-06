@@ -1,5 +1,5 @@
 /*
-  $Id: pkginst.i,v 1.2 2006-05-24 12:55:25 paumard Exp $
+  $Id: pkginst.i,v 1.1 2006-07-06 05:43:04 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   yorick -batch debian/pkginst.i $DESTDIR [pkg.info]

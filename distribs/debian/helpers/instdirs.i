@@ -1,5 +1,5 @@
 /*
-  $Id: instdirs.i,v 1.1 2006-05-24 06:13:26 paumard Exp $
+  $Id: instdirs.i,v 1.1 2006-07-06 05:43:04 paumard Exp $
   To be used in Debian packages for Yorick add-ons
 
   yorick -batch debian/instdirs.i $DESTDIR
