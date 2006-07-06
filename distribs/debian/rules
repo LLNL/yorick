@@ -13,6 +13,9 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# start by saving the path to debian/rules (useful in get-orig-source)
+PATH_TO_DEBIAN := $(shell dirname $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
+
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
@@ -104,9 +107,18 @@ binary-indep: build-stamp
 binary-arch: build-stamp
 	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
 
-CVSVERS=`cd $(CURDIR) ; dpkg-parsechangelog | grep Version | sed 's/Version: //' | sed 's/-.*//'`.orig
-CVSROOT=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
-CVSDATE=`cd $(CURDIR) ; dpkg-parsechangelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }'`
+CVSVERS:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/-.*//').orig
+CVSROOT:=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
+CVSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }')
+
+# This rule is to be called from anywhere, preferentially _not_ from within
+# the source tree.  It will download the source tree from the CVS
+# corresponding to the last version in the changelog, then prune
+# non-DFSG-compatible files (see copyright), and pack all this as the relevant
+# .orig.tar.gz file (in the current directory).
+#
+# WARNING: Side effect: this will use and remove the
+# directory "orig-sources".
 get-orig-source:
 	-rm -Rf orig-sources
 	mkdir orig-sources
@@ -117,7 +129,7 @@ get-orig-source:
 	rm -Rf orig-sources/opengl
 	-rm -Rf yorick-$(CVSVERS)
 	mv orig-sources/yorick yorick-$(CVSVERS)
-	tar cvzf ../yorick_$(CVSVERS).tar.gz yorick-$(CVSVERS)
+	tar cvzf yorick_$(CVSVERS).tar.gz yorick-$(CVSVERS)
 	rm -Rf yorick-$(CVSVERS)
 	rm -Rf orig-sources
 
