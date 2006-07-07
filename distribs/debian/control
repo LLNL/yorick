@@ -2,7 +2,7 @@ Source: yorick
 Section: math
 Priority: optional
 Maintainer: Thibaut Paumard <paumard@users.sourceforge.net>
-Build-Depends: libx11-dev, texinfo, debhelper (>= 4.0.0), dpatch, imagemagick
+Build-Depends: libx11-dev, texinfo, debhelper (>= 5.0.0), dpatch, imagemagick
 Standards-Version: 3.7.2.0
 
 Package: yorick
