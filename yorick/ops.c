@@ -1,5 +1,5 @@
 /*
- * $Id: ops.c,v 1.2 2005-11-12 04:21:56 dhmunro Exp $
+ * $Id: ops.c,v 1.3 2006-07-16 22:52:48 dhmunro Exp $
  *
  * Define miscellaneous virtual machine functions.
  */
@@ -313,7 +313,8 @@ void Build(void)
         YError("non-conformable arguments to build array operator [...]");
       FreeDimension(buildDims);
       buildDims= Ref(tmpDims);
-      if (buildOps[i].type.base==base || ops->promoteID<=T_COMPLEX) {
+      if (buildOps[i].type.base==base ||
+          (ops->promoteID<=T_COMPLEX) && (promoteID<=T_COMPLEX)) {
         if (ops->promoteID!=promoteID) needPromote= 1;
         if (ops->promoteID>promoteID) promoteID= ops->promoteID;
       } else {
