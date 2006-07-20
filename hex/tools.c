@@ -1,5 +1,5 @@
 /*
- * $Id: tools.c,v 1.1 2005-09-18 22:05:51 dhmunro Exp $
+ * $Id: tools.c,v 1.2 2006-07-20 04:28:30 dhmunro Exp $
  * toolkit for computing ray intersections with tets,
  * performing entry point calculations
  */
@@ -320,7 +320,7 @@ int entry_setup(TK_ray *ray, real xy[][3], int tri[],
   flags[2]= (ABS(xk-xj)>dot[3] && (xk-xj<0.)==sign);
   if (flags[2]) {
     /* on entry side always head toward the ray */
-    if ((xk-xj<0.) == xj<0.) sign|= 2;
+    if ((xk-xj<0.) == (xj<0.)) sign|= 2;
   } else {
     /* on exit side head opposite to ray direction unless
      * flag is set for interior boundary -- this is purely a

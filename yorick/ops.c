@@ -1,5 +1,5 @@
 /*
- * $Id: ops.c,v 1.3 2006-07-16 22:52:48 dhmunro Exp $
+ * $Id: ops.c,v 1.4 2006-07-20 04:28:30 dhmunro Exp $
  *
  * Define miscellaneous virtual machine functions.
  */
@@ -314,7 +314,7 @@ void Build(void)
       FreeDimension(buildDims);
       buildDims= Ref(tmpDims);
       if (buildOps[i].type.base==base ||
-          (ops->promoteID<=T_COMPLEX) && (promoteID<=T_COMPLEX)) {
+          ((ops->promoteID<=T_COMPLEX) && (promoteID<=T_COMPLEX))) {
         if (ops->promoteID!=promoteID) needPromote= 1;
         if (ops->promoteID>promoteID) promoteID= ops->promoteID;
       } else {

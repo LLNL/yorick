@@ -1,5 +1,5 @@
 /*
- * $Id: list.c,v 1.3 2006-02-10 00:11:18 dhmunro Exp $
+ * $Id: list.c,v 1.4 2006-07-20 04:28:30 dhmunro Exp $
  * Rudimentary list data type for Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -142,7 +142,6 @@ Y__cat(int argc)
 void
 Y__cpy(int argc)
 {
-  Symbol *s= sp-argc+1;
   long n = -1;
   if (argc==2 && !yarg_nil(0)) n = ygets_l(0);
   else if (argc!=1) y_error("_cpy function takes one or two arguments");
@@ -301,7 +300,6 @@ yput_cdr(int iarg, long n, int jarg)
 void
 Y__cdr(int argc)
 {
-  List_Cell *list, *next;
   long n = 1;
   if (argc<1 || argc>3)
     y_error("_cdr function takes one, two, or three arguments");

@@ -1,5 +1,5 @@
 /*
- * $Id: slinks.c,v 1.2 2006-03-11 18:54:45 dhmunro Exp $
+ * $Id: slinks.c,v 1.3 2006-07-20 04:28:30 dhmunro Exp $
  * u_track_link and u_find_exe functions from playu.h
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -45,7 +45,7 @@ u_track_link(const char *name)
          */
         if (j+1>=len || link[j+1]=='/') {
           j = (j+1>=len)? j+1 : j+2;
-        } else if (link[j+1]=='.' && j+2>=len || link[j+2]=='/') {
+        } else if (link[j+1]=='.' && (j+2>=len || link[j+2]=='/')) {
           if (p_wkspc.c[i-1] != '/') break;
           i--;
           while (i>0 && p_wkspc.c[--i]=='/');

@@ -1,18 +1,22 @@
-Summary:    interpreted language and scientific graphics
-Packager:   David H. Munro <munro1@llnl.gov>
 Name:       yorick
-Version:    1.6
+Version:    2.1
 Release:    02
-Source:     yorick-%{version}.%{release}.tgz
-URL:        ftp://ftp-icf.llnl.gov/pub/Yorick/doc/index.html
+Summary:    interpreted language and scientific graphics
+Packager:   David H. Munro <dhmunro@users.sourceforge.net>
 
-Copyright:  BSD
 Group:      Development/Languages
+License:    BSD
+URL:        http://yorick.sourceforge.net
+Source0:    yorick-%{version}.%{release}.tgz
+BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: info
+
 Icon:       yicon48.xpm
 
-Buildroot:  /tmp/yorick_rpmbuild
-Prereq:     /sbin/install-info
-
+# emacs site-lisp directories for fedora core, site-start.d is subdir
+%define emacs_site_d  %{_datadir}/emacs/site-lisp
+%define xemacs_site_d %{_datadir}/xemacs/site-packages/lisp
+%define yordir %{_libdir}/yorick/%{version}
 
 %description
 Yorick is an interpreted programming language for:
@@ -34,60 +38,102 @@ you can launch by typing M-x yorick in emacs.
 
 
 %prep
-%setup
-make prefix=/usr ysite
+%setup -q
 
 %build
+make reloc
+CFLAGS="$RPM_OPT_FLAGS" make config
 make
 make docs
 cd doc; make yorick.info; cd ..
 
 %install
-if [ -d /tmp/yorick_rpmbuild ]; then
-# do not use RPM_BUILD_ROOT here
-  rm -rf /tmp/yorick_rpmbuild
-fi
-make INSTALL_ROOT=$RPM_BUILD_ROOT Y_BINDIR=$RPM_BUILD_ROOT/usr/bin install
-mkdir $RPM_BUILD_ROOT/usr/share/info
-cp -f doc/yorick.info* $RPM_BUILD_ROOT/usr/share/info
-mkdir -p $RPM_BUILD_ROOT/usr/share/man/man1
-cp -f doc/yorick.1 doc/gist.1 $RPM_BUILD_ROOT/usr/share/man/man1
-gzip -9qnf $RPM_BUILD_ROOT/usr/share/info/yorick.info*
-gzip -9qnf $RPM_BUILD_ROOT/usr/share/man/man1/yorick.1
-gzip -9qnf $RPM_BUILD_ROOT/usr/share/man/man1/gist.1
-#want contrib directory to belong to this package (although contents will
-#belong to other packages such as yplot) so that clean delete of this package
-#once other packages such as yplot are deleted.
-mkdir $RPM_BUILD_ROOT/usr/lib/yorick/%{version}/lib/contrib
-mkdir $RPM_BUILD_ROOT/usr/share/yorick/%{version}/contrib
-mkdir -p $RPM_BUILD_ROOT/usr/share/emacs/site-lisp/site-start.d
-cp -f emacs/yorick.el $RPM_BUILD_ROOT/usr/share/emacs/site-lisp
-cp -f emacs/yorick-auto.el $RPM_BUILD_ROOT/usr/share/emacs/site-lisp/site-start.d
+rm -rf $RPM_BUILD_ROOT
+make install
+
+install -dm 755 $RPM_BUILD_ROOT%{yordir}
+mv relocate/* $RPM_BUILD_ROOT%{yordir}/
+rmdir relocate
+install -dm 755 $RPM_BUILD_ROOT%{_bindir}
+ln -s ../..%{yordir}/bin/yorick $RPM_BUILD_ROOT%{_bindir}/yorick
+ln -s ../..%{yordir}/bin/gist $RPM_BUILD_ROOT%{_bindir}/gist
+
+install -dm 755 $RPM_BUILD_ROOT%{_datadir}/info
+install -pm 644 doc/yorick.info* $RPM_BUILD_ROOT%{_datadir}/info
+gzip -9qnf $RPM_BUILD_ROOT%{_datadir}/info/yorick.info*
+install -dm 755 $RPM_BUILD_ROOT%{_mandir}/man1
+install -pm 644 doc/yorick.1 doc/gist.1 $RPM_BUILD_ROOT%{_mandir}/man1
+gzip -9qnf $RPM_BUILD_ROOT%{_mandir}/man1/yorick.1
+gzip -9qnf $RPM_BUILD_ROOT%{_mandir}/man1/gist.1
+install -dm 755 $RPM_BUILD_ROOT%{yordir}/emacs
+install -pm 644 emacs/yorick.el $RPM_BUILD_ROOT%{yordir}/emacs
+install -pm 644 emacs/yorick-auto.el $RPM_BUILD_ROOT%{yordir}/emacs
+for dir in %{emacs_site_d} %{xemacs_site_d} ; do
+  install -dm 755 $RPM_BUILD_ROOT$dir $RPM_BUILD_ROOT$dir/site-start.d
+  ln -s %{yordir}/emacs/yorick.el $RPM_BUILD_ROOT$dir
+  ln -s %{yordir}/emacs/yorick-auto.el $RPM_BUILD_ROOT$dir/site-start.d
+done
 
 %clean
-# do not use RPM_BUILD_ROOT here
-rm -rf /tmp/yorick_rpmbuild
+rm -rf $RPM_BUILD_ROOT
 
-%post 
-/sbin/install-info /usr/share/info/yorick.info.gz /usr/share/info/dir
 
-%postun
-/sbin/install-info --delete yorick /usr/share/info/dir
+%post
+if [ "$1" = "1" ] ; then  # first install
+ if [ -x /sbin/install-info ]; then
+   /sbin/install-info %{_datadir}/info/yorick.info.gz %{_datadir}/info/dir
+ fi
+fi
+
+%preun
+if [ "$1" = "0" ] ; then # last uninstall
+ if [ -x /sbin/install-info ]; then
+   /sbin/install-info --delete yorick %{_datadir}/info/dir
+ fi
+fi
+
+
+%triggerin -- emacs-common
+if [ -d %{emacs_site_d} ] ; then
+  ln -sf %{yordir}/emacs/yorick.el %{emacs_site_d}
+  ln -sf %{yordir}/emacs/yorick-auto.el %{emacs_site_d}/site-start.d
+fi
+
+%triggerin -- xemacs-common
+if [ -d %{xemacs_site_d} ] ; then
+  ln -sf %{yordir}/emacs/yorick.el %{xemacs_site_d}
+  ln -sf %{yordir}/emacs/yorick-auto.el %{xemacs_site_d}/site-start.d
+fi
+
+%triggerun -- emacs-common
+if [ "$2" = "0" ] ; then
+  rm -f %{emacs_site_d}/yorick.el*
+  rm -f %{emacs_site_d}/site-start.d/yorick-auto.el*
+fi
+
+%triggerun -- xemacs-common
+if [ "$2" = "0" ] ; then
+  rm -f %{xemacs_site_d}/yorick.el*
+  rm -f %{xemacs_site_d}/site-start.d/yorick-auto.el*
+fi
+
 
 %files
-%attr(-, root, root) %doc README NEWS LICENSE
-%docdir /usr/share/yorick/%{version}/doc
-%attr(-, root, root) %doc /usr/share/man/man1/yorick.1.gz
-%attr(-, root, root) %doc /usr/share/man/man1/gist.1.gz
-%attr(-, root, root) %doc /usr/share/info/yorick*
-%attr(-, root, root) /usr/bin/yorick
-%attr(-, root, root) /usr/bin/gist
-%attr(-, root, root) /usr/lib/yorick/%{version}/
-%attr(-, root, root) /usr/share/yorick/%{version}/
-%attr(-, root, root) /usr/share/emacs/site-lisp/yorick*
-%attr(-, root, root) /usr/share/emacs/site-lisp/site-start.d/yorick*
+%defattr(-,root,root,-)
+%doc LICENSE README
+%docdir %{yordir}/doc
+%doc %{_mandir}/man1/yorick.1.gz
+%doc %{_mandir}/man1/gist.1.gz
+%doc %{_datadir}/info/yorick*
+%{yordir}/
+%{_bindir}/yorick
+%{_bindir}/gist
+%ghost %{_datadir}/*emacs
 
 %changelog
+* Wed Jul 19 2006 David H. Munro <dave@dogberry.localdomain> - 2.1-02
+- update to fedora core style
+
 * Sat Mar 12 2005  <munro1@llnl.gov> 1.6-02
 - 1.6.02 changed plugin support, package Makefile system, see NEWS
 
