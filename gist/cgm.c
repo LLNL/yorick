@@ -1,5 +1,5 @@
 /*
- * $Id: cgm.c,v 1.1 2005-09-18 22:04:24 dhmunro Exp $
+ * $Id: cgm.c,v 1.2 2006-08-04 04:40:23 dhmunro Exp $
  * Implement the CGM binary metafile engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1363,6 +1363,7 @@ static int DrawCells(Engine *engine, GpReal px, GpReal py, GpReal qx,
 
     now= NextPartition(buffer, nCells, &lPart);
   }
+  p_free(buffer);
 
   return 0;
 }
