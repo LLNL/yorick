@@ -1,5 +1,5 @@
 /*
- * $Id: wspawn.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: wspawn.c,v 1.2 2006-10-01 19:49:41 dhmunro Exp $
  * play spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -299,7 +299,7 @@ w_callout(void *vproc)
       proc->flags &= ~8;   /* for p_recv */
       proc->callback(proc->ctx, 0);
     } else {
-      proc->flags != 16;
+      proc->flags |= 16;
       /* on error, callback will call p_spawf with nocallback==1 */
       proc->callback(proc->ctx, 2);
     }

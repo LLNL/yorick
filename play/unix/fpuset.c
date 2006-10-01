@@ -1,5 +1,5 @@
 /*
- * $Id: fpuset.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: fpuset.c,v 1.2 2006-10-01 19:49:41 dhmunro Exp $
  * set up FPU to trap floating point exceptions
  * - this is very non-portable, not covered by ANSI C, POSIX, or even C9X
  * - if you port to a new platform (eg- Ultrix) please contact the author
@@ -174,15 +174,10 @@ u_fpu_setup(int when)
 # if defined(__CYGWIN__)
   __asm__ ("fclex" : : );
   if (when<0) {
-# elif define(__NeXT)
+# elif defined(__NeXT)
   if (when<=0) {
 # else
   if (when) {
-# endif
-# ifndef __NeXT
-  if (when) {
-# else
-  if (when<=0) {
 # endif
     unsigned int fpucw = 0x1372;
 # ifndef __CYGWIN__

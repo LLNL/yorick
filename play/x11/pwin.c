@@ -1,5 +1,5 @@
 /*
- * $Id: pwin.c,v 1.1 2005-09-18 22:05:33 dhmunro Exp $
+ * $Id: pwin.c,v 1.2 2006-10-01 19:49:41 dhmunro Exp $
  * X11 window management procedures
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -145,6 +145,7 @@ p_window(p_scr *s, int width, int height, char *title,
     Display *dpy = s->xdpy->dpy;
     Window xwin = w->d;
 
+    w->is_menu = 0;
     /* create and initialize private colormap if requested
      * - do it here instead of on demand (by p_palette), so that
      *   OpenGL child window can find the colormap if necessary
