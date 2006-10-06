@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: config.sh,v 1.3 2005-11-12 17:49:23 dhmunro Exp $
+# $Id: config.sh,v 1.4 2006-10-06 05:28:42 dhmunro Exp $
 
 debug=no
 
@@ -251,6 +251,12 @@ elif $CC -DFPU_IRIX $args -lfpe >cfg.08 2>&1; then
 elif $CC -DFPU_IRIX $args >cfg.08 2>&1; then
   echo "using FPU_IRIX (SIGFPE delivery), but no libfpe??"
   fpedef=-DFPU_IRIX
+elif $CC -DFPU_GCC_X86_64 $args >cfg.08 2>&1; then
+  echo "using FPU_GCC_X86_64 (SIGFPE delivery)"
+  fpedef=-DFPU_GCC_X86_64
+elif $CC -DFPU_GCC_X86 $args >cfg.08 2>&1; then
+  echo "using FPU_GCC_X86 (SIGFPE delivery)"
+  fpedef=-DFPU_GCC_X86
 elif $CC -DFPU_MACOSX $args >cfg.08 2>&1; then
   echo "using FPU_MACOSX (SIGFPE delivery)"
   fpedef=-DFPU_MACOSX

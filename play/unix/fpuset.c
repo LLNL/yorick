@@ -1,5 +1,5 @@
 /*
- * $Id: fpuset.c,v 1.2 2006-10-01 19:49:41 dhmunro Exp $
+ * $Id: fpuset.c,v 1.3 2006-10-06 05:28:42 dhmunro Exp $
  * set up FPU to trap floating point exceptions
  * - this is very non-portable, not covered by ANSI C, POSIX, or even C9X
  * - if you port to a new platform (eg- Ultrix) please contact the author
@@ -21,6 +21,10 @@ extern void u_fpu_setup(int when);
  *         0 after each longjmp out of interrupt handler (after setjmp)
  *         1 inside interrupt handler before signal() re-enables SIGFPE
  */
+
+#ifdef FPU_GCC_X86_64
+# define FPU_GCC_X86
+#endif
 
 #if defined(FPU_DIGITAL) || defined(FPU_ALPHA_LINUX)
 
@@ -148,6 +152,106 @@ u_fpu_setup(int when)
   if (when < 0) {
     int flag = -1;
     libmset(&flag);
+  }
+}
+
+#elif defined(FPU_GCC_X86)
+/* This branch is now preferred over FPU_GNU_FENV or FPU_GNU_I86 for
+ * modern Intel Pentium and AMD machines.  The GNU fenv.h extension
+ * will unmask interrupts properly, but provides no means for setting
+ * the flush-to-zero and denormals-are-zero bits required for high
+ * performance with the SSE/SSE2 floating point unit.
+ */
+# undef X86_PREFIX
+# ifdef FPU_GCC_X86_64
+#  define X86_PREFIX "r"
+# else
+#  define X86_PREFIX "e"
+# endif
+
+static unsigned int u_fpu_detect(void);
+static unsigned int u_mxcsr_mask = 0;
+static unsigned int u_fpu_features = 0x8000;
+/* 0x001   x87 fpu on chip
+ * 0x002   mmx technology
+ * 0x004   fxsave/fxrestor instructions present
+ * 0x008   sse extensions
+ * 0x010   sse2 extensions
+ * 0x020   sse3 extensions
+ * 0x040   daz supported
+ */
+static unsigned int
+u_fpu_detect(void)
+{
+  unsigned int features = 0;
+  unsigned int x, y;
+  __asm __volatile ("pushf\n\t pop %%eax" : "=a" (x));
+  y = x;          /* set x and y to original value of eflags */
+  x ^= 0x200000;  /* flip bit 21, ID */
+  __asm __volatile ("push %%eax\n\t popf" : : "a" (x));
+  __asm __volatile ("pushf\n\t pop %%eax" : "=a" (x));
+  if (x ^ y) {
+    unsigned long ecx, edx;
+    /* this cpu has the cpuid instruction, restore original eflags */
+    __asm __volatile ("push %%eax\n\t popf" : : "a" (y));
+    /* get mmx, sse related feature bits from cpuid */
+    __asm __volatile ("mov %%"X86_PREFIX"bx, %%"X86_PREFIX"si \n\t"
+                      "cpuid \n\t"
+                      "xchg %%"X86_PREFIX"bx, %%"X86_PREFIX"si"
+                      : "=c" (ecx), "=d" (edx) : "a" (1) : "si");
+    features = (edx & 1) | ((edx & 0x7800000) >> 22) | ((ecx & 1) >> 5);
+    if ((features & 0x004) && (features & 0x018)) {
+      /* get mxcsr_mask to find out if DAZ supported */
+      int i;
+      /* get a 16-byte aligned state buffer for fxsave */
+      unsigned char *state, pstate[528];
+      state = pstate + 15;
+      state = ((state - (unsigned char *)0)&(~0xfL)) + (unsigned char *)0;
+      for (i=0 ; i<512 ; i++) state[i] = 0;
+      __asm __volatile ("fxsave %0" : : "m" (*state));
+      u_mxcsr_mask = *((unsigned int *)(state + 28));
+      if (!u_mxcsr_mask) u_mxcsr_mask = 0xffbf;
+      else if (u_mxcsr_mask & 0x40) features |= 0x040;
+    }
+  }
+  return features;
+}
+
+/* interrupt mask bits for x87 and sse (xmm) fpu's */
+#define U_FPU_X87CW 0x1372
+#define U_FPU_MXCSR 0x9940
+/*   bit meaning         x87      sse      yes=mask=1, no=deliver=0
+ * flush to zero          --     0x8000       yes
+ * infinity control     0x1000     --    (for 287 coprocessor compatibility)
+ * rounding control     0x0c00   0x6000        0
+ * precison control     0x0300     --    (0x0300 means 64-bit extended)
+ * precision mask       0x0020   0x1000       yes
+ * underflow mask       0x0010   0x0800       yes
+ * overflow mask        0x0008   0x0400       no
+ * zero divide mask     0x0004   0x0200       no
+ * denormal op mask     0x0002   0x0100       yes
+ * invalid op mask      0x0001   0x0080       no
+ * denormals are zero     --     0x0040       yes
+ */
+void
+u_fpu_setup(int when)
+{
+# if defined(__CYGWIN__)
+  __asm__ ("fclex" : : );
+  if (when<0) {
+# elif defined(__NeXT)
+  if (when<=0) {
+# else
+  if (when) {
+# endif
+    unsigned int fpucw = U_FPU_X87CW;
+    if (u_fpu_features == 0x8000)
+      u_fpu_features = u_fpu_detect();
+    __asm__ ("fldcw %0" : : "m" (fpucw));
+    if (u_mxcsr_mask) {
+      unsigned int mxcsr = U_FPU_MXCSR & u_mxcsr_mask;
+      __asm__ ("ldmxcsr %0" : : "m" (mxcsr));
+    }
   }
 }
 
