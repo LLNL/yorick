@@ -1,5 +1,5 @@
 /*
- * $Id: fpuset.c,v 1.3 2006-10-06 05:28:42 dhmunro Exp $
+ * $Id: fpuset.c,v 1.4 2006-10-19 04:14:27 dhmunro Exp $
  * set up FPU to trap floating point exceptions
  * - this is very non-portable, not covered by ANSI C, POSIX, or even C9X
  * - if you port to a new platform (eg- Ultrix) please contact the author
@@ -202,12 +202,12 @@ u_fpu_detect(void)
     features = (edx & 1) | ((edx & 0x7800000) >> 22) | ((ecx & 1) >> 5);
     if ((features & 0x004) && (features & 0x018)) {
       /* get mxcsr_mask to find out if DAZ supported */
+      unsigned char pstate[528], *state;
       int i;
+      for (state=pstate,i=0 ; i<528 ; i++) *state++ = '\0';
       /* get a 16-byte aligned state buffer for fxsave */
-      unsigned char *state, pstate[528];
       state = pstate + 15;
       state = ((state - (unsigned char *)0)&(~0xfL)) + (unsigned char *)0;
-      for (i=0 ; i<512 ; i++) state[i] = 0;
       __asm __volatile ("fxsave %0" : : "m" (*state));
       u_mxcsr_mask = *((unsigned int *)(state + 28));
       if (!u_mxcsr_mask) u_mxcsr_mask = 0xffbf;
