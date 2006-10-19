@@ -1,5 +1,5 @@
 /*
- * $Id: drat.i,v 1.2 2005-11-27 21:07:28 dhmunro Exp $
+ * $Id: drat.i,v 1.3 2006-10-19 04:29:18 dhmunro Exp $
  * Yorick interface definitions for Drat transport equation solver.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -529,6 +529,10 @@ local drat_symmetry;
      set to 2 to force spherical symmetry, 1 to force reflection symmetry
      about the z=0 plane, 0 to force no symmetry, [] (the default) to
      use the guess_symmetry function to compute problem symmetry.
+     Special value drat_symmetry=2+khold where k=khold is a hold-line
+     causes ray to reflect at the hold line.  This doesn't mean anything
+     physically (in fact, it is wrong), but may give qualitatively useful
+     pictures in problems that are polar wedges.
  */
 
 local drat_glist;

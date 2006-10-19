@@ -1,5 +1,5 @@
 /*
- * $Id: track.c,v 1.1 2005-09-18 22:04:56 dhmunro Exp $
+ * $Id: track.c,v 1.2 2006-10-19 04:29:18 dhmunro Exp $
  * Routines for tracking a straight ray in 3D through a cylindrical mesh.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -75,13 +75,15 @@ EntryPoint *FindEntryPoints(Boundary *boundary, Ray *rayin)
    int after /* ,notafter */;
    long i;
    int izsym;
+   int zsym = boundary->zsym;
+   if (zsym > 2) zsym = 0;
 
    entry= 0;
    ray= *rayin;
    ray.sin= -ray.sin;  /* time reverse ray so that exit points... */
    ray.cos= -ray.cos;  /* ...become entry points */
     /* two passes if zsym, else single pass */
-   for (izsym= boundary->zsym?2:1 ; izsym ; izsym--) {
+   for (izsym= zsym?2:1 ; izsym ; izsym--) {
 
       z= boundary->z;
       r= boundary->r;
@@ -90,80 +92,80 @@ EntryPoint *FindEntryPoints(Boundary *boundary, Ray *rayin)
 
       after= /* notafter= */ 0;
       for (i=0 ; i<boundary->npoints-1 ; i++, z++, r++, zone++, side++) {
-         if (*zone && ExitEdge(&ray, z,r, &after/*, &notafter */, &info)) {
-             /* Unlike the exit from a zone which is known to have been
-                entered, the after/notafter logic is incorrect for
-                identifying entries to the whole problem boundary.
-                In particular, to discriminate against false entries,
-                check here that fex is reasonably (though arbitrarily)
-                close to lying within the [-0.5, 0.5] interval.  */
-            fex= info.fx;
-            if (fex<-0.5000005 || fex>0.5000005) {
-               /* notafter= 0; */   /* disable notafter as below */
-               continue;
+        if (*zone && ExitEdge(&ray, z,r, &after/*, &notafter */, &info)) {
+          /* Unlike the exit from a zone which is known to have been
+             entered, the after/notafter logic is incorrect for
+             identifying entries to the whole problem boundary.
+             In particular, to discriminate against false entries,
+             check here that fex is reasonably (though arbitrarily)
+             close to lying within the [-0.5, 0.5] interval.  */
+          fex= info.fx;
+          if (fex<-0.5000005 || fex>0.5000005) {
+            /* notafter= 0; */   /* disable notafter as below */
+            continue;
+          }
+
+          /* found an entry point, get next free EntryPoint for it */
+          newentry= nextEntry;
+          if (!newentry) {
+            long n= NBLOCK_SIZE;
+            nextEntry= (EntryPoint *)p_malloc(sizeof(EntryPoint)*n);
+            /* first element of each block is used to form a
+               linked list of the blocks -- not a valid EntryPoint */
+            nextEntry->next= entryBlock;
+            entryBlock= nextEntry;
+            while (--n) {
+              nextEntry++;
+              nextEntry->next= newentry;   /* 0 on first pass */
+              newentry= nextEntry;
             }
+          }
+          nextEntry= newentry->next;
+          newentry->next= entry;
+          entry= newentry;
 
-             /* found an entry point, get next free EntryPoint for it */
-            newentry= nextEntry;
-            if (!newentry) {
-              long n= NBLOCK_SIZE;
-              nextEntry= (EntryPoint *)p_malloc(sizeof(EntryPoint)*n);
-              /* first element of each block is used to form a
-                 linked list of the blocks -- not a valid EntryPoint */
-              nextEntry->next= entryBlock;
-              entryBlock= nextEntry;
-              while (--n) {
-                nextEntry++;
-                nextEntry->next= newentry;   /* 0 on first pass */
-                newentry= nextEntry;
-              }
-            }
-            nextEntry= newentry->next;
-            newentry->next= entry;
-            entry= newentry;
+          ds= RayPathLength(&ray, &info);
+          entry->zone= *zone;
+          entry->side= *side;
+          entry->info= info;    /* not altered by time reversal */
+          entry->ray.cos= -ray.cos;
+          entry->ray.sin= -ray.sin;
+          entry->ray.y= ray.y;
+          entry->ray.z= *z + (fex+0.5)*info.dz;
+          entry->ray.r= *r + (fex+0.5)*info.dr;
+          entry->ray.x= ray.x + ds*ray.sin;
 
-            ds= RayPathLength(&ray, &info);
-            entry->zone= *zone;
-            entry->side= *side;
-            entry->info= info;    /* not altered by time reversal */
-            entry->ray.cos= -ray.cos;
-            entry->ray.sin= -ray.sin;
-            entry->ray.y= ray.y;
-            entry->ray.z= *z + (fex+0.5)*info.dz;
-            entry->ray.r= *r + (fex+0.5)*info.dr;
-            entry->ray.x= ray.x + ds*ray.sin;
+          if (polishRoot)     /* polish the root */
+            PolishExit(&entry->ray, &info, &ds, &fex);
+          /* make sure exit point is actually on exit edge segment
+           * if not, put it at endpoint, and adjust the ray (x,y) */
+          if (fex < -0.5) {
+            fex= -0.5;
+            AdjustRayXY(&entry->ray, z,r);
+          } else if (fex > 0.5) {
+            fex= 0.5;
+            AdjustRayXY(&entry->ray, z+1,r+1);
+          }
 
-            if (polishRoot)     /* polish the root */
-               PolishExit(&entry->ray, &info, &ds, &fex);
-             /* make sure exit point is actually on exit edge segment
-              * if not, put it at endpoint, and adjust the ray (x,y) */
-            if (fex < -0.5) {
-               fex= -0.5;
-               AdjustRayXY(&entry->ray, z,r);
-            } else if (fex > 0.5) {
-               fex= 0.5;
-               AdjustRayXY(&entry->ray, z+1,r+1);
-            }
+          entry->f= fex;      /* boundary counterclockwise relative to
+                               * zone, side */
+          entry->s0= -ds;     /* undo ray time-reversal */
 
-            entry->f= fex;      /* boundary counterclockwise relative to
-                                 * zone, side */
-            entry->s0= -ds;     /* undo ray time-reversal */
-
-         } else {
-             /* The "double exit" rejection logic in ExitEdge is not
-                correct for whole problem boundaries, so disable it
-                here.  Leave the "missed exit" logic intact however;
-                incorrectly reinstated roots are rejected in the
-                if branch corresponding to this else.  */
-            /* notafter= 0; */
-         }
-          /* Note: Conceivably could miss an entry point due to
-           * roundoff, if the ray had a very near tangency to a
-           * boundary edge precisely at a boundary point.
-           * (ExitEdge might (erroniously) return 0 after the entry
-           *  point (erroniously) fell outside [-0.5,0.5].)
-           * Hopefully, this is not important enough to worry about...
-           */
+        } else {
+          /* The "double exit" rejection logic in ExitEdge is not
+             correct for whole problem boundaries, so disable it
+             here.  Leave the "missed exit" logic intact however;
+             incorrectly reinstated roots are rejected in the
+             if branch corresponding to this else.  */
+          /* notafter= 0; */
+        }
+        /* Note: Conceivably could miss an entry point due to
+         * roundoff, if the ray had a very near tangency to a
+         * boundary edge precisely at a boundary point.
+         * (ExitEdge might (erroniously) return 0 after the entry
+         *  point (erroniously) fell outside [-0.5,0.5].)
+         * Hopefully, this is not important enough to worry about...
+         */
       }
 
        /* abort symmetry pass if ray lies in symmetry plane */
@@ -190,6 +192,9 @@ void FreeEntryPoints(EntryPoint *entry)
 
 /* ---------------------------------------------------------------------- */
 
+static double khold_reflect(Mesh *mesh, long j2, long j1, Ray *ray,
+                            RayEdgeInfo *info);
+
 /* Starting at the given entry point(s), track the ray through the mesh.
  * The path arrays will be lengthened if necessary, but never shortened.
  */
@@ -214,6 +219,7 @@ void RayTrack(Mesh *mesh, EntryPoint *entry, RayPath *path, double *sLimits)
    long kmax= mesh->kmax;
    int *ireg= mesh->ireg;
    long alarm= mesh->klmax*8;
+   int zsym = mesh->zsym;
 
    double s=0.0, dstest;
    double smin= sLimits[0];
@@ -235,6 +241,16 @@ void RayTrack(Mesh *mesh, EntryPoint *entry, RayPath *path, double *sLimits)
    info[1]= info4+1;
    info[2]= info4+2;
    info[3]= info4+3;
+
+   if (zsym > 2) {
+     /* special case for reflecting off of k-hold line,
+      * to give weird pseudo-3D effect for wedges
+      *   zsym = 2+khold   (khold>=1, usually 1)
+      */
+     zsym -= 2;  /* khold */
+   } else {
+     zsym = 0;
+   }
 
     /* initially, assume that limits will not clip ray path */
    path->fi= path->ff= 0.0;
@@ -279,6 +295,15 @@ void RayTrack(Mesh *mesh, EntryPoint *entry, RayPath *path, double *sLimits)
          path->f[i]= f;
          if (ireg[zone]) {
             path->zone[i]= zone;
+         } else if (zone && zsym && (side&1) && (j2%kmax)==(zsym-1)) {
+           /* this is weird khold reflection case, actually reflect ray */
+           zone += inczone[side];  /* back to zone on boundary */
+           side ^= 02;
+           ds = khold_reflect(mesh, j2, j1, &ray, info[3]);
+           if (limits) {
+             smin += s;
+             smax += s;
+           }
          } else {
             path->zone[i]= 0;           /* mark exit to vacuum */
             path->ds[i]= 0.0;
@@ -335,6 +360,47 @@ void RayTrack(Mesh *mesh, EntryPoint *entry, RayPath *path, double *sLimits)
 lost:
    path->ncuts= 0;
    path->fi= path->ff= -1.0;    /* not great lost flag... */
+}
+
+static double
+khold_reflect(Mesh *mesh, long j1, long j2, Ray *ray, RayEdgeInfo *info)
+{
+  double dz = mesh->z[j2] - mesh->z[j1];
+  double dr = mesh->r[j2] - mesh->r[j1];
+  double x = ray->x;
+  double y = ray->y;
+  double nx = dz*x;
+  double ny = dz*y;
+  double nz = -dr*sqrt(x*x + y*y);
+  double rn2 = 1. / (nx*nx + ny*ny + nz*nz);
+  double nr = (ray->sin*nx + ray->cos*nz) * rn2;
+  double s = x*ray->sin + ray->z*ray->cos;
+  double rx, ry, rr, z[2], r[2];
+  int after = 0;
+
+  /* reflect ray direction, rotate direction and point in (x,y)
+   * to phi where y-component of direction is zero
+   */
+  nr += nr;
+  rx = ray->sin - nr*nx;
+  ry = - nr*ny;
+  ray->cos -= nr*nz;
+  ray->sin = rr = sqrt(rx*rx + ry*ry);
+  rr = 1./rr;
+  ray->x = (x*rx + y*ry) * rr;
+  ray->y = (y*rx - x*ry) * rr;
+
+  /* reverse order of points on side because next call is ExitZone */
+  z[1] = mesh->z[j1];
+  z[0] = mesh->z[j2];
+  r[1] = mesh->r[j1];
+  r[0] = mesh->r[j2];
+  ExitEdge(ray, z, r, &after, info);
+
+  /* return change in s to adjust slimits - this will always
+   * be zero if khold line goes through (r,z) = (0,0)
+   */
+  return (ray->x*ray->sin + ray->z*ray->cos) - s;
 }
 
 /* Find index of a value in a monotonically increasing list of n
