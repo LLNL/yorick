@@ -1,5 +1,5 @@
 /*
- * $Id: track.c,v 1.2 2006-10-19 04:29:18 dhmunro Exp $
+ * $Id: track.c,v 1.3 2006-10-27 06:10:00 dhmunro Exp $
  * Routines for tracking a straight ray in 3D through a cylindrical mesh.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -299,6 +299,7 @@ void RayTrack(Mesh *mesh, EntryPoint *entry, RayPath *path, double *sLimits)
            /* this is weird khold reflection case, actually reflect ray */
            zone += inczone[side];  /* back to zone on boundary */
            side ^= 02;
+           path->zone[i]= zone;
            ds = khold_reflect(mesh, j2, j1, &ray, info[3]);
            if (limits) {
              smin += s;
