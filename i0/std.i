@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.9 2006-05-06 20:57:42 dhmunro Exp $
+ * $Id: std.i,v 1.10 2006-11-19 00:01:49 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -979,7 +979,7 @@ func mergef(_mrg_x, _mrg_f, _mrg_c, ..)
  */
 {
   _mrg_yy = [];
-  _mrg_cc = (x != x);
+  _mrg_cc = (_mrg_x != _mrg_x);
   for (;;) {
     if (structof(_mrg_c) != int) _mrg_c = !(!_mrg_c);
     mergel = where(_mrg_c);
