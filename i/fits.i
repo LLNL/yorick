@@ -6,10 +6,34 @@
  * Copyright (c) 2000-2002 Eric THIEBAUT.
  *
  * History:
- *	$Id: fits.i,v 1.3 2006-02-14 08:42:36 thiebaut Exp $
+ *	$Id: fits.i,v 1.4 2006-11-27 16:56:15 thiebaut Exp $
  *	$Log: fits.i,v $
- *	Revision 1.3  2006-02-14 08:42:36  thiebaut
- *	make FITS a little bit more tolerant with invalid FITS header
+ *	Revision 1.4  2006-11-27 16:56:15  thiebaut
+ *	fixed True and Not methods for built-in and interpreted functions
+ *
+ *	Revision 1.25  2006/11/03 12:09:18  eric
+ *	 - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for
+ *	   discovering this bug).
+ *	 - Slightly change the calling sequence of fits_pack_bintable
+ *	   (no side effects w.r.t. previous version).
+ *
+ *	Revision 1.24  2006/10/17 12:11:07  eric
+ *	 - Fixed fits_write function to properly pad FITS file with
+ *	   zeroes (thanks to Christophe Pichon for discovering this
+ *	   bug).
+ *
+ *	Revision 1.23  2006/09/07 07:20:31  eric
+ *	 - Fixed documentation (thanks to Ariane Lançon).
+ *
+ *	Revision 1.22  2006/09/02 12:39:04  eric
+ *	 - Minor changes to make the code portable with different versions
+ *	   of Yorick.
+ *
+ *	Revision 1.21  2006/05/03 15:50:58  eric
+ *	 - Handle TDIM keyword in BINTABLE.
+ *	 - New function: fits_get_list.
+ *	 - Fix some documentation.
+ *	 - Minor speedup.
  *
  *	Revision 1.20  2006/02/07 12:09:46  eric
  *	 - be more tolerant for non-compliant FITS file: completely
@@ -114,7 +138,7 @@
 
 /*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.3 $";
+fits = "$Revision: 1.4 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
@@ -212,9 +236,9 @@ fits = "$Revision: 1.3 $";
      and setup  a basic primary header.   In this case, the  first lines of
      the above examples become:
 
-       fh = fits_create(name, 'w', extend=1,
-                        bitpix=fits_bitipix_of(data1),
-                        dimslist=dimsof(data1));
+       fh = fits_create(name, extend=1,
+                        bitpix=fits_bitpix_of(data1),
+                        dimlist=dimsof(data1));
        fits_set, fh, ...               // set any number of other cards with
        ...                             // several calls to fits_set
        fits_write_header, fh;          // write header part of current HDU
@@ -263,6 +287,7 @@ fits = "$Revision: 1.3 $";
        fits_get_gcount     - get GCOUNT value
        fits_get_history    - get value(s) of HISTORY card(s)
        fits_get_keywords   - get list of defined keywords
+       fits_get_list       - get list of integer values
        fits_get_naxis      - get NAXIS value
        fits_get_pcount     - get PCOUNT value
        fits_get_xtension   - get name of FITS primary/extension HDU
@@ -489,7 +514,7 @@ func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
   fh = fits_open(filename, 'r', encoding=encoding);
   if (is_void(hdu)) hdu = 1;
   else if (hdu != 1) fits_goto_hdu, fh, hdu;
-  if (hdu == 1 || (xtension = fits_get(fh, "XTENSION")) == "IMAGE")
+  if (hdu == 1 || (xtension = fits_get_xtension(fh)) == "IMAGE")
     return fits_read_array(fh, which=which, rescale=rescale);
   if (xtension == "BINTABLE")
     return fits_read_bintable(fh, pack=pack, select=select);
@@ -538,7 +563,11 @@ func fits_write(filename, data, encoding=, overwrite=,
                    template=template, history=history, comment=comment);
   fits_write_header, fh;
   fits_write_array, fh, data;
-  return fh;
+  if (am_subroutine()) {
+    fits_close, fh;
+  } else {
+    return fits_pad_hdu(fh);
+  }
 }
 
 func fits_best_scale(bitpix, cmin, cmax, debug=)
@@ -1110,9 +1139,10 @@ func fits_get_dims(fh, fix)
 
 func fits_get_xtension(fh)
 /* DOCUMENT fits_get_xtension(fh)
-     Get XTENSION value  from current HDU in FITS  handle FH.  The returned
-     value is a  scalar string with the name of  the extension;  "IMAGE" is
-     returned for the primary HDU.
+     Get XTENSION value from current HDU in FITS handle FH.  The returned
+     value is a scalar string in upper case letters with the name of the
+     extension (without trailing spaces); "IMAGE" is returned for the
+     primary HDU.
 
    SEE ALSO: fits, fits_get, fits_parse. */
 {
@@ -1126,7 +1156,9 @@ func fits_get_xtension(fh)
     error, "not a valid FITS file";
   }
   if (hdu > 1) {
-    if (id == _fits_id_xtension && structof(value) == string) return value;
+    if (id == _fits_id_xtension && structof(value) == string) {
+      return fits_toupper(value);
+    }
     error, "bad/missing XTENSION card in FITS header";
   }
   error, "bad unit number in FITS handle";
@@ -2089,7 +2121,7 @@ func fits_write_bintable(fh, ptr, logical=)
    SEE ALSO: fits, fits_new_bintable, fits_read_bintable. */
 {
   /* Minimal checking. */
-  if (fits_get(fh, "XTENSION") != "BINTABLE")
+  if (fits_get_xtension(fh) != "BINTABLE")
     error, "current HDU is not a FITS BINTABLE";
   if (structof(ptr) == pointer) {
     ptr = ptr; /* force private copy */
@@ -2107,22 +2139,48 @@ func fits_write_bintable(fh, ptr, logical=)
   for (i=1 ; i<=tfields ; ++i) {
     local a; eq_nocopy, a, *ptr(i);
     if (is_void(a)) {
-      ncols = 0;
+      ncells = 0;
     } else {
       if (! is_array(a)) error, "unexpected non-array field for BINTABLE";
       dims = dimsof(a);
       ndims = dims(1);
-      if (ndims != 2 && ndims != 1)
-        error, "only 1 or 2-dimensional arrays can be a field of a BINTABLE";
-      if (i == 1) nrows = dims(2);
-      else if (dims(2) != nrows)
+      if (ndims == 0) {
+        /* fix for scalars */
+        ndims = 1;
+        dims = [1,1];
+      }
+      if (i == 1) {
+        nrows = dims(2);
+      } else if (dims(2) != nrows) {
         error, "all fields of a BINTABLE must have the same number of rows";
-      ncols = (ndims == 2 ? dims(3) : 1);
+      }
+      ncells = numberof(a)/nrows;
     }
     type = structof(a);
-    if (type == string && ncols != 1) {
+    if (type == string && ncells != 1) {
       error, "only string vectors implemented in BINTABLE";
     }
+
+    /* Deal with TDIM# card. */
+    key = swrite(format="TDIM%d", i);
+    tdim = fits_get_list(fh, key);
+    if (is_void(tdim)) {
+      if (ndims > 2) {
+        str = swrite(format="(%d", dims(3));
+        for (j = 4 ; j <= ndims ; ++j) {
+          str += swrite(format=",%d", dims(j));
+        }
+        str += ")";
+        fits_set, fh, key, str, swrite(format="array dimensions for column %d", i);
+      }
+    } else {
+      if (min(tdim) <= 0) {
+        error, "bad dimension list for FITS card \"" + key + "\"";
+      }
+      if (numberof(tdim) != ndims - 1 || anyof(tdim != dims(3:))) {
+        error, "incompatible dimension list in FITS card \"" + key + "\"";
+      }
+    }    
 
     /* Get/check the format if already specified */
     key = swrite(format="TFORM%d", i);
@@ -2139,13 +2197,13 @@ func fits_write_bintable(fh, ptr, logical=)
         m = (sread(format="%1s%s", tform, s, nil) == 1 ? 1 : -1);
       }
       if (m < 0) error, "bad format string in FITS card \""+key+"\"";
-      if ((type == string ? m <= 0 : ncols != m)) {
-        error, ("bad number of columns in "+fits_nth(i)
+      if ((type == string ? m <= 0 : ncells != m)) {
+        error, ("bad number of cells in "+fits_nth(i)
                 +" field of binary table");
       }
       mult(i) = m;
       t = (*pointer(s))(1);
-      if (ncols) {
+      if (ncells) {
         if (t == 'A') {
           size(i) = 1;
           bad_type = (type != (cast = char) && type != string);
@@ -2189,7 +2247,7 @@ func fits_write_bintable(fh, ptr, logical=)
                       type != double && type != float && type != long &&
                       type != int && type != short && type != char);
           if (! bad_type) {
-            tmp = array(float, nrows, 2*ncols);
+            tmp = array(float, nrows, 2*ncells);
             tmp(,1::2) = float(a);
             if (type == complex) tmp(,2::2) = a.im;
             ptr(i) = &tmp;
@@ -2206,7 +2264,7 @@ func fits_write_bintable(fh, ptr, logical=)
           bad_type = (type != (cast = char) &&
                       type != long && type != int && type != short);
           if (! bad_type && type != cast) {
-            tmp = array('T', nrows, ncols);
+            tmp = array('T', nrows, ncells);
             if (is_array((a = where(! a)))) tmp(a) = 'F';
             ptr(i) = &tmp;
             a = [];
@@ -2236,7 +2294,7 @@ func fits_write_bintable(fh, ptr, logical=)
       *** Otherwise guess it from data tables contents.
       **/
 
-      if (ncols == 0) {
+      if (ncells == 0) {
         t = 'A';
         size(i) = 1;
       } else if (type == double) {
@@ -2279,8 +2337,8 @@ func fits_write_bintable(fh, ptr, logical=)
       } else if (type == string) {
         t = 'A';
         size(i) = 1;
-        ncols = max((len = strlen(a)));
-        tmp = array(char, nrows, ncols);
+        ncells = max((len = strlen(a)));
+        tmp = array(char, nrows, ncells);
         for (k=1 ; k<=nrows ; ++k) {
           if ((l = len(k))) tmp(k, 1:l) = (*pointer(a(k)))(1:l);
         }
@@ -2290,8 +2348,8 @@ func fits_write_bintable(fh, ptr, logical=)
       } else {
         error, "unsupported data type in BINTABLE";
       }
-      mult(i) = ncols;
-      fits_set, fh, key, swrite(format="%d%c", ncols, t),
+      mult(i) = ncells;
+      fits_set, fh, key, swrite(format="%d%c", ncells, t),
         "format of " + fits_nth(i) + " field";
 
     } else {
@@ -2320,7 +2378,7 @@ func fits_write_bintable(fh, ptr, logical=)
        complicated and cannot solve for all the cases). */
     for (j=1 ; j<=nrows ; ++j) {
       for (i=1 ; i<=tfields ; ++i) {
-        _write, stream, address, (*ptr(i))(j,);
+        _write, stream, address, (*ptr(i))(j,..);
         address += size(i);
       }
     }
@@ -2376,7 +2434,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
    SEE ALSO: fits, fits_write_bintable, fits_pack_bintable. */
 {
   /* Minimal checking. */
-  if (fits_get(fh, "XTENSION") != "BINTABLE" || fits_get_naxis(fh) != 2) {
+  if (fits_get_xtension(fh) != "BINTABLE" || fits_get_naxis(fh) != 2) {
     error, "current HDU is not a valid FITS BINTABLE";
   }
   nbytes = fits_get(fh, "NAXIS1");
@@ -2407,9 +2465,10 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
   warn_X = warn_P = 1;
   for (i=1 ; i<=tfields ; ++i) {
     tform = fits_get(fh, (key = swrite(format="TFORM%d", i)));
-    if (structof(tform) != string)
+    if (structof(tform) != string) {
       error, ((is_void(tform) ? "missing" : "unexpected data type for")
               + " FITS card \""+key+"\"");
+    }
     if (sread(format="%d%1s%s", tform, m, s, nil) != 2) {
       if (sread(format="%1s%s", tform, s, nil) == 1) m = 1;
       else error, "bad format string in FITS card \""+key+"\"";
@@ -2465,9 +2524,35 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
       error, "unknown format \""+tform+"\" in FITS binary table";
     }
     if (mult(i) && keep(i)) {
-      ncols = mult(i);
-      ptr(i) = &(ncols == 1 ? array(type, nrows) : array(type, nrows, ncols));
-      if (nrows > 1) row(i) = &array(type, ncols);
+      ncells = mult(i);
+      key = swrite(format="TDIM%d", i);
+      tdim = fits_get_list(fh, key);
+      if (is_void(tdim)) {
+        if (ncells > 1) {
+          dimlist = ncells;
+        } else {
+          dimlist = [];
+        }
+      } else {
+        if (min(tdim) <= 0) {
+          error, "bad dimension list for FITS card \"" + key + "\"";
+        }
+        number = 1L;
+        ndims = numberof(tdim);
+        for (j = ndims ; j >= 1 ; --j) {
+          number *= tdim(j);
+        }
+        if (number != ncells) {
+          error, "incompatible dimension list in FITS card \"" + key + "\"";
+        }
+        dimlist = array(long, ndims + 1);
+        dimlist(1) = ndims;
+        if (ndims >= 1) {
+          dimlist(2:0) = tdim;
+        }
+      }
+      ptr(i) = &array(type, nrows, dimlist);
+      if (nrows > 1) row(i) = &array(type, dimlist);
       is_not_byte(i) = (type != char);
     } else {
       keep(i) = 0n; /* will not read this column */
@@ -2558,33 +2643,44 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
       ptr(j) = &tmp;
     }
   }
-
-  if (! is_void(select)) ptr = ptr(select);
-  return (pack ? fits_pack_bintable(ptr) : ptr);
+  if (pack) {
+    return fits_pack_bintable(ptr, select);
+  }
+  if (is_void(select)) {
+    return ptr;
+  }
+  return ptr(select);
 }
 
-func fits_pack_bintable(ptr)
+func fits_pack_bintable(ptr, list)
 /* DOCUMENT fits_pack_bintable(ptr)
-       -or- fits_pack_bintable(ptr(list))
+       -or- fits_pack_bintable(ptr, list)
      Packs binary  table PTR  into a  single array; PTR  must be  a pointer
-     array (e.g. as the one returned by fits_read_bintable which see).  The
-     argument can be PTR(LIST) to select or re-order some fields: LIST is a
-     vector  of indices of  selected and  re-ordered fields.   The returned
-     array  is NROWS-by-NCOLS  where NROWS  is the  first dimension  of all
-     fields (which  must be the  same) and NCOLS  is the sum of  the second
+     array  (e.g. as  the one  returned by  fits_read_bintable  which see).
+     Second  argument LIST  can be  specified  to select  or re-order  some
+     fields: LIST is a vector of indices of selected and re-ordered fields,
+     the result will be as if  PTR(LIST) was given as unique argument.  The
+     returned array is NROWS-by-NCOLS where NROWS is the first dimension of
+     all fields (which must be the same) and NCOLS is the sum of the second
      dimension of all fields.
 
    SEE ALSO: fits_read_bintable. */
 {
-  if (structof(ptr) != pointer) error, "expecting array of pointer argument";
-  n = numberof(ptr);
-  begin = array(long, n + 1);
-  end = array(long, n);
-  begin(1) = 1;
+  if (structof(ptr) != pointer) {
+    error, "expecting array of pointer argument";
+  }
+  if (is_void(list)) {
+    seletct = 0n;
+    n = numberof(ptr);
+  } else {
+    seletct = 1n;
+    n = numberof(list);
+  }
+  start = stop = array(long, n);
   ncols = 0;
   type = [];
   for (i=1 ; i<=n ; ++i) {
-    local a; eq_nocopy, a, *ptr(i);
+    local a; eq_nocopy, a, *ptr((select ? list(i) : i));
     if (is_void(a)) continue; /* ignore empty field */
     if ((s = structof(a)) != char && s != short && s != int &&
         s != long && s != float && s != double && s != string) {
@@ -2592,6 +2688,7 @@ func fits_pack_bintable(ptr)
     }
     dims = dimsof(a);
     ndims = dims(1);
+    start(i) = 1 + ncols;
     if (ndims == 1) {
       ++ncols;
     } else if (ndims == 2) {
@@ -2599,8 +2696,7 @@ func fits_pack_bintable(ptr)
     } else {
       error, "unexpected dimension list in table column";
     }
-    end(i) = ncols - 1;
-    begin(i+1) = ncols;
+    stop(i) = ncols;
     if (i == 1) {
       nrows = dims(2);
       type = s;
@@ -2617,7 +2713,7 @@ func fits_pack_bintable(ptr)
   /* Pack selected columns. */
   arr = array(type, nrows, ncols);
   for (i=1 ; i<=n ; ++i) {
-    arr(,begin(i):end(i)) = *ptr(i);
+    arr(, start(i):stop(i)) = *ptr((select ? list(i) : i));
   }
   return arr;
 }
@@ -2752,6 +2848,13 @@ func fits_index_of_table_field(fh, name)
 /* Note: The following fits_toupper and fits_tolower routines are ~2 times
    faster than their ancestors in "string.i". */
 
+local fits_toupper, fits_tolower;
+/* DOCUMENT fits_tolower(s)
+       -or- fits_toupper(s)
+     Converts a string or an array of strings S to lower/upper case letters.
+
+   SEE ALSO: fits, fits_trim. */
+
 local _fits_tolower;
 local _fits_toupper;
 /* DOCUMENT _fits_tolower
@@ -2762,19 +2865,35 @@ local _fits_toupper;
 (_fits_tolower=char(indgen(0:255)))(1+'A':1+'Z')=_fits_tolower(1+'a':1+'z');
 (_fits_toupper=char(indgen(0:255)))(1+'a':1+'z')=_fits_toupper(1+'A':1+'Z');
 
-func fits_tolower(s)
-{ extern _fits_tolower; n = numberof((r = array(string, dimsof(s))));
-  for (i=1 ; i<=n ; ++i) r(i) = string(&_fits_tolower(1 + *pointer(s(i))));
-  return r; }
-func fits_toupper(s)
-{ extern _fits_toupper; n = numberof((r = array(string, dimsof(s))));
-  for (i=1 ; i<=n ; ++i) r(i) = string(&_fits_toupper(1 + *pointer(s(i))));
-  return r; }
-/* DOCUMENT fits_tolower(s)
-       -or- fits_toupper(s)
-     Converts a string or an array of strings S to lower/upper case letters.
+func _fits_tolower_0(s)
+{
+  extern _fits_tolower;
+  n = numberof((r = array(string, dimsof(s))));
+  for (i=1 ; i<=n ; ++i) {
+    r(i) = string(&_fits_tolower(1 + *pointer(s(i))));
+  }
+  return r;
+}
 
-   SEE ALSO: fits, fits_trim. */
+func _fits_toupper_0(s)
+{
+  extern _fits_toupper;
+  n = numberof((r = array(string, dimsof(s))));
+  for (i=1 ; i<=n ; ++i) {
+    r(i) = string(&_fits_toupper(1 + *pointer(s(i))));
+  }
+  return r;
+}
+
+func _fits_tolower_1(s)
+{
+  return strcase(0, s);
+}
+
+func _fits_toupper_1(s)
+{
+  return strcase(1, s);
+}
 
 func fits_trim(s)
 /* DOCUMENT fits_trim(s)
@@ -2788,13 +2907,15 @@ func fits_trim(s)
   return "";
 }
 
-func fits_strcmp(a,b)
+local fits_strcmp;
 /* DOCUMENT fits_strcmp(a, b)
      Returns non-zero where (array of) strings A and B are the same in FITS
      sense, i.e., ignore case and trailing ordinary spaces (code 0x20). For
      instance, "Hello" and "HELLO " are the same strings.
 
    SEE ALSO: fits, fits_toupper. */
+
+func _fits_strcmp_0(a,b) /* code for Yorick versions older than 1.6 */
 {
   n = numberof((r = array(int, dimsof(a,b))));
   for (i=1 ; i<=n ; ++i) {
@@ -2808,6 +2929,27 @@ func fits_strcmp(a,b)
   }
   return r;
 }
+
+func _fits_strcmp_1(a,b)
+{
+  blank=" "; /* only trim ordinary spaces */
+  return (strcase(1, strtrim(a, 2, blank=blank)) ==
+          strcase(1, strtrim(b, 2, blank=blank)));
+}
+
+/* Install function code according to Yorick capabilities. */
+if (is_func(strcase) == 2) {
+  fits_toupper = _fits_toupper_1;
+  fits_tolower = _fits_tolower_1;
+  fits_strcmp = _fits_strcmp_1;
+} else {
+  fits_toupper = _fits_toupper_0;
+  fits_tolower = _fits_tolower_0;
+  fits_strcmp = _fits_strcmp_0;
+}
+_fits_toupper_0 = _fits_toupper_1 = [];
+_fits_tolower_0 = _fits_tolower_1 = [];
+_fits_strcmp_0 = _fits_strcmp_1 = [];
 
 func fits_map(op, src)
 /* DOCUMENT fits_map(op, src)
@@ -3032,6 +3174,10 @@ func fits_parse(card, id, safe=)
         - double for a real FITS card
         - complex for a complex FITS card
 
+     Trailing   spaces   (which    are   irrelevant   according   to   FITS
+     specifications)   get   discarded   from   the  returned   value   for
+     string-valued cards (not commentary cards).
+
      In order to save a call to  fits_id, if ID is non-nil it is assumed to
      be the numerical identifier of the card, i.e. fits_id(CARD).
 
@@ -3134,7 +3280,16 @@ func fits_get(fh, pattern, &comment, default=, promote=)
      If no  cards match PATTERN, the  value of keyword  DEFAULT is returned
      and COMMENT is set to the null string.
 
-     If multiple  cards match PATTERN, they  must have the  same value type
+     The data  type of  the returned value  depends on the  particular card
+     type: a  char ('T' or  'F') is returned  for a logical-valued  card, a
+     long is returned for an  integer-valued card, a double is returned for
+     a real-valued  card, a complex  is returned for a  complex-valued card
+     (either integer  or floating  point), and a  string is returned  for a
+     commentary  or  a  string-valued  card.  Trailing  spaces  (which  are
+     irrelevant  according  to  FITS  specifications)  get  discarded  from
+     the returned value for string-valued cards (not commentary cards).
+
+     If multiple cards match PATTERN, their values must be of the same type
      unless keyword PROMOTE is true, in which case the routine promotes all
      card values to a suitable "highest" type.
 
@@ -3420,6 +3575,42 @@ func fits_get_comment(fh) {
 
    SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
 
+
+func fits_get_list(fh, key)
+/* DOCUMENT fits_get_list(fh, key)
+      Get value of FITS card KEY in FH and returns it as a vector of integers.
+      This function is intended to parse, e.g. the TDIM# cards in BINTABLE
+      extensions.  The syntax of the card must be a string of the form:
+
+        '(ARG1,ARG2,...)'
+
+      where ARG1, etc are human readable integer values.
+
+   SEE ALSO: fits_get.
+ */
+{
+  str = fits_get(fh, key);
+  if (is_void(str)) return;
+  if (structof(str) != string) {
+    error, "unexpected data type for FITS card \"" + key + "\"";
+  }
+  str = strtrim(str, 3);
+  c = *pointer(str);
+  n = numberof(c);
+  if (n >= 3 && c(1) == '(' && c(n-1) == ')' && sum(c == ')') == 1) {
+    number = sum(c == ',') + 1;
+    result = array(long, number);
+    format_first = "(%d %[^\a]";
+    format_other = ", %d %[^\a]";
+    value = 0L;
+    k = 0;
+    while (sread(str, format=(k ? format_other : format_first), value, str) == 2) {
+      result(++k) = value;
+      if (k >= number) return result;
+    }
+  }
+  error, "syntax error in value of FITS card \"" + key + "\"";
+}
 
 /*---------------------------------------------------------------------------*/
 /* INITIALIZATION OF PRIVATE DATA */
