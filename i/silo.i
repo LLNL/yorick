@@ -1,5 +1,5 @@
 /*
- * $Id: silo.i,v 1.1 2005-09-18 22:06:16 dhmunro Exp $
+ * $Id: silo.i,v 1.2 2006-12-17 18:22:03 dhmunro Exp $
  * support for Silo files, a higher level binary format than PDB
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -7,6 +7,8 @@
  * This file is part of yorick (http://yorick.sourceforge.net).
  * Read the accompanying LICENSE file for details.
  */
+
+if (is_void(silo_openb)) silo_openb=is_void(basfix_openb)?openb:basfix_openb;
 
 func silo_open(filename)
 /* DOCUMENT silo_open, filename
@@ -22,7 +24,7 @@ func silo_open(filename)
    SEE ALSO: silo_cd, silo_ls, silo_var, silo_close
  */
 {
-  f= openb(filename);
+  f= silo_openb(filename);
   vars= *get_vars(f)(1);
   nvars= numberof(vars);
   mask= strpart(vars,0:0)=="/";
@@ -40,7 +42,7 @@ func silo_open(filename)
   lens= array(0,nvars+ndirs);
   order= (mask<0)(psum);
   lens(list)= ends - list - order(ends) + order(list);
-  list= where(lens);
+  list= where(mask>0);
   lens= lens(list);
   depth= mask(psum);
   depth(list)-= 1;

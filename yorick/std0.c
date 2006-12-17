@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.5 2006-05-27 23:09:15 dhmunro Exp $
+ * $Id: std0.c,v 1.6 2006-12-17 18:22:03 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -931,17 +931,20 @@ static void UnaryTemplate(int nArgs, Looper *DLooper, Looper *ZLooper)
   if (nArgs != 1) YError("expecting exactly one argument");
   sp->ops->FormOperand(sp, &op);
   promoteID= op.ops->promoteID;
-  errno = 0;
   if (promoteID<=T_DOUBLE) {
     if (promoteID<T_DOUBLE) op.ops->ToDouble(&op);
+    errno = 0;
     DLooper(BuildResultU(&op, &doubleStruct), op.value, op.type.number);
+    promoteID = errno;
     PopToD(sp-2);
   } else {
     if (promoteID>T_COMPLEX) YError("expecting numeric argument");
+    errno = 0;
     ZLooper(BuildResultU(&op, &complexStruct), op.value, 2*op.type.number);
+    promoteID = errno;
     PopTo(sp-2);
   }
-  if (errno) YError("mathlib function signals error");
+  if (promoteID) YError("mathlib function signals error");
   Drop(1);
 }
 

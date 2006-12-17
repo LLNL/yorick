@@ -9,7 +9,7 @@
 @setchapternewpage odd
 @comment %**end of header (This is for running Texinfo on a region.)
 
-@comment $Id: yorick.tex,v 1.2 2005-11-20 21:14:24 dhmunro Exp $
+@comment $Id: yorick.tex,v 1.3 2006-12-17 18:22:02 dhmunro Exp $
 @comment -----------------------------------------------------------------
 
 @copying
@@ -1161,7 +1161,7 @@ I designed Yorick on the assumption that you have a good terminal
 emulator program.  In particular, Yorick is much easier to use if you
 can recall and edit previous input lines; as in music, repitition with
 variations is at the heart of programming.  My personal recommendation
-is shell-mode in GNU Emacs.
+is the yorick command in GNU Emacs (defined in yorick.el).
 
 Therefore, Yorick inherits most of its ``look and feel'' from your
 terminal emulator.  Yorick's distinctive prompts and error messages
@@ -1170,10 +1170,11 @@ are described later in this section.
 Any significant Yorick program will be stored in a text file, called
 an @dfn{include} file, after the command which reads it.  Use your
 favorite text editor to create and modify your include files.  Again,
-GNU Emacs is my favorite --- use its c-mode to edit Yorick include
-files as well as C programs.  Just as C source file names should end
-in @file{.c} or @file{.h}, and Fortran source file names should end in
-@file{.f}, so Yorick include file names should end in @file{.i}.
+GNU Emacs is my favorite --- use the yorick-mode (defined in
+yorick.el) to edit Yorick include files as well as C programs.  Just
+as C source file names should end in @file{.c} or @file{.h}, and
+Fortran source file names should end in @file{.f}, so Yorick include
+file names should end in @file{.i}.
 
 This section begins with additional stylistic suggestions concerning
 include files.  In particular, Yorick's @kbd{help} command can find
@@ -4963,7 +4964,7 @@ which distinguishes it from an interpreted package:
 plug_in, "mypkg";
 @end example
 
-Here, we assume the pacakge name is ``mypkg'', matching the name of
+Here, we assume the package name is ``mypkg'', matching the name of
 the file @file{mypkg.i}, but you can choose any name for the package
 you like.  In fact, you can have any number of include files defining
 different pieces of the interface to a single compiled package, say
@@ -5270,7 +5271,7 @@ more than two input arguments.  In that case, you can very quickly
 write a C function to compute the required two argument result:
 
 @example
-#include <mathlib.h>
+#include <math.h>
 extern void crtleg(double *r, double *x, long n);
 void
 crtleg(double *r, double *x, long n)
@@ -5343,7 +5344,7 @@ But your C source becomes much more complicated:
 
 @example
 #include "yapi.h"
-#include <mathlib.h>
+#include <math.h>
 extern void Y_rtleg(int argc);
 void
 Y_rtleg(int argc)

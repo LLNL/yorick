@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.3 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: ydata.h,v 1.4 2006-12-17 18:22:03 dhmunro Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -47,7 +47,7 @@
    table for an int and the Add member of the Operations table for a
    double will point to different functions.
 
-   A Symbol represents an variable or an intermediate result in an
+   A Symbol represents a variable or an intermediate result in an
    expression evaluation; Yorick's global symtab and program stack
    consist of Symbols.  Symbols are distinct from DataBlocks in an
    attempt to speed up simple operations on common data types (that is,

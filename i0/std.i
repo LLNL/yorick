@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.10 2006-11-19 00:01:49 dhmunro Exp $
+ * $Id: std.i,v 1.11 2006-12-17 18:22:03 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3104,7 +3104,7 @@ __vaxg(26:32) = [0, 1,11, 12,52, 0, 0x401];
 func updateb(filename, primitives, close102=, open102=)
 /* DOCUMENT file= updateb(filename)
          or file= updateb(filename, primitives)
-     open a binary date file FILENAME for update (mode "r+b").
+     open a binary data file FILENAME for update (mode "r+b").
      The optional PRIMITIVES argument is as for the createb function.
      If the file exists, it is opened as if by openb(filename),
      otherwise a new PDB file is created as if by createb(filename).
