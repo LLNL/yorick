@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.1 2005-09-18 22:03:47 dhmunro Exp $
+ * $Id: ascio.c,v 1.2 2007-01-28 22:10:31 dhmunro Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -445,7 +445,7 @@ ReadWorker(Operand *sourceOp, Symbol *stack, char *format, Symbol *stack0)
 
   /* First pass through arguments counts them, checks data types and
      conformability, and matches them to conversions in the format list.  */
-  CheckOps((int)(sp-stack+1));
+  CheckOps((int)(sp-stack+2));
   nArgs= 0;
   for ( ; stack<=sp ; stack++) {
     if (!stack->ops) { /* skip keywords */
@@ -504,7 +504,13 @@ ReadWorker(Operand *sourceOp, Symbol *stack, char *format, Symbol *stack0)
                  fmtList[nArgs].format[i-1]=='\015' ||
                  fmtList[nArgs].format[i-1]==' '))
       fmtList[nArgs].format[--i]= '\0';  /* strip off trailing newlines */
-    if (i) nArgs++;
+    if (i) {
+      if (from_keybd) {
+        ioOps[nArgs].s.ops = 0;
+        ioOps[nArgs].s.index = -1;
+      }
+      nArgs++;
+    }
   }
 
   if (from_keybd) {
