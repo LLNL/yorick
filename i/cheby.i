@@ -1,5 +1,5 @@
 /*
- * $Id: cheby.i,v 1.1 2005-09-18 22:06:14 dhmunro Exp $
+ * $Id: cheby.i,v 1.2 2007-01-28 23:47:31 dhmunro Exp $
  * Chebyshev polynomial approximation routines
  * after Numerical Recipes (Press et. al.) section 5.6
  */
@@ -67,12 +67,13 @@ func cheby_integ(fit, x0)
  * SEE ALSO: cheby_fit, cheby_deriv
  */
 {
+  fit = double(fit);
   if (is_void(x0)) x0 = fit(1);
-  f = fit;
   c = 0.25*(fit(2)-fit(1));
-  n = numberof(fit) - 2;
-  if (n>2) f(4:n+1) = c * (fit(3:n)-fit(5:n+2))/indgen(n-2);
-  f(0) = c * fit(n+1)/(n-1);
+  n = numberof(fit);
+  f = grow(fit, [0.]);
+  if (n>4) f(4:n-1) = c * (fit(3:n-2)-fit(5:n))/indgen(n-4);
+  f(n:n+1) = c * fit(n-1:n)/indgen(n-3:n-2);
   f(3) = 0.;
   f(3) = -2.*cheby_eval(f, x0);
   return f;
@@ -86,13 +87,15 @@ func cheby_deriv(fit)
  * SEE ALSO: cheby_fit, cheby_integ
  */
 {
+  fit = double(fit);
   n = numberof(fit) - 2;
   if (n<2) return [fit(1),fit(2),0.];
   f = fit(1:-1);
   f(0) = 2.*(n-1)*fit(0);
   if (n>2) f(-1) = 2.*(n-2)*fit(-1);
   for (i=-2 ; i>1-n ; --i) f(i) = f(i+2) + 2.*(i+n-1)*fit(i);
-  return (2./(fit(2)-fit(1))) * f;
+  f(3:0) *= (2./(fit(2)-fit(1)));
+  return f;
 }
 
 func cheby_poly(fit)
