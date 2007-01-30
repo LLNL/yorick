@@ -1,5 +1,5 @@
 /*
- * $Id: romberg.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: romberg.i,v 1.2 2007-01-30 13:45:13 thiebaut Exp $
  * Romberg integrator, after qromb in Numerical Recipes (Press, et.al.)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -24,6 +24,7 @@ func romberg(function, a, b, epsilon, notvector=)
    SEE ALSO: simpson, max_doublings
  */
 {
+  local _trapezoid_i, _trapezoid_s;
   if (!epsilon || epsilon<0.) epsilon= 1.e-6;
   a= double(a);
   b= double(b);
@@ -72,6 +73,7 @@ func simpson(function, a, b, epsilon, notvector=)
    SEE ALSO: romberg, max_doublings
  */
 {
+  local _trapezoid_i, _trapezoid_s;
   if (!epsilon || epsilon<0.) epsilon= 1.e-6;
   a= double(a);
   b= double(b);
