@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.4 2006-12-17 18:22:03 dhmunro Exp $
+ * $Id: ydata.h,v 1.5 2007-01-30 12:55:41 thiebaut Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -453,6 +453,7 @@ PLUG_API void Drop(int n);
 PLUG_API void PopTo(Symbol *s);
 
 PLUG_API void ReplaceRef(Symbol *stack);
+PLUG_API DataBlock *ForceToDB(Symbol *s);
 
 /* Conform sets 4 bit if not conformable, sets 1 bit if ldims==1 where
    rdims>1, sets 2 bit if rdims==1 where ldims>1.  The result dimension
