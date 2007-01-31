@@ -1,5 +1,5 @@
 /*
- * $Id: fpuset.c,v 1.4 2006-10-19 04:14:27 dhmunro Exp $
+ * $Id: fpuset.c,v 1.5 2007-01-31 04:06:50 dhmunro Exp $
  * set up FPU to trap floating point exceptions
  * - this is very non-portable, not covered by ANSI C, POSIX, or even C9X
  * - if you port to a new platform (eg- Ultrix) please contact the author
@@ -185,15 +185,15 @@ u_fpu_detect(void)
 {
   unsigned int features = 0;
   unsigned int x, y;
-  __asm __volatile ("pushf\n\t pop %%eax" : "=a" (x));
+  __asm __volatile ("pushf\n\t pop %%"X86_PREFIX"ax" : "=a" (x));
   y = x;          /* set x and y to original value of eflags */
   x ^= 0x200000;  /* flip bit 21, ID */
-  __asm __volatile ("push %%eax\n\t popf" : : "a" (x));
-  __asm __volatile ("pushf\n\t pop %%eax" : "=a" (x));
+  __asm __volatile ("push %%"X86_PREFIX"ax\n\t popf" : : "a" (x));
+  __asm __volatile ("pushf\n\t pop %%"X86_PREFIX"ax" : "=a" (x));
   if (x ^ y) {
     unsigned long ecx, edx;
     /* this cpu has the cpuid instruction, restore original eflags */
-    __asm __volatile ("push %%eax\n\t popf" : : "a" (y));
+    __asm __volatile ("push %%"X86_PREFIX"ax\n\t popf" : : "a" (y));
     /* get mmx, sse related feature bits from cpuid */
     __asm __volatile ("mov %%"X86_PREFIX"bx, %%"X86_PREFIX"si \n\t"
                       "cpuid \n\t"
