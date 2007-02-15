@@ -6,11 +6,14 @@
  * Copyright (c) 2000-2002 Eric THIEBAUT.
  *
  * History:
- *	$Id: fits.i,v 1.4 2006-11-27 16:56:15 thiebaut Exp $
+ *	$Id: fits.i,v 1.25 2007-02-15 08:19:38 thiebaut Exp $
  *	$Log: fits.i,v $
- *	Revision 1.4  2006-11-27 16:56:15  thiebaut
- *	fixed True and Not methods for built-in and interpreted functions
+ *	Revision 1.25  2007-02-15 08:19:38  thiebaut
+ *	Force CVS revison number to match RCS one.
  *
+ *	Revision 1.4  2006/11/27 16:56:15  thiebaut
+ *	fixed True and Not methods for built-in and interpreted functions
+ *	
  *	Revision 1.25  2006/11/03 12:09:18  eric
  *	 - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for
  *	   discovering this bug).
@@ -138,7 +141,7 @@
 
 /*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.4 $";
+fits = "$Revision: 1.25 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
