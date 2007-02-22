@@ -1,5 +1,5 @@
 /*
- * $Id: files.c,v 1.2 2007-02-22 22:05:48 dhmunro Exp $
+ * $Id: files.c,v 1.3 2007-02-22 22:30:53 dhmunro Exp $
  * UNIX version of play file operations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -162,12 +162,16 @@ p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
   }
 }
 
+extern long p_io_rand;
+long p_io_rand;
+
 static unsigned long
 p_iohelp(unsigned long nb, long n)
 {
   /* pause roughly a millisecond, typical number of passes is m/2 */
-  long a = 7141, c = 54773, m = 259200, i = nb&0x1ffff;
-  while ((n&0x1ffff) != i) i = (i*a + c)%m;
+  long a = 7141, c = 54773, m = 259200;
+  p_io_rand = nb&0x1ffff;
+  while ((n&0x1ffff) != p_io_rand) p_io_rand = (p_io_rand*a + c)%m;
   nb -= n;
   return nb;
 }
