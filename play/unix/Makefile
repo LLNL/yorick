@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+# $Id: Makefile,v 1.2 2007-02-22 22:05:48 dhmunro Exp $
 SHELL=/bin/sh
 MAKE=make
 include ../../Make.cfg
@@ -34,7 +34,7 @@ PLUGEXT=../plugin.h
 
 dir.o: config.h ../play.h playu.h ../pstdlib.h ../pstdio.h dir.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_DIR1) $(D_DIR2) -c dir.c
-files.o: config.h ../pstdio.h ../pstdlib.h playu.h $(PLUGEXT)
+files.o: config.h ../pstdio.h ../pstdlib.h playu.h files.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_PROCS) -c files.c
 fpuset.o: config.h playu.h fpuset.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_FPUSET) -c fpuset.c
@@ -57,7 +57,7 @@ uinbg.o: config.h playu.h uinbg.c $(PLUGEXT)
 usernm.o: config.h ../play.h usernm.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USERNM) -c usernm.c
 umain.o: config.h ../play.h playu.h ../pstdlib.h $(PLUGEXT)
-uspawn.o: config.h ../pstdio.h ../pstdlib.h playu.h $(PLUGEXT)
+uspawn.o: config.h ../pstdio.h ../pstdlib.h playu.h uspawn.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_PROCS) -c uspawn.c
 
 # this is the DL config test used in config.sh

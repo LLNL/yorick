@@ -1,5 +1,5 @@
 /*
- * $Id: files.c,v 1.1 2005-09-18 22:05:39 dhmunro Exp $
+ * $Id: files.c,v 1.2 2007-02-22 22:05:48 dhmunro Exp $
  * UNIX version of play file operations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -104,22 +104,72 @@ p_fputs(p_file *file, const char *buf)
   return fputs(buf, file->fp);
 }
 
+static unsigned long p_iohelp(unsigned long m, long n);
+
 unsigned long
 p_fread(p_file *file, void *buf, unsigned long nbytes)
 {
-  if (file->binary & 1)
-    return read(file->fd, buf, nbytes);
-  else
+  if (file->binary & 1) {
+    long n = read(file->fd, buf, nbytes);
+    if (n!=nbytes && n!=-1L) {
+      /* cope with filesystems which permit read/write to return before
+       * full request completes, even in blocking mode (Lustre, nfs? YUCK)
+       * note that read behavior undefined if signed nbytes is < 0
+       */
+      unsigned long nb = nbytes;
+      char *cbuf = buf;
+      int stalled = 0;
+      for (;;) {
+        nb = p_iohelp(nb, n);
+        n = read(file->fd, (cbuf+=n), nb);
+        if (n<0) return -1L;
+        if (n==nb) return nbytes;
+        if (n) stalled = 0;
+        else if (++stalled > 1000) return -1L;
+      }
+    }
+    return n;
+  } else {
     return fread(buf, 1, nbytes, file->fp);
+  }
 }
 
 unsigned long
 p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
 {
-  if (file->binary & 1)
-    return write(file->fd, buf, nbytes);
-  else
+  if (file->binary & 1) {
+    long n = write(file->fd, buf, nbytes);
+    if (n!=nbytes && n!=-1L) {
+      /* cope with filesystems which permit read/write to return before
+       * full request completes, even in blocking mode (Lustre, nfs? YUCK)
+       * note that read behavior undefined if signed nbytes is < 0
+       */
+      unsigned long nb = nbytes;
+      const char *cbuf = buf;
+      int stalled = 0;
+      for (;;) {
+        nb = p_iohelp(nb, n);
+        n = write(file->fd, (cbuf+=n), nb);
+        if (n<0) return -1L;
+        if (n==nb) return nbytes;
+        if (n) stalled = 0;
+        else if (++stalled > 1000) return -1L;
+      }
+    }
+    return n;
+  } else {
     return fwrite(buf, 1, nbytes, file->fp);
+  }
+}
+
+static unsigned long
+p_iohelp(unsigned long nb, long n)
+{
+  /* pause roughly a millisecond, typical number of passes is m/2 */
+  long a = 7141, c = 54773, m = 259200, i = nb&0x1ffff;
+  while ((n&0x1ffff) != i) i = (i*a + c)%m;
+  nb -= n;
+  return nb;
 }
 
 unsigned long
