@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.6 2006-05-06 20:57:42 dhmunro Exp $
+ * $Id: task.c,v 1.7 2007-02-24 23:14:41 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -56,8 +56,8 @@ int yAutoDebug= 0;
 int yDebugLevel= 0;
 
 /* most recent error message was built in yErrorMsg */
-char yErrorMsg[132];
-char yWarningMsg[132];
+char yErrorMsg[192];
+char yWarningMsg[192];
 
 static int inYError= 0;
 
@@ -924,7 +924,7 @@ YError(const char *msg)
   int category;
   int no_abort = y_do_not_abort;
   int no_print = 0;
-  char tmsg[84];
+  char tmsg[144];
 
   int recursing= inYError;
   inYError++;
@@ -972,7 +972,7 @@ YError(const char *msg)
     /* if after_error function present, make it the idler */
     y_idler_function = (Function *)Ref(globTab[after_index].value.db);
     y_idler_fault = 1;
-    if (msg) strncpy(tmsg, msg, 80), tmsg[80] = '\0';
+    if (msg) strncpy(tmsg, msg, 140), tmsg[140] = '\0';
     else tmsg[0] = '\0';
   } else {
     y_idler_fault = 0;
@@ -1026,7 +1026,7 @@ YError(const char *msg)
   strncat(yErrorMsg, name, 40);
   strcat(yErrorMsg, ") ");
   if (!pcUp || recursing)
-    strncat(yErrorMsg, msg, 80);
+    strncat(yErrorMsg, msg, 140);
   if (!no_print) YputsErr(yErrorMsg);
 
   if (recursing) {
@@ -1283,14 +1283,14 @@ static Catcher *CatchScan(const char *msg, int category)
   }
 
   if (i>=0) {
-    char tmsg[84];
+    char tmsg[144];
     Instruction *pcRet;
     Symbol *spCatch= spBottom + catchers[i].isp;
     catchers[i].category= 0;  /* disable this catcher */
 
     /* note: msg itself might be on stack! */
-    strncpy(tmsg, msg, 80);
-    tmsg[80]= '\0';
+    strncpy(tmsg, msg, 140);
+    tmsg[140]= '\0';
 
     for (;;) {
       ClearStack();

@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.2 2007-01-28 22:10:31 dhmunro Exp $
+ * $Id: ascio.c,v 1.3 2007-02-24 23:14:41 dhmunro Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -211,10 +211,10 @@ void Y_open(int nArgs)
 
   } else {
     /* blow up if optional errmode flag is not set */
-    char *dots= strlen(filename)>40? "..." : "";
-    char message[80];
+    char *dots= strlen(filename)>100? "..." : "";
+    char message[140];
     p_free(fullname);
-    sprintf(message, "cannot open file %.40s%s (mode %.6s)",
+    sprintf(message, "cannot open file %.100s%s (mode %.6s)",
             filename, dots, filemode);
     YErrorIO(message);
     return;
