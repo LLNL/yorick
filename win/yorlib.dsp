@@ -309,6 +309,10 @@ SOURCE=..\yorick\task.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\yorick\yapi.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\yorick\ydata.c
 # End Source File
 # Begin Source File
@@ -416,6 +420,10 @@ SOURCE=..\yorick\parse.h
 # Begin Source File
 
 SOURCE=..\yorick\prmtyp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\yorick\yapi.h
 # End Source File
 # Begin Source File
 

@@ -1,5 +1,5 @@
 /*
- * $Id: wspawn.c,v 1.2 2006-10-01 19:49:41 dhmunro Exp $
+ * $Id: wspawn.c,v 1.3 2007-03-07 00:50:24 dhmunro Exp $
  * play spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -269,7 +269,6 @@ spawn_kill(p_spawn_t *proc, int nocallback)
     SPAWN_HCLOSE(proc->in);
     if (proc->o[0].pipe && proc->o[1].pipe) {
       /* closing stdin should kill child pretty quickly, wait 1 sec */
-      DWORD state;
       HANDLE handles[2];
       handles[0] = proc->o[0].ready;
       handles[1] = proc->o[1].ready;
@@ -321,7 +320,7 @@ w_callerr(void *vproc)
         proc->callback(proc->ctx, 1);
       }
     } else {
-      proc->flags != 16;
+      proc->flags |= 16;
       /* on error, callback will call p_spawf with nocallback==1 */
       proc->callback(proc->ctx, 2);
     }
