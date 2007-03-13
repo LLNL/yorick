@@ -38,6 +38,8 @@
      Functions: fitrat, fitpol
    spline.i   - cubic spline and tensioned spline interpolation
      Functions: spline, tspline
+   splinef.i  - general piecewise cubic spline interpolation
+     Functions: splinef, splined, splinei, splinelsq
    digit2.i   - 2D equivalents for digitize and interp
      Functions: digit2, interp2
    cheby.i    - Chebyshev fitting and evaluation routines

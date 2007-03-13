@@ -37,5 +37,6 @@ autoload, "roots.i", nraphson, mxbrent, mnbrent, f_inverse;
 autoload, "series.i", series_s, series_r, series_n;
 autoload, "silo.i", silo_open;
 autoload, "spline.i", spline, tspline;
+autoload, "splinef.i", splinef, splined, splinei, splinelsq;
 autoload, "style.i", get_style, set_style, write_style;
 autoload, "zroots.i", zroots, laguerre;
