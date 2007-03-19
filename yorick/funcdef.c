@@ -1,5 +1,5 @@
 /*
- * $Id: funcdef.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: funcdef.c,v 1.3 2007-03-19 18:38:06 dhmunro Exp $
  * mini-parser converting simple command line to interpreted function
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -79,7 +79,7 @@ ypush_func(char *line)
         tmp->ctab = 0;
         mxp = 32;
         tmp->code = p_malloc(sizeof(Instruction)*mxp);
-      } else if (pc+2 >= mxp) {
+      } else if (pc+10 >= mxp) {
         mxp += mxp;
         tmp->code = p_realloc(tmp->code, sizeof(Instruction)*mxp);
       }
@@ -90,9 +90,9 @@ ypush_func(char *line)
     } else {
       if (!tmp) goto parserr;   /* first token must be a symbol */
       if (!c) break;
-      if (pc+2 >= mxp) {
+      if (pc+10 >= mxp) {
         mxp += mxp;
-        tmp->code = p_realloc(tmp->code, sizeof(Instruction)*mxc);
+        tmp->code = p_realloc(tmp->code, sizeof(Instruction)*mxp);
       }
       if (nc+1 >= mxc) {
         int i = mxc;

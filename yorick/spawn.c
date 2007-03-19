@@ -1,5 +1,5 @@
 /*
- * $Id: spawn.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: spawn.c,v 1.3 2007-03-19 18:38:06 dhmunro Exp $
  * yorick spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -233,7 +233,7 @@ spawn_callback(void *vproc, int err)
   spawn_proc *proc = vproc;
   char *msg = 0;
   Array *msga;
-  Instruction *code;
+  Instruction code[12];
   Symbol *ctable;
   long callback = -1;
   if (err != 2) {
@@ -280,7 +280,6 @@ spawn_callback(void *vproc, int err)
   ctable->value.db = (DataBlock *)msga;
 
   /* fill in function code */
-  code = p_malloc(sizeof(Instruction)*12);
   code[0].Action = &PushVariable;
   code[1].index = callback;
   code[2].Action = &PushString;
