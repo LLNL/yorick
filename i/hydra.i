@@ -1,5 +1,5 @@
 /*
- * $Id: hydra.i,v 1.1 2005-09-18 22:06:17 dhmunro Exp $
+ * $Id: hydra.i,v 1.2 2007-03-19 21:17:16 dhmunro Exp $
  * functions to access hydra-generated Silo/PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -269,7 +269,16 @@ func h_show(f)
     vars = strpart(vars(list),8:0);
     vars = vars(where(strlen(vars)>0));
     vars = vars(where(!strmatch(vars,"/")));
-    vars = vars(where(!strmatch(vars,"_")));
+    mask = strmatch(vars,"_");
+    list = where(mask);
+    if (numberof(list)) {
+      v = strpart(vars(list), -1:-1);
+      i = where(v == "_");
+      if (numberof(i)) v(i) = strpart(vars(list(i)), 0:0);
+      i = where((v>="0") & (v<="9"));
+      if (numberof(i)) mask(list(i)) = 0;
+    }
+    vars = vars(where(!mask));
     vars = vars(sort(vars));
   }
   if (am_subroutine()) {
