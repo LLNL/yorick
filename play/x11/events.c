@@ -1,5 +1,5 @@
 /*
- * $Id: events.c,v 1.1 2005-09-18 22:05:32 dhmunro Exp $
+ * $Id: events.c,v 1.2 2007-03-19 07:31:30 thiebaut Exp $
  * X11 event handler
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -61,6 +61,29 @@ p_gui(void (*on_expose)(void *c, int *xy),
   xon_deselect = on_deselect;
   x_on_panic = on_panic;
   x_wire_events = &x_wirer;
+}
+
+void
+p_gui_query(void (**on_expose)(void *c, int *xy),
+	    void (**on_destroy)(void *c),
+	    void (**on_resize)(void *c,int w,int h),
+	    void (**on_focus)(void *c,int in),
+	    void (**on_key)(void *c,int k,int md),
+	    void (**on_click)(void *c,int b,int md,int x,int y,
+			      unsigned long ms),
+	    void (**on_motion)(void *c,int md,int x,int y),
+	    void (**on_deselect)(void *c),
+	    void (**on_panic)(p_scr *s))
+{
+  *on_expose = xon_expose;
+  *on_destroy = xon_destroy;
+  *on_resize = xon_resize;
+  *on_focus = xon_focus;
+  *on_key = xon_key;
+  *on_click = xon_click;
+  *on_motion = xon_motion;
+  *on_deselect = xon_deselect;
+  *on_panic = x_on_panic;
 }
 
 static void

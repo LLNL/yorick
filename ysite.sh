@@ -2,10 +2,10 @@
 prefix="."
 Y_PLATFORM="."
 Y_SITE="."
-Y_HOME="."
+Y_HOME="relocate"
 
 # -------------- DO NOT CHANGE THIS LINE OR BELOW -----------------------
-# ysite.sh -- $Id: ysite.sh,v 1.1 2005-09-18 22:03:38 dhmunro Exp $
+# ysite.sh -- $Id: ysite.sh,v 1.2 2007-03-19 07:31:30 thiebaut Exp $
 # the install.sh script sources this script in order to set the
 # Y_SITE and Y_HOME variables that determine where the architecture
 # independent and dependent parts of yorick will be installed

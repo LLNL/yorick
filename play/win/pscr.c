@@ -1,5 +1,5 @@
 /*
- * $Id: pscr.c,v 1.2 2006-03-25 03:32:36 dhmunro Exp $
+ * $Id: pscr.c,v 1.3 2007-03-19 07:31:30 thiebaut Exp $
  * routines to initialize graphics for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -243,6 +243,30 @@ p_gui(void (*on_expose)(void *c, int *xy),
   won_click = on_click;
   won_motion = on_motion;
   won_deselect = on_deselect;
+}
+
+/* ARGSUSED */
+void
+p_gui_query(void (**on_expose)(void *c, int *xy),
+	    void (**on_destroy)(void *c),
+	    void (**on_resize)(void *c,int w,int h),
+	    void (**on_focus)(void *c,int in),
+	    void (**on_key)(void *c,int k,int md),
+	    void (**on_click)(void *c,int b,int md,int x,int y,
+			     unsigned long ms),
+	    void (**on_motion)(void *c,int md,int x,int y),
+	    void (**on_deselect)(void *c),
+	    void (**on_panic)(p_scr *s))
+{
+  *on_expose = won_expose;
+  *on_destroy = won_destroy;
+  *on_resize = won_resize;
+  *on_focus = won_focus;
+  *on_key = won_key;
+  *on_click = won_click;
+  *on_motion = won_motion;
+  *on_deselect = won_deselect;
+  *on_panic = 0; /* on_panic not used by Windows interface */
 }
 
 /* ARGSUSED */

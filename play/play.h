@@ -1,5 +1,5 @@
 /*
- * $Id: play.h,v 1.1 2005-09-18 22:05:31 dhmunro Exp $
+ * $Id: play.h,v 1.2 2007-03-19 07:31:30 thiebaut Exp $
  * portability layer programming model declarations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -53,6 +53,16 @@ PLUG_API void p_gui(void (*on_expose)(void *c, int *xy),
                     void (*on_motion)(void *c,int md,int x,int y),
                     void (*on_deselect)(void *c),
                     void (*on_panic)(p_scr *screen));
+PLUG_API void p_gui_query(void (**on_expose)(void *c, int *xy),
+			  void (**on_destroy)(void *c),
+			  void (**on_resize)(void *c,int w,int h),
+			  void (**on_focus)(void *c,int in),
+			  void (**on_key)(void *c,int k,int md),
+			  void (**on_click)(void *c,int b,int md,int x,int y,
+					    unsigned long ms),
+			  void (**on_motion)(void *c,int md,int x,int y),
+			  void (**on_deselect)(void *c),
+			  void (**on_panic)(p_scr *screen));
 PLUG_API void (*p_on_connect)(int dis, int fd);
 
 /* asynchronous subprocesses using callbacks (see also p_popen, p_system) */

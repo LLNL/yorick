@@ -264,6 +264,16 @@ extern void p_gui(void (*on_expose)(void *c, int *xy),
                   void (*on_motion)(void *c,int md,int x,int y),
                   void (*on_deselect)(void *c),
                   void (*on_panic)(p_scr *screen));
+extern void p_gui_query(void (**on_expose)(void *c, int *xy),
+			void (**on_destroy)(void *c),
+			void (**on_resize)(void *c,int w,int h),
+			void (**on_focus)(void *c,int in),
+			void (**on_key)(void *c,int k,int md),
+			void (**on_click)(void *c,int b,int md,int x,int y,
+					  unsigned long ms),
+			void (**on_motion)(void *c,int md,int x,int y),
+			void (**on_deselect)(void *c),
+			void (**on_panic)(p_scr *screen));
   the on_launch function should call at least some of these
   routines to set the callback procedures for all the events which
   might drive the remainder of program execution
@@ -272,6 +282,12 @@ extern void p_gui(void (*on_expose)(void *c, int *xy),
   ignores it if no callback was set
   each of these setup routines may be called only once, and should
   be called from on_launch (or maybe the first call to on_idle?)
+
+  The p_gui function installs callbacks to handle events from the
+  graphical interface.  The p_gui_query function gives the addresses
+  of current callbacks (the one previously installed by p_gui).  Note
+  that the address(es) of the callback(s) can be NULL if there is
+  no such callback(s).
 
 extern void p_set_alarm(double secs, void (*on_alarm)(void *context),
                         void *context);
