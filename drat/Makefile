@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:04:53 dhmunro Exp $
+# $Id: Makefile,v 1.2 2007-03-25 15:36:32 dhmunro Exp $
 # similar to any yorick package Makefile
 
 COPT=$(COPT_DEFAULT)
@@ -34,7 +34,7 @@ include $(Y_MAKEDIR)/Make$(TGT)
 # override macros set by Makepkg used in rules (because yorick not installed)
 Y_IDIR=-I. -I../play -I../yorick
 Y_LIBEXE=../yorick
-Y_EXE=../yorick/yorick
+Y_EXE=../yorick/yorick$(EXE_SFX)
 
 # ------------------------------------- targets and rules for this package
 
