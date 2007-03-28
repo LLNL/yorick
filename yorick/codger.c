@@ -1,5 +1,5 @@
 /*
- * $Id: codger.c,v 1.1 2005-09-18 22:03:45 dhmunro Exp $
+ * $Id: codger.c,v 1.2 2007-03-28 23:15:49 dhmunro Exp $
  *
  * codger
  * automatic CODe GEneratoR for adding compiled functions to yorick
@@ -737,12 +737,21 @@ skip_quote(FILE *in, char *pos)
 {
   /* pos[0] == " on input, scan to closing " */
   char c = *pos++;
-  while (pos[0]!='"' || c=='\\') {
+  while (pos[0]!='"') {
     if (!pos[0]) {
       pos = next_line(in);
       if (!pos) return 0;
     } else {
       c = *pos++;
+      if (c=='\\' && pos[0]) {
+        c = *pos++;
+        if (c<='7' && c>='0' && pos[0]) {
+          do { c = *pos++; } while (c>='0' && c<='7' && pos[0]);
+        } else if (c == 'x' && pos[0]) {
+          do { c = *pos++; } while (((c<='9' && c>='0') || (c<='F' && c>='A')
+                                     || (c<='f' && c>='a')) && pos[0]);
+        }
+      }
     }
   }
   return pos+1;
@@ -847,6 +856,7 @@ next_action(FILE *in, char *pos)
       } else {
         pos++;
       }
+      if (!pos) return 0;
     }
     if (!pos) return 0;
     pos = next_nonblank(in, 1);
