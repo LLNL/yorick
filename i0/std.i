@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.12 2007-03-28 09:07:53 thiebaut Exp $
+ * $Id: std.i,v 1.13 2007-03-28 09:58:21 thiebaut Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -158,7 +158,7 @@ func help_worker
     buf = print(topic);
     n = numberof(buf);
     str = buf(1);
-    escape = "\\";
+    escape = "\134"; /* must be octal code to not kill codger */
     newline = "\n";
     for (i=2;i<=n;++i) {
       if (strpart(str, 0:0) == escape) {
