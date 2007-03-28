@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.6 2006-12-17 18:22:03 dhmunro Exp $
+ * $Id: std0.c,v 1.7 2007-03-28 09:10:37 thiebaut Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -737,6 +737,7 @@ void Y_nameof(int nArgs)
     long index;
     if (db->ops==&functionOps) index= ((Function *)db)->code[0].index;
     else if (db->ops==&builtinOps) index= ((BIFunction *)db)->index;
+    else if (db->ops==&auto_ops) index= ((autoload_t *)db)->isymbol;
     else index= -1;
     if (index>=0) name= globalTable.names[index];
     else name= 0;

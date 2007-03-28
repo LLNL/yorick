@@ -1,5 +1,5 @@
 /*
- * $Id: autold.c,v 1.2 2006-05-21 15:36:22 dhmunro Exp $
+ * $Id: autold.c,v 1.3 2007-03-28 09:10:37 thiebaut Exp $
  * autoload Yorick .i files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -20,16 +20,6 @@ extern BuiltIn Y_autoload;
 
 extern void IncludeNow(void);
 extern DataBlock *ForceToDB(Symbol *s);
-
-/* Implement lists as a foreign Yorick data type.  */
-typedef struct autoload_t autoload_t;
-struct autoload_t {
-  int references;      /* reference counter */
-  Operations *ops;     /* virtual function table */
-  long ifile;          /* index into table of autoload files */
-  long isymbol;        /* global symtab index */
-  autoload_t *next;    /* linked list for each ifile */
-};
 
 static void auto_syminit(long ifile);
 

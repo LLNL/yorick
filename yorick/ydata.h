@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.5 2007-01-30 12:55:41 thiebaut Exp $
+ * $Id: ydata.h,v 1.6 2007-03-28 09:10:37 thiebaut Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -212,6 +212,17 @@ struct BIFunction {
   Operations *ops;    /* pointer to virtual functions */
   BuiltIn *function;
   long index;         /* to globTab -- shorthand for function name */
+};
+
+/* Auto-loaded functions are special interpreted functions which
+   trigger parsing of their source file when first used.  */
+typedef struct autoload_t autoload_t;
+struct autoload_t {
+  int references;      /* reference counter */
+  Operations *ops;     /* virtual function table */
+  long ifile;          /* index into table of autoload files */
+  long isymbol;        /* global symtab index */
+  autoload_t *next;    /* linked list for each ifile */
 };
 
 /* TextStream is a "foreign" data block defined in ascio.c */
