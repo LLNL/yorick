@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.11 2006-12-17 18:22:03 dhmunro Exp $
+ * $Id: std.i,v 1.12 2007-03-28 09:07:53 thiebaut Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -153,10 +153,43 @@ func help_worker
     line+= mark(i);
     write, "defined at:"+line;
 
+  } else if (is_func(topic) == 3) {
+    /* autoloaded function */
+    buf = print(topic);
+    n = numberof(buf);
+    str = buf(1);
+    escape = "\\";
+    newline = "\n";
+    for (i=2;i<=n;++i) {
+      if (strpart(str, 0:0) == escape) {
+        str = strpart(str, 1:-1) + buf(i);
+      } else {
+        str += newline + buf(i);
+      }
+    }
+    topic_name = file_name = string();
+    if (sread(str, format="autoload of: %s from: %[^\n]",
+              topic_name, file_name) == 2) {
+      include, file_name, 1;
+      help_topic = topic_name;
+      after, 0.0, _help_auto;
+    } else {
+      info, topic;
+    }
   } else {
     write, "<not defined in an include file, running info function>";
     info, topic;
   }
+}
+
+func _help_auto
+/* xxDOCUMENT _help_auto (Not for interactive use -- called by help_worker
+ *                        for autoloaded function.) */
+{
+  topic = help_topic;
+  help_topic = [];
+  if (structof(topic) == string) topic = symbol_def(topic);
+  help, topic;
 }
 
 func info(topic)
