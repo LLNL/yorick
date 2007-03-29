@@ -1,5 +1,5 @@
 /*
- * $Id: codger.c,v 1.2 2007-03-28 23:15:49 dhmunro Exp $
+ * $Id: codger.c,v 1.3 2007-03-29 23:56:19 dhmunro Exp $
  *
  * codger
  * automatic CODe GEneratoR for adding compiled functions to yorick
@@ -736,22 +736,29 @@ static char *
 skip_quote(FILE *in, char *pos)
 {
   /* pos[0] == " on input, scan to closing " */
-  char c = *pos++;
+  pos++;
   while (pos[0]!='"') {
     if (!pos[0]) {
       pos = next_line(in);
       if (!pos) return 0;
-    } else {
-      c = *pos++;
-      if (c=='\\' && pos[0]) {
-        c = *pos++;
-        if (c<='7' && c>='0' && pos[0]) {
-          do { c = *pos++; } while (c>='0' && c<='7' && pos[0]);
-        } else if (c == 'x' && pos[0]) {
-          do { c = *pos++; } while (((c<='9' && c>='0') || (c<='F' && c>='A')
-                                     || (c<='f' && c>='a')) && pos[0]);
+    } else if (pos[0]=='\\') {
+      pos++;
+      if (pos[0]<='7' && pos[0]>='0') {
+        pos++;
+        if (pos[0]<='7' && pos[0]>='0') {
+          pos++;
+          if (pos[0]<='7' && pos[0]>='0') pos++;
         }
+      } else if (pos[0] == 'x') {
+        pos++;
+        while ((pos[0]<='9' && pos[0]>='0')
+               || (pos[0]<='F' && pos[0]>='A')
+               || (pos[0]<='f' && pos[0]>='a')) pos++;
+      } else {
+        pos++;
       }
+    } else {
+      pos++;
     }
   }
   return pos+1;
