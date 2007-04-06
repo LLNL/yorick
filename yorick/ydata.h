@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.6 2007-03-28 09:10:37 thiebaut Exp $
+ * $Id: ydata.h,v 1.7 2007-04-06 22:04:33 thiebaut Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -385,6 +385,7 @@ PLUG_API BinaryOp OrX, AndX, XorX, ShiftLX, ShiftRX, MatMultX;
 PLUG_API MemberOp GetMemberX;
 PLUG_API PromoteOp PromXX;
 PLUG_API UnaryOp PrintX;
+PLUG_API UnaryOp y_setup_func_hack; /* do not use y_setup_func_hack */
 
 /*--------------------------------------------------------------------------*/
 

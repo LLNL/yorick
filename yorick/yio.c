@@ -1,5 +1,5 @@
 /*
- * $Id: yio.c,v 1.1 2005-09-18 22:04:14 dhmunro Exp $
+ * $Id: yio.c,v 1.2 2007-04-06 22:04:33 thiebaut Exp $
  * Implement Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -209,8 +209,6 @@ extern UnaryOp PrintC, PrintS, PrintI, PrintL, PrintF, PrintD, PrintZ,
   PrintQ, PrintP, PrintSI, PrintR, PrintVD, PrintSD, PrintFN, PrintBI,
   PrintIO;
 
-extern UnaryOp PrintXFN, PrintXBI;
-
 int printLength= 79;   /* maximum number of characters to put on a line */
 long maxPrintLines= 5000;
 
@@ -239,24 +237,21 @@ static void ClearTempBuffer(int force);
 static void PrintDims(Dimension *dims);
 static int PDRecurse(Dimension *dims, long *length, int last);
 
+void y_setup_func_hack(Operand *op)
+{
+  YError("bad data type for array index");
+}
+
 /* Print calls functions with no arguments, or prints anything else using
    YputsOut.  */
 void Print(void)
 {
   Operand op;
   sp->ops->FormOperand(sp, &op);
-  if (op.ops==&builtinOps) {
+  if (op.ops->Setup == &y_setup_func_hack) {
     /* put operand into bogus form expected by Eval (see Eval in ops3.c) */
     op.references= 0;   /* intentionally misused */
-    EvalBI(&op);
-  } else if (op.ops==&functionOps) {
-    /* put operand into bogus form expected by Eval (see Eval in ops3.c) */
-    op.references= 0;   /* intentionally misused */
-    EvalFN(&op);
-  } else if (op.ops==&auto_ops) {
-    /* put operand into bogus form expected by Eval (see Eval in ops3.c) */
-    op.references= 0;   /* intentionally misused */
-    eval_auto(&op);
+    op.ops->Eval(&op);
   } else {
     PrintInit(YputsOut);
     op.ops->Print(&op);
@@ -284,9 +279,7 @@ void Y_print(int nArgs)
   while (nArgs--) {
     if (!stack->ops) YError("print accepts no keywords (do you mean write?)");
     stack->ops->FormOperand(stack, &op);
-    if (op.ops==&functionOps) PrintXFN(&op);
-    else if (op.ops==&builtinOps) PrintXBI(&op);
-    else op.ops->Print(&op);
+    op.ops->Print(&op);
     if (nArgs) PermitNewline(2);
     stack++;
   }
@@ -396,20 +389,6 @@ void ForceNewline(void)
 
 void PrintFN(Operand *op)
 {
-  /* put operand into bogus form expected by Eval (see Eval in ops3.c) */
-  op->references= 0;   /* intentionally misused */
-  EvalFN(op);
-}
-
-void PrintBI(Operand *op)
-{
-  /* put operand into bogus form expected by Eval (see Eval in ops3.c) */
-  op->references= 0;   /* intentionally misused */
-  EvalBI(op);
-}
-
-void PrintXFN(Operand *op)
-{
   Function *f= op->value;
   Instruction *pc= f->code;
   long posList;
@@ -445,7 +424,7 @@ void PrintXFN(Operand *op)
   PrintFunc(")");
 }
 
-void PrintXBI(Operand *op)
+void PrintBI(Operand *op)
 {
   BIFunction *bif= op->value;
   char *name;

@@ -1,5 +1,5 @@
 /*
- * $Id: autold.c,v 1.3 2007-03-28 09:10:37 thiebaut Exp $
+ * $Id: autold.c,v 1.4 2007-04-06 22:04:33 thiebaut Exp $
  * autoload Yorick .i files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -37,7 +37,7 @@ Operations auto_ops = {
   &AddX, &SubtractX, &MultiplyX, &DivideX, &ModuloX, &PowerX,
   &EqualX, &NotEqualX, &GreaterX, &GreaterEQX,
   &ShiftLX, &ShiftRX, &OrX, &AndX, &XorX,
-  &AssignX, &eval_auto, &SetupX, &GetMemberX, &MatMultX, &print_auto
+  &AssignX, &eval_auto, &y_setup_func_hack, &GetMemberX, &MatMultX, &print_auto
 };
 
 /* Set up a block allocator which grabs space for 64 autoload_t objects

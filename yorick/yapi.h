@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.4 2005-11-26 20:04:43 dhmunro Exp $
+ * $Id: yapi.h,v 1.5 2007-04-06 22:04:33 thiebaut Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -379,20 +379,22 @@ struct y_userobj_t {
   void *uo_ops;
 };
 PLUG_API void *ypush_obj(y_userobj_t *uo_type, unsigned long size);
+PLUG_API y_userobj_t *yfunc_obj(y_userobj_t *uo_type);
 PLUG_API void *yget_obj(int iarg, y_userobj_t *uo_type);
 PLUG_API void y_print(const char *text, int newline);
 /*
-You should statically initialize the uo_type.  Passing uo_type=0 to
-yget_obj returns the type_name for the object at iarg; otherwise it
-returns the pointer to the object itself, as created by ypush_object.
-The uo_ops member will be initialized on the first call to ypush_obj.
-Before that call, make sure uo_ops=0, and do not touch it afterwards.
-The virtual functions for your object can be 0 to get default
-behavior.  Like ypush_scratch, the on_free, if present, should not
-attempt to free the object itself, just its contents.  If no special
-action is required to free your object, use on_free=0.  If on_print=0,
-printing the object will print a generic phrase including its
-type_name.  The on_eval is invoked like a builtin function:
+You should statically initialize the uo_type structure (with
+uo_ops=0).  For function-like objects, the uo_ops member must then be
+initialized in a special way by calling yfunc_obj; otherwise, the
+uo_ops member will be initialized on the first call to ypush_obj.
+Before applying yfunc_obj or before the first call to ypush_obj, make
+sure uo_ops=0, and do not touch it afterwards.  The virtual functions
+for your object can be 0 to get default behavior.  Like ypush_scratch,
+the on_free, if present, should not attempt to free the object itself,
+just its contents.  If no special action is required to free your
+object, use on_free=0.  If on_print=0, printing the object will print
+a generic phrase including its type_name.  The on_eval is invoked like
+a builtin function:
   object(arg1, arg2, ...)
 in the interpreted code will invoke
   on_eval(object, argc)
@@ -408,6 +410,11 @@ irrelevant).  Again, you should leave the result on the top of the
 stack.  If on_eval or on_extract is zero, that operation will cause a
 runtime error (the default behavior).  Note that you can use the
 yarg_kw_init function (with kiargs=0) to retrieve name indices.
+
+An object created by ypush_obj can be retrieved by yget_obj.  Passing
+uo_type=0 to yget_obj returns the type_name for the object at iarg;
+otherwise it returns the pointer to the object itself, as created by
+ypush_obj.
 
 The y_print function must be used by the on_print callback to produce
 output.  Do not attempt to use y_print except in a on_print callback.

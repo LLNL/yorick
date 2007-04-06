@@ -1,5 +1,5 @@
 /*
- * $Id: debug.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: debug.c,v 1.3 2007-04-06 22:04:33 thiebaut Exp $
  *
  * Define Yorick debugging functions.
  */
@@ -45,7 +45,7 @@ extern RangeFunc RFmin, RFmax, RFptp, RFsum, RFavg, RFrms, RFmnx, RFmxx,
 extern char *GetRFName(RangeFunc *rfTarget);  /* from yio.c */
 extern int PutsAsArray(char *s);              /* from yio.c */
 
-extern UnaryOp PrintXFN;
+extern UnaryOp PrintFN;
 
 /* virtual machine instructions */
 extern VMaction PushChar, PushShort, PushInt, PushLong,
@@ -371,7 +371,7 @@ void Y_disassemble(int nArgs)
   VMaction *Action;
   int stack, iAction, category;
   long ipc;
-  Operand op;   /* PrintXFN uses only op.value */
+  Operand op;   /* PrintFN uses only op.value */
 
   if (nArgs > 1) YError("disassemble takes a single argument");
   if (nArgs==1 && sp->ops==&referenceSym) ReplaceRef(sp);
@@ -396,7 +396,7 @@ void Y_disassemble(int nArgs)
     PushDataBlock(NewArray(&stringStruct, (Dimension *)0));
   }
 
-  PrintXFN(&op);
+  PrintFN(&op);
   ForceNewline();
 
   /* skip past local variables */
@@ -935,8 +935,8 @@ void Y_dbinfo(int nArgs)
     PushDataBlock(NewArray(&stringStruct, (Dimension *)0));
   }
 
-  op.value= dbg->func;   /* PrintXFN only uses this member of op */
-  PrintXFN(&op);
+  op.value= dbg->func;   /* PrintFN only uses this member of op */
+  PrintFN(&op);
   ForceNewline();
   sprintf(lineBuf, "Current debug level is: %d", yDebugLevel);
   PrintFunc(lineBuf);

@@ -1,5 +1,5 @@
 /*
- * $Id: opsv.c,v 1.2 2005-09-28 06:17:33 thiebaut Exp $
+ * $Id: opsv.c,v 1.3 2007-04-06 22:04:33 thiebaut Exp $
  *
  * Load up virtual functions for the various DataBlock and Symbol types.
  */
@@ -566,7 +566,7 @@ Operations functionOps = {
   &AddX, &SubtractX, &MultiplyX, &DivideX, &ModuloX, &PowerX,
   &EqualX, &NotEqualX, &GreaterX, &GreaterEQX,
   &ShiftLX, &ShiftRX, &OrX, &AndX, &XorX,
-  &AssignX, &EvalFN, &SetupX, &GetMemberX, &MatMultX, &PrintFN
+  &AssignX, &EvalFN, &y_setup_func_hack, &GetMemberX, &MatMultX, &PrintFN
 };
 
 Operations builtinOps = {
@@ -577,7 +577,7 @@ Operations builtinOps = {
   &AddX, &SubtractX, &MultiplyX, &DivideX, &ModuloX, &PowerX,
   &EqualX, &NotEqualX, &GreaterX, &GreaterEQX,
   &ShiftLX, &ShiftRX, &OrX, &AndX, &XorX,
-  &AssignX, &EvalBI, &SetupX, &GetMemberX, &MatMultX, &PrintBI
+  &AssignX, &EvalBI, &y_setup_func_hack, &GetMemberX, &MatMultX, &PrintBI
 };
 
 Operations structDefOps = {

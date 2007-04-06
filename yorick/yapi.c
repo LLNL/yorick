@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.4 2006-05-13 17:30:43 dhmunro Exp $
+ * $Id: yapi.c,v 1.5 2007-04-06 22:04:33 thiebaut Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1197,10 +1197,11 @@ static Operations y_scratch_ops = {
 void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
 {
   y_uo_t *uo;
-  if (!uo_type->uo_ops) {
-    Operations *ops = uo_type->uo_ops = p_malloc(sizeof(Operations));
+  if (! uo_type->uo_ops) {
+    Operations *ops = p_malloc(sizeof(Operations));
     memcpy(ops, &y_scratch_ops, sizeof(Operations));
     ops->typeName = uo_type->type_name;
+    uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
   }
   uo = p_malloc(sizeof(y_uo_t) - sizeof(union y_uo_body_t) + size);
   memset(uo, 0, sizeof(y_uo_t) - sizeof(union y_uo_body_t) + size);
@@ -1208,6 +1209,28 @@ void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
   uo->uo_type = uo_type;
   PushDataBlock(uo);
   return uo->body.c;
+}
+
+/* The function yfunc_obj initializes uo_ops member in a special way
+ * for function like objects.  It must be applied prior to the first
+ * call to ypush_obj.  Alternatively, you may push a new
+ * function-like object by:
+ *   user_object = ypush_obj(yfunc_obj(uo_type), sizeof(user_object_type))
+ */
+y_userobj_t *
+yfunc_obj(y_userobj_t *uo_type)
+{
+  Operations *ops;
+  if (! uo_type->uo_ops) {
+    if (! uo_type->on_eval) {
+      y_error("(BUG) foreign function-like object with no on_eval method makes no sense");
+    }
+    ops = p_malloc(sizeof(Operations));
+    memcpy(ops, &y_scratch_ops, sizeof(Operations));
+    ops->typeName = uo_type->type_name;
+    uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
+  }
+  return uo_type;
 }
 
 static void
