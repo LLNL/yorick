@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.5 2007-04-06 22:04:33 thiebaut Exp $
+ * $Id: yapi.c,v 1.6 2007-04-06 22:12:29 thiebaut Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1227,6 +1227,7 @@ yfunc_obj(y_userobj_t *uo_type)
     }
     ops = p_malloc(sizeof(Operations));
     memcpy(ops, &y_scratch_ops, sizeof(Operations));
+    ops->Setup = y_setup_func_hack;
     ops->typeName = uo_type->type_name;
     uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
   }
