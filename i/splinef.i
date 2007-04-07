@@ -1,5 +1,5 @@
 /* splinef.i
- * $Id: splinef.i,v 1.1 2007-03-04 05:13:15 dhmunro Exp $
+ * $Id: splinef.i,v 1.2 2007-04-07 01:16:12 dhmunro Exp $
  * piecewise cubic interpolation functions
  */
 /* Copyright (c) 2007, The Regents of the University of California.
@@ -197,14 +197,29 @@ func splinelsq(y, x, xfit, weight=, y0=, dydx0=, y1=, dydx1=, constrain=)
   dx = xu - xl;
   rdx = 1./dx;
 
-  ld = x-xl;
+  ld = xhi = x-xl;
   lx = ld * rdx;
   ud = lx*lx;
   lx = 1.-lx;
   ld *= lx*lx;
   uf = (1.+lx+lx)*ud;
-  ud *= -lx*dx;
+  ud *= xlo = -lx*dx;
   lf = 1.-uf;
+
+  mist = where(l==1);
+  if (numberof(mist)) {
+    lf(mist) = ld(mist) = 0.;
+    uf(mist) = 1.;
+    ud(mist) = xlo(mist);
+    xlo = [];
+  }
+  mist = where(l==np1);
+  if (numberof(mist)) {
+    uf(mist) = ud(mist) = 0.;
+    lf(mist) = 1.;
+    ld(mist) = xhi(mist);
+    xhi = [];
+  }
 
   if (is_void(weight)) weight = 1.0;
   lfy = histogram(l, lf*y*weight, top=np1);
