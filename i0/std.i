@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.13 2007-03-28 09:58:21 thiebaut Exp $
+ * $Id: std.i,v 1.14 2007-04-16 16:02:54 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2878,7 +2878,7 @@ func _not_cdf(file)
  */
 {
   i= array(char, 4);
-  _read, f, 0, i;
+  _read, file, 0, i;
   if (string(&i)!="CDF\001") return 1;  /* test magic number */
   require, "netcdf.i";
   return raw_not_cdf(file);
