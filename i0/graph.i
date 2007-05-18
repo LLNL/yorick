@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.2 2006-02-15 03:57:07 dhmunro Exp $
+ * $Id: graph.i,v 1.3 2007-05-18 01:32:06 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -279,7 +279,7 @@ func eps(name, pdf=)
   close, f;
   return name+".eps";
 }
-if (is_void(EPSGS_CMD)) EPSGS_CMD= "gs -q -dNOPAUSE -dSAFER -dBATCH";
+if (is_void(EPSGS_CMD)) EPSGS_CMD= "gs -q -dNOPAUSE -dBATCH";
 
 func pdf(name)
 /* DOCUMENT pdf, name
