@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.6 2007-04-06 22:12:29 thiebaut Exp $
+ * $Id: yapi.c,v 1.7 2007-06-11 10:24:14 thiebaut Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -229,8 +229,8 @@ ygeta_c(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &charOps) {
     int is_db = (sp[-iarg].ops == &dataBlockSym);
-    y_to_c[ops->promoteID](p, ypush_array(&charStruct, type->dims),
-                           type->number);
+    unsigned char *q = ypush_array(&charStruct, type->dims);
+    y_to_c[ops->promoteID](p, q, type->number);
     if (is_db) {
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
@@ -238,6 +238,7 @@ ygeta_c(int iarg, long *ntot, long *dims)
     sp--;
     sp[-iarg].value.db = sp[1].value.db;
     sp[-iarg].ops = &dataBlockSym;
+    return (char *)q;
   }
   return p;
 }
@@ -270,8 +271,8 @@ ygeta_s(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &shortOps) {
     int is_db = (sp[-iarg].ops == &dataBlockSym);
-    y_to_s[ops->promoteID](p, ypush_array(&shortStruct, type->dims),
-                           type->number);
+    short *q = ypush_array(&shortStruct, type->dims);
+    y_to_s[ops->promoteID](p, q, type->number);
     if (is_db) {
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
@@ -279,6 +280,7 @@ ygeta_s(int iarg, long *ntot, long *dims)
     sp--;
     sp[-iarg].value.db = sp[1].value.db;
     sp[-iarg].ops = &dataBlockSym;
+    return q;
   }
   return p;
 }
@@ -311,13 +313,14 @@ ygeta_i(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &intOps) {
     if (type->dims) {
-      y_to_i[ops->promoteID](p, ypush_array(&intStruct, type->dims),
-                             type->number);
+      int *q = ypush_array(&intStruct, type->dims);
+      y_to_i[ops->promoteID](p, q, type->number);
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
       sp--;
       sp[-iarg].value.db = sp[1].value.db;
       sp[-iarg].ops = &dataBlockSym;
+      return q;
     } else {
       int is_db = (sp[-iarg].ops == &dataBlockSym);
       int x;
@@ -325,6 +328,7 @@ ygeta_i(int iarg, long *ntot, long *dims)
       sp[-iarg].ops = &intScalar;
       if (is_db) Unref(sp[-iarg].value.db);
       sp[-iarg].value.i = x;
+      return &(sp[-iarg].value.i);
     }
   }
   return p;
@@ -358,13 +362,14 @@ ygeta_l(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &longOps) {
     if (type->dims) {
-      y_to_l[ops->promoteID](p, ypush_array(&longStruct, type->dims),
-                             type->number);
+      long *q = ypush_array(&longStruct, type->dims);
+      y_to_l[ops->promoteID](p, q, type->number);
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
       sp--;
       sp[-iarg].value.db = sp[1].value.db;
       sp[-iarg].ops = &dataBlockSym;
+      return q;
     } else {
       int is_db = (sp[-iarg].ops == &dataBlockSym);
       long x;
@@ -372,6 +377,7 @@ ygeta_l(int iarg, long *ntot, long *dims)
       sp[-iarg].ops = &longScalar;
       if (is_db) Unref(sp[-iarg].value.db);
       sp[-iarg].value.l = x;
+      return &(sp[-iarg].value.l);
     }
   }
   return p;
@@ -393,6 +399,7 @@ ygets_l(int iarg)
       sp[-iarg].ops = &longScalar;
       if (is_db) Unref(sp[-iarg].value.db);
       sp[-iarg].value.l = x;
+      return x;
     }
     return *(long *)p;
   }
@@ -428,8 +435,8 @@ ygeta_f(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &floatOps) {
     int is_db = (sp[-iarg].ops == &dataBlockSym);
-    y_to_f[ops->promoteID](p, ypush_array(&floatStruct, type->dims),
-                           type->number);
+    float *q = ypush_array(&floatStruct, type->dims);
+    y_to_f[ops->promoteID](p, q, type->number);
     if (is_db) {
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
@@ -437,6 +444,7 @@ ygeta_f(int iarg, long *ntot, long *dims)
     sp--;
     sp[-iarg].value.db = sp[1].value.db;
     sp[-iarg].ops = &dataBlockSym;
+    return q;
   }
   return p;
 }
@@ -469,13 +477,14 @@ ygeta_d(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &doubleOps) {
     if (type->dims) {
-      y_to_d[ops->promoteID](p, ypush_array(&doubleStruct, type->dims),
-                             type->number);
+      double *q = ypush_array(&doubleStruct, type->dims);
+      y_to_d[ops->promoteID](p, q, type->number);
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
       sp--;
       sp[-iarg].value.db = sp[1].value.db;
       sp[-iarg].ops = &dataBlockSym;
+      return q;
     } else {
       int is_db = (sp[-iarg].ops == &dataBlockSym);
       double x;
@@ -483,6 +492,7 @@ ygeta_d(int iarg, long *ntot, long *dims)
       sp[-iarg].ops = &doubleScalar;
       if (is_db) Unref(sp[-iarg].value.db);
       sp[-iarg].value.d = x;
+      return &(sp[-iarg].value.d);
     }
   }
   return p;
@@ -499,11 +509,12 @@ ygets_d(int iarg)
   if (!type->dims && ops->promoteID<T_COMPLEX) {
     if (ops != &doubleOps) {
       int is_db = (sp[-iarg].ops == &dataBlockSym);
-      long x;
-      y_to_l[ops->promoteID](p, &x, type->number);
-      sp[-iarg].ops = &longScalar;
+      double x;
+      y_to_d[ops->promoteID](p, &x, type->number);
+      sp[-iarg].ops = &doubleScalar;
       if (is_db) Unref(sp[-iarg].value.db);
-      sp[-iarg].value.l = x;
+      sp[-iarg].value.d = x;
+      return x;
     }
     return *(double *)p;
   }
@@ -539,8 +550,8 @@ ygeta_z(int iarg, long *ntot, long *dims)
   yget_dims(ntot, dims, type);
   if (ops != &complexOps) {
     int is_db = (sp[-iarg].ops == &dataBlockSym);
-    y_to_z[ops->promoteID](p, ypush_array(&complexStruct, type->dims),
-                           type->number);
+    double *q = ypush_array(&complexStruct, type->dims);
+    y_to_z[ops->promoteID](p, q, type->number);
     if (is_db) {
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
@@ -548,6 +559,7 @@ ygeta_z(int iarg, long *ntot, long *dims)
     sp--;
     sp[-iarg].value.db = sp[1].value.db;
     sp[-iarg].ops = &dataBlockSym;
+    return q;
   }
   return p;
 }
@@ -618,13 +630,14 @@ ygeta_dz(int iarg, long *ntot, long *dims, int *is_z)
   *is_z = (ops==&complexOps);
   if (ops!=&doubleOps && !*is_z) {
     if (type->dims) {
-      y_to_d[ops->promoteID](p, ypush_array(&doubleStruct, type->dims),
-                             type->number);
+      double *q = ypush_array(&doubleStruct, type->dims);
+      y_to_d[ops->promoteID](p, q, type->number);
       sp[-iarg-1].ops = &intScalar;
       Unref(sp[-iarg-1].value.db);
       sp--;
       sp[-iarg].value.db = sp[1].value.db;
       sp[-iarg].ops = &dataBlockSym;
+      return q;
     } else {
       int is_db = (sp[-iarg].ops == &dataBlockSym);
       double x;
@@ -632,6 +645,7 @@ ygeta_dz(int iarg, long *ntot, long *dims, int *is_z)
       sp[-iarg].ops = &doubleScalar;
       if (is_db) Unref(sp[-iarg].value.db);
       sp[-iarg].value.d = x;
+      return &(sp[-iarg].value.d);
     }
   }
   return p;
