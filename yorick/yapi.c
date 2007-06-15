@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.7 2007-06-11 10:24:14 thiebaut Exp $
+ * $Id: yapi.c,v 1.8 2007-06-15 03:28:12 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -870,6 +870,7 @@ char *
 ypush_c(long *dims)
 {
   Array *a = PushDataBlock(NewArray(&charStruct, ypush_dims(dims)));
+  memset(a->value.c, 0, a->type.number*a->type.base->size);
   return a->value.c;
 }
 
@@ -877,6 +878,7 @@ short *
 ypush_s(long *dims)
 {
   Array *a = PushDataBlock(NewArray(&shortStruct, ypush_dims(dims)));
+  memset(a->value.c, 0, a->type.number*a->type.base->size);
   return a->value.s;
 }
 
@@ -889,6 +891,7 @@ ypush_i(long *dims)
     return &sp[0].value.i;
   } else {
     Array *a = PushDataBlock(NewArray(&intStruct, ypush_dims(dims)));
+    memset(a->value.c, 0, a->type.number*a->type.base->size);
     return a->value.i;
   }
 }
@@ -902,6 +905,7 @@ ypush_l(long *dims)
     return &sp[0].value.l;
   } else {
     Array *a = PushDataBlock(NewArray(&longStruct, ypush_dims(dims)));
+    memset(a->value.c, 0, a->type.number*a->type.base->size);
     return a->value.l;
   }
 }
@@ -910,6 +914,7 @@ float *
 ypush_f(long *dims)
 {
   Array *a = PushDataBlock(NewArray(&floatStruct, ypush_dims(dims)));
+  memset(a->value.c, 0, a->type.number*a->type.base->size);
   return a->value.f;
 }
 
@@ -922,6 +927,7 @@ ypush_d(long *dims)
     return &sp[0].value.d;
   } else {
     Array *a = PushDataBlock(NewArray(&doubleStruct, ypush_dims(dims)));
+    memset(a->value.c, 0, a->type.number*a->type.base->size);
     return a->value.d;
   }
 }
@@ -930,6 +936,7 @@ double *
 ypush_z(long *dims)
 {
   Array *a = PushDataBlock(NewArray(&complexStruct, ypush_dims(dims)));
+  memset(a->value.c, 0, a->type.number*a->type.base->size);
   return a->value.d;
 }
 
