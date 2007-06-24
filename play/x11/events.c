@@ -1,5 +1,5 @@
 /*
- * $Id: events.c,v 1.2 2007-03-19 07:31:30 thiebaut Exp $
+ * $Id: events.c,v 1.3 2007-06-24 20:32:49 dhmunro Exp $
  * X11 event handler
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -254,6 +254,14 @@ x_event(void *wsdata)
     if (xon_destroy && event.xclient.format==32 &&
         event.xclient.message_type==xdpy->wm_protocols &&
         event.xclient.data.l[0]==xdpy->wm_delete) {
+      xon_destroy(w->context);
+      p_destroy(w);
+    }
+    break;
+
+  case DestroyNotify:
+    /* this is equivalent to above ClientMessage for subwindow case */
+    if (xon_destroy && w->d!=None) {
       xon_destroy(w->context);
       p_destroy(w);
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: pwin.c,v 1.2 2006-03-25 03:32:36 dhmunro Exp $
+ * $Id: pwin.c,v 1.3 2007-06-24 20:32:49 dhmunro Exp $
  * routines to create graphics devices for MS Windows
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -29,6 +29,42 @@ p_cursor(p_win *w, int cursor)
   if (!w->cursor)
     w->cursor = w->s->cursors[cursor] = w_cursor(cursor);
   SetCursor(w->cursor);
+}
+
+p_win *p_subwindow(p_scr *s, int width, int height,
+                   unsigned long parent_id, int x, int y,
+                   p_col_t bg, int hints, void *ctx)
+{
+  p_win *pw = w_pwin(ctx, s, 0, 0, bg);
+  HWND hw;
+  HWND parent = (HWND)parent_id;
+  DWORD xstyle = 0;
+  DWORD style = WS_CHILD;
+
+  if (!pw) return 0;
+
+  pw->ancestor = 0;
+  style |= WS_CHILD;
+
+  hw = CreateWindowEx(xstyle, w_win_class, 0, style,
+                      x, y, width, height, parent, 0,
+                      w_app_instance, pw);
+  /* CreateWindow already causes several calls to w_winproc
+   * (including WM_CREATE) which will not have GWL_USERDATA set
+   * -- WM_CREATE handler fills in and initializes pw */
+  if (hw) {
+    if (hints & P_RGBMODEL) {
+      p_palette(pw, p_595, 225);
+      pw->rgb_mode = 1;
+    }
+    if (!(hints&P_NOKEY)) SetActiveWindow(hw);
+    ShowWindow(hw, (hints&P_NOKEY)? SW_SHOWNA : SW_SHOW);
+  } else {
+    p_destroy(pw);
+    pw = 0;
+  }
+
+  return pw;
 }
 
 p_win *
@@ -64,8 +100,8 @@ p_window(p_scr *s, int width, int height, char *title,
   }
 
   hw = CreateWindowEx(xstyle, w_win_class, parent? 0 : title, style,
-                     CW_USEDEFAULT, 0, width, height, parent, 0,
-                     w_app_instance, pw);
+                      CW_USEDEFAULT, 0, width, height, parent, 0,
+                      w_app_instance, pw);
   /* CreateWindow already causes several calls to w_winproc
    * (including WM_CREATE) which will not have GWL_USERDATA set
    * -- WM_CREATE handler fills in and initializes pw */

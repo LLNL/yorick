@@ -1,5 +1,5 @@
 /*
- * $Id: pwin.c,v 1.2 2006-10-01 19:49:41 dhmunro Exp $
+ * $Id: pwin.c,v 1.3 2007-06-24 20:32:49 dhmunro Exp $
  * X11 window management procedures
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -133,6 +133,21 @@ p_winloc(p_win *w, int *x, int *y)
 static XSizeHints *size_hints = 0;
 static XWMHints *wm_hints = 0;
 static XClassHint *class_hint = 0;
+
+p_win *p_subwindow(p_scr *s, int width, int height,
+                   unsigned long parent_id, int x, int y,
+                   p_col_t bg, int hints, void *ctx)
+{
+  p_win *w = x_create(s, (Window)parent_id, hints, ctx,
+                      x, y, width, height, 2, bg, PWIN_PLAIN);
+  if (w) {
+    Display *dpy = s->xdpy->dpy;
+    if (hints&P_RGBMODEL) x_rgb_palette(w);
+    XMapWindow(dpy, w->d);
+    if (p_signalling) p_abort();
+  }
+  return w;
+}
 
 p_win *
 p_window(p_scr *s, int width, int height, char *title,

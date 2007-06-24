@@ -1,5 +1,5 @@
 /*
- * $Id: play.h,v 1.2 2007-03-19 07:31:30 thiebaut Exp $
+ * $Id: play.h,v 1.3 2007-06-24 20:32:49 dhmunro Exp $
  * portability layer programming model declarations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -90,6 +90,9 @@ PLUG_API void p_winloc(p_win *w, int *x, int *y);
 /* screen graphics window and pixmap management */
 PLUG_API p_win *p_window(p_scr *s, int width, int height, char *title,
                          p_col_t bg, int hints, void *ctx);
+PLUG_API p_win *p_subwindow(p_scr *s, int width, int height,
+                            unsigned long parent_id, int x, int y,
+                            p_col_t bg, int hints, void *ctx);
 PLUG_API p_win *p_menu(p_scr *s, int width, int height, int x, int y,
                        p_col_t bg, void *ctx);
 PLUG_API p_win *p_offscreen(p_win *parent, int width, int height);

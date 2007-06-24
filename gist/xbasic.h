@@ -1,5 +1,5 @@
 /*
- * $Id: xbasic.h,v 1.1 2005-09-18 22:04:30 dhmunro Exp $
+ * $Id: xbasic.h,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
  * Declare the basic play engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -55,6 +55,10 @@ PLUG_API int gx75height, gx100height;  /* defaults are 450 and 600 pixels */
 #define DefaultTopHeight(dpi) \
   (gx75width<gx100width?((dpi)*gx100height)/100:gx100height)
 #define PixelsPerNDC(dpi) ((dpi)/ONE_INCH)
+
+/* hack for p_subwindow communication */
+PLUG_API unsigned long gx_parent;
+PLUG_API int gx_xloc, gx_yloc;
 
 /* GxEngine creates an XEngine and adds it to the list of GIST engines.
    The top window will generally be smaller than the graphics

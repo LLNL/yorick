@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.c,v 1.1 2005-09-18 22:04:23 dhmunro Exp $
+ * $Id: xfancy.c,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -114,8 +114,11 @@ GpFXEngine(char *name, int landscape, int dpi, char *displayName)
   /* possibly want optional P_RGBMODEL as well */
   hints = (gist_private_map?P_PRIVMAP:0) | (gist_input_hint?0:P_NOKEY) |
     (gist_rgb_hint?P_RGBMODEL:0);
-  fxe->xe.win = fxe->xe.w =
+  fxe->xe.win = fxe->xe.w = gx_parent?
+    p_subwindow(s, topWidth, topHeight+heightButton+2,
+                gx_parent, gx_xloc, gx_yloc, P_BG, hints, fxe) :
     p_window(s, topWidth, topHeight+heightButton+2, name, P_BG, hints, fxe);
+  gx_parent = 0;
   if (!fxe->xe.win) {
     GpDelEngine(&fxe->xe.e);
     return 0;

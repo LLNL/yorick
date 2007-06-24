@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.3 2007-05-18 01:32:06 dhmunro Exp $
+ * $Id: graph.i,v 1.4 2007-06-24 20:32:49 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -15,7 +15,8 @@ extern window;
 /* DOCUMENT window, n, display="host:server.screen", dpi=100/75, wait=0/1,
                        private=0/1, hcp="hcp_filename", dump=0/1,
                        legends=1/0, style="style_sheet_filename",
-                       width=wpixels,height=hpixels,rgb=1
+                       width=wpixels,height=hpixels,rgb=1,
+                       parent=id,xpos=x_in_parent,ypos=y_in_parent
 
      select window N as the current graphics output window.  N may
      range from 0 to 7, inclusive.  Each graphics window corresponds to
@@ -87,6 +88,12 @@ extern window;
      the number and location of coordinate systems, tick and label styles,
      and the like.  Other choices include "axes.gs", "boxed.gs",
      "work2.gs", and "boxed2.gs".
+
+     The parent=id keyword can be used to make the yorick window a
+     subwindow of an existing window.  The id is an integer, which is
+     the system-dependent window id that must be retrieved from the
+     application which owns the parent window.  When parent= is defined,
+     xloc= and yloc= specify the offset in that window; both default to 0.
 
      If invoked as a function, window(...) returns the current
      window number.

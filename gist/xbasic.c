@@ -1,5 +1,5 @@
 /*
- * $Id: xbasic.c,v 1.1 2005-09-18 22:04:21 dhmunro Exp $
+ * $Id: xbasic.c,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1400,6 +1400,9 @@ int gx100width = 600;
 int gx75height = 450;
 int gx100height = 600;
 
+unsigned long gx_parent = 0;
+int gx_xloc=0, gx_yloc=0;
+
 int gist_private_map = 0;
 int gist_input_hint = 0;
 int gist_rgb_hint = 0;
@@ -1431,8 +1434,11 @@ GpBXEngine(char *name, int landscape, int dpi, char *displayName)
   /* possibly want optional P_RGBMODEL as well */
   hints = (gist_private_map?P_PRIVMAP:0) | (gist_input_hint?0:P_NOKEY) |
     (gist_rgb_hint?P_RGBMODEL:0);
-  xeng->win = xeng->w =
+  xeng->win = xeng->w = gx_parent?
+    p_subwindow(s, topWidth, topHeight,
+                gx_parent, gx_xloc, gx_yloc, P_BG, hints, xeng) :
     p_window(s, topWidth, topHeight, name, P_BG, hints, xeng);
+  gx_parent = 0;
   if (!xeng->win) {
     GpDelEngine(&xeng->e);
     return 0;

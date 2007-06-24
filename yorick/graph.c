@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.1 2005-09-18 22:04:05 dhmunro Exp $
+ * $Id: graph.c,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1931,10 +1931,10 @@ static char *GetHCPname(int n)
 }
 
 #undef N_KEYWORDS
-#define N_KEYWORDS 11
+#define N_KEYWORDS 14
 static char *windowKeys[N_KEYWORDS+1]= {
   "display", "dpi", "private", "hcp", "legends", "dump", "style", "wait",
-  "width", "height", "rgb", 0 };
+  "width", "height", "rgb", "parent", "xpos", "ypos", 0 };
 
 static Instruction *yg_pc_resume = 0;
 extern void yg_got_expose(void);
@@ -1942,6 +1942,7 @@ extern Instruction *ym_suspend(void);
 extern void ym_resume(Instruction *);
 extern int yg_blocking;
 int yg_blocking = 0;
+extern unsigned long gx_parent;
 
 void Y_window(int nArgs)
 {
@@ -1973,7 +1974,8 @@ void Y_window(int nArgs)
   /* get current palette for this graphics window */
   nColors= GhGetPalette(n, &palette);
 
-  /* check for width and height specs */
+  /* check for width and height specs, subwindow hack */
+  gx_parent = 0;
 #ifndef NO_XLIB
   if (YNotNil(keySymbols[8])) {
     extern int gx75width, gx100width;
@@ -1986,6 +1988,15 @@ void Y_window(int nArgs)
     int height= (int)YGetInteger(keySymbols[9]);
     if (height>30) gx75height= gx100height= height;
     else { gx75height= 450; gx100height= 600; }
+  }
+  if (YNotNil(keySymbols[11])) {
+    extern int gx_xloc, gx_yloc;
+    gx_parent = (unsigned long)YGetInteger(keySymbols[11]);
+    gx_xloc = gx_yloc = 0;
+    if (YNotNil(keySymbols[12]))
+      gx_xloc = (int)YGetInteger(keySymbols[12]);
+    if (YNotNil(keySymbols[13]))
+      gx_yloc = (int)YGetInteger(keySymbols[13]);
   }
 #endif
 
