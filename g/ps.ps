@@ -12,7 +12,7 @@
 %%BeginProlog
 %
 % Gist PostScript Prolog
-% $Id: ps.ps,v 1.1 2005-09-18 22:06:20 dhmunro Exp $
+% $Id: ps.ps,v 1.2 2007-06-29 15:09:20 dhmunro Exp $
 % Copyright (c) 1994.  The Regents of the University of California.
 %               All rights reserved.
 %
@@ -323,14 +323,14 @@ currentdict end def
 } bind def
 /F {
   newpath GPT moveto
-  1 sub { GPT lineto } repeat closepath fill
+  1 sub { GPT lineto } repeat closepath eofill
 } bind def
 /E {
   dup 0 eq {
     pop stroke
   } {
     newpath GPT moveto
-    1 sub { GPT lineto } repeat closepath gsave fill grestore
+    1 sub { GPT lineto } repeat closepath gsave eofill grestore
   } ifelse
 } bind def
 /GRGB {
