@@ -1,5 +1,5 @@
 /*
- * $Id: cache.c,v 1.1 2005-09-18 22:03:54 dhmunro Exp $
+ * $Id: cache.c,v 1.2 2007-07-18 02:16:05 dhmunro Exp $
  * Define caching (disk buffering) scheme used for random access
  * binary I/O.
  */
@@ -235,6 +235,7 @@ static long RawWrite(IOStream *file, const void *buf, long addr, long len)
         YcWrite(file, bufc, addr, first); /* clobbers wrtBuffer! */
         addr+= first;
         bufc+= first;
+        block = file->blockList;   /* YcWrite may clobber blockList! */
       }
       /* Must release any cache blocks in this region before this write
          (or update and mark them as not dirty).  */
