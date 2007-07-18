@@ -1,5 +1,5 @@
 /*
- * $Id: cache.c,v 1.2 2007-07-18 02:16:05 dhmunro Exp $
+ * $Id: cache.c,v 1.3 2007-07-18 02:54:42 dhmunro Exp $
  * Define caching (disk buffering) scheme used for random access
  * binary I/O.
  */
@@ -514,6 +514,9 @@ static void FreeCacheBlock(CacheBlock *block)
   if (block->next) block->next->prev= block->prev;
   else if (file) file->blockList= block->prev;
   if (block->prev) block->prev->next= block->next;
+
+  /* probably impossible, but best to be safe */
+  if (block == prevBlock) prevBlock = 0;
 
   p_free(block);
 }
