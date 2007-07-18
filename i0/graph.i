@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.4 2007-06-24 20:32:49 dhmunro Exp $
+ * $Id: graph.i,v 1.5 2007-07-18 05:24:39 thiebaut Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -93,7 +93,7 @@ extern window;
      subwindow of an existing window.  The id is an integer, which is
      the system-dependent window id that must be retrieved from the
      application which owns the parent window.  When parent= is defined,
-     xloc= and yloc= specify the offset in that window; both default to 0.
+     xpos= and ypos= specify the offset in that window; both default to 0.
 
      If invoked as a function, window(...) returns the current
      window number.
@@ -1231,12 +1231,12 @@ extern plq;
      *PROPERTIES(3)   int array, depends on type (names match keywords):
        1 plg:  [color, type, marks, mcolor, marker, rays, closed, smooth]
        2 pldj: [color, type]
-       3 plt:  [color, font, path, justify, opaque]
+       3 plt:  [color, font, orient, justify, opaque]
        4 plm:  [color, type, region, boundary, inhibit]
        5 plf:  [region, edges, ecolor, rgb_flag]
        6 plv:  [region, color, hollow]
        7 plc:  [region, color, type, marks, mcolor, marker, smooth]
-       8 pli:  nil
+       8 pli:  [rgb_flag]
        9 plfp: [edges, ecolor, rgb_flag]
      *PROPERTIES(4)   double array, depends on type (names match keywords):
        1 plg:  [width, msize, mspace, mphase, rspace, rphase, arrowl, arroww]
@@ -1246,7 +1246,8 @@ extern plq;
        5 plf:  [ewidth]
        6 plv:  [width, aspect, scale]
        7 plc:  [width, msize, mspace, mphase]
-       8 pli:  [x0, x1, y0, y1]
+       8 pli:  [x0, y0, x1, y1]
+       9 plfp: [ewidth]
      *PROPERTIES(5)   long array, depends on type (names match arguments):
        1 plg:  [npoints, &x, &y]
        2 pldj: [npoints, &x0, &y0, &x1, &y1]
@@ -1287,7 +1288,7 @@ extern pledit;
              rays, rspace, rphase, arrowl, arroww,
              closed, smooth
        pldj: color, type, width
-       plt:  color, font, height, path, justify, opaque
+       plt:  color, font, height, orient, justify, opaque
        plm:  region, boundary, inhibit, color, type, width
        plf:  region
        plv:  region, color, hollow, width, aspect, scale
@@ -1316,7 +1317,7 @@ extern pldefault;
              marks, mcolor, msize, mspace, mphase,
              rays, rspace, rphase, arrowl, arroww
        pldj: color, type, width
-       plt:  color, font, height, path, justify, opaque
+       plt:  color, font, height, orient, justify, opaque
        plm:  color, type, width
        plv:  color, hollow, width, aspect
        plc:  color, type, width,
