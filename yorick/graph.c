@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
+ * $Id: graph.c,v 1.3 2007-07-18 05:23:08 thiebaut Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2473,7 +2473,7 @@ void Y_animate(int nArgs)
 
 /*--------------------------------------------------------------------------*/
 
-static long prop3sizes[10]= {0, 8, 2, 5, 5, 4, 3, 7, 0, 3};
+static long prop3sizes[10]= {0, 8, 2, 5, 5, 4, 3, 7, 1, 3};
 static long prop4sizes[10]= {0, 8, 1, 3, 1, 1, 3, 4, 4, 1};
 static long prop5sizes[10]= {0, 3, 5, 2, 5, 6, 7, 9, 3, 5};
 
@@ -2813,6 +2813,7 @@ void Y_plq(int nArgs)
         lval[7]= gistD.nLevels;
         lval[8]= ((char *)gistD.levels)-((char *)0);
       } else if (type==8) {           /* pli */
+	ival[0]= gistA.rgb;
         dval[0]= gistD.px;
         dval[1]= gistD.py;
         dval[2]= gistD.qx;
