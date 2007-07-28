@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.c,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
+ * $Id: xfancy.c,v 1.3 2007-07-28 03:34:37 frigaut Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -440,6 +440,10 @@ static char stdFormat[] = "%7.4f";
 static int rubberBanding = 0;
 static int anchorX, anchorY, oldX, oldY;
 
+/* FR, 2007jun11: expose this for use in plugins */
+GpReal xWCS, yWCS;
+int sysWCS;
+
 static void
 MovePointer(FXEngine *fxe, Drauing *drawing,
             int md,int x,int y)
@@ -481,6 +485,11 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
     sprintf(format, "%%s%%2d (%s, %s)", f1, f2);
     sprintf(fxe->msgText, format, locked? "=" : ":", iSystem, xWC, yWC);
 
+    /* FR hack 2007jun11 */
+    xWCS = xWC;
+    yWCS = yWC;
+    sysWCS = iSystem;
+    
     RedrawMessage(fxe);
   }
   if (rubberBanding) DrawRubber(fxe, x, y);
