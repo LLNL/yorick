@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.3 2007-07-18 05:23:08 thiebaut Exp $
+ * $Id: graph.c,v 1.4 2007-07-28 02:15:26 dhmunro Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -26,6 +26,7 @@ static int my_rgb_read(Engine *eng, GpColor *rgb, long *nx, long *ny);
 #  endif
 # endif
 # define RGB_READER g_rgb_read
+extern unsigned long gx_parent;
 #endif
 #ifdef NO_MOUSE
 # ifndef DISPLAY_ZOOM_FACTOR
@@ -1883,6 +1884,7 @@ static void CheckDefaultWindow(void)
 
 #ifndef NO_XLIB
     gist_private_map = gist_rgb_hint = 0;
+    gx_parent = 0;
     ghDevices[0].display=
       DISPLAY_ENGINE(window_name(0), 0, defaultDPI, (char *)0);
     if (!ghDevices[0].display)
@@ -1942,7 +1944,6 @@ extern Instruction *ym_suspend(void);
 extern void ym_resume(Instruction *);
 extern int yg_blocking;
 int yg_blocking = 0;
-extern unsigned long gx_parent;
 
 void Y_window(int nArgs)
 {
@@ -1975,8 +1976,8 @@ void Y_window(int nArgs)
   nColors= GhGetPalette(n, &palette);
 
   /* check for width and height specs, subwindow hack */
-  gx_parent = 0;
 #ifndef NO_XLIB
+  gx_parent = 0;
   if (YNotNil(keySymbols[8])) {
     extern int gx75width, gx100width;
     int width= (int)YGetInteger(keySymbols[8]);

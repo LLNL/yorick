@@ -1,5 +1,5 @@
 /*
- * $Id: yorick.c,v 1.1 2005-09-18 22:03:56 dhmunro Exp $
+ * $Id: yorick.c,v 1.2 2007-07-28 02:15:26 dhmunro Exp $
  *
  * Based on Berkeley Yacc (byacc) parser generated from yorick.y.
  * Modified to handle parser stack overflow gracefully.
@@ -1223,7 +1223,7 @@ static int yyerrflag;
 static int yychar;
 static short *yyssp;
 static YYSTYPE *yyvsp;
-static YYSTYPE yyval;
+static YYSTYPE yyval, yy_zero;
 static YYSTYPE yylval;
 static short *yyss= 0;
 static YYSTYPE *yyvs= 0;
@@ -2160,7 +2160,8 @@ yyreduce:
                 yystate, yyn, yyrule[yyn]);
 #endif
     yym = yylen[yyn];
-    yyval = yyvsp[1-yym];
+    /* yyvsp[1] can be beyond end of yyval stack -- do not access */
+    yyval = yym? yyvsp[1-yym] : yy_zero;
     switch (yyn)
     {
 case 2:
