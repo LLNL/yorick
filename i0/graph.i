@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.5 2007-07-18 05:24:39 thiebaut Exp $
+ * $Id: graph.i,v 1.6 2007-07-29 21:53:33 frigaut Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -19,7 +19,7 @@ extern window;
                        parent=id,xpos=x_in_parent,ypos=y_in_parent
 
      select window N as the current graphics output window.  N may
-     range from 0 to 7, inclusive.  Each graphics window corresponds to
+     range from 0 to 63, inclusive.  Each graphics window corresponds to
      an X window, and optionally has its own associated hardcopy file.
      If N is omitted, it defaults to the current coordinate system.
 
@@ -104,7 +104,7 @@ extern window;
 func winkill(n)
 /* DOCUMENT winkill
          or winkill, n
-     deletes the current graphics window, or graphics window N (0-7).
+     deletes the current graphics window, or graphics window N (0-63).
    SEE ALSO: window
  */
 {
