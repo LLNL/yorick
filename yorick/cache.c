@@ -1,5 +1,5 @@
 /*
- * $Id: cache.c,v 1.3 2007-07-18 02:54:42 dhmunro Exp $
+ * $Id: cache.c,v 1.4 2007-08-04 01:03:01 dhmunro Exp $
  * Define caching (disk buffering) scheme used for random access
  * binary I/O.
  */
@@ -243,7 +243,9 @@ static long RawWrite(IOStream *file, const void *buf, long addr, long len)
       while (block && block->nextAddress>addr) {
         prevBlock= block->prev;
         FreeCacheBlock(block);  /* take easy way out for now... */
+        block = prevBlock;
       }
+      prevBlock = 0;
       file->ioOps->Seek(file, addr);
       file->ioOps->Write(file, bufc, sizeof(char), final-addr);
       if (last>final) {
