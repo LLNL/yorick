@@ -1,5 +1,5 @@
 /*
- * $Id: ps.c,v 1.1 2005-09-18 22:04:30 dhmunro Exp $
+ * $Id: ps.c,v 1.2 2007-08-31 17:13:00 dhmunro Exp $
  * Implement the PostScript engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1284,7 +1284,6 @@ static int DrawCells(Engine *engine, GpReal px, GpReal py, GpReal qx,
         now[nc++] = hexChar[ccell[2]&0xf];
       } else {
         color= colors[i+j];
-        i++;
         if (color>=nColors && nColors>0) color= nColors-1;
         if (!colorMode) color= (P_R(palette[color])+
                                 P_G(palette[color])+P_B(palette[color]))/3;
@@ -1295,6 +1294,7 @@ static int DrawCells(Engine *engine, GpReal px, GpReal py, GpReal qx,
           now[nc++]= hexChar[color];
         }
       }
+      i++;
     }
     now[nc]= '\0';
     psEngine->nchars= nc;
