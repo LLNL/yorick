@@ -1,3 +1,22 @@
+yorick (2.1.04+dfsg-1) unstable; urgency=low
+
+  * new upstream release.
+  * added link from /usr/lib/yorick/LICENSE to
+       /usr/share/doc/yorick/copyright. Closes: #399191
+  * minor doc corrections. Closes: #399192
+  * improved emacs integration.
+       If .i files have no association yet, they get
+       associated to yorick-mode. Closes: #399193
+  * modified dependencies for binNMU-safeness. Closes: #435966
+  * menu entry updated to new hierarchy, yorick is now found in
+       Applications/Science/Mathematics.
+  * installation scripts updated to use debconf for prompting.
+  * if /usr/lib/yorick/packages/pkg_setup.i exists, it is moved to
+       /etc/yorick/packages/. The link normal link is now part of the
+       package.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Thu, 20 Sep 2007 10:33:53 +0200
+
 yorick (2.1.01cvs20060706-1) unstable; urgency=low
 
   * new maintainer. Closes: #357679

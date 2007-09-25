@@ -13,7 +13,9 @@ Debian treatment for Yorick add-on packages
  3.2 Why?
  3.3 How?
 
-4 ERROR (*main*) autoload variable must be nil initially
+4 Bugs
+ 4.1 ERROR (*main*) autoload variable must be nil initially
+ 4.2 GISTPATH
 
 1) What are Yorick add-on packages?
 -----------------------------------
@@ -61,7 +63,7 @@ To install packages using the pkg_mngr, simply install the Debian package
  pkg_list;               // lists available packages
  pkg_install,"pkg_name"; // replace pkg_name by the actual name
 
-//install user-wide or at another location:
+//install at the user level or at another location:
 
  #include "pkg_mngr.i";  // you then get a message that a special Debian
                          // configuration has been loaded
@@ -95,7 +97,7 @@ step to install at a custom place. For instance:
       DEST_Y_HOME=/usr/local/lib/yorick \
       install
 
-# user-wide, canonical place (~/.yorick):
+# per-user, canonical place (~/.yorick):
  make DEST_Y_SITE=~/.yorick \
       DEST_Y_HOME=~/.yorick \
       install
@@ -138,7 +140,7 @@ in the same directory. The following is advisable:
  3.2 Why?
  --------
 
-Apt is not aware installed through the pkg_mngr. On the other hand, the
+Apt is not aware of packages installed through the pkg_mngr. On the other hand, the
 pkg_mngr is aware of packages installed through apt, but not that they have
 been installed through apt. So you could easily install a package with apt and
 remove it with the pkg_mngr, leaving your system in an inconsistent
@@ -174,19 +176,22 @@ There are copies of these two files in /usr/share/doc/yorick/examples/ .
 During installation (or upgrade) of the Yorick package, the postinst script
 checks whether the file /usr/lib/yorick/packages/pkg_setup.i already
 exists. This would be a sign that the sysadmin has already used the package
-manager to install add-ons in the main Yorick directory. In this case, the two
-configuration files are still installed, but the link is not created, so the
-pkg_mngr will continue using the main directory. The sysadmin is prompted to
-read this file (README.Debian.packages) once and an empty file
-/etc/yorick/packages/pkg_setup_may_use_Y_HOME is created so as not to prompt
-them again upon upgrade.
+manager to install add-ons in the main Yorick directory. In this case:
+ 1) any pre-existing /etc/yorickpackages/pkg_setup.i is moved to
+    packages/pkg_setup.i.dpkg-bak;
+ 2) the pre-existing /usr/lib/yorick/packages/pkg_setup.i is moved to
+    /etc/yorick/packages/pkg_setup.i;
+ 3) dpkg asks the admin whether to install the new Debian file or keep the old.
 
-If this is your case and you want to revert to the default Debian behavior:
+If you choose to keep your old configuration, pkg_mngr will continue using
+the main yorick directory foor it's packages.
+
+If this is your case, you certainly want to revert to the default Debian behavior:
   - start Yorick as root and execute:
     pkg_list;       // note the installed packages;
     pkg_remove,"*"; // remove them;
     quit;           // exit Yorick
-  - remove /usr/lib/yorick/packages/pkg_setup.i and make it a link to
+  - move or copy /etc/yorick/packages/pkg_setup.dpkg-new to
     /etc/yorick/packages/pkg_setup.i;
   - start Yorick again and reinstall the packages:
     #include "pkg_mngr.i";
@@ -194,14 +199,16 @@ If this is your case and you want to revert to the default Debian behavior:
     pkg_install,"package";                   // for a single package, or
     pkg_install,["package1","package2",...]; // for several packages
     quit;
-  - you can also remove /etc/yorick/packages/pkg_setup_may_use_Y_HOME, but it
-    will be removed during next upgrade anyway.
 
 
-4) ERROR (*main*) autoload variable must be nil initially
+4) Bugs
+-------
+
+ 4.1) ERROR (*main*) autoload variable must be nil initially
+ -----------------------------------------------------------
 
 This error is due to the autoload() function and happens when the same package
-is installed twice, for instance both system-wide and user-wide.
+is installed twice, for instance both system-wide and per-user.
 
 More precisely, upon Yorick startup, if a package is installed twice in your
 path, you will get an error such as:
@@ -230,4 +237,15 @@ If yes, then you can have the error disappear by doing the following:
 This issue is being thought in depth by upstream.
 
 
+ 4.2) GISPATH
+ ------------
+
+As of writing, the path used for style files (.gs) and palette files (.gp)
+files (GISPATH variable) cannot be set from within Yorick. It can be set by
+setting the GISTPATH environment variable prior to starting Yorick,
+though. Functions in the pathfun.i file set the GISTPATH variable to no avail,
+this is a bug.
+
+
 Thibaut Paumard <paumard@users.sourceforge.net>
+Wed, 19 Sep 2007 12:52:06 +0200

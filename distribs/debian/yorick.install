@@ -1,0 +1,3 @@
+build/lib usr
+debian/etc/yorick etc
+build/50yorick-auto.el etc/emacs/site-start.d

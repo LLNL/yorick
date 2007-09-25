@@ -1,7 +1,7 @@
 This package was debianized by Thibaut Paumard <paumard@users.sourceforge.net> on
 Fri,  5 May 2006 16:43:44 +0200.
 
-It was downloaded from yorick.cvs.sourceforge.net:/cvsroot/yorick (module yorick)
+It was downloaded from http://dl.sourceforge.net/sourceforge/yorick/yorick-2.1.04.tgz
 
 Author: David H. Munro
 
@@ -125,5 +125,5 @@ The the content of the upstream `opengl' directory may not be DFSG-free as it
 uses GLX. It is not used and is removed from the Debian source tree. For
 OpenGL support, look at yorick-gl in non-free.
 
-The content of the debian/ directory is Copyright (C) 2006 Thibaut Paumard,
-under GPL.
+The content of the debian/ directory is Copyright (C) 2006-2007 Thibaut Paumard,
+under GPL v.2.

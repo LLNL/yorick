@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+case "$1" in
+  install|upgrade)
+    # older (unofficial) versions of yorick 2.x shipped with the package
+    # manager but no debian-friendly setup. Users that have used pkg_mngr 
+    # with this configuration have automatically created a pkg_setup.i file
+    # we'd like them to get rid of. All this mess can certainly disappear
+    # at lenny+1.
+    if [   -e /usr/lib/yorick/packages/pkg_setup.i ] &&
+       [ ! -h /usr/lib/yorick/packages/pkg_setup.i ]; then
+	[ -e /etc/yorick/packages ] || mkdir -p /etc/yorick/packages
+	if [ -e   /etc/yorick/packages/pkg_setup.i ]; then
+             mv   /etc/yorick/packages/pkg_setup.i \
+		  /etc/yorick/packages/pkg_setup.i.dpkg-bak
+	fi
+	mv /usr/lib/yorick/packages/pkg_setup.i \
+	       /etc/yorick/packages/pkg_setup.i
+	rm -f /etc/yorick/packages/pkg_setup_may_use_Y_HOME || true
+    fi
+    ;;
+esac
+#DEBHELPER#

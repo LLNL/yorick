@@ -9,7 +9,7 @@
 
   The preferred way to customize the configuration is through pkg_setup
   (within Yorick). The customized configuration will be saved in 
-  /usr/lib/yorick/packages/pkg_setup.i , not here.
+  /usr/local/lib/yorick/packages/pkg_setup.i , which is read from here.
 
  */
 

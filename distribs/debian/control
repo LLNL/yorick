@@ -2,14 +2,13 @@ Source: yorick
 Section: math
 Priority: optional
 Maintainer: Thibaut Paumard <paumard@users.sourceforge.net>
-Build-Depends: libx11-dev, texinfo, debhelper (>= 5.0.0), dpatch, imagemagick
+Build-Depends: libx11-dev, texinfo, debhelper (>= 5.0.0), dpatch, imagemagick, po-debconf
 Standards-Version: 3.7.2.0
 
 Package: yorick
 Architecture: any
-Depends: yorick-data (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Conflicts: yorick-gist
-Replaces: yorick-gist (<=1.4-15)
+Depends: yorick-data (= ${source:Version}), ${shlibs:Depends}, ${misc:Depends}, debconf
+Replaces: yorick-data (<< 2.1.04+dfsg-1)
 Recommends: rlwrap
 Suggests: yorick-yutils, yorick-yeti, curl, yorick-dev, yorick-hdf5, yorick-soy, yorick-gl, yorick-z, yorick-imutil, yorick-curses, yorick-yeti-fftw, yorick-yeti-regex, yorick-yeti-tiff, emacsen
 Description: interpreted language and scientific graphics
@@ -35,7 +34,7 @@ Description: interpreted language and scientific graphics
 Package: yorick-data
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: yorick (=${binary:Version})
+Recommends: yorick (>= ${source:Version})
 Description: interpreted library for the Yorick language
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -51,7 +50,7 @@ Description: interpreted library for the Yorick language
 
 Package: yorick-dev
 Architecture: any
-Depends: yorick (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: yorick (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Conflicts: yorick-gist
 Description: development files for the Yorick interpreted language
  Yorick is an interpreted programming language for:

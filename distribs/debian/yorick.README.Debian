@@ -1,0 +1,105 @@
+Yorick for Debian
+-----------------
+
+This is the `Yorick' interpreted language by David H. Munro, prepackaged for
+Debian GNU/Linux.
+
+This package was put together by Thibaut Paumard <thibaut.paumard@free.fr>
+from the sourceforge CVS sources. The changes are regularly committed back to the
+CVS.
+
+
+1) Website
+2) Configuration
+3) Add-ons
+4) Relocation
+5) Suppressed material
+
+
+1) Website:
+-----------
+
+The homepage is full-featured with an active forum, bug-tracker etc.
+
+   http://yorick.sourceforge.net
+
+
+
+2) Configuration:
+-----------------
+
+ * System-wide:
+
+Any .i script found in /etc/yorick/ will be sourced by Yorick on start-up (in
+alphabetic order). Use this for system-wide configuration.
+
+
+ * Per-user:
+
+Each user can have one user directory, one of ~/.yorick, ~/yorick and
+~/Yorick. If you have several of them and want to know which one Yorick is
+using , look at the Y_USER variable. Any .i script found in Y_USER/i-start/
+will be sourced by Yorick on start-up (in alphabetic order). This can be used
+for user-wide configuration.
+
+Additionally, Yorick will look for custom.i in the path. This can be used for
+"task-wide" customizations by putting a custom.i in the directory from which
+you start Yorick for a given task.
+
+
+
+3) Add-ons:
+-----------
+
+There are useful interpreted libraries as well as compiled plug-ins available
+around the net (see e.g. http://www.maumae.net), some of which are packaged
+for Debian.
+
+By default, the Debian package of Yorick is configured in such way that its
+package manager (pkg_mngr.i) will install packages under
+/usr/local/lib/yorick. See README.Debian.packages for details. Users can take
+inspiration from this file to install packages in their home directories.
+
+
+
+4) Relocation:
+--------------
+
+This build of Yorick is relocatable. This means that you can keep a functional
+copy of this version e.g. before upgrading by simply copying the entire
+/usr/lib/yorick directory anywhere. If you do that:
+  - make sure you dereference symbolic links (-L option to cp);
+  - you may want want to remove i-start/zzdebian.i, which makes an
+    `include_all,"/etc/yorick";';
+  - you may also want to have a look at packages/pkg_setup.i
+    and check whether it does something useful for you (you probably want to
+    delete it).
+  - the yorick binary is in bin/; you may set up a symbolic link, but you
+    cannot change the layout of the directory tree or move the real executable
+    out.
+
+
+5) Suppressed material
+----------------------
+
+Due to some copyright incompatibilities, a few files have been removed from
+the upstream source. Most of them do not get used in the standard Linux build
+anyway and are therefore useless for the Debian package (see copyright file
+for details).
+
+The exception is idlsave.i, that can be used to read "save" files from the
+commercial software Interactive Data Language (IDL) from Research System
+Inc. (RSI). It is legal for an IDL user to use and distribute this file, but
+it might be problematic for Debian to ship it.
+
+If you need to exchange data between IDL and Yorick, I suggest you look at a
+standard file format: FITS is supported out-of-the-box by Yorick, HDF5 thanks
+to the yorick-hdf5 plug-in. If you really need idlsave.i, grab it from the CVS
+web interface, as of writing:
+ http://yorick.cvs.sourceforge.net/*checkout*/yorick/yorick/i/idlsave.i
+and put it anywhere in your path (e.g. /usr/local/lib/yorick/i/ for
+system-wide install, ~/.yorick/ for per-user install).
+
+
+Thibaut Paumard <paumard@users.sourceforge.net>,  
+Tue, 21 Nov 2006 17:29:54 +0100

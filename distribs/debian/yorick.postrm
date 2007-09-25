@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+case $1 in
+  purge)
+    if [ -e /etc/yorick ]; then
+      rm -Rf /etc/yorick
+    fi
+    if [ -e /usr/lib/yorick ]; then
+      rm -Rf /usr/lib/yorick
+    fi
+    ;;
+  abort-upgrade)
+    [ -e /usr/lib/yorick/pakages/pkg_setup.i ] ||
+       ln -s /etc/yorick/pakages/pkg_setup.i \\
+         /usr/lib/yorick/pakages/pkg_setup.i
+    ;;
+esac
+#DEBHELPER#

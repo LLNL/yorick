@@ -84,6 +84,7 @@ binary-common:
 	dh_installexamples
 	dh_installmenu
 	dh_installinfo
+	dh_installdebconf
 	dh_installman
 	dh_link
 	dh_strip
@@ -107,32 +108,40 @@ binary-indep: build-stamp
 binary-arch: build-stamp
 	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
 
-CVSVERS:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/-.*//').orig
+###### Getting the original source:
+Y_VERS:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/+.*//')
+CVSVERS:=$(Y_VERS)+dfsg.orig
 CVSROOT:=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
 CVSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }')
+ORIG_URL:=http://dl.sourceforge.net/sourceforge/yorick/
+ORIG_TGZ:=yorick-$(Y_VERS).tgz
+# Non-DFSG-free files (see copyright):
+PRUNEFILES:=play/hacks/hack103.c i/idlsave.i opengl
 
-# This rule is to be called from anywhere, preferentially _not_ from within
-# the source tree.  It will download the source tree from the CVS
-# corresponding to the last version in the changelog, then prune
-# non-DFSG-compatible files (see copyright), and pack all this as the relevant
-# .orig.tar.gz file (in the current directory).
+# Use this rule to get the original sources if the current verion is from
+# cvs. Breaks when sourceforge change there CVS access.
 #
 # WARNING: Side effect: this will use and remove the
 # directory "orig-sources".
-get-orig-source:
-	-rm -Rf orig-sources
-	mkdir orig-sources
+get-cvs-source:
+	-rm -Rf ../orig-sources
+	mkdir ../orig-sources
 	cvs -d$(CVSROOT) login
-	cd orig-sources ; cvs -z3 -d$(CVSROOT) export -D $(CVSDATE) yorick
-	rm orig-sources/yorick/play/hacks/hack103.c
-	rm orig-sources/yorick/i/idlsave.i
-	rm -Rf orig-sources/opengl
-	-rm -Rf yorick-$(CVSVERS)
-	mv orig-sources/yorick yorick-$(CVSVERS)
-	tar cvzf yorick_$(CVSVERS).tar.gz yorick-$(CVSVERS)
-	rm -Rf yorick-$(CVSVERS)
-	rm -Rf orig-sources
+	cd ../orig-sources ; cvs -z3 -d$(CVSROOT) export -D $(CVSDATE) yorick
+	-rm -Rf ../yorick-$(CVSVERS)
+	mv ../orig-sources/yorick ../yorick-$(CVSVERS)
+	rm -Rf ../orig-sources
+	cd ../yorick-$(CVSVERS); rm -Rf $(PRUNEFILES)
+	cd ..; tar cf yorick_$(CVSVERS).tar yorick-$(CVSVERS)
+	gzip -9 ../yorick_$(CVSVERS).tar
 
+get-orig-source:
+	cd ..; wget $(ORIG_URL)$(ORIG_TGZ)
+	cd ..; tar xvzf $(ORIG_TGZ)
+	mv ../yorick-2.1 ../yorick-$(CVSVERS)
+	cd ../yorick-$(CVSVERS); rm -Rf $(PRUNEFILES)
+	cd ..; tar cf yorick_$(CVSVERS).tar yorick-$(CVSVERS)
+	gzip -9 ../yorick_$(CVSVERS).tar
 
 binary: binary-arch binary-indep
 .PHONY: build clean binary-indep binary-arch binary configure
