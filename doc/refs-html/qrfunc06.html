@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A>
+    <ul>
+    <li><A href="./qrfunc00.html">Including Source Files</A></li>
+    <li><A href="./qrfunc01.html">Comments</A></li>
+    <li><A href="./qrfunc02.html">Issuing Shell Commands</A></li>
+    <li><A href="./qrfunc03.html">Matrix Multiplication</A></li>
+    <li><A href="./qrfunc04.html">Information About Variables</A></li>
+    <li><A href="./qrfunc05.html">Elementary Functions</A></li>
+    <li><A href="./qrfunc06.html">Advanced Array Indexing</A></li>
+    <li><A href="./qrfunc07.html">Index Range Functions</A></li>
+    <li><A href="./qrfunc08.html">Logical Functions</A></li>
+    <li><A href="./qrfunc09.html">Interpolation and Lookup Functions</A></li>
+    <li><A href="./qrfunc10.html">Sorting</A></li>
+    <li><A href="./qrfunc11.html">Transposing</A></li>
+    <li><A href="./qrfunc12.html">Manipulating Strings</A></li>
+    <li><A href="./qrfunc13.html">Generating Simple Meshes</A></li>
+    <li><A href="./qrfunc14.html">Using Pointers</A></li>
+    <li><A href="./qrfunc15.html">Instancing Data Structures</A></li>
+    <li><A href="./qrfunc16.html">Reshaping Arrays</A></li>
+    </ul></li>
+  <li><A href="./qrio00.html">I/O Reference</A></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Function Reference</h1>
+
+<h2>Advanced Array Indexing</h2>
+
+<ul>
+<li> A scalar index or the <tt>start</tt>
+and <tt>stop</tt> of an index range may be non-positive to reference the
+elements near the end of a dimension. Hence, 0 refers to the final element,
+-1 refers to the next to last element, -2 to the element before that, and
+so on. For example,
+<i>x</i><tt>(2:-1)</tt> refers to all but the first
+and last elements of the 1-D array <i>x</i>. This convention does <b>NOT</b>
+work for an index list.</li>
+<li> A range function <i>ifunc</i> may
+be followed by a colon and an index range <tt>start:stop</tt> or <tt>start:stop:step</tt>
+in order to restrict the indices to which the range function applies to
+a subset of the entire dimension. Hence, <i>x</i><tt>(min:2:-1)</tt> returns
+the minimum of all the elements of the 1-D array <i>x</i>, excluding the
+first and last elements.</li>
+<li> An index specified as a scalar,
+the <tt>start</tt> or <tt>stop</tt> of an index range, or an element of
+an index list may exceed the length of the indexed dimension <b>ID</b>,
+provided that the entire indexing operation does not overreach the bounds
+of the array. Thus, if <i>y</i>is a 5-by-6 array, then <i>y</i><tt>(22)</tt>
+refers to the same datum as <i>y</i><tt>(2,5)</tt>.</li>
+<li> The expression <i>z</i><tt>(..)</tt>
+- using the rubber-index operator <tt>..</tt> - refers to the entire array
+<i>z</i>.
+This is occasionally useful as the left hand side of an assignment statement
+in order to force broadcasting and type conversion of the right hand expression
+to the preallocated type and shape <i>z</i>.</li>
+<li> The expression <i>z</i><tt>(*)</tt>
+- using the rubber-index operator <tt>*</tt> - collapses a multidimensional
+array <i>z</i> into a one-dimensional array. Even more useful as <i>z</i><tt>(*,)</tt>
+to preserve the final index of an array and force a two-dimensional result.</li>
+</ul>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

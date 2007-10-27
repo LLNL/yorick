@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A>
+    <ul>
+    <li><A href="../refcard/qrio00.html">Opening and Closing Text Files</A></li>
+    <li><A href="../refcard/qrio01.html">Reading Text</A></li>
+    <li><A href="../refcard/qrio02.html">Writing Text</A></li>
+    <li><A href="../refcard/qrio03.html">Positioning a Text File</A></li>
+    <li><A href="../refcard/qrio04.html">Opening and Closing Binary Files</A></li>
+    <li><A href="../refcard/qrio05.html">Saving and Restoring Variables</A></li>
+    <li><A href="../refcard/qrio06.html">Reading History Records</A></li>
+    <li><A href="../refcard/qrio07.html">Writing History Records</A></li>
+    <li><A href="../refcard/qrio08.html">Opening Non-PDB Files</A></li>
+    <li><A href="../refcard/qrio09.html">Making Plots</A></li>
+    <li><A href="../refcard/qrio10.html">Plot Paging and Hardcopy</A></li>
+    <li><A href="../refcard/qrio11.html">Setting Plot Limits</A></li>
+    <li><A href="../refcard/qrio12.html">Managing Graphics Windows</A></li>
+    <li><A href="../refcard/qrio13.html">Graphics Query, Edit, and Defaults</A></li>
+    </ul></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Opening and Closing Binary Files</h2>
+
+<table><tbody>
+<tr><td><tt><i>f</i> = openb(<i>filename</i>)</tt></td>
+<td>open <i>filename</i> read-only</td></tr>
+<tr><td><tt><i>f</i> = updateb(<i>filename</i>)</tt></td>
+<td>open <i>filename</i> read-write</td></tr>
+<tr><td><tt><i>f</i> = createb(<i>filename</i>)</tt></td>
+<td>create the binary file <i>filename</i></td></tr>
+<tr><td><tt>close, <i>f</i></tt></td>
+<td>close file <i>f</i></td></tr>
+</tbody></table>
+<p>A binary file <i>f</i> has a Yorick data type which is distinct from
+a text file. The <tt>info</tt> and <tt>print</tt> functions describe <i>f</i>.
+The <tt>close</tt> function will be called implicitly when the last reference
+to a file disappears, e.g.- if <i>f</i> is redefined.
+</p>
+<p>The data in a binary file is organized into named variables, each of
+which has a data type and dimensions. The <tt>.</tt> operator, which extracts
+members from a structure instance, accepts binary files for its left operand.
+Thus:
+<br><tt>&nbsp;f = updateb("foo.bar");
+<br>&nbsp;print, f.var1, f.var2(2:8,::4);
+<br>&nbsp;f.var3(2,5) = 3.14;
+<br>&nbsp;close, f;</tt>
+<br>Opens a file, prints <tt>var1</tt> and a subarray of <tt>var2</tt>, sets
+one element of <tt>var3</tt>, then closes the file.
+</p>
+<p>The <tt>show</tt> command prints an alphabetical list of the variables
+contained in a file:
+</p>
+<p><tt>show, <i>f</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> shows the variables in file <i>f</i>
+<br><tt>show,
+<i>f, pat</i>&nbsp;</tt> show only names starting with <i>pat</i>
+<br><tt>get_vars(<i>f</i>)&nbsp;&nbsp;</tt>
+returns pointers to complete name lists for <i>f</i>
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

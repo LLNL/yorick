@@ -1,0 +1,146 @@
+body {
+  max-width: 650px;
+}
+
+#banner {
+  position: absolute; top: 0;
+  background: url(images/skull_up.jpeg) no-repeat top left;
+  height: 119px;
+  width: 881px;
+  margin-left: 40px;
+}
+
+#content {
+  position: absolute; top: 119px;
+  background: url(images/skull_down.jpeg) no-repeat;
+  color: #202020;
+  padding-left: 100px;
+  padding-right: 100px;
+  margin-left: 40px;
+  width: 681px;
+}
+
+h2 {
+  color: #333;
+  margin:0;
+  margin-bottom: 12px;
+  padding: 16px 100px 0px 0px;
+  border-bottom: solid 2px #C2C223;
+}
+
+h2 .topnoborder {
+  border-bottom: solid 0px;
+}
+
+
+a {
+  color:#31a;
+  font-weight:normal;
+}
+
+a:hover {
+  color:#ffffff; 
+  background-color:#44a;  
+  text-decoration: none;
+}
+
+#l-bar {
+  z-index: 1;
+  position: fixed;
+  color: #000000;
+  width:125px;
+  text-align:left;
+  background-color:white;
+  padding: 0;
+  margin: 0;
+  margin-right: 0px;
+  margin-bottom: 10px;
+  /* ie5 hack starts
+     */
+  margin-right: 10px;
+  /* the previous line is seen by anyone but ie
+     */
+}
+
+
+
+#links { 
+  padding: 0px 0px 0px 5px;
+  background: none;
+}
+
+#links a {
+  color:#666;
+  font-weight:bold;
+  text-decoration:none;
+}
+
+#links .nav2 a {
+  font-weight:normal;
+}
+
+#links .nav1 a { 
+  margin:0px 0px 0px 3px; 
+  padding: 2px 3px 2px 0px;
+  line-height: 180%;
+  background: none;
+}
+
+
+#links .nav2 a { 
+  margin:0px 0px 0px 9px; 
+  padding: 0px 0px 0px 0px;
+  line-height: 145%;
+  font-size: 90%;
+  font-weight: normal;
+  background: none;
+}
+
+#links a:hover {
+  color: #FFFFFF;
+  background-color:#44a;
+}
+
+
+#footer {
+  background:none;
+  border-top: 2px solid #a0a0a0;
+  margin:20px 0px 30px 140px;
+  padding: 7px 20px 0px 10px;
+  text-align: left;
+  width: 650px;
+}
+
+pre { 
+  color: #000000;
+}
+
+table .alphaHead {
+  background-color: #338;
+  margin-right: 80px;
+}
+
+h1.isearch
+{
+    font-size:20px;
+    color:#303080;
+}
+
+table.isearch_head
+{
+    background-color:#303080;
+}
+
+a.isearch_title:link
+{
+    color:#31a;
+    background-color:transparent
+}
+
+#ftpbullet {list-style:url(images/ftp16b.png);}
+#cvsbullet {list-style:url(images/cvs16b.png);}
+#forumbullet {list-style:url(images/taskman16b.png);}
+#trackerbullet {list-style:url(images/taskman16b.png);}
+#mailbullet {list-style:url(images/mail16b.png);}
+#docbullet {list-style:url(images/docman16b.png);}
+

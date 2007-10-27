@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A>
+    <ul>
+    <li><A href="../refcard/qrio00.html">Opening and Closing Text Files</A></li>
+    <li><A href="../refcard/qrio01.html">Reading Text</A></li>
+    <li><A href="../refcard/qrio02.html">Writing Text</A></li>
+    <li><A href="../refcard/qrio03.html">Positioning a Text File</A></li>
+    <li><A href="../refcard/qrio04.html">Opening and Closing Binary Files</A></li>
+    <li><A href="../refcard/qrio05.html">Saving and Restoring Variables</A></li>
+    <li><A href="../refcard/qrio06.html">Reading History Records</A></li>
+    <li><A href="../refcard/qrio07.html">Writing History Records</A></li>
+    <li><A href="../refcard/qrio08.html">Opening Non-PDB Files</A></li>
+    <li><A href="../refcard/qrio09.html">Making Plots</A></li>
+    <li><A href="../refcard/qrio10.html">Plot Paging and Hardcopy</A></li>
+    <li><A href="../refcard/qrio11.html">Setting Plot Limits</A></li>
+    <li><A href="../refcard/qrio12.html">Managing Graphics Windows</A></li>
+    <li><A href="../refcard/qrio13.html">Graphics Query, Edit, and Defaults</A></li>
+    </ul></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Reading Text</h2>
+<table><tbody>
+<tr><td><tt>read, <i>f, var1, var2, ..., varN</i></tt></td>
+<td>reads the <i>varI</i> from file <i>f</i></td></tr>
+<tr><td><tt>read, <i>var1, var2, ..., varN</i></tt></td>
+<td>reads the <i>varI</i> from keyboard</td></tr>
+<tr><td><tt>read_n, <i>f, var1, var2, ..., varN</i></tt></td>
+<td>read, skip non-numeric tokens</td></tr>
+<tr><td><tt>rdline(<i>f</i>)</tt></td>
+<td>returns next line from file <i>f</i></td></tr>
+<tr><td><tt>rdline(<i>f, n</i>)</tt></td>
+<td>returns next <i>n</i> lines from file <i>f</i></td></tr>
+<tr><td><tt>sread, <i>s, var1, var2, ..., varN</i></tt></td>
+<td>reads the <i>varI</i> from string <i>s</i></td></tr>
+</tbody></table>
+<p>The data type and dimensions of the <i>varI</i> determine how the text
+is converted as it is read. The <i>varI</i> may be arrays, provided the
+arrays have identical dimensions. If the <i>varI</i> have length <b>L</b>,
+then the <tt>read</tt> is applied as if called <b>L</b> times, with successive
+elements of each of the <i>varI</i> read on each call.
+</p>
+<p>The <tt>read</tt> function takes the <tt>prompt</tt> keyword to set
+the prompt string, which defaults to <tt>"read> "</tt>.
+</p>
+<p>Both <tt>read</tt> and <tt>sread</tt> accept the <tt>format</tt> keyword.
+The format is a string containing conversion specifiers for the <i>varI</i>.
+The number of conversion specifiers should match the number of <i>varI</i>.
+If the <i>varI</i> are arrays, the format string is applied repeatedly
+until the arrays are filled.
+</p>
+<p>Read format strings in Yorick have (nearly) the same meaning as the
+format strings for the ANSI standard C library <tt>scanf</tt> routine.
+In brief, a format string consists of:
+</p>
+<ul>
+<li> whitespace
+<br>means to skip any number of whitespace characters in the source</li>
+<li> characters other than whitespace and <tt>%</tt>
+<br>must match characters in the source exactly or the read operation stops</li>
+<li> conversion specifiers beginning with <tt>%</tt>
+<br>each specifier ends with one of the characters <tt>d</tt> (decimal
+integer), <tt>i</tt> (decimal, octal, or hex integer), <tt>o</tt> (octal
+integer), <tt>x</tt> (hex integer), <tt>s</tt> (whitespace delimited string),
+any of <tt>e</tt>, <tt>f</tt>, or <tt>g</tt> (real),
+<tt>[<i>xxx</i>]</tt> to match the longest string of characters in the list,
+<tt>[^<i>xxx</i>]</tt>
+to match the longest string of characters not in the list, or <tt>%</tt>
+(the <tt>%</tt> character - not a conversion)</li>
+</ul>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

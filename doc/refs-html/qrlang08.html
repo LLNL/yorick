@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A>
+    <ul>
+    <li><A href="./qrlang00.html">Starting and Quitting Yorick</A></li>
+    <li><A href="./qrlang01.html">Getting Help</A></li>
+    <li><A href="./qrlang02.html">Error Recovery</A></li>
+    <li><A href="./qrlang03.html">Array Data Types</A></li>
+    <li><A href="./qrlang04.html">Constants</A></li>
+    <li><A href="./qrlang05.html">Defining Variables</A></li>
+    <li><A href="./qrlang06.html">Arithmetic and Comparison Operators</A></li>
+    <li><A href="./qrlang07.html">Logical Operators</A></li>
+    <li><A href="./qrlang08.html">Creating Arrays</A></li>
+    <li><A href="./qrlang09.html">Indexing Arrays</A></li>
+    <li><A href="./qrlang10.html">Array Conformability Rules</A></li>
+    <li><A href="./qrlang11.html">Calling Functions</A></li>
+    <li><A href="./qrlang12.html">Defining Functions</A></li>
+    <li><A href="./qrlang13.html">Variable Scope</A></li>
+    <li><A href="./qrlang14.html">Returning from Functions</A></li>
+    <li><A href="./qrlang15.html">Compound Statements</A></li>
+    <li><A href="./qrlang16.html">Conditional Execution</A></li>
+    <li><A href="./qrlang17.html">Loops</A></li>
+    </ul></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Creating Arrays</h2>
+<table><tbody>
+<tr><td><tt>[</tt> <i>obj1, obj2, ..., objN</i><tt>]</tt></td>
+<td>build an array of N objects<br>
+The <i>objI</i> may be arrays to build multi-dimensional arrays.</td></tr>
+<tr><td><tt>array(</tt><i>value, dimlist</i><tt>)</tt></td>
+<td>add dimensions <i>dimlist</i> to <i>value</i><br></td></tr>
+<tr><td><tt>array(</tt><i>type_name, dimlist</i><tt>)</tt></td>
+<td>return specified array, all zero</td></tr>
+<tr><td><tt>span(</tt><i>start, stop, n</i><tt>)</tt></td>
+<td><i>n</i> equal stepped values from <i>start </i>to <i>stop</i></td></tr>
+<tr><td><tt>spanl(</tt><i>start, stop, n</i><tt>)</tt></td>
+<td><i>n</i> equal ratio values from <i>start </i>to <i>stop</i></td></tr>
+<tr><td><tt>grow, </tt><i>var, sfx1, sfx2, ...</i></td>
+<td>append <i>sfx1</i>, <i>sfx1</i>, etc. to <i>var</i></td></tr>
+</tbody></table>
+<p>These functions may be used to generate multi-dimensional arrays; use
+<tt>help</tt>
+for details.
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

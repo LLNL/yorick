@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A>
+    <ul>
+    <li><A href="../refcard/qrio00.html">Opening and Closing Text Files</A></li>
+    <li><A href="../refcard/qrio01.html">Reading Text</A></li>
+    <li><A href="../refcard/qrio02.html">Writing Text</A></li>
+    <li><A href="../refcard/qrio03.html">Positioning a Text File</A></li>
+    <li><A href="../refcard/qrio04.html">Opening and Closing Binary Files</A></li>
+    <li><A href="../refcard/qrio05.html">Saving and Restoring Variables</A></li>
+    <li><A href="../refcard/qrio06.html">Reading History Records</A></li>
+    <li><A href="../refcard/qrio07.html">Writing History Records</A></li>
+    <li><A href="../refcard/qrio08.html">Opening Non-PDB Files</A></li>
+    <li><A href="../refcard/qrio09.html">Making Plots</A></li>
+    <li><A href="../refcard/qrio10.html">Plot Paging and Hardcopy</A></li>
+    <li><A href="../refcard/qrio11.html">Setting Plot Limits</A></li>
+    <li><A href="../refcard/qrio12.html">Managing Graphics Windows</A></li>
+    <li><A href="../refcard/qrio13.html">Graphics Query, Edit, and Defaults</A></li>
+    </ul></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Managing Graphics Windows</h2>
+<p><tt>window, <i>n</i>&nbsp;&nbsp;</tt> switch to window <i>n</i> (0-7)
+<br><tt>winkill, <i>n</i>&nbsp;</tt> delete window <i>n</i> (0-7)
+</p>
+<p>The <tt>window</tt> command takes several keywords, for example:
+</p>
+<ul>
+<li><tt>dpi=75</tt> makes a smaller X window than the default <tt>dpi=100</tt>,
+</li><li><tt>private=1</tt>
+forces use of private instead of shared colors,</li>
+<li><tt>dump=1</tt> forces
+the palette to be dumped to the <tt>hcp</tt> file, and <tt>style</tt> specifies
+an alternative style sheet for tick and label style (<tt>"work.gs"</tt>
+and <tt>"boxed.gs"</tt> are two predefined style sheets).</li>
+</ul>
+<p>The <tt>plf</tt> and <tt>pli</tt> commands require a color palette:
+</p>
+<p><tt>palette, <i>name</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> load the standard palette <i>name</i>
+<br><tt>palette,
+<i>r, g, b</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> load a custom palette
+<br><tt>palette, query=1, <i>r, g, b</i>&nbsp;</tt> retrieve current palette
+</p>
+<p>Standard palette names: <tt>"earth.gp"</tt> (the default), <tt>"gray.gp"</tt>,
+<tt>"yarg.gp"</tt>,
+<tt>"stern.gp"</tt>,
+<tt>"heat.gp"</tt>,
+and <tt>"rainbow.gp"</tt>.
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

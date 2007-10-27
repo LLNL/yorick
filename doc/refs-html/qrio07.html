@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A>
+    <ul>
+    <li><A href="../refcard/qrio00.html">Opening and Closing Text Files</A></li>
+    <li><A href="../refcard/qrio01.html">Reading Text</A></li>
+    <li><A href="../refcard/qrio02.html">Writing Text</A></li>
+    <li><A href="../refcard/qrio03.html">Positioning a Text File</A></li>
+    <li><A href="../refcard/qrio04.html">Opening and Closing Binary Files</A></li>
+    <li><A href="../refcard/qrio05.html">Saving and Restoring Variables</A></li>
+    <li><A href="../refcard/qrio06.html">Reading History Records</A></li>
+    <li><A href="../refcard/qrio07.html">Writing History Records</A></li>
+    <li><A href="../refcard/qrio08.html">Opening Non-PDB Files</A></li>
+    <li><A href="../refcard/qrio09.html">Making Plots</A></li>
+    <li><A href="../refcard/qrio10.html">Plot Paging and Hardcopy</A></li>
+    <li><A href="../refcard/qrio11.html">Setting Plot Limits</A></li>
+    <li><A href="../refcard/qrio12.html">Managing Graphics Windows</A></li>
+    <li><A href="../refcard/qrio13.html">Graphics Query, Edit, and Defaults</A></li>
+    </ul></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Writing History Records</h2>
+<p>To write a family of files containing history records:
+</p>
+<ol type=1>
+<li>Create the file using <tt>createb</tt>.</li>
+<li>Write all of the non-record (time independent) variables to the file
+using <tt>save</tt>.</li>
+<li>Create a record which will correspond to time <i>time</i> and cycle
+<i>ncyc</i>
+for future <tt>jt</tt> and <tt>jc</tt> commands. Use:
+<br><tt>&nbsp;add_record, <i>f, time, ncyc</i>&nbsp;</tt> make new record at <i>time,
+ncyc</i></li>
+<li>Write all record (time dependent) variables to the file using
+<tt>save</tt>.
+After the first <tt>add_record</tt>, <tt>save</tt> will create and store
+record variables instead of non-record variables as in step 2.</li>
+<li>Repeat steps 3 and 4 for each new record you wish to add to the file.
+For the second and subsequent records, <tt>save</tt> will not allow variables
+which were not written to the first record, or whose data type or shape
+has changed since the first record. That is, the structure of all history
+records in a file must be identical. Use type <tt>pointer</tt> variables
+to deal with data which changes in size, shape, or data type.</li>
+</ol>
+<p>After each <tt>add_record</tt>, any number of <tt>save</tt> commands
+may be used to write the record.
+</p>
+<p>If the current member of a history record file family has at least one
+record, and if the next record would cause the file to exceed the maximum
+allowed file size, <tt>add_record</tt> will automatically form the next
+member of the family. The maximum family member file size defaults to 4
+MBytes, but:
+</p>
+<p><tt>set_filesize, <i>f, n_bytes</i>&nbsp;</tt> set family member size
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

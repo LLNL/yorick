@@ -1,0 +1,248 @@
+:newsection
+Standard Yorick Functions
+
+:std
+basic compiled and interpreted functions
+
+:graph
+2D graphics functions
+
+:math
+Swarztrauber FFT routines and LAPACK matrix solving routines
+
+
+
+:newsection
+Compiled (plugin) Yorick Packages
+
+:yorz
+read and write png or jpeg grephics files, write mpeg-1 movie files,
+ and interface to zlib (gzip) compression library
+
+:drat
+a 2D transport equation solver for (r,z) meshes
+
+:hex
+a 3D transport equation solver
+
+
+:newsection
+Interpreted Yorick Packages
+
+:newsubsection
+Tutorial example programs
+
+:demo1
+a simple 1-D hydro code
+
+:demo2
+fancy movies of a drumhead oscillating (solves 2D wave equation on the fly)
+
+:demo3
+movie of a chaotic pendulum
+ (does Runge-Kutta integration of Lagrangian on the fly)
+
+:demo4
+movie of flow around an airfoil (solves for flow field on the fly)
+
+:demo5
+interpreted 3-D graphics, demonstrating plwf, slice3
+
+
+:newsubsection
+Mathematical special functions
+
+:bessel
+integer order Bessel functions
+
+:dawson
+Dawson's integral and error functions (erf)
+
+:elliptic
+elliptic functions and integrals
+
+:fermi
+Fermi-Dirac integrals and their inverses
+
+:fermii
+incomplete Fermi-Dirac integrals
+
+:gamma
+gamma and beta functions
+
+:gammp
+incomplete gamma and beta functions
+
+:legndr   
+Legendre polynomials, associated Legendre functions
+
+:series
+geometric series solvers (e.g.- find number of terms given sum and ratio)
+
+
+
+:newsubsection
+Data fitting and interpolation
+
+:cheby
+Chebyshev polynomial approximation
+
+:digit2
+2D equivalents for digitize and interp
+
+:fitlsq
+least squares fit a piecewise linear function to data
+
+:fitrat   
+polynomial and rational function fits
+
+:spline
+cubic spline and tensioned spline interpolation
+
+
+
+:newsubsection
+Numerical integration
+
+:romberg  
+Romberg and Simpson adaptive integrators
+ 
+:rkutta
+Runge-Kutta and Bulirsch-Stoer ODE integrators
+
+
+
+:newsubsection
+Other mathematical utilities
+
+:bowtie
+detect and map bowties in 2D mesh
+
+:convol
+convolution using fft
+
+:filter
+analog signal processing (e.g.- Bessel, Butterworth, Chebyshev filters)
+
+:gcd
+GCD, LCM, prime factorization
+
+:ieee
+IEEE 754 floating point support (Inf, NaN, denormal)
+
+:kepler
+solar system models and digitial orrery
+
+:plato
+regular Platonic solids
+
+:random
+gaussian deviates, arbitrary piecewise linear deviates,
+ rejection method, more
+
+:roots
+Newton-Raphson root and inverse, Brent maxima and minima
+
+:ylmdec
+spherical harmonic decomposition sketch for hex package
+
+:zroots
+find roots of polynomial
+
+
+
+:newsubsection
+I/O utilities
+
+:basfix
+fix PDB binary file interface for use with Basis interpreter
+
+:copyb     
+copy a binary file
+
+:fits
+read and write FITS files (IAU astronomical data)
+
+:hydra
+access hydra-generated Silo-PDB files
+
+:idlsave
+read IDL save files (RSI, see comment in idlsave.i)
+
+:multi
+multiple file extension to drat package
+
+:netcdf
+read and write netcdf binary files (usually only required to write)
+
+:pnm
+read and write PBM, PGM, and PBM files made by the pbmplus or netpbm packages
+
+:prefix
+read lists of numbers tagged by a "prefix" at the beginning of each line
+
+:silo
+open Silo/PDB files
+
+
+
+:newsubsection
+Graphical utilities
+
+:button
+implement mouse pushbuttons in a Yorick graphics window
+ (see rezone.i for usage examples)
+
+:color
+palette adjustment, HSV<->RGB transforms
+ (study split_palette, split_bytscl in slice3.i for more color table ideas)
+
+:movie    
+assistance for animation (see demo2.i and demo3.i)
+
+:pl3d
+first cut at 3-D graphics command line interface,
+ defines common lighting, rotation and perspective
+ transforms, gnomon (axis orientation indicator)
+ plwf.i, slice3.i, and demo5.i contain usage examples
+
+:plclab
+label contour levels with numeric values
+
+:plwf
+3-D wire frame plots (painter's algorithm)
+
+:pixels
+crude attempt to force Yorick to plot cell arrays at one cell per screen pixel
+
+:slice3
+3-D mesh slicing functions, plus plotting functions
+
+:style
+low level peek and poke into graphics style sheets
+
+
+
+:newsubsection
+Miscellaneous functions and utilities
+
+:make
+automatic Makefile generator for custom version of Yorick
+
+:md5
+compute MD5 checksums (slowly via interpreter)
+
+:mkdoc
+extract and alphabetize DOCUMENT comments from include files
+
+:msort
+multiple key sorting functions
+
+:rays
+ray manipulation for drat package
+
+:rezone
+point-and-click rezoner for quadrilateral meshes
+
+:sysafe
+Replacement for system function (but not $ syntax)

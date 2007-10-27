@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A>
+    <ul>
+    <li><A href="./qrfunc00.html">Including Source Files</A></li>
+    <li><A href="./qrfunc01.html">Comments</A></li>
+    <li><A href="./qrfunc02.html">Issuing Shell Commands</A></li>
+    <li><A href="./qrfunc03.html">Matrix Multiplication</A></li>
+    <li><A href="./qrfunc04.html">Information About Variables</A></li>
+    <li><A href="./qrfunc05.html">Elementary Functions</A></li>
+    <li><A href="./qrfunc06.html">Advanced Array Indexing</A></li>
+    <li><A href="./qrfunc07.html">Index Range Functions</A></li>
+    <li><A href="./qrfunc08.html">Logical Functions</A></li>
+    <li><A href="./qrfunc09.html">Interpolation and Lookup Functions</A></li>
+    <li><A href="./qrfunc10.html">Sorting</A></li>
+    <li><A href="./qrfunc11.html">Transposing</A></li>
+    <li><A href="./qrfunc12.html">Manipulating Strings</A></li>
+    <li><A href="./qrfunc13.html">Generating Simple Meshes</A></li>
+    <li><A href="./qrfunc14.html">Using Pointers</A></li>
+    <li><A href="./qrfunc15.html">Instancing Data Structures</A></li>
+    <li><A href="./qrfunc16.html">Reshaping Arrays</A></li>
+    </ul></li>
+  <li><A href="./qrio00.html">I/O Reference</A></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Function Reference</h1>
+
+<h2>Manipulating Strings</h2>
+<p>Yorick type <tt>string</tt> is a pointer to a 0-terminated array of
+<tt>char</tt>.
+A string with zero characters - <tt>""</tt> - differs from a zero pointer
+- <tt>string(0)</tt>. A <tt>string</tt> variable <i>s</i> can be converted
+to a <tt>pointer</tt> to a 1-D array of <tt>char</tt>, and such a <tt>pointer</tt><i>p</i> can be converted back to a <tt>string</tt>:
+<tt><i>p</i>=pointer(<i>s</i>); <i>s</i>=string(<i>p</i>);</tt>
+These conversions copy the characters, so you can't use the pointer <i>p</i> to
+alter the characters of <i>s</i>.  The <tt>strchar</tt> function directly
+converts between <tt>string</tt> and <tt>char</tt> data.
+</p>
+<p>Given a string or an array of strings <i>s</i>:
+</p>
+<p><tt>strlen(<i>s </i>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> number of characters in each element of <i>s</i>
+<br><tt>strpart(<i>s, rng</i>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> returns substring <i>rng</i> of <i>s</i>
+<br><tt>strfind(<i>pat, s</i>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> returns <i>rng</i> where <i>pat</i> occurs in <i>s</i>
+<br><tt>strgrep(<i>pat, s</i>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> regular expression version of <tt>strfind</tt>
+<br><tt>strword(<i>s, delims</i>)&nbsp;&nbsp;</tt> returns <i>rng</i> of words in <i>s</i>
+<br><tt>streplace(<i>s, rng, to</i>)&nbsp;</tt> replaces <i>rng</i> of <i>s</i> by <i>to</i>
+</p>
+<p>The <tt>strfind</tt>, <tt>strgrep</tt>, and <tt>strword</tt> functions
+return <i>rng</i> lists suitable as inputs to <tt>strpart</tt> or
+<tt>streplace</tt>.  Other string manipulation functions include
+<tt>strmatch</tt>, <tt>strglob</tt>, <tt>strcase</tt>, and <tt>strtrim</tt>.
+Use <tt>help</tt> for details.
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

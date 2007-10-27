@@ -1,0 +1,10 @@
+texi2html -init_file texi2html.init yorick.tex
+
+puts result in yorick subdirectory; need to add yorick_prt.html, yorick.pdf
+and rename
+
+README-win.html is top level for Windows
+
+skull.css, style.css still broken on IE 6 (10/Apr/07) because of
+IE bug involving    position: fixed
+-- needs to become   position: absolute

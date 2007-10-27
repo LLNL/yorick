@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A>
+    <ul>
+    <li><A href="../refcard/qrio00.html">Opening and Closing Text Files</A></li>
+    <li><A href="../refcard/qrio01.html">Reading Text</A></li>
+    <li><A href="../refcard/qrio02.html">Writing Text</A></li>
+    <li><A href="../refcard/qrio03.html">Positioning a Text File</A></li>
+    <li><A href="../refcard/qrio04.html">Opening and Closing Binary Files</A></li>
+    <li><A href="../refcard/qrio05.html">Saving and Restoring Variables</A></li>
+    <li><A href="../refcard/qrio06.html">Reading History Records</A></li>
+    <li><A href="../refcard/qrio07.html">Writing History Records</A></li>
+    <li><A href="../refcard/qrio08.html">Opening Non-PDB Files</A></li>
+    <li><A href="../refcard/qrio09.html">Making Plots</A></li>
+    <li><A href="../refcard/qrio10.html">Plot Paging and Hardcopy</A></li>
+    <li><A href="../refcard/qrio11.html">Setting Plot Limits</A></li>
+    <li><A href="../refcard/qrio12.html">Managing Graphics Windows</A></li>
+    <li><A href="../refcard/qrio13.html">Graphics Query, Edit, and Defaults</A></li>
+    </ul></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Writing Text</h2>
+
+<table><tbody>
+<tr><td><tt>write, <i>f, expr1, expr2, .., exprN</i></tt></td>
+<td>writes the <i>exprI</i> to file <i>f</i></td></tr>
+<tr><td><tt>write, <i>expr1, expr2, .., exprN</i></tt></td>
+<td>writes the <i>exprI</i> to terminal</td></tr>
+<tr><td><tt>swrite(<i>expr1, expr2, .., exprN</i>)</tt></td>
+<td>returns the <i>exprI</i> as a string</td></tr>
+</tbody></table>
+<p>The <tt>swrite</tt> function returns an array of strings - one string
+for each line that would have been produced by the <tt>write</tt> function.
+</p>
+<p>The <i>exprI</i> may be arrays, provided the arrays are conformable.
+In this case, the <i>exprI</i> are broadcast to the same length <b>L</b>,
+then the <tt>write</tt> is applied as if called <b>L</b> times, with successive
+elements of the <i>exprI</i> written on each call.
+</p>
+<p>Both functions accept an optional <tt>format</tt> keyword. Write format
+strings in Yorick have (nearly) the same meaning as the format strings
+for the ANSI stacndard C library <tt>printf</tt> routine. In brief, a format
+string consists of:
+</p>
+<ul>
+<li> characters other than <tt>%</tt>
+<br>which are copied directly to output</li>
+<li> conversion specifiers beginning with <tt>%</tt>
+<br>of the general format <tt>%</tt><i>FW.PSC</i> where:
+<ul>
+<li><i>F</i> is zero or more of the optional flags <tt>-</tt> (left justify),
+<tt>+</tt> (always print sign), (space) (leave space if +), <tt>0</tt> (leading zeroes)</li>
+<li><i>W</i> is an optional decimal integer specifying the minimum number
+of characters to output</li>
+<li><i>.P</i> is an optional decimal integer specifying the number of digits
+of precision</li>
+<li><i>S</i> is one of <tt>h</tt>, <tt>l</tt>, or <tt>L</tt>, ignored by
+Yorick</li>
+<li><i>C</i> is <tt>d</tt> or <tt>i</tt> (decimal integer), <tt>o</tt>
+(octal integer), <tt>x</tt> (hex integer), <tt>f</tt> (fixed point real),
+<tt>e</tt>
+(scientific real), <tt>g</tt> (fixed or scientific real), <tt>s</tt> (string),
+<tt>c</tt>
+(ASCII character), or <tt>%</tt> (the <tt>%</tt> character - not a conversion)</li>
+</ul></li></ul>
+<p>For example,
+<br><tt>> write, format="&nbsp;&nbsp; tp %7.4f %e\n", [1.,2.], [.5,.6]</tt>
+<br><tt>&nbsp;&nbsp; tp&nbsp; 1.0000 5.000000e-01</tt>
+<br><tt>&nbsp;&nbsp; tp&nbsp; 2.0000 6.000000e-01</tt>
+<br><tt>></tt>
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

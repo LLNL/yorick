@@ -1,0 +1,131 @@
+body {
+  margin:0px;
+  background:#ffffff;
+  color: #202020;
+  padding:0;
+  /* font: 12px Verdana; */
+}
+
+#banner {
+  padding: 0; 
+  margin: 0; 
+}
+
+#content {
+  text-align:left;
+  padding: 0;
+  margin: 0;
+}
+
+table {
+  /* font-size: 12px; */
+}
+
+/* ie5 hack starts \*/
+p { 
+  padding: 5px 0px 0px 4px;
+  margin: 0;
+  font: Verdana;
+}
+/* end of hack */
+p { 
+  text-align:justify;
+}
+
+ul { 
+  margin:0; 
+  margin-left: 10px; 
+  padding: 3px 3px 5px 15px;
+  list-style-position: outside;
+  /* list-style-image: url(images/star-bullet-s1.png) ; */
+}
+
+#bottomnav {
+  background: none;
+}
+
+#links .stylePicker form {
+  margin: 0;
+  padding: 0;
+}
+
+#searchbox {
+  padding: 0px;
+  margin: 0px;
+  background-color: none;
+  width: 150px;
+  height: 35px;
+}
+
+.searchitems {
+  padding: 5px 0 0 0px;
+}
+
+.searchitems input {
+  vertical-align: middle;
+}
+
+#links { 
+  margin: 0px;
+}
+
+#footer {
+  clear: both;
+  height:25px;
+  color: #333333;
+  font-size: 90%;
+}
+
+pre { 
+  font: 100% Monaco, Courier, Helvetica;
+  padding: 0;
+  margin: 0;
+}
+
+.funcname { 
+  font: 110% Courier, Helvetica;
+  font-weight: bold;
+  color: #a0aa30;
+}
+
+table .alphaHead {
+  padding: 1px 2px 1px 5px;
+  font-weight: bold;
+  color: white;
+}
+
+.spaced ul {margin: 6px 0px 0px 5px;}
+.packed ul {margin: 1px 0px 0px 5px;}
+
+.spaced li {margin: 6px 0px 0px 5px;}
+.packed li {margin: 1px 0px 0px 5px;}
+
+.xreffuncname {
+  font-weight: bold;
+  font-size: 110%;
+  background-color: #338;
+  color: white;
+  padding: 8px 10px 8px 10px;
+}
+
+table ul { 
+  margin:0; 
+  margin-left: 10px; 
+  padding: 1px 3px 1px 5px;
+  list-style-position: outside;
+  list-style-image: url(images/triangle2.jpg) ;
+}
+
+.code {
+  margin: 4px 0px 4px 0px;
+  padding: 5px 5px 5px 5px;
+  background-color: #d0d0d9;
+  background-color: #dddde4;
+  background-color: #dddddd;
+//  background-color: #efe8ef;
+//  border: 1px solid #909090;
+}
+
+pre {
+  width: 600px;
+}

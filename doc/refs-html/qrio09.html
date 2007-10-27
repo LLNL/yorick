@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A>
+    <ul>
+    <li><A href="../refcard/qrio00.html">Opening and Closing Text Files</A></li>
+    <li><A href="../refcard/qrio01.html">Reading Text</A></li>
+    <li><A href="../refcard/qrio02.html">Writing Text</A></li>
+    <li><A href="../refcard/qrio03.html">Positioning a Text File</A></li>
+    <li><A href="../refcard/qrio04.html">Opening and Closing Binary Files</A></li>
+    <li><A href="../refcard/qrio05.html">Saving and Restoring Variables</A></li>
+    <li><A href="../refcard/qrio06.html">Reading History Records</A></li>
+    <li><A href="../refcard/qrio07.html">Writing History Records</A></li>
+    <li><A href="../refcard/qrio08.html">Opening Non-PDB Files</A></li>
+    <li><A href="../refcard/qrio09.html">Making Plots</A></li>
+    <li><A href="../refcard/qrio10.html">Plot Paging and Hardcopy</A></li>
+    <li><A href="../refcard/qrio11.html">Setting Plot Limits</A></li>
+    <li><A href="../refcard/qrio12.html">Managing Graphics Windows</A></li>
+    <li><A href="../refcard/qrio13.html">Graphics Query, Edit, and Defaults</A></li>
+    </ul></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Making Plots</h2>
+<p><tt>plg, <i>y, x</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> plot graph of 1-D <i>y</i> vs. <i>x</i>
+<br><tt>plm, <i>mesh_args</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> plot quadrilateral mesh&nbsp;
+<br><tt>plc, <i>z, mesh_args</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> plot contours of <i>z</i>
+<br><tt>plf, <i>z, mesh_args</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> plot filled mesh, filling with <i>z</i>
+<br><tt>plv, <i>v, u, mesh_args</i>&nbsp;&nbsp;&nbsp;</tt> plot vector field (<i>u,v)</i>)&nbsp;
+<br><tt>pli, <i>z, x0, y0, x1, y1</i>&nbsp;</tt> plot image
+<i>z</i>
+<br><tt>pldj, <i>x0, y0, x1, y1</i>&nbsp;&nbsp;&nbsp;</tt> plot disjoint lines&nbsp;
+<br><tt>plt, <i>text, x, y</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> plot <i>text</i> at (<i>x,y</i> )
+</p>
+
+<p>The <i>mesh_args</i> may be zero, two, or three arguments as follows:
+</p>
+<ul>
+<li> omitted to use the current default mesh set by:
+<br><tt>plmesh, <i>mesh_args</i>&nbsp;</tt> set default quadrilateral mesh&nbsp;
+<br><tt>plmesh&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> delete current default quadrilateral mesh</li>
+<li> <i>y, x</i>
+<br>To set mesh points to (<i>x, y</i> ), which must be 2-D arrays of the
+same shape, with at least two elements in each dimension.</li>
+<li> <i>y, x, ireg</i>
+<br>To set mesh points to (<i>x, y</i> ), as above, with a region number
+array <i>ireg</i>. The <i>ireg</i> should be an integer array of the same
+shape as <i>y</i> and <i>x</i>, which has a non-zero ``region number''
+for every meaningful zone in the problem. The first row and column of
+<i>ireg</i> do
+not correspond to any zone, since there are one fewer zones along each
+dimension than points in <i>y</i> and <i>x</i>.</li>
+</ul>
+
+<p>The <tt>plc</tt> command accepts the <tt>levs</tt> keyword to specify
+the list of <i>z</i> values to be contoured; by default, eight linearly
+spaced levels are generated.
+</p>
+<p>The <tt>plc</tt> and <tt>plmesh</tt> commands accept the <tt>triangle</tt>
+keyword to specify a detailed triangulation map for the contouring algorithm.
+Use the <tt>help, triangle</tt> for details.
+</p>
+<p>The <tt>plv</tt> command accepts the <tt>scale</tt> keyword to specify
+the scaling factor to be applied to (<i>u, v</i>) before rendering the
+vectors in (<i>x, y</i>) space; by default, the vector lengths are chosen
+to be comparable to typical zone dimensions.
+</p>
+<p>The <tt>plm</tt> command accepts the <tt>boundary</tt> keyword, which
+should be set to 1 if only the mesh boundary, rather than the mesh interior,
+is to be plotted.
+</p>
+<p>The <tt>plm</tt>, <tt>plc</tt>, <tt>plf</tt>, and <tt>plv</tt> commands
+accept the
+<tt>region</tt> keyword to restrict the plot to only one region
+of the mesh, as numbered by the <i>ireg</i> argument. The default <tt>region</tt>
+is 0, which is interpreted to mean the every non-0 region of the mesh.
+</p>
+<p>The <tt>pli</tt> command produces a cell array; the <i>x0, y0, x1, y1</i>,
+which are optional, specify the coordinates of the opposite corners of
+the cell array.
+</p>
+<p>Numerous other keywords adjust the style of lines, text, etc.
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>

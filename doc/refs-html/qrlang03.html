@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html><head><title>Yorick Reference Card</title>
+<link rel="stylesheet" type="text/css" href="../style.css">
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
+<!--[if IE 6]>
+   <style type="text/css">
+   /*<![CDATA[*/ 
+body {overflow-y:auto;}
+#content { width: 873px; }
+#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
+#searchbox { width:100px; background-color:transparent;}
+* html #l-bar {position:absolute;}
+html {overflow-x:auto; overflow-y:hidden;}
+   /*]]>*/
+   </style>
+<![endif]-->
+</head>
+
+<body>
+<div id="l-bar">
+<div id="links">
+<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
+<div class="nav1"><a href="../README.html">Getting Started</a></div>
+<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
+<div class="nav1"><a href="./index.html">Quick Reference</a></div>
+<div class="nav2"><a href="qrlang00.html">Language Reference</a></div>
+<div class="nav2"><a href="qrfunc00.html">Function Reference</a></div>
+<div class="nav2"><a href="qrio00.html">I/O Reference</a></div>
+</div>
+<div id="bottomnav"></div>
+</div>
+<div id="banner"></div>
+<div id="content"><br>
+
+<table border="0" cellpadding="5" cellspacing="0"><tbody>
+<tr><td valign="top" width="230"><br>
+  <ul>
+  <li><A href="./qrlang00.html">Language Reference</A>
+    <ul>
+    <li><A href="./qrlang00.html">Starting and Quitting Yorick</A></li>
+    <li><A href="./qrlang01.html">Getting Help</A></li>
+    <li><A href="./qrlang02.html">Error Recovery</A></li>
+    <li><A href="./qrlang03.html">Array Data Types</A></li>
+    <li><A href="./qrlang04.html">Constants</A></li>
+    <li><A href="./qrlang05.html">Defining Variables</A></li>
+    <li><A href="./qrlang06.html">Arithmetic and Comparison Operators</A></li>
+    <li><A href="./qrlang07.html">Logical Operators</A></li>
+    <li><A href="./qrlang08.html">Creating Arrays</A></li>
+    <li><A href="./qrlang09.html">Indexing Arrays</A></li>
+    <li><A href="./qrlang10.html">Array Conformability Rules</A></li>
+    <li><A href="./qrlang11.html">Calling Functions</A></li>
+    <li><A href="./qrlang12.html">Defining Functions</A></li>
+    <li><A href="./qrlang13.html">Variable Scope</A></li>
+    <li><A href="./qrlang14.html">Returning from Functions</A></li>
+    <li><A href="./qrlang15.html">Compound Statements</A></li>
+    <li><A href="./qrlang16.html">Conditional Execution</A></li>
+    <li><A href="./qrlang17.html">Loops</A></li>
+    </ul></li>
+  <li><A href="./qrfunc00.html">Function Reference</A></li>
+  <li><A href="./qrio00.html">I/O Reference</A></li>
+  </ul>
+</td><td valign="top">
+
+<h1>Yorick Language Reference</h1>
+
+<h2>Array Data Types</h2>
+<p>The basic data types are:
+</p>
+<p> <tt>char&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> one 8-bit byte, from 0 to 255
+<br><tt>short&nbsp;&nbsp;&nbsp;&nbsp;</tt> compact integer, at least 2 bytes
+<br><tt>int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> <b>logical results</b>- 0 false, 1 true, at least 2 bytes
+<br><tt>long&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt> <b>default integer</b>- at least 4 bytes
+<br><tt>float&nbsp;&nbsp;&nbsp;&nbsp;</tt> at least 5 digits, 10<sup><font face="symbol">&plusmn;</font>38</sup>
+<br><tt>double&nbsp;&nbsp;&nbsp;</tt> <b>default real</b>- 14 or 15 digits, usually 10<sup><font face="symbol">&plusmn;</font>308</sup>
+<br><tt>complex&nbsp;&nbsp;</tt> <b>re</b> and <b>im</b> parts are double
+<br><tt>string&nbsp;&nbsp;&nbsp;</tt> 0-terminated text string
+<br><tt>pointer&nbsp;&nbsp;</tt> pointer to an array
+</p>
+<p>A compound data type <i>compound_type</i> can be built from any combination
+of basic or previously defined data types as follows:
+</p>
+<p><tt>struct</tt> <i>compound_type</i> <tt>{<br>
+&nbsp;&nbsp;</tt><i>type_name_A memb_name_1</i> <tt>;<br>
+&nbsp;&nbsp;</tt><i>type_name_B memb_name_2(dimlist)</i> <tt>;<br>
+&nbsp;&nbsp;</tt><i>type_name_C memb_name_3,memb_name_4(dimlist)</i><tt>;<br>
+&nbsp;&nbsp;...<br>}</tt>
+</p>
+<p>A <i>dimlist</i> is a comma delimited list of dimension lengths, or lists
+in the format returned by the <tt>dimsof</tt> function, or ranges of the
+form <tt>&nbsp;min_index:max_index</tt>. (By default, <tt>&nbsp;min_index</tt> is 1.)
+</p>
+<p>For example, the <tt>complex</tt> data type is predefined as:
+<tt>&nbsp;struct complex { double re, im; }</tt>
+</p>
+
+</td></tr>
+</tbody></table>
+</div></body>
+</html>
