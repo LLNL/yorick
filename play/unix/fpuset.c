@@ -1,5 +1,5 @@
 /*
- * $Id: fpuset.c,v 1.5 2007-01-31 04:06:50 dhmunro Exp $
+ * $Id: fpuset.c,v 1.6 2007-11-08 16:34:30 dhmunro Exp $
  * set up FPU to trap floating point exceptions
  * - this is very non-portable, not covered by ANSI C, POSIX, or even C9X
  * - if you port to a new platform (eg- Ultrix) please contact the author
@@ -357,6 +357,15 @@ u_fpu_setup(int when)
  */
 
 #include <architecture/ppc/fp_regs.h>
+
+# ifdef FPU_MACOSX_10_1
+/* for Darwin version 6.0 (MacOS X 10.2) FE0=FE1=1 initially
+ * for Darwin version 5.5 (MacOS X <=10.1) FE0=FE1=0 initially
+ * Darwin 5.5 resets MSR to FE0=FE1=0 after each SIGFPE
+ * A thread cannot set its own MSR, so we have to create a second thread
+ * to change our MSR to a value which permits FPE unmasking bits in SCR
+ * to have any effect (yuck).
+ */
 #include <mach/mach.h>
 #include <pthread.h>
 
@@ -368,11 +377,6 @@ static void *fpu_fpe_enable(void *arg);
  *  0    1    -- floating-point imprecise nonrecoverable
  *  1    0    -- floating-point imprecise recoverable
  *  1    1    -- floating-point precise mode
- */
-/* for Darwin version 6.0 (MacOS X 10.2) FE0=FE1=1 initially
- * for Darwin version 5.5 (MacOS X <=10.1) FE0=FE1=0 initially
- * Darwin 5.5 resets MSR to FE0=FE1=0 after each SIGFPE
- * Darwin 6.0 does not reset MSR?  leave MSR reset code in case?
  */
 
 /* a thread cannot get or set its own MSR bits */
@@ -390,6 +394,7 @@ fpu_fpe_enable(void *arg)
   }
   return 0;
 }
+# endif
 
 void
 u_fpu_setup(int when)
@@ -416,6 +421,7 @@ u_fpu_setup(int when)
       looping &= ~1;
     }
   }
+# ifdef FPU_MACOSX_10_1
   if (when <= 0) {
     thread_t self = mach_thread_self();
     pthread_t enabler;
@@ -426,6 +432,7 @@ u_fpu_setup(int when)
       looping &= ~2;
     }
   }
+# endif
   looping = 0;
 }
 
