@@ -1,5 +1,5 @@
 /*
- * $Id: gamma.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ * $Id: gamma.i,v 1.2 2007-11-10 20:03:49 dhmunro Exp $
  * Gamma function, beta function, and binomial coefficients.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -88,6 +88,7 @@ func erfc_nr(x)
      error less than 1.2e-7 everywhere.
  */
 {
+  if (structof(x)==complex) error, "erfc function not valid for complex";
   z= abs(x);
   t= 1.0/(1.0+0.5*z);
   ans= t*exp(-z*z +

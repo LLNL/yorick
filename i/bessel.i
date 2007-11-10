@@ -1,5 +1,5 @@
 /*
- * $Id: bessel.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: bessel.i,v 1.2 2007-11-10 20:03:49 dhmunro Exp $
  * A few Bessel functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -18,6 +18,7 @@ func bessj0(x)
    SEE ALSO: bessj
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessj0_1, abs(x)<8.0, _bessj0_2);
 }
 
@@ -49,6 +50,7 @@ func bessj1(x)
    SEE ALSO: bessj
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessj1_1, abs(x)<8.0, _bessj1_2);
 }
 
@@ -153,6 +155,7 @@ func bessy0(x)
    SEE ALSO: bessy
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessy0_1, abs(x)<8.0, _bessy0_2);
 }
 
@@ -184,6 +187,7 @@ func bessy1(x)
    SEE ALSO: bessy
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessy1_1, abs(x)<8.0, _bessy1_2);
 }
 
@@ -242,6 +246,7 @@ func bessi0(x)
    SEE ALSO: bessi
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   x = abs(x);
   return mergef(x, _bessi0_1, x<3.75, _bessi0_2);
 }
@@ -267,6 +272,7 @@ func bessi1(x)
    SEE ALSO: bessi
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessi1_1, abs(x)<3.75, _bessi1_2);
 }
 
@@ -347,6 +353,7 @@ func bessk0(x)
    SEE ALSO: bessk
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessk0_1, x<=2.0, _bessk0_2);
 }
 
@@ -372,6 +379,7 @@ func bessk1(x)
    SEE ALSO: bessk
  */
 {
+  if (structof(x)==complex) error, "Bessel functions not valid for complex";
   return mergef(x, _bessk1_1, x<=2.0, _bessk1_2);
 }
 

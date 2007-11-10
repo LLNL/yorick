@@ -1,5 +1,5 @@
 /*
- * $Id: dawson.i,v 1.1 2005-09-18 22:06:14 dhmunro Exp $
+ * $Id: dawson.i,v 1.2 2007-11-10 20:03:49 dhmunro Exp $
  * Dawson's integral and error functions after SLATEC
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -17,6 +17,7 @@ func dawson(x)
  */
 {
   { local mask1,mask2,mask3,xx,yy; }
+  if (structof(x)==complex) error, "dawson function not valid for complex";
   y = abs(x);
   if (any_in(,y,1., mask1, yy, x,xx))
     d1 = xx * (0.75 + _cheby_eval(_dawson_1, 2.*yy*yy-1.));
@@ -59,6 +60,7 @@ func erf(x)
  */
 {
   { local mask1,mask2,mask3,mask4,xx,yy,zz; }
+  if (structof(x)==complex) error, "erf function not valid for complex";
   y = abs(x);
   if (any_in(,y,1., mask1, yy, x,xx))
     e1 = xx * (1.0 + _cheby_eval(_erf_1, 2.*yy*yy-1.));
@@ -81,6 +83,7 @@ func erfc(x)
  */
 {
   { local mask1,mask2,mask3,mask4,xx,yy,zz; }
+  if (structof(x)==complex) error, "erfc function not valid for complex";
   y = abs(x);
   if (any_in(,y,1., mask1, yy, x,xx))
     e1 = 1.0 - xx * (1.0 + _cheby_eval(_erf_1, 2.*yy*yy-1.));

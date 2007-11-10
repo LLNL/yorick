@@ -1,5 +1,5 @@
 /*
- * $Id: elliptic.i,v 1.1 2005-09-18 22:05:56 dhmunro Exp $
+ * $Id: elliptic.i,v 1.2 2007-11-10 20:03:49 dhmunro Exp $
  * elliptic functions
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -109,6 +109,8 @@ func ell_am(u,m)
    SEE ALSO: elliptic
  */
 {
+  if (structof(u)==complex || structof(m)==complex)
+    error, "elliptic function not valid for complex";
   /* set up the arithmetic-geometric mean scale */
   extern ell_m, _agm_m, _agm_n, _agm_coa, _agm_a, _agm_sn;
   if (is_void(m)) m= ell_m;
@@ -194,6 +196,8 @@ func ell_f(phi,m)
    SEE ALSO: elliptic, ell_e
  */
 {
+  if (structof(phi)==complex || structof(m)==complex)
+    error, "elliptic integral not valid for complex";
   orig_m= m= double(m);
   if (m>1.) {
     scale= sqrt(m);
@@ -254,6 +258,8 @@ func ell_e(phi,m)
    SEE ALSO: elliptic, ell_f
  */
 {
+  if (structof(phi)==complex || structof(m)==complex)
+    error, "elliptic integral not valid for complex";
   orig_m= m= double(m);
   if (m>1.) {
     scale= sqrt(m);
