@@ -44,8 +44,8 @@ build-stamp: configure-stamp
 	$(MAKE) -C doc yorick.info
 	mkdir -p build/share
 	mkdir -p build/lib/yorick
-	mv relocate/doc build/doc
-	mv relocate build/share/yorick
+	cp -a relocate build/share/yorick
+	rm -Rf build/share/yorick/doc
 	mkdir -p build/share/yorick/packages/installed
 	mv build/share/yorick/bin build/lib/yorick/
 	mv build/share/yorick/lib build/lib/yorick/
@@ -59,6 +59,16 @@ build-stamp: configure-stamp
 	cp emacs/yorick-auto.el build/50yorick-auto.el
 	convert icons/yicon32.png build/yorick32x32.xpm
 	convert icons/yicon16.png build/yorick16x16.xpm
+	mkdir -p build/doc/html
+	relocate/bin/yorick -i debian/helpers/mkdoc.i
+	rm build/doc/index.html
+	cd build/doc ; texi2html -init-file ../../debian/helpers/texi2html.init ../../doc/yorick.tex
+	mv build/doc/yorick/* build/doc/manual/
+	rmdir build/doc/yorick
+	rmdir build/doc/html_i
+	cp -a doc/yorick.pdf build/doc/manual.pdf
+	cp -a doc/refs.pdf build/doc/refcard.pdf
+	rm -rf doc/html_i
 	touch build-stamp
 
 clean: configure-stamp clean-patched unpatch
@@ -110,19 +120,20 @@ binary-arch: build-stamp
 
 ###### Getting the original source:
 Y_VERS:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/+.*//')
-CVSVERS:=$(Y_VERS)+dfsg.orig
 CVSROOT:=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
 CVSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }')
+CVSVERS:=$(Y_VERS)+dfsg+cvs$(CVSDATE).orig
 ORIG_URL:=http://dl.sourceforge.net/sourceforge/yorick/
 ORIG_TGZ:=yorick-$(Y_VERS).tgz
 # Non-DFSG-free files (see copyright):
 PRUNEFILES:=play/hacks/hack103.c i/idlsave.i opengl
 
 # Use this rule to get the original sources if the current verion is from
-# cvs. Breaks when sourceforge change there CVS access.
+# cvs. Breaks when sourceforge change their CVS access.
 #
 # WARNING: Side effect: this will use and remove the
-# directory "orig-sources".
+# directory "orig-sources" and overwrite yorick-(version).orig/
+# and yorick_(version).orig.tar.gz.
 get-cvs-source:
 	-rm -Rf ../orig-sources
 	mkdir ../orig-sources

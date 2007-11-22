@@ -2,3 +2,4 @@ build/share usr
 debian/zzdebian.i usr/share/yorick/i-start
 emacs/yorick.el usr/share/emacs/site-lisp
 build/yorick*.xpm usr/share/pixmaps
+debian/linda-overrides.d/yorick-data usr/share/linda/overrides

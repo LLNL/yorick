@@ -1,0 +1,7 @@
+Tag: no-upstream-changelog
+# OK, I know.
+
+Tag: empty-directory-in-pkg
+Data: usr/share/yorick/packages/installed
+# add-on packages should install a file there.
+# Although not technically useful, it makes sense for yorick-data to create it.
