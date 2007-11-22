@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 04_htmldoc_i.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: bugfix rel. "to=" keyword.
+## DP: should be fixed upstream.
+
+@DPATCH@
+
+--- yorick-2.1.04+dfsg+cvs20071118.orig/doc/html/htmldoc.i	2007-11-21 16:59:55.000000000 +0100
++++ yorick-2.1.04+dfsg+cvs20071118/doc/html/htmldoc.i	2007-11-21 16:38:36.000000000 +0100
+@@ -1164,7 +1164,7 @@
+       ch = string (&(char('a' + i)));
+       w = where (strpart (kwl, 1:1) == ch);
+       if (!numberof(w)) continue;
+-      fnm = "html/keywords-" + ch + ".html";
++      fnm = to+"html/keywords-" + ch + ".html";
+       write, format = "\n %s   ", fnm;
+       hdoc_keywordref, fnm, kwl(w), tags;
+    }
