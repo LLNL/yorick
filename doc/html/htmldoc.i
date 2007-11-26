@@ -19,10 +19,12 @@ revised by David Munro 19/Apr/01
 
 
 
-func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=)
+func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=,aliases=)
 /* DOCUMENT mkhtmldoc         generate html documentation tree
     
-            mkhtmldoc, from=, to=, keywords=, packinfo= nosrc=, nofunc= 
+            mkhtmldoc, from=, to=,
+                       keywords=, packinfo=, aliases=,
+                       nosrc=, nofunc=
    generates html documentation from yorick files in selected directories.
    Without any arguments the subdirectories i0, i, and contrib
    of Y_SITE are scanned for function definitions, and the documentation is 
@@ -35,7 +37,9 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=)
    if there is a file keywords.txt in the current directory, then that is 
    used. Likewise, the packinfo= can be used to specify a file containing 
    further information on some or all of the files in the source directories.
-   It defaults to packinfo.txt if not specified. 
+   It defaults to packinfo.txt if not specified. an "aliases" file can  also be
+   specified to merge the functions from several .i files in a single .html
+   file.
    The keywords nosrc and nofunc, if non null cut out the slowest parts 
    of the document creation process - crossreferencing the source files, 
    and creating function pages. They can be useful when checking the 
@@ -118,13 +122,13 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=)
    } 
 
 
-   /* directories for html files: html for alphabetical function listings,
-      html_i for converted yorick code, and create the directories 
-      manual and html to hold the manual, and pages to be created by hand.
-      (for now will put simple placeholder files in them)
+   /* directories for html files: html_xref for alphabetical function
+      listings, create the directories manual and refcard to hold the
+      manual and reference cards.  (for now will put simple
+      placeholder files in them)
       */ 
    
-   dnames = ["manual","html_i","html","images"];
+   dnames = ["manual","refcard","html_xref","images"];
    // make these directories under the 'to' directory if they don't exist;
    for (i = 1; i <= numberof (dnames); i++) {
       todir = to + dnames(i);
@@ -220,31 +224,40 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=)
 
      tags = tags(,sort(strcase(0,tags(1,))));
 
-     mask = (strpart(tags(3,),-2:0)=="fft") |
-       (strpart(tags(3,),-5:0)=="matrix");
-     list = where(mask);
-     tags(3,list) = "math";
-     write, format = "writing index and doc pages for %s      \n", "math";
-     hdoc_funcindex, "math", tags(,list), to;
-     hdoc_funcdocs, "math", tags(,list), tags, to;
+     if (is_void(aliases)) aliases="aliases.txt";
+     if (fal=open(aliases,"r",1)) {
+       while (line=rdline(fal)) {
+         found=0;
+         if (strlen(line)==0) continue;
+         aka=pathsplit(line,delim=" ");
+         rname=aka(1);
+         if (strgrep("^#",rname)(2)==1) continue;
+         for (i=1;i<=numberof(aka);i++) {
+           list=where(strgrep(aka(i)+"$",tags(3,))(2,)!=-1);
+           if (numberof(list)) {
+             tags(3,list)=rname;
+             found=1;
+             grow,rtx,aka(i);
+           }
+         }
+         if (found) {
+           list=where(tags(3,)==rname);
+           write, format = "writing index and doc pages for %s \n", rname;
+           hdoc_funcindex, rname, tags(,list), to;
+           hdoc_funcdocs, rname, tags(,list), tags, to;
+         }
+       }
+       close,fal;
+         // math fft matrix
+         // yorz png mpeg jpeg zlib
+     }
 
-     mask = (strpart(tags(3,),-2:0)=="png") |
-       (strpart(tags(3,),-3:0)=="mpeg") |
-       (strpart(tags(3,),-3:0)=="jpeg") |
-       (strpart(tags(3,),-3:0)=="zlib");
-     list = where(mask);
-     tags(3,list) = "yorz";
-     write, format = "writing index and doc pages for %s      \n", "yorz";
-     hdoc_funcindex, "yorz", tags(,list), to;
-     hdoc_funcdocs, "yorz", tags(,list), tags, to;
       tags = tags(,sort(tags(3,)));
       rtndx = (tags(3,2:0)!=tags(3,1:-1))(cum)+1;
       rtname = array(string, rtndx(0));
       rtname(rtndx) = tags(3,);
       tags = tags(,sort(strcase(0,tags(1,))));
-      mask = (rtname=="fft") | (rtname=="matrix") | (rtname=="png") |
-        (rtname=="mpeg") | (rtname=="jpeg") | (rtname=="zlib");
-      rtname = rtname(where(!mask));
+      for (i=1;i<=numberof(rtx);i++) rtname = rtname(where(rtname!=rtx(i)));
       for (i = 1; i <= numberof(rtname); i++) {
 	 write, format = "writing index and doc pages for %s      \n", 
            rtname(i);
@@ -305,10 +318,7 @@ func _lsm1 (from, ext=, to=) {
    for (i = 2; i <= ndir; i++) {
       system, "ls -1 " + from(i) + "/*" + ext + " >> " + to + "tmpflist.dat";
    }
-   f = open (to + "tmpflist.dat");
-   ifiles = rdline(f, 1000);
-   ifiles = ifiles(where(ifiles));
-   close, f;
+   ifiles = hdoc_read_file(to + "tmpflist.dat");
    remove, to + "tmpflist.dat";
    if (ext==".i" && numberof(ifiles)) {
      mask = strpart(ifiles,-7:0)!="collec.i";
@@ -532,7 +542,7 @@ func srcanchor (infile, outfile, tags) {
 	    /* for the definition/declaration itself, put in an anchor and 
                a link back to the documentation tree */
 	    wryte, g, ("<b>" + split(1) + " <a name = " + tagdat(1) + 
-		       " href = ../html/" + tagdat(3) + 
+		       " href = ../html_xref/" + tagdat(3) + 
 		       "-doc.html" + "#" + tagdat(1) + 
 		       ">" + tagdat(1) + "</a></b> " + rest);  
 	 }
@@ -628,17 +638,14 @@ func hdoc_funcindex(rtname, tags, to) {
    idxbg0 = "\"#ffffff\"";
 
 
-   f = open (to + "html/" + rtname + "-index.html", "w");
+   f = open (to + "html_xref/" + rtname + "-index.html", "w");
 
-   if (rtname == "global") {
-     _hdoc_head, f, "Yorick routines defined in all files", table=1; 
-     wryte, f, "<center><h1>";
-      wryte, f,  "all routines";
-   } else {
-     _hdoc_head,f, "Yorick routines defined in file " + rtname + ".i",table=1; 
-     wryte, f, "<center><h1>";
-      wryte, f,  "Yorick routines defined in file " + rtname + ".i";
-   }
+   if (rtname == "global") title="Yorick routines defined in all files";
+   else title="Yorick routines defined in file " + rtname + ".i";
+   _hdoc_head, f, title, table=1; 
+   wryte, f, "<center><h1>";
+   if (rtname == "global") wryte, f,  "all routines";
+   else wryte, f,  title;
    wryte, f, "</h1></center>";
    _hdoc_skip, f, 2;
 
@@ -678,7 +685,7 @@ func hdoc_funcindex(rtname, tags, to) {
       wryte, f, "</tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f, title, table=1;
 }
 
 
@@ -694,9 +701,9 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
    f = [];
    n = numberof (name_list);
 
-	 f = open(to+"html/"+rtname+"-doc.html","w");
-         _hdoc_head, f, "section " + aprev + " of routines in " +
-           rtname + ".i", table=1
+	 f = open(to+"html_xref/"+rtname+"-doc.html","w");
+         title = "section " + aprev + " of routines in " + rtname + ".i";
+         _hdoc_head, f, title, table=1
 	 wryte, f, "<center><h1>";
 	 if (rtname == "global") {
 	    wryte, f, " all functions  - " + aprev;
@@ -793,7 +800,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
 	    w = where (anames == ssa);
 	    if (numberof(w) == 1) {
 	       igl = w(1);
-	       defroot = "../html/" + atags(3, igl);
+	       defroot = "../html_xref/" + atags(3, igl);
 	    } else {
 	       if (nwsf == 0) write, format = "\n %s", "";
 	       write, fwarn, format = " warning: %i tag matches for  %s \n", 
@@ -814,7 +821,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
       }
       wryte, f, "</table>";
    }
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f, title, table=1;
    close, f;
 }
 
@@ -906,7 +913,7 @@ func split_doc_list (name_list, doc_list, &doc_def, &doc_body, &doc_see)
 
 
 func hdoc_toptemplate (to) {
-   _hdoc_indexbartags, htags, hfiles;
+   _hdoc_indexbartags, htags, hfiles, toroot="";
    // if index.html exists, don't overwrite it - put the template
    // in index-raw.html instead
 
@@ -916,7 +923,8 @@ func hdoc_toptemplate (to) {
    } else {
       f = open(to + "index.html", "w");
    }
-   _hdoc_head, f, "yorick reference", table=1;
+   title = "yorick reference";
+   _hdoc_head, f, title, table=1, toroot="";
 
 
    wryte, f, "<h1><center>Yorick</center></h1>";
@@ -943,14 +951,14 @@ func hdoc_toptemplate (to) {
    f = f;
    wryte, f, "<ul>";
    wryte, f, "<li>";
-   wryte, f, "<a href = ftp://ftp-icf.llnl.gov/pub/Yorick/yorick-ad.html>yorick's home</a>";
+   wryte, f, "<a href = http://yorick.sourceforge.net>the official yorick homepage</a>";
 
    wryte, f, "<li>";
-   wryte, f, "a  copy of <a href=\"../yorick-ad.html\">the same page</a>";
-   wryte, f, "in case that link is slow";
+   wryte, f, "<a href = http://www.maumae.net/yorick/doc/index.php>";
+   wryte, f, "the unofficial yorick homepage</a>";
 
    wryte, f, "<li>";
-   wryte, f, "the <a href = ftp://ftp-icf.llnl.gov/pub/munro/yorickfaq.html>yorick faq</a>";
+   wryte, f, "the <a href = http://yorick.sourceforge.net/yorickfaq.php>yorick faq</a>";
    wryte, f, "</ul>";
 
    wryte, f, "<hrule>";
@@ -958,19 +966,20 @@ func hdoc_toptemplate (to) {
    wryte, f, "This documentation was generated from the manual, README files, ";
    wryte, f, "and code documents of Yorick written by David H. Munro. <p>";
 
-   wryte, f, "Yorick is free software, <a href=\"../copyright.html\">copyright</a>";
+   wryte, f, "Yorick is free software, <a href=\"copyright.html\">copyright</a>";
    wryte, f, "of the Regents of the University of California";
 
    wryte, f, "<hrule>";
 
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f, title, table=1, toroot="";
 
    f = open (to + "copyright.html", "w");
-   _hdoc_head, f, "yorick copyright", table=1;
+   title = "yorick copyright";
+   _hdoc_head, f, title, table=1, toroot="";
    wryte, f, "<center><h1>Yorick</h1></center>";
    _hdoc_skip, f, 4;
    _hdoc_copyright, f;
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f, title, table=1, toroot="";
 }
 
 
@@ -1045,8 +1054,9 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
       }
    }
 
-   f = open (to + "html/packages.html", "w");
-   _hdoc_head, f, "Yorick packages", table=1;
+   f = open (to + "html_xref/packages.html", "w");
+   title = "Yorick packages";
+   _hdoc_head, f, title, table=1;
 
    was_entry = 0;
        wryte, f, ("<table cellspacing=0 border=0" +
@@ -1093,7 +1103,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
    }
    wryte, f, "</table> &nbsp;<br>&nbsp;<br>&nbsp;<br>";
 
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f, title, table=1;
    close, f;
 }
 
@@ -1115,8 +1125,9 @@ func hdoc_keywordindex (tags, keywords, to) {
    s = sort (kwl);
    kwl = kwl(s);
 
-   f = open (to + "html/keywords.html", "w");
-   _hdoc_head, f, "Yorick keyword index", table=1;
+   f = open (to + "html_xref/keywords.html", "w");
+   title = "Yorick keyword index";
+   _hdoc_head, f, title, table=1;
 
    wryte, f, ("<table cellspacing=2 border=0" +
 		  " cellpadding=4 width=100\%>");
@@ -1126,7 +1137,7 @@ func hdoc_keywordindex (tags, keywords, to) {
       w = where (strpart (kwl, 1:1) == ch);
       if (!numberof(w)) continue;
       wryte, f, "<td>"; 
-      wryte, f, "<a href = ../html/keywords-"+ch+".html>"+ch+"</a>";
+      wryte, f, "<a href = ../html_xref/keywords-"+ch+".html>"+ch+"</a>";
       wryte, f, "</td>" 
    }
    wryte, f, "</tr></table>";
@@ -1145,7 +1156,7 @@ func hdoc_keywordindex (tags, keywords, to) {
 	    myw = kwl(irc);
 	    suff = strcase(0, strpart (myw, 1:1));
 	    wryte, f, "<td>";
-	    wryte, f, ("<a href = ../html/keywords-" + suff +
+	    wryte, f, ("<a href = ../html_xref/keywords-" + suff +
 		       ".html#" + strcomp(myw) + ">" + myw + "</a>");
 	    wryte, f, "</td>";
 	 } else {
@@ -1155,14 +1166,14 @@ func hdoc_keywordindex (tags, keywords, to) {
       wryte, f, "</tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f, title, table=1;
    close, f;
 
    for (i = 0; i < 26; i++) {
       ch = string (&(char('a' + i)));
       w = where (strpart (kwl, 1:1) == ch);
       if (!numberof(w)) continue;
-      fnm = "html/keywords-" + ch + ".html";
+      fnm = to+"html_xref/keywords-" + ch + ".html";
       write, format = "\n %s   ", fnm;
       hdoc_keywordref, fnm, kwl(w), tags;
    }
@@ -1185,7 +1196,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
    for (i = 0; i < 26; i++) {
       ch = string (&(char(int(*pointer ("a"))(1) + i)));
       wryte, f, "<td>"; 
-      wryte, f, "<a href = ../html/keywords-" + ch + ".html>"+ch+"</a>";
+      wryte, f, "<a href = ../html_xref/keywords-" + ch + ".html>"+ch+"</a>";
       wryte, f, "</td>" 
    }
    wryte, f, "</td></tr></table>";
@@ -1203,7 +1214,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
 
       w = where (name_list == myk);
       if (numberof (w) > 0) {
-	 defroot = "../html/" + file_list(w(1));
+	 defroot = "../html_xref/" + file_list(w(1));
 	 wryte, f, (" <b><a href=\"" + defroot +
 		    "-doc.html#"+myk + "\">" + 
 		    myk + "</a></b> &nbsp;&nbsp;&nbsp;");
@@ -1220,7 +1231,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
 	 nsa = numberof (w);
 	 for (j = 1; j <= nsa; j++) {
 	    ssa = name_list(w(j));
-	    defroot = "../html/" + file_list(w(j));
+	    defroot = "../html_xref/" + file_list(w(j));
 	    wryte, f, (" <a href=\"" + defroot +
 		        "-doc.html#"+ssa + "\">" + ssa + "</a>"+ 
 		       ((j < nsa) ? ", &nbsp; " : " &nbsp; ")); 
@@ -1230,7 +1241,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
       wryte, f, "</td></tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, table=1;
+   _hdoc_tail, f,fnm,  table=1;
    close, f;
 }
 
@@ -1257,11 +1268,12 @@ func _hdoc_startbody (f)
 /* a simple page can be made with 
        _hdoc_head, f, title;
        ... write some html;
-       _hdoc_tail, f;
+       _hdoc_tail, f, title;
 
-       with the 'table' option set, it puts a margin on the left and 
-       the text is put inside a table - the left column is the margin, 
-       the right column contains evverything else
+       with the 'table' option set, it puts a margin on the left and
+       the text is put inside a table - the left column is the margin,
+       the right column contains evverything else. The layout can be
+       customized using hdoc_read_template().
  */
 
 func wryte(f, line)
@@ -1269,61 +1281,89 @@ func wryte(f, line)
   write,format="%s\n", f, line;
 }
 
-func _hdoc_head (g, title, table=) {
-   wryte, g, "<html> <head> <title>";
-   wryte, g, title;
-   wryte, g, "</title> </head>";
-   _hdoc_startbody, g;
+extern _hdoc_template;
+_hdoc_template=
+["<html> <head> <title>",
+ "%title%",
+ "</title> </head>",
+ "%startbody%",
+ "<TABLE border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"100%\">",
+ "<TR><TD valign=\"TOP\" width=\"150\" bgcolor=\"#bbddff\"><BR>",
+ "<IMG src=\"../images/ybanng.jpg\" border=\"0\" hspace=\"0\" vspace=\"0\"",
+ " alt=\"yorick banner\">",
+ "  <FONT face=\"Arial,Helvetica\">",
+ "  <P><B><A href=\"../index.html\">Home</A></B></P>",
+ "  <P><B><A href=\"../manual/yorick.html\">Manual</A></B></P>",
+ "  <P><B><A href=\"../html_xref/packages.html\">Packages</A></B></P>",
+ "  <P><B><A href=\"../html_xref/global-index.html\">Global Index</A></B></P>",
+ "  <P><B><A href=\"../html_xref/keywords.html\">Keywords</A></B></P>",
+ "  <P><B><A href=\"../refcard/index.html\">Quick Reference</A></B></P>",
+ "  </FONT>",
+ "</TD><TD valign=\"TOP\">",
+ "%content%",
+ "</td></tr>",
+ "</table>",
+ "&nbsp;<br>",
+ "&nbsp;<br>",
+ "&nbsp;<br>",
+ "</body>",
+ "</html>"];
+
+func _hdoc_parse_tpl_line (g, i, toroot=,title=) {
+  if (is_void(toroot)) toroot = "../";
+  if (_hdoc_template(i)=="%title%") wryte, g, title;
+  else {
+    if (_hdoc_template(i)=="%startbody%") _doc_startbody, g;
+    else {
+      if (_hdoc_template(i)=="%indexbar%") _hdoc_indexbar, g;
+      else {
+        if (_hdoc_template(i)=="%skip%") _hdoc_skip, g, 1;
+        else {
+          line=streplace(_hdoc_template(i),strgrep("%title%",_hdoc_template(i)),title);
+          line=streplace(line,strgrep("%toroot%",line),toroot);
+          wryte, g, line;
+        }
+      }
+    }
+  }
+}
+
+func _hdoc_head (g, title, table=, toroot=) {
    if (table) {
-     wryte, g, "<TABLE border=\"0\" cellpadding=\"5\" cellspacing=\"0\" "+
-       "width=\"100%\">";
-     wryte, g, "<TR><TD valign=\"TOP\" width=\"150\" bgcolor=\"#bbddff\"><BR>";
-     wryte, g, "<IMG src=\"../images/ybanng.jpg\" border=\"0\" "+
-       "hspace=\"0\" vspace=\"0\"";
-     wryte, g, " alt=\"yorick banner\">";
-     wryte, g, "  <FONT face=\"Arial,Helvetica\">";
-     wryte, g, "  <P><B><A href=\"../index.html\">Home</A></B></P>";
-     wryte, g, "  <P><B><A href=\"../manual/yorick.html\">Manual</A></B></P>";
-     wryte, g, "  <P><B><A href=\"../html/packages.html\">"+
-       "Packages</A></B></P>";
-     wryte, g, "  <P><B><A href=\"../html/global-index.html\">"+
-       "Global Index</A></B></P>";
-     wryte, g, "  <P><B><A href=\"../html/keywords.html\">"+
-       "Keywords</A></B></P>";
-     wryte, g, "  <P><B><A href=\"../refcard/index.html\">"+
-       "Quick Reference</A></B></P>";
-     wryte, g, "  </FONT>";
-     wryte, g, "</TD><TD valign=\"TOP\">";
+     for (i=1;i<=numberof(_hdoc_template)&_hdoc_template(i)!="%content%";i++)
+           _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title;
    } else {
+     wryte, g, "<html> <head> <title>";
+     wryte, g, title;
+     wryte, g, "</title>";
+     _hdoc_startbody, g;
      _hdoc_indexbar, g;
      _hdoc_skip, g, 3;
    }
 }
 
-func _hdoc_tail (g, table=) {
-   if (do_disclaimer) {
-     wryte, g, "<P><HR><a href=\"http://www.llnl.gov/disclaimer.html\">";
-     wryte, g, "<small>LLNL Disclaimers</small></a></P>";
-   }
-   if (table) {
-      wryte, g, "</td></tr>";
-      wryte, g, "</table>";
-   }
-   _hdoc_skip, g, 3;
-   wryte, g, "</body>";
-   wryte, g, "</html>";
+func _hdoc_tail (g, title, table=, toroot=) {
+  if (do_disclaimer) {
+    wryte, g, "<P><HR><a href=\"http://www.llnl.gov/disclaimer.html\">";
+    wryte, g, "<small>LLNL Disclaimers</small></a></P>";
+  }
+  if (table) {
+    for (i=max(where(_hdoc_template=="%content%"))+1;i<=numberof(_hdoc_template);i++)
+      _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title;
+  } else {
+    _hdoc_skip, g, 3;
+    wryte, g, "</body>";
+    wryte, g, "</html>";
+  }
 }
 
-func _hdoc_headtail (src, dest, title= ) {
-   f = open (src);
+func _hdoc_headtail (src, dest, title= , toroot=) {
    g = open (dest, "w");
    if (is_void(title)) title = dest
    _hdoc_head, g, title, table=1;
-   line = rdline(f,50000);
-   line = line(where(line));
+   line = hdoc_read_file(src);
    wryte, g, line;
-   _hdoc_tail, g, table=1;
-   close, f;
+   _hdoc_tail, g, title, table=1, toroot=toroot;
    close, g;
    remove, src;
 }
@@ -1340,11 +1380,12 @@ func _hdoc_skip (f, n) {
 
 
 
-func _hdoc_indexbartags (&htags, &hfiles) {
+func _hdoc_indexbartags (&htags, &hfiles, toroot=) {
+  if (is_void(toroot)) toroot="../";
    htags = ["home", "manual",  "packages", "index", "keywords"];
-   hfiles = ["../index.html", "../manual/yorick.html", 
-	     "../html/packages.html", 
-	     "../html/global-index.html", "../html/keywords.html"];
+   hfiles = toroot+["index.html", "manual/yorick.html", 
+	     "html_xref/packages.html", 
+	     "html_xref/global-index.html", "html_xref/keywords.html"];
 }
 
 func _hdoc_indexbar(f) {
@@ -1412,13 +1453,19 @@ func hdoc_wrap (dir) {
    }
 }
 
+func hdoc_read_file(fname,block) {
+  if (is_void(block)) block=1024;
+  f=open(fname,"r");
+  lines=rdline(f,1024);
+  while (lines(0)) grow,lines,rdline(f,1024);
+  return lines(where(lines));
+}
 
-
-
-
-
-
-
+func hdoc_read_template(fname) {
+  extern _hdoc_template;
+  _hdoc_template=hdoc_read_file(fname);
+}
+ 
 
 func _hdoc_copyright (f) {
    wryte, f, "Copyright 1994. The Regents of the University of California";
@@ -1468,3 +1515,4 @@ if (batch()) {
   else write, "creating yorick html documents set (LLNL version)";
   mkhtmldoc;
 }
+ 
