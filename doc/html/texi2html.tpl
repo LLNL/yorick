@@ -8,42 +8,16 @@ $ICONS = 1;
 $SPLIT = 'node';
 
 $EXTRA_HEAD = <<'EOF';
-<link rel="stylesheet" type="text/css" href="../style.css">
-<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
-<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
-<link rel="stylesheet" type="text/css" href="../skull.css" title="skull">
-<!--[if IE 6]>
-   <style type="text/css">
-   /*<![CDATA[*/ 
-body {overflow-y:auto;}
-#content { width: 873px; }
-#l-bar {display:block; top:0px; left:0px; width:130px; position:absolute; border:0px solid #888; background-color:transparent;background-url:none;}
-#searchbox { width:100px; background-color:transparent;}
-* html #l-bar {position:absolute;}
-html {overflow-x:auto; overflow-y:hidden;}
-   /*]]>*/
-   </style>
-<![endif]-->
+%extra_head%
 EOF
 
 $AFTER_BODY_OPEN = <<'EOF';
-<div id="l-bar">
-<div id="links">
-<div class="nav1"><a href="http://yorick.sourceforge.net/index.php">Web Home</a></div>
-<div class="nav1"><a href="../README.html">Getting Started</a></div>
-<div class="nav1"><a href="../manual/yorick_1.html">Manual</a></div>
-<div class="nav2"><a href="../manual/yorick_toc.html">Contents</a></div>
-<div class="nav2"><a href="../manual/yorick.html">Copyright</a></div>
-<div class="nav2"><a href="../manual/yorick_prt.html">Print Manual</a></div>
-<div class="nav1"><a href="../refcard/index.html">Quick Reference</a></div>
-</div>
-<div id="bottomnav"></div>
-</div>
-<div id="banner"></div>
-<div id="content"> 
-<br>
+%after_body_open%
 EOF
-$PRE_BODY_CLOSE = '</div>';
+
+$PRE_BODY_CLOSE = <<'EOF';
+%pre_body_close%
+EOF
 
 # specify in this array which "buttons" should appear in which order
 # in the navigation panel for sections; use ' ' for empty buttons (space)

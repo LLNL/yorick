@@ -1,34 +1,42 @@
 /*  ************************** htmldoc.i *****************   */
+// $Id: htmldoc.i,v 1.3 2007-11-27 19:19:29 paumard Exp $
 
 /* DOCUMENT htmldoc.i 
    html documentation tools. By default the function mkhtmldoc constructs 
-   html pages from the i0, i and contrib directories. 
-   Document comments are extracted, and cross-refrenced to each other and to 
+   html pages from the installed i0 and i directories. 
+   Document comments are extracted, and cross-referenced to each other and to 
    the original function definitions. Crude indexing is performed by matching
    a list of keywords to the document comments.
-   Functions mkhtmldoc.
+   Functions mkhtmldoc, hdoc_read_template, hdoc_extract_embedded, mktexi2html_init
+   Lower level: _hdoc_head, _hdoc_tail, _hdoc_headtail
  */
 
 
 
 /*
 author: Robert Cannon, rcc1@soton.ac.uk, 15th May 98
-revised by David Munro 19/Apr/01
+revised by David Munro 19/Apr/01, T. Paumard Nov/07
+Yorick's BSD license applies:
+Copyright (c) 2005-2007, The Regents of the University of California.
 */
 
 
-
-
-func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=,aliases=)
+func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, warn=,aliases=)
 /* DOCUMENT mkhtmldoc         generate html documentation tree
     
             mkhtmldoc, from=, to=,
                        keywords=, packinfo=, aliases=,
                        nosrc=, nofunc=
    generates html documentation from yorick files in selected directories.
-   Without any arguments the subdirectories i0, i, and contrib
+   Without any arguments the subdirectories i0 and i
    of Y_SITE are scanned for function definitions, and the documentation is 
    created in subdirectories of the current directory.
+   
+   The page layout is defined in a template file, which defaults to
+   "template.html" if this file exists. A builtin fallback is used if
+   no file is provided. The template can also be set using
+   hdoc_read_template.
+
    If specified, the  'from' keyword should be a string array of 
    directories to scan. The 'to' keyword can be used to set a 
    destination directory other than the current directory.
@@ -37,9 +45,10 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=,aliases=
    if there is a file keywords.txt in the current directory, then that is 
    used. Likewise, the packinfo= can be used to specify a file containing 
    further information on some or all of the files in the source directories.
-   It defaults to packinfo.txt if not specified. an "aliases" file can  also be
+   It defaults to packinfo.txt if not specified. An "aliases" file can  also be
    specified to merge the functions from several .i files in a single .html
-   file.
+   file. It defaults to aliases.txt in the current directory if this file exists.
+   
    The keywords nosrc and nofunc, if non null cut out the slowest parts 
    of the document creation process - crossreferencing the source files, 
    and creating function pages. They can be useful when checking the 
@@ -98,7 +107,8 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=,aliases=
 
    KEYWORDS: keywords, packinfo, from, to, nosrc, nofunc
 
-   SEE ALSO:  mkdoc, tagscan, srcanchor 
+   SEE ALSO:  mkdoc, tagscan, srcanchor, hdoc_read_template,
+              mktexi2html_init, hdoc_extract_embedded
  */
 
 {
@@ -121,6 +131,8 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=,aliases=
       fwarn = open (warn, "w");
    } 
 
+   if (is_void(template)) template="template.html";
+   if (open(template,"r",1)) hdoc_read_template,"template.html";
 
    /* directories for html files: html_xref for alphabetical function
       listings, create the directories manual and refcard to hold the
@@ -292,7 +304,6 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, nosrc=, nofunc=, warn=,aliases=
 
    //STAGE 7 - miscellaneous;
    hdoc_toptemplate, to;
-
 
    // put a default background image in the images directory;
    // f = open (to + "images/ydocbg.gif", "wb");
@@ -637,12 +648,12 @@ func hdoc_funcindex(rtname, tags, to) {
    idxfg = "\"#000000\"";
    idxbg0 = "\"#ffffff\"";
 
-
+   doc="xref";
    f = open (to + "html_xref/" + rtname + "-index.html", "w");
 
    if (rtname == "global") title="Yorick routines defined in all files";
    else title="Yorick routines defined in file " + rtname + ".i";
-   _hdoc_head, f, title, table=1; 
+   _hdoc_head, f, title, table=1, doc=doc; 
    wryte, f, "<center><h1>";
    if (rtname == "global") wryte, f,  "all routines";
    else wryte, f,  title;
@@ -685,7 +696,7 @@ func hdoc_funcindex(rtname, tags, to) {
       wryte, f, "</tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, title, table=1;
+   _hdoc_tail, f, title, table=1, doc=doc;
 }
 
 
@@ -703,7 +714,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
 
 	 f = open(to+"html_xref/"+rtname+"-doc.html","w");
          title = "section " + aprev + " of routines in " + rtname + ".i";
-         _hdoc_head, f, title, table=1
+         _hdoc_head, f, title, table=1, doc=doc;
 	 wryte, f, "<center><h1>";
 	 if (rtname == "global") {
 	    wryte, f, " all functions  - " + aprev;
@@ -821,7 +832,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
       }
       wryte, f, "</table>";
    }
-   _hdoc_tail, f, title, table=1;
+   _hdoc_tail, f, title, table=1, doc=doc;
    close, f;
 }
 
@@ -924,7 +935,8 @@ func hdoc_toptemplate (to) {
       f = open(to + "index.html", "w");
    }
    title = "yorick reference";
-   _hdoc_head, f, title, table=1, toroot="";
+   doc="index";
+   _hdoc_head, f, title, table=1, toroot="", doc=doc;
 
 
    wryte, f, "<h1><center>Yorick</center></h1>";
@@ -971,7 +983,7 @@ func hdoc_toptemplate (to) {
 
    wryte, f, "<hrule>";
 
-   _hdoc_tail, f, title, table=1, toroot="";
+   _hdoc_tail, f, title, table=1, toroot="", doc=doc;
 
    f = open (to + "copyright.html", "w");
    title = "yorick copyright";
@@ -1056,7 +1068,8 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
 
    f = open (to + "html_xref/packages.html", "w");
    title = "Yorick packages";
-   _hdoc_head, f, title, table=1;
+   doc="xref";
+   _hdoc_head, f, title, table=1, doc=doc;
 
    was_entry = 0;
        wryte, f, ("<table cellspacing=0 border=0" +
@@ -1103,12 +1116,71 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
    }
    wryte, f, "</table> &nbsp;<br>&nbsp;<br>&nbsp;<br>";
 
-   _hdoc_tail, f, title, table=1;
+   _hdoc_tail, f, title, table=1, doc=doc;
    close, f;
 }
 
 
+func hdoc_extract_embedded (to,template_file) {
+  /* DOCUMENT hdoc_extract_embedded [,to, template_file]
+     
+      extract documents embedded in the HTML documentation template.
 
+      If TEMPLATE_FILE is specified, load this file as a template
+      first.
+
+      A template may have one or two line identical to
+      "%content%". Everything above the first one is used as a header
+      (see _hdoc_head), everything after the last one as a footer (see
+      _hdoc_tail). Between these two line, it is possible to embed the
+      content of one or several files. This function extract these
+      files, setting their header and footer accordingly to the
+      template.
+
+      The definition of each of these files starts with a line of the
+      form:
+        %embedded:file_name:doc:toroot%Nice Long Title
+      and finishes with the beginning of the next embedded file or
+      with the last %content% line.
+        
+      The first '%' character must be the first character of the
+      line. FILE_NAME is the actual filename to which the file will be
+      extracted (as usual, TO is prepended to FILE_NAME. DOC is used
+      for %onlydoc:doc% lines (see hdoc_read_template). TOROOT is the
+      path from FILE_NAME to the root of the documentation tree.
+
+      Except for this special first line, each line of the embedded
+      document is parsed for occurrences of e.g. %title% or %toroot%
+      using _hdoc_parse_tpl_line and written fo FILE_NAME.
+
+     SEE ALSO: hdoc_read_template, mktexi2html_init
+       low level: _hdoc_head, _hdoc_tail, _hdoc_parse_tpl_line
+  */
+  if (!is_void(template_file)) hdoc_read_template(template_file);
+  ind=where(_hdoc_template=="%content%");
+  if (is_void(to)) to="";
+  if ((max(ind)-min(ind))<=1) return;
+  scont=min(ind);
+  contents=_hdoc_template(scont+1:max(ind)-1);
+  ind=where(strgrep("^%embedded:",contents)(2,) != -1);
+  if (numberof(ind)>1) indf=grow(ind(2:0)-1,numberof(contents));
+  else indf=[numberof(contents)];
+  for (n=1;n<=numberof(ind);n++) {
+    col=strfind("%",contents(ind(n)),2)(1);
+    title=strpart(contents(ind(n)),col+2:0);
+    control=strpart(contents(ind(n)),2:col);
+    control=pathsplit(control);
+    fname=control(2);
+    fname;
+    doc=control(3);
+    toroot=control(4);
+    f=open(to+fname,"w");
+    _hdoc_head, f, title, table=1, toroot=toroot, doc=doc;
+    for (l=ind(n)+1;l<=indf(n);l++) _hdoc_parse_tpl_line,f, scont+l, toroot=toroot,title=title,doc=doc;
+    _hdoc_tail, f, title, table=1, toroot=toroot, doc=doc;
+    close, f;
+  }
+}
 
 
 
@@ -1126,8 +1198,9 @@ func hdoc_keywordindex (tags, keywords, to) {
    kwl = kwl(s);
 
    f = open (to + "html_xref/keywords.html", "w");
+   doc="xref";
    title = "Yorick keyword index";
-   _hdoc_head, f, title, table=1;
+   _hdoc_head, f, title, table=1, doc=doc;
 
    wryte, f, ("<table cellspacing=2 border=0" +
 		  " cellpadding=4 width=100\%>");
@@ -1166,7 +1239,7 @@ func hdoc_keywordindex (tags, keywords, to) {
       wryte, f, "</tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, title, table=1;
+   _hdoc_tail, f, title, table=1, doc=doc;
    close, f;
 
    for (i = 0; i < 26; i++) {
@@ -1188,7 +1261,8 @@ func hdoc_keywordref (fnm, kwl, tags) {
    doc_list = tags (6,);
 
    f = open (fnm, "w");
-   _hdoc_head, f, fnm, table=1; 
+   doc="xref";
+   _hdoc_head, f, fnm, table=1, doc=doc; 
 
    wryte, f, ("<table cellspacing=2 border=0" +
 		  " cellpadding=2 width=100\%>");
@@ -1241,7 +1315,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
       wryte, f, "</td></tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f,fnm,  table=1;
+   _hdoc_tail, f,fnm,  table=1, doc=doc;
    close, f;
 }
 
@@ -1281,6 +1355,70 @@ func wryte(f, line)
   write,format="%s\n", f, line;
 }
 
+func hdoc_read_file(fname,block) {
+  // returns the content of a text file FNAME in a string array.
+  // Read BLOCK lines at a time (default=1024).
+  if (is_void(block)) block=1024;
+  f=open(fname,"r");
+  lines=rdline(f,1024);
+  while (lines(0)) grow,lines,rdline(f,1024);
+  return lines(where(lines));
+}
+
+func hdoc_read_template(fname) {
+  /* DOCUMENT hdoc_read_template, fname
+
+      load an HTML template for htmldoc.i functions.
+
+      FNAME is the name of an HTML file, from which the layout of the
+      documentation (navigation bars etc.) will be determined.
+
+      The functions in htmldoc.i treat certain strings in the template
+      in a special way. The first few of them must e alone on the
+      line, wihtout heading or trailing blank:
+            
+        Either one or two lines must contain exactly the text
+        "%content%". The content of each page will be placed there,
+        replacing anything between the first and last line equal to
+        "%content%". The space in-between can be used to embed
+        documents, see hdoc_extract_embedded for details.
+
+        %startbody% will be replaced using _hdoc_startbody. This
+        special line should be used at most once.
+
+        %indexbar% produces a simple index bar using _hdoc_indexbar.
+
+        %skip% skips a line (replaced with "&nbsp;<br>").
+
+      Certain patterns are recognized when they are found at the
+      beginning of a line:
+
+        %onlydoc:doc% where DOC is a short document ID: the remaining
+        of the line will appear only in files pertaining to the
+        document DOC. Certain IDs are predefined: "index" for the main
+        index and "xref" for most of the pages produced by
+        mkhtmldoc. In addition, "manual" is used for the Yorick Manual
+        (see mktexi2html_init) and "qref" is reserved for the
+        reference card. You can use other IDs for use e.g. with your
+        custom embedded documents (see hdoc_extract_embedded).
+
+        %embedded:....% is used to define embedded documents, see
+        hdoc_extract_embedded.
+
+      Finally, a few patterns are recognized anywhere in the document:
+
+        %title% is replaced with the (long) document title. It should
+        probably be used at least once, between <title> and </title>.
+
+        %toroot% is replaced with the path from the current file to
+        the HTML root. It is often "../" and sometimes empty.
+      
+     SEE ALSO: hdoc_extract_embedded, mktexi2html_init
+  */
+  extern _hdoc_template;
+  _hdoc_template=hdoc_read_file(fname);
+}
+ 
 extern _hdoc_template;
 _hdoc_template=
 ["<html> <head> <title>",
@@ -1309,29 +1447,48 @@ _hdoc_template=
  "</body>",
  "</html>"];
 
-func _hdoc_parse_tpl_line (g, i, toroot=,title=) {
+func _hdoc_parse_tpl_line (g, i, toroot=,title=,doc=) {
+  /* DOCUMENT _hdoc_parse_tpl_line ,g, i, title=title [, toroot=toroot, doc=docid]
+
+      Parse line I from the hdoc template and (if needed) write it
+      file stream G.
+
+      TITLE has no default and must be set, TOROOT defaults to "../",
+      DOC is the doc ID for %onlydoc:doc% matching: a line starting
+      with "%onlydoc:line_doc_id" will be output only if LINE_DOC_ID
+      == DOCID.
+
+      This function implements some of the special strings detailed in
+      hdoc_read_template: %startbody%, %indexbar%, %skip%,
+      %onlydoc:...%, %title% and %toroot%.
+
+     SEE ALSO: hdoc_read_template
+  */
   if (is_void(toroot)) toroot = "../";
-  if (_hdoc_template(i)=="%title%") wryte, g, title;
+  if (is_void(doc)) doc = "";
+  line=_hdoc_template(i);
+  if (_hdoc_template(i)=="%startbody%") _hdoc_startbody, g;
   else {
-    if (_hdoc_template(i)=="%startbody%") _doc_startbody, g;
+    if (_hdoc_template(i)=="%indexbar%") _hdoc_indexbar, g;
     else {
-      if (_hdoc_template(i)=="%indexbar%") _hdoc_indexbar, g;
+      if (_hdoc_template(i)=="%skip%") _hdoc_skip, g, 1;
       else {
-        if (_hdoc_template(i)=="%skip%") _hdoc_skip, g, 1;
-        else {
-          line=streplace(_hdoc_template(i),strgrep("%title%",_hdoc_template(i)),title);
-          line=streplace(line,strgrep("%toroot%",line),toroot);
-          wryte, g, line;
+        if (strgrep("^%onlydoc:",line)(2)!=-1) {
+          if (strgrep("^%onlydoc:"+doc+"%",line)(2)==-1) return;
+          line=strpart(line,strgrep("^%onlydoc:"+doc+"%",line)(2)+1:0);
         }
+        line=streplace(line,strgrep("%title%",_hdoc_template(i)),title);
+        line=streplace(line,strgrep("%toroot%",line),toroot);
+        wryte, g, line;
       }
     }
   }
 }
 
-func _hdoc_head (g, title, table=, toroot=) {
+func _hdoc_head (g, title, table=, toroot=, doc=) {
    if (table) {
      for (i=1;i<=numberof(_hdoc_template)&_hdoc_template(i)!="%content%";i++)
-           _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title;
+           _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title, doc=doc;
    } else {
      wryte, g, "<html> <head> <title>";
      wryte, g, title;
@@ -1342,14 +1499,14 @@ func _hdoc_head (g, title, table=, toroot=) {
    }
 }
 
-func _hdoc_tail (g, title, table=, toroot=) {
+func _hdoc_tail (g, title, table=, toroot=, doc=) {
   if (do_disclaimer) {
     wryte, g, "<P><HR><a href=\"http://www.llnl.gov/disclaimer.html\">";
     wryte, g, "<small>LLNL Disclaimers</small></a></P>";
   }
   if (table) {
     for (i=max(where(_hdoc_template=="%content%"))+1;i<=numberof(_hdoc_template);i++)
-      _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title;
+      _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title, doc=doc;
   } else {
     _hdoc_skip, g, 3;
     wryte, g, "</body>";
@@ -1453,19 +1610,6 @@ func hdoc_wrap (dir) {
    }
 }
 
-func hdoc_read_file(fname,block) {
-  if (is_void(block)) block=1024;
-  f=open(fname,"r");
-  lines=rdline(f,1024);
-  while (lines(0)) grow,lines,rdline(f,1024);
-  return lines(where(lines));
-}
-
-func hdoc_read_template(fname) {
-  extern _hdoc_template;
-  _hdoc_template=hdoc_read_file(fname);
-}
- 
 
 func _hdoc_copyright (f) {
    wryte, f, "Copyright 1994. The Regents of the University of California";
@@ -1506,6 +1650,117 @@ func _hdoc_copyright (f) {
    wryte, f, "the United States Government or the University of California, and ";
    wryte, f, "shall not be used for advertising or product endorsement purposes. ";
    
+}
+
+func mktexi2html_init (infile,outfile) {
+  /* DOCUMENT mktexi2html_init [, infile, outfile]
+
+      create a TeXi2HTML init file using the currently loaded HTML
+      template (see hdoc_read_template).
+
+      mktexi2html_init will parse the hdoc template to fill these
+      TeXi2HTML variables (see "info texi2html"):
+      $EXTRA_HEAD, $AFTER_BODY_OPEN, $PRE_BODY_CLOSE.
+
+      mktexi2html_init needs an input file INFILE (default:
+      "texi2html.tpl"), which is a complete, valid TeXi2HTML init file
+      except that these three variables are defined with the following
+      syntax:
+
+      $VARIABLE = <<'EOF';
+      %variable%
+      EOF
+
+      Therefore, OUTFILE is a copy of INFILE with the three special
+      lines
+       %extra_head%
+       %after_body_open%
+       %pre_body_close%
+      have been replaced with parts of the hdoc template. These three
+      lines must appear in that order.
+
+      mktexi2html_init works by detecting certain strings in the hdoc
+      template.
+
+        EXTRA_HEAD is everything between </TITLE> and </HEAD>
+      
+        AFTER_BODY_OPEN is everything between either %startbody% or
+        <BODY ...>and %content%
+
+        PRE_BODY_CLOSE is everything between the last %content% and
+        </BODY>
+
+      The case is not important for the HTML tags (but it is for the
+      %...% special strings). The HTML tags must be alone on their
+      line as any leading or trailing text will not be output (see
+      below for a PHP trick, though). The entire <BODY ... > tag must
+      be on a single line, but can contain complex definitions (these
+      definitions will be ignored).
+
+      If your template does not contain these strings, for instance
+      because your HTML code is really PHP, you can try to put
+      something like "%onlydoc:never%</TITLE>" where you would like
+      them to be (see hdoc_read_template). As long as you dont declare
+      any embedded document with "never" as a short doc ID, these
+      lines will never appear in any of the produced documentation,
+
+      Once mktexi2html_init has determined which lines to put in which
+      variable, it does parse them for replacing the special strings
+      such as %title%, %toroot% and %onlydoc:doc%. mktexi2html_init is
+      meant for typesetting the Yorick Manual, so the doc ID it uses
+      is "manual". Therefore, lines beginning with "%onlydoc:" will
+      not be output, unless they actually start with
+      "%onlydoc:manual%".
+
+     SEE ALSO: hdoc_read_template, hdoc_extract_embedded
+  */
+  if (is_void(infile)) infile="texi2html.tpl";
+  if (is_void(outfile)) outfile="texi2html.init";
+  toroot="../";
+  title="The Yorick Manual";
+  doc="manual";
+  in=hdoc_read_file(infile);
+  f = open (outfile, "w");
+
+  wryte, f, in(1:min(where(in=="%extra_head%"))-1);
+  // EXTA_HEAD is everything between </TITLE> and </head>
+  // find </TITLE>
+  junk = strfind("</title>",_hdoc_template,case=0);
+  linea = min (where(junk(2,) != -1));
+    //columna = junk(2, linea);
+  // find </head>
+  junk = strfind("</head>",_hdoc_template,case=0);
+  lineb = min (where(junk(2,) != -1));
+    //columnb = junk(1, lineb);
+  // write the end of line A, everything between line A and B, and the beginning of line B.
+  // Warning: the bits of liine A and B are not parsed for toroot.
+    //if (linea < lineb) {
+    //if (columna < strlen(_hdoc_template(linea))) wryte, f, strpart(_hdoc_template(linea), columna+1:0);
+  for (i=linea+1; i < lineb; i++) _hdoc_parse_tpl_line, f, i, toroot=toroot, title=title, doc=doc;
+    //if (columnb > 1) wryte, f, strpart(_hdoc_template(lineb), 1:columnb-1);
+    //} else {
+    // if (columna+1 < columnb) wryte, f, strpart(_hdoc_template(linea), columna+1:columnb-1);
+    //}
+
+  wryte, f, in(min(where(in=="%extra_head%"))+1:min(where(in=="%after_body_open%"))-1);
+  // AFTER_BODY_OPEN is everything between %startbody% and %content%
+  if (anyof(_hdoc_template == "%startbody%" )) linea = min ( where ( _hdoc_template == "%startbody%" ) );
+  else linea = min ( where ( strmatch(_hdoc_template, "<body", 1 ) ));
+  lineb = min ( where ( _hdoc_template == "%content%" ) );
+  for (i=linea+1; i < lineb; i++) _hdoc_parse_tpl_line, f, i, toroot=toroot, title=title, doc=doc;
+
+  wryte, f, in(min(where(in=="%after_body_open%"))+1:min(where(in=="%pre_body_close%"))-1);
+  // PRE_BODY_CLOSE is everything between %content% and </BODY>
+  linea = max ( where ( _hdoc_template == "%content%" ) ) ;
+  junk = strfind("</body>",_hdoc_template,case=0);
+  lineb = min (where(junk(2,) != -1));
+    //columnb = junk(1, lineb);
+  for (i=linea+1; i < lineb; i++) _hdoc_parse_tpl_line, f, i, toroot=toroot, title=title, doc=doc;
+    //if (columnb > 1) wryte, f, strpart(_hdoc_template(lineb), 1:columnb-1);
+
+  wryte, f, in(min(where(in=="%pre_body_close%"))+1:0);
+
+  close, f;
 }
 
 if (batch()) {

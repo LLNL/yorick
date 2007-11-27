@@ -1,9 +1,15 @@
-texi2html -init_file texi2html.init yorick.tex
+Call "make html-doc" from here or one directory above.
 
-puts result in yorick subdirectory; need to add yorick_prt.html, yorick.pdf
-and rename
+This creates html_xref, manual, refcard, README.html and
+yorick/yorick_prt.html and copies yorick.pdf in manual/ and refs.pdf
+in refcard/.
 
-README-win.html is top level for Windows
+README-win.html is top level for Windows (missing frome source)
+Installation instructions "../README.html" is also missing from the
+source.
+
+Both could fairly easily be "%embedded:" in template.html like
+README.html and yorick_prt.html.
 
 skull.css, style.css still broken on IE 6 (10/Apr/07) because of
 IE bug involving    position: fixed
