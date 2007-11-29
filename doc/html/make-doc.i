@@ -19,6 +19,7 @@ for (t=2;t<=numberof(TARGETS);t++) {
     outDIR="./refcard/";
     mkdirp,outDIR;
     files=lsdir("../refs-html/");
+    files=files(where(strgrep(".html$",files)(2,)!=-1));
     files=files(sort(files))(0:1:-1);
     for (n=1;n<=numberof(files);n++) {
       files(n);
