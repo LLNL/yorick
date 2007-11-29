@@ -1,15 +1,29 @@
 Call "make html-doc" from here or one directory above.
 
-This creates html_xref, manual, refcard, README.html and
-yorick/yorick_prt.html and copies yorick.pdf in manual/ and refs.pdf
-in refcard/.
+yorick has to have been built, unless the YORICK= variable is used to
+select another yorick.
 
-README-win.html is top level for Windows (missing frome source)
-Installation instructions "../README.html" is also missing from the
-source.
+A decent texi2html must bee installed (see Makefile).
 
-Both could fairly easily be "%embedded:" in template.html like
-README.html and yorick_prt.html.
+Use PLATFORM=(mac|win) to select version of the "Installation
+Instructions" README.html.
+
+This creates the HTML hierarchy under compiled-doc/ (unless TO= is
+used to select another top-level directory):
+ README.html     Installation Instructions
+ doc/README.html Getting Started
+ doc/html_xref   Cross-referenced DOCUMENT comments
+ doc/manual      The Yorick Manual
+ doc/refcard     Quick Reference Cards
+ doc/images
+ doc/skull.css
+ doc/style.css
+
+The "install" rule copies this hierarchy to DESTDIR (default:
+/usr/local/share/doc/yorick).
+
+The pdf documentation is copied over, but not the text documentation
+(*.doc, FILE_FORMATS...)
 
 skull.css, style.css still broken on IE 6 (10/Apr/07) because of
 IE bug involving    position: fixed

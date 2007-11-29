@@ -1,0 +1,265 @@
+%onlydoc:comment% $Id: README-install.html.content,v 1.1 2007-11-29 14:37:57 paumard Exp $
+%onlydoc:comment%   Content of doc/../README.html
+%onlydoc:comment%   create actual file with
+%onlydoc:comment%   _hdoc_headtail,"README-install.html.content",
+%onlydoc:comment%       "../README.html", 0,
+%onlydoc:comment%       title="Yorick: Installation Instructions",
+%onlydoc:comment%       toroot="doc/", doc="installwin";
+%onlydoc:comment%    or                doc="installmac";
+%onlydoc:comment%
+%onlydoc:comment%----------------------------------------------------------
+<br>
+
+<hr size="1">
+<h1>Yorick Installation Instructions</h1>
+
+<p>Yorick is
+<a href="http://opensource.org">open source software</a>.
+You may use, distribute, or modify yorick under the terms of a
+<a href="./doc/manual/yorick.html">BSD license</a>.  The
+source code for yorick is available from the
+<a href="http://yorick.sourceforge.net">yorick homepage</a>
+hosted by <a href="http://sourceforge.net">SourceForge.net</a>.</p>
+
+%onlydoc:installwin%<p>This Microsoft Windows binary distribution of yorick includes two
+%onlydoc:installwin%versions of the yorick executable: The first is a standalone program
+%onlydoc:installwin%which has the look and feel of many other Windows programs.  The
+%onlydoc:installwin%second is a UNIX-like version that requires separate programs to
+%onlydoc:installwin%provide user interface windows where you can interactively type yorick
+%onlydoc:installwin%commands, and where you can edit yorick source files.  The installer
+%onlydoc:installwin%put shortcuts under the Windows Start menu called "Yorick" for the
+%onlydoc:installwin%standalone version, and "Yorick + Emacs" for the UNIX-like version.
+%onlydoc:installwin%If the "Yorick + Emacs" shortcut does not work for you, read on.</p>
+%onlydoc:installmac%<p>This Mac OS X binary distribution of yorick is packaged as a
+%onlydoc:installmac%gzipped tar archive.  It includes the yorick-z and yorick-gl projects
+%onlydoc:installmac%as well, which add zlib, png, jpeg, mpeg, and OpenGL support to the
+%onlydoc:installmac%yorick interpreter.  To install it, you can place this top level
+%onlydoc:installmac%directory anywhere you like; reasonable choices are the Applications
+%onlydoc:installmac%directory, or your home directory.  Yorick is an X11 program, so you
+%onlydoc:installmac%need to install and start an X11 server before you can use yorick's
+%onlydoc:installmac%interactive graphics (see below).  You start yorick from the command
+%onlydoc:installmac%line, so you will want to make sure the yorick executable is on your
+%onlydoc:installmac%shell's PATH.  You can do this in one of two ways:</p>
+%onlydoc:installmac%<ol>
+%onlydoc:installmac%<li>Put a symlink to the yorick executable in a directory you know
+%onlydoc:installmac%to be on your PATH, e.g.-
+%onlydoc:installmac%<pre>ln -s /Applications/yorick-2.1.04/bin/yorick /usr/local/bin/yorick</pre>
+%onlydoc:installmac%(assuming you moved this directory to /Applications).  You may also want to
+%onlydoc:installmac%make symlinks to gist and yomacs if you do this.</li>
+%onlydoc:installmac%<li>Put the bin/ subdirectory of this directory on your PATH.  You would
+%onlydoc:installmac%normally do this in your ~/.login or ~/.profile script, depending on
+%onlydoc:installmac%what shell you use.</li>
+%onlydoc:installmac%</ol>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>To uninstall yorick, simply delete this directory and undo the
+%onlydoc:installmac%changes you made to put yorick on your PATH.</p>
+
+<p>Go to the <a href="./doc/README.html">Getting Started</a> page to
+begin learning to use yorick.</p>
+
+%onlydoc:installwin%<p>I highly recommend installing two additional programs that add
+%onlydoc:installwin%features to yorick:</p>
+%onlydoc:installwin%<dl>
+%onlydoc:installwin%<dt>GNU Emacs</dt>
+%onlydoc:installwin%<dd>a powerful text editor and terminal emulator, which supports the
+%onlydoc:installwin%UNIX-like yorick development environment.  I recommend the
+%onlydoc:installwin%<a href="http://www.ourcomments.org/Emacs/EmacsW32.html">EmacsW32</a>
+%onlydoc:installwin%distribution of Emacs, which is easy to install and is patched to
+%onlydoc:installwin%integrate into the Windows environment.</dd>
+%onlydoc:installwin%<dt>Ghostscript</dt>
+%onlydoc:installwin%<dd>a PostScript interpreter, which must be present in order for the
+%onlydoc:installwin%yorick "pdf" and "eps" commands to work.  The native hardcopy output
+%onlydoc:installwin%format for yorick graphics is postscript, which ghostscript can translate
+%onlydoc:installwin%to the eps and pdf formats.  You can obtain it at the
+%onlydoc:installwin%<a href="//http:www.cs.wisc.edu/~ghost/">ghostscript home page</a>.
+%onlydoc:installwin%You may also want to install
+%onlydoc:installwin%<a href="http://www.cs.wisc.edu/~ghost/gsview/">GSView</a> in order
+%onlydoc:installwin%to be able to preview postscript output.</dd>
+%onlydoc:installwin%</dl>
+%onlydoc:installmac%<p>Apple includes an <a
+%onlydoc:installmac%href="http://developer.apple.com/opensource/tools/runningx11.html">
+%onlydoc:installmac%X11 server</a> with Mac OS X; you need to install it to use X11
+%onlydoc:installmac%software, which includes a large amount of open source software in
+%onlydoc:installmac%addition to yorick.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>If you want to get the most out of yorick, you will need to install
+%onlydoc:installmac%other open source programs on your Mac.  The easiest way to do that is
+%onlydoc:installmac%to install either <a href="http://darwinports.com/">Darwin Ports</a>
+%onlydoc:installmac%or <a href="http://finkproject.org/">Fink</a> on your machine.  Either one
+%onlydoc:installmac%will allow you to easily download and install thousands of open source
+%onlydoc:installmac%programs.</p>
+
+<a name="emacs">
+%onlydoc:installwin%<h2>Fixing the Yorick+Emacs Shortcut</h2></a>
+%onlydoc:installmac%<h2>GNU Emacs</h2></a>
+
+%onlydoc:installwin%<p>If you installed
+%onlydoc:installwin%<a href="http://www.ourcomments.org/Emacs/EmacsW32.html">EmacsW32</a>
+%onlydoc:installwin%before running the yorick installer, the yorick installer will find
+%onlydoc:installwin%it, and the "Yorick + Emacs" shortcut will work.  Otherwise, it will
+%onlydoc:installwin%simply print a message saying that Emacs was not found.  You can fix
+%onlydoc:installwin%this by unistalling yorick, installing EmacsW32, then rerunning the
+%onlydoc:installwin%yorick installer.  You can also repair the "Yorick + Emacs" shortcut
+%onlydoc:installwin%as follows:</p>
+%onlydoc:installwin%<ol>
+%onlydoc:installwin%<li>Navigate to the "Yorick + Emacs" shortcut under the Windows Start
+%onlydoc:installwin%menu.</li>
+%onlydoc:installwin%<li>Right click on "Yorick + Emacs" and select "Properties" to pop
+%onlydoc:installwin%up a Properties dialog box for the shortcut.</li>
+%onlydoc:installwin%<li>Type the path to "runemacs.exe" in the "Target:" field, replacing
+%onlydoc:installwin%the path to "nomacs.bat".  Be sure not to alter the parameters at the
+%onlydoc:installwin%end of the "Target:" line.</li>
+%onlydoc:installwin%</ol>
+%onlydoc:installwin%<p>If EmacsW32 and yorick are installed in their default locations,
+%onlydoc:installwin%the "Target:" field of the "Yorick + Emacs" shortcut reads (the quotes
+%onlydoc:installwin%are necessary):</p>
+%onlydoc:installwin%<pre>"C:\Program Files\Emacs\emacs\bin\runemacs.exe" -l "C:\Program Files\yorick-2.1.04\emacs\yomacs.el"</pre>
+%onlydoc:installwin%
+%onlydoc:installwin%You should also add the following lines to your ".emacs" Emacs startup
+%onlydoc:installwin%file.  (By default, this is in your Application Data folder, which is
+%onlydoc:installwin%hidden.  To see it, in a Windows Explorer window, navigate to
+%onlydoc:installwin%Documents and Settings >> [yourself], check Tools >> Folder
+%onlydoc:installwin%Options... >> View >> File and Folders >> Hidden Files and Folders >>
+%onlydoc:installwin%Show hidden files and folders, then click OK.)</p>
+%onlydoc:installmac%<p>Emacs is a powerful text editor and terminal emulator, which supports a
+%onlydoc:installmac%complete yorick development environment.  The emacs that Apple ships
+%onlydoc:installmac%(/usr/bin/emacs) is crippled; you need to install an X11 version of
+%onlydoc:installmac%emacs from either Darwin Ports or Fink to make it usable.  (Things will
+%onlydoc:installmac%be easier if you install an X11 version of emacs rather than a native
+%onlydoc:installmac%Carbon version.  If you try to use the Carbon version, you will need to
+%onlydoc:installmac%set the DISPLAY environment variable before you can run yorick.)  To
+%onlydoc:installmac%start yorick running under emacs, use the <tt>yomacs</tt> script instead
+%onlydoc:installmac%of the <tt>yorick</tt> executable.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>You should also add the following lines to your <tt>~/.emacs</tt> Emacs
+%onlydoc:installmac%startup file (assuming you moved this directory to /Applications):</p>
+<pre>
+%onlydoc:installwin%(setq yorick-executable-name "C:\Program Files\yorick-2.1.04\bin\yorick.exe")
+%onlydoc:installwin%(load "C:\Program Files\yorick-2.1.04\emacs\yorick-auto.el" t t)
+%onlydoc:installmac%(setq yorick-executable-name "/Applications/yorick-2.1.04/bin/yorick")
+%onlydoc:installmac%(load "/Applications/yorick-2.1.04/emacs/yorick-auto.el" t t)
+</pre>
+%onlydoc:installmac%<p>With these lines, you can start yorick under any emacs (not just yomacs)
+%onlydoc:installmac%with the command <tt>M-x yorick RET</tt>.  Any emacs will also recognize
+%onlydoc:installmac%yorick .i files and use appropriate syntax highlighting and other aids
+%onlydoc:installmac%for composing yorick source code.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>Get GNU Emacs from <a href="http://darwinports.com/">Darwin
+%onlydoc:installmac%Ports</a> or <a href="http://finkproject.org/">Fink</a>.</p>
+
+<a name="ghost">
+%onlydoc:installwin%<h2>Making yorick find ghostscript</h2></a>
+%onlydoc:installmac%<h2>Graphics compatibility</h2></a>
+
+%onlydoc:installwin%<p>Yorick's preferred graphical output format is postscript.  If you
+%onlydoc:installwin%install <a href="//http:www.cs.wisc.edu/~ghost/">ghostscript</a>,
+%onlydoc:installwin%yorick can produce encapsulated postscript files or pdf files, which
+%onlydoc:installwin%you may be able to paste into presentation software.  For example, the
+%onlydoc:installwin%<a href="http://www.tug.org/">TeX</a> desktop publishing software,
+%onlydoc:installwin%which is the standard for scientific publishing, accepts these
+%onlydoc:installwin%formats.  I recommend you also install <a
+%onlydoc:installwin%href="http://www.cs.wisc.edu/~ghost/gsview/">GSView</a> (or one of the
+%onlydoc:installwin%other viewers mentioned on the <a
+%onlydoc:installwin%href="//http:www.cs.wisc.edu/~ghost/">ghostscript</a> page) to be able
+%onlydoc:installwin%to preview postscript files.  If the directory containing the ghostscript
+%onlydoc:installwin%executable is not in your Path environment variable, you will need
+%onlydoc:installwin%to edit the file <kbd>Y_HOME\i-start\00ghost.i</kbd> pathname to
+%onlydoc:installwin%ghostscript.  (Y_HOME is the yorick installation directory, which you
+%onlydoc:installwin%can find by typing Y_HOME at the yorick command prompt.  By default, it
+%onlydoc:installwin%is C:\Program Files\yorick-2.1.04.)</p>
+%onlydoc:installwin%
+%onlydoc:installwin%<p>So far, I have only been able to make ghostscript work by putting
+%onlydoc:installwin%gswin32c on the Path environment variable.  Even then it only works
+%onlydoc:installwin%from the standalone version of yorick.  (If anyone can debug the
+%onlydoc:installwin%problems here, I would be grateful for help; post on the yorick.sf.net
+%onlydoc:installwin%forum or contact me by email.)  To set Path, navigate to Control Panel
+%onlydoc:installwin%>> System Properties >> Advanced >> Environment Variables.  Then
+%onlydoc:installwin%select Path from the System Variables list, click Edit, and append
+%onlydoc:installwin%"<kbd>;C:\Program Files\gs\gs8.53\bin</kbd>" (or the path to the
+%onlydoc:installwin%directory where your gswin32c is installed).</p>
+%onlydoc:installmac%<p>Yorick is capable of producing publication quality graphical
+%onlydoc:installmac%output.  You will need some additional software to take advantage of
+%onlydoc:installmac%this.  Additionally, I recommend the following yorick commands in
+%onlydoc:installmac%order to produce high quality graphical output:</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<pre>
+%onlydoc:installmac%window, style="vg.gs";        /* use viewgraph style */
+%onlydoc:installmac%pldefault, marks=0, width=4;  /* no curve markers, wide lines */
+%onlydoc:installmac%</pre>
+%onlydoc:installmac%
+%onlydoc:installmac%<h3>Ghostscript</h3>
+%onlydoc:installmac%
+%onlydoc:installmac%<p><a href="http://www.ghostscript.com">Ghostscript</a> is a
+%onlydoc:installmac%PostScript interpreter, which must be present in order for the yorick
+%onlydoc:installmac%<tt>pdf</tt> and <tt>eps</tt> commands to work.  The native hardcopy
+%onlydoc:installmac%output format for yorick graphics is postscript, which ghostscript can
+%onlydoc:installmac%translate to the eps and pdf formats.</pp>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>Get Ghostscript from <a href="http://darwinports.com/">Darwin
+%onlydoc:installmac%Ports</a> or <a href="http://finkproject.org/">Fink</a>.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<h3>Xfig</h3>
+%onlydoc:installmac%
+%onlydoc:installmac%<p><a href="http://xfig.org/">Xfig</a> is a drawing program that
+%onlydoc:installmac%accepts yorick eps files.  This is how I generate presentations based
+%onlydoc:installmac%on yorick graphics, or prepare figures for publications.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>Get Xfig from <a href="http://darwinports.com/">Darwin Ports</a> or
+%onlydoc:installmac%<a href="http://finkproject.org/">Fink</a>.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<h3>LaTeX, ConText, etc.</h3>
+%onlydoc:installmac%
+%onlydoc:installmac%<p><a href="http://www.tug.org/">TeX</a> is the definitive scientific
+%onlydoc:installmac%publication software.  It accepts yorick or xfig generated eps and pdf
+%onlydoc:installmac%files for graphics, adds unbeatable mathematical typesetting.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>You should also install the AUCTeX package in order to make it
+%onlydoc:installmac%easier to compose LaTeX/ConText source in GNU EMacs.</p>
+%onlydoc:installmac%
+%onlydoc:installmac%<p>The <a href="http://www.tug.org/mactex/">MacTeX</a> distribution is
+%onlydoc:installmac%probably the best choice for installing the entire TeX system on your
+%onlydoc:installmac%Mac.  (You can also install the no-longer-supported <a
+%onlydoc:installmac%href="http://tug.org/tetex/">teTeX</a> distribution from Fink, and
+%onlydoc:installmac%there are <a href="http://www.esm.psu.edu/mac-tex/">several other
+%onlydoc:installmac%options</a>.)  AUCTeX for GNU Emacs is available from either Darwin
+%onlydoc:installmac%Ports or Fink</p>
+
+<a name="folder">
+<h2>Working with folders</h2></a>
+
+<p>Yorick assumes that you understand how to navigate your computer's
+filesystem.  Unlike graphical user interfaces, you must understand how
+to do this using the textual names of the directories and files.
+There will be no icons to click on; you need to know where your files
+are and be able to type their names.  Yorick has a <tt>cd</tt> (change
+directory) command to change its current working directory, so that
+when you have many files to read or write, you can omit their
+directory names.  If you are using Emacs, use <kbd>M-x cd RET</kbd> in
+the yorick command buffer in order to change directories; this permits
+you to navigate the file tree easily with TAB name completion.</p>
+
+<p>You should (almost) never use the directory containing this file or
+any of its subdirectories to store your working files or projects.
+%onlydoc:installwin%Keep those in your personal directory tree (e.g.- My Documents).</p>
+%onlydoc:installwin%
+%onlydoc:installwin%<a name="extend">
+%onlydoc:installwin%<h2>Extending yorick</h2></a>
+%onlydoc:installwin%
+%onlydoc:installwin%<p>If you wish to extend yorick by writing compiled C functions, you
+%onlydoc:installwin%should consider installing the open source <a
+%onlydoc:installwin%href="http://cygwin.com/"> cygwin</a> or <a
+%onlydoc:installwin%href="http://www.mingw.org/">MinGW</a> compiler and tool suites (or
+%onlydoc:installwin%both), which are version of the GNU gcc compiler.  Also, you should be
+%onlydoc:installwin%aware that Microsoft now gives away their Visual C++ compiler as an <a
+%onlydoc:installwin%href="http://msdn.microsoft.com/vstudio/express/visualc/"> Express
+%onlydoc:installwin%Edition</a>.  This is the same compiler as in Visual Studio, but the
+%onlydoc:installwin%libraries required to link to the Microsoft Foundation Classes are
+%onlydoc:installwin%missing, so you won't be able to build the binmfc/yorick.exe version
+%onlydoc:installwin%of yorick; nevertheless, you can build anything you could with the
+%onlydoc:installwin%cygwin or MinGW suites.  The cygwin and MinGW suites come with the
+%onlydoc:installwin%full complement of UNIX developer utilities, so you build yorick
+%onlydoc:installwin%extensions as explained in chapter 4 of the yorick manual.  With
+%onlydoc:installwin%Visual C++ Express, you are on your own.  Both the command line and
+%onlydoc:installwin%stand-alone versions of yorick can use extensions built with any of
+%onlydoc:installwin%the compilers.</p>
+%onlydoc:installmac%Keep those in your personal directory tree.</p>

@@ -1,4 +1,4 @@
-<!-- $Id: template.html,v 1.2 2007-11-27 19:19:29 paumard Exp $ -->
+<!-- $Id: template.html,v 1.3 2007-11-29 14:37:57 paumard Exp $ -->
 <html>
 <header>
 <title>
@@ -40,6 +40,15 @@ html {overflow-x:auto; overflow-y:hidden;}
 <div id="l-bar">
 <div id="links">
 <div class="nav1"><A href="http://yorick.sourceforge.net/index.php">Web Home</A></div>
+%onlydoc:installmac%<div class="nav1"><a href="./README.html">Installation</a></div>
+%onlydoc:installmac%<div class="nav2"><a href="./README.html#emacs">Emacs help</a></div>
+%onlydoc:installmac%<div class="nav2"><a href="./README.html#ghost">Graphics help</a></div>
+%onlydoc:installmac%<div class="nav2"><a href="./README.html#folder">Folders help</a></div>
+%onlydoc:installwin%<div class="nav1"><a href="./README.html">Installation</a></div>
+%onlydoc:installwin%<div class="nav2"><a href="./README.html#emacs">Emacs help</a></div>
+%onlydoc:installwin%<div class="nav2"><a href="./README.html#ghost">Graphics help</a></div>
+%onlydoc:installwin%<div class="nav2"><a href="./README.html#folder">Folders help</a></div>
+%onlydoc:installwin%<div class="nav2"><a href="./README.html#extend">C Extensions</a></div>
 <div class="nav1"><a href="%toroot%README.html">Getting Started</a></div>
 %onlydoc:index%<div class="nav2"><A href="%toroot%manual/yorick.html">BSD License</A></div>
 %onlydoc:index%<div class="nav2"><A href="%toroot%../README.html">Installation</A></div>

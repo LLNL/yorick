@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2007-11-29 10:57:37 paumard Exp $
+# $Id: Makefile,v 1.6 2007-11-29 14:38:07 paumard Exp $
 # you need the makeinfo and texi2dvi programs from gnu.org
 # and the tex typesetting system from tug.org
 # For the html-doc target, you need a recent texi2html that accepts
@@ -33,12 +33,12 @@ refs.pdf: refs.tex
 	$(PDFTEX) refs.tex
 
 html-doc:
-	cd html; make html-doc
+	make -C html html-doc
 
 TEX_AUX=*.aux *.log *.toc *.cp *.fn *.ky *.pg *.tp *.vr *.tmp
 clean::
 	rm -f *~ '#'* *.inf* *.dvi *.doc $(TEX_AUX)
 	rm -Rf yorick/
-	cd html; make clean
+	make -C html clean
 
 distclean:: clean

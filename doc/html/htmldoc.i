@@ -1,5 +1,5 @@
 /*  ************************** htmldoc.i *****************   */
-// $Id: htmldoc.i,v 1.3 2007-11-27 19:19:29 paumard Exp $
+// $Id: htmldoc.i,v 1.4 2007-11-29 14:37:57 paumard Exp $
 
 /* DOCUMENT htmldoc.i 
    html documentation tools. By default the function mkhtmldoc constructs 
@@ -303,7 +303,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    }
 
    //STAGE 7 - miscellaneous;
-   hdoc_toptemplate, to;
+   //hdoc_toptemplate, to;
 
    // put a default background image in the images directory;
    // f = open (to + "images/ydocbg.gif", "wb");
@@ -1121,8 +1121,8 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
 }
 
 
-func hdoc_extract_embedded (to,template_file) {
-  /* DOCUMENT hdoc_extract_embedded [,to, template_file]
+func hdoc_extract_embedded (template_file,to=) {
+  /* DOCUMENT hdoc_extract_embedded [,template_file, to=to]
      
       extract documents embedded in the HTML documentation template.
 
@@ -1151,10 +1151,10 @@ func hdoc_extract_embedded (to,template_file) {
 
       Except for this special first line, each line of the embedded
       document is parsed for occurrences of e.g. %title% or %toroot%
-      using _hdoc_parse_tpl_line and written fo FILE_NAME.
+      using hdoc_parse and written fo FILE_NAME.
 
      SEE ALSO: hdoc_read_template, mktexi2html_init
-       low level: _hdoc_head, _hdoc_tail, _hdoc_parse_tpl_line
+       low level: _hdoc_head, _hdoc_tail, hdoc_parse
   */
   if (!is_void(template_file)) hdoc_read_template(template_file);
   ind=where(_hdoc_template=="%content%");
@@ -1176,7 +1176,7 @@ func hdoc_extract_embedded (to,template_file) {
     toroot=control(4);
     f=open(to+fname,"w");
     _hdoc_head, f, title, table=1, toroot=toroot, doc=doc;
-    for (l=ind(n)+1;l<=indf(n);l++) _hdoc_parse_tpl_line,f, scont+l, toroot=toroot,title=title,doc=doc;
+    hdoc_parse, f, scont+ind(n)+1:scont+indf(n), toroot=toroot,title=title,doc=doc;
     _hdoc_tail, f, title, table=1, toroot=toroot, doc=doc;
     close, f;
   }
@@ -1447,11 +1447,12 @@ _hdoc_template=
  "</body>",
  "</html>"];
 
-func _hdoc_parse_tpl_line (g, i, toroot=,title=,doc=) {
-  /* DOCUMENT _hdoc_parse_tpl_line ,g, i, title=title [, toroot=toroot, doc=docid]
+func hdoc_parse (g, spec, toroot=,title=,doc=,text=) {
+  /* DOCUMENT hdoc_parse, g, spec, title=title [, toroot=toroot, doc=docid, text=text]
 
-      Parse line I from the hdoc template and (if needed) write it
-      file stream G.
+      Parse lines specified by index specification SPEC from the
+      string array TEXT (defaults to currently loaded template) write
+      them to file stream G.
 
       TITLE has no default and must be set, TOROOT defaults to "../",
       DOC is the doc ID for %onlydoc:doc% matching: a line starting
@@ -1466,20 +1467,24 @@ func _hdoc_parse_tpl_line (g, i, toroot=,title=,doc=) {
   */
   if (is_void(toroot)) toroot = "../";
   if (is_void(doc)) doc = "";
-  line=_hdoc_template(i);
-  if (_hdoc_template(i)=="%startbody%") _hdoc_startbody, g;
-  else {
-    if (_hdoc_template(i)=="%indexbar%") _hdoc_indexbar, g;
+  if (is_void(text)) lines=_hdoc_template(spec);
+  else lines=text(spec);
+  for (i=1;i<=numberof(lines);i++) {
+    line=lines(i);
+    if (line=="%startbody%") _hdoc_startbody, g;
     else {
-      if (_hdoc_template(i)=="%skip%") _hdoc_skip, g, 1;
+      if (line=="%indexbar%") _hdoc_indexbar, g;
       else {
-        if (strgrep("^%onlydoc:",line)(2)!=-1) {
-          if (strgrep("^%onlydoc:"+doc+"%",line)(2)==-1) return;
-          line=strpart(line,strgrep("^%onlydoc:"+doc+"%",line)(2)+1:0);
+        if (line=="%skip%") _hdoc_skip, g, 1;
+        else {
+          if (strgrep("^%onlydoc:",line)(2)!=-1) {
+            if (strgrep("^%onlydoc:"+doc+"%",line)(2)==-1) continue;
+            line=strpart(line,strgrep("^%onlydoc:"+doc+"%",line)(2)+1:0);
+          }
+          line=streplace(line,strgrep("%title%",line),title);
+          line=streplace(line,strgrep("%toroot%",line),toroot);
+          wryte, g, line;
         }
-        line=streplace(line,strgrep("%title%",_hdoc_template(i)),title);
-        line=streplace(line,strgrep("%toroot%",line),toroot);
-        wryte, g, line;
       }
     }
   }
@@ -1487,8 +1492,8 @@ func _hdoc_parse_tpl_line (g, i, toroot=,title=,doc=) {
 
 func _hdoc_head (g, title, table=, toroot=, doc=) {
    if (table) {
-     for (i=1;i<=numberof(_hdoc_template)&_hdoc_template(i)!="%content%";i++)
-           _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title, doc=doc;
+     last_line=min(where(_hdoc_template=="%content%"))-1;
+     hdoc_parse, g, 1:last_line, toroot=toroot, title=title, doc=doc;
    } else {
      wryte, g, "<html> <head> <title>";
      wryte, g, title;
@@ -1505,8 +1510,8 @@ func _hdoc_tail (g, title, table=, toroot=, doc=) {
     wryte, g, "<small>LLNL Disclaimers</small></a></P>";
   }
   if (table) {
-    for (i=max(where(_hdoc_template=="%content%"))+1;i<=numberof(_hdoc_template);i++)
-      _hdoc_parse_tpl_line, g, i, toroot=toroot, title=title, doc=doc;
+    first_line=max(where(_hdoc_template=="%content%"))+1;
+    hdoc_parse, g, first_line:0, toroot=toroot, title=title, doc=doc;
   } else {
     _hdoc_skip, g, 3;
     wryte, g, "</body>";
@@ -1514,15 +1519,23 @@ func _hdoc_tail (g, title, table=, toroot=, doc=) {
   }
 }
 
-func _hdoc_headtail (src, dest, title= , toroot=) {
+func _hdoc_headtail (src, dest, rm, title= , toroot=, doc=) {
+  /* DOCUMENT _hdoc_headtail, src, dest [, rm, title= , toroot=, doc=]
+
+      Adds HTML header and footer specified by currently loaded
+      template to file SRC. Saves the result to DEST. Removes SRC
+      unless "rm=0" is specified.
+     
+   */
+  if (is_void(rm)) rm=1;
    g = open (dest, "w");
-   if (is_void(title)) title = dest
-   _hdoc_head, g, title, table=1;
+   if (is_void(title)) title = dest;
+   _hdoc_head, g, title, table=1, toroot=toroot, doc=doc;
    line = hdoc_read_file(src);
-   wryte, g, line;
-   _hdoc_tail, g, title, table=1, toroot=toroot;
+   hdoc_parse, g, 1:0, text=line, toroot=toroot, doc=doc, title=title;
+   _hdoc_tail, g, title, table=1, toroot=toroot, doc=doc;
    close, g;
-   remove, src;
+   if (rm) remove, src;
 }
 
 
@@ -1736,7 +1749,7 @@ func mktexi2html_init (infile,outfile) {
   // Warning: the bits of liine A and B are not parsed for toroot.
     //if (linea < lineb) {
     //if (columna < strlen(_hdoc_template(linea))) wryte, f, strpart(_hdoc_template(linea), columna+1:0);
-  for (i=linea+1; i < lineb; i++) _hdoc_parse_tpl_line, f, i, toroot=toroot, title=title, doc=doc;
+  for (i=linea+1; i < lineb; i++) hdoc_parse, f, i, toroot=toroot, title=title, doc=doc;
     //if (columnb > 1) wryte, f, strpart(_hdoc_template(lineb), 1:columnb-1);
     //} else {
     // if (columna+1 < columnb) wryte, f, strpart(_hdoc_template(linea), columna+1:columnb-1);
@@ -1747,7 +1760,7 @@ func mktexi2html_init (infile,outfile) {
   if (anyof(_hdoc_template == "%startbody%" )) linea = min ( where ( _hdoc_template == "%startbody%" ) );
   else linea = min ( where ( strmatch(_hdoc_template, "<body", 1 ) ));
   lineb = min ( where ( _hdoc_template == "%content%" ) );
-  for (i=linea+1; i < lineb; i++) _hdoc_parse_tpl_line, f, i, toroot=toroot, title=title, doc=doc;
+  for (i=linea+1; i < lineb; i++) hdoc_parse, f, i, toroot=toroot, title=title, doc=doc;
 
   wryte, f, in(min(where(in=="%after_body_open%"))+1:min(where(in=="%pre_body_close%"))-1);
   // PRE_BODY_CLOSE is everything between %content% and </BODY>
@@ -1755,7 +1768,7 @@ func mktexi2html_init (infile,outfile) {
   junk = strfind("</body>",_hdoc_template,case=0);
   lineb = min (where(junk(2,) != -1));
     //columnb = junk(1, lineb);
-  for (i=linea+1; i < lineb; i++) _hdoc_parse_tpl_line, f, i, toroot=toroot, title=title, doc=doc;
+  for (i=linea+1; i < lineb; i++) hdoc_parse, f, i, toroot=toroot, title=title, doc=doc;
     //if (columnb > 1) wryte, f, strpart(_hdoc_template(lineb), 1:columnb-1);
 
   wryte, f, in(min(where(in=="%pre_body_close%"))+1:0);
