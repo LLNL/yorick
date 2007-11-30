@@ -1,7 +1,7 @@
-%onlydoc:comment% $Id: README-install.html.content,v 1.1 2007-11-29 14:37:57 paumard Exp $
+%onlydoc:comment% $Id: README-install.html.content,v 1.2 2007-11-30 12:47:22 paumard Exp $
 %onlydoc:comment%   Content of doc/../README.html
 %onlydoc:comment%   create actual file with
-%onlydoc:comment%   _hdoc_headtail,"README-install.html.content",
+%onlydoc:comment%   hdoc_headtail,"README-install.html.content",
 %onlydoc:comment%       "../README.html", 0,
 %onlydoc:comment%       title="Yorick: Installation Instructions",
 %onlydoc:comment%       toroot="doc/", doc="installwin";

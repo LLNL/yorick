@@ -1,5 +1,5 @@
 /*  ************************** htmldoc.i *****************   */
-// $Id: htmldoc.i,v 1.4 2007-11-29 14:37:57 paumard Exp $
+// $Id: htmldoc.i,v 1.5 2007-11-30 12:47:22 paumard Exp $
 
 /* DOCUMENT htmldoc.i 
    html documentation tools. By default the function mkhtmldoc constructs 
@@ -8,7 +8,7 @@
    the original function definitions. Crude indexing is performed by matching
    a list of keywords to the document comments.
    Functions mkhtmldoc, hdoc_read_template, hdoc_extract_embedded, mktexi2html_init
-   Lower level: _hdoc_head, _hdoc_tail, _hdoc_headtail
+   Lower level: hdoc_head, hdoc_tail, hdoc_headtail
  */
 
 
@@ -207,7 +207,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
 	 write, format = "%s           \n", ifiles(i) ;      
 	 srcanchor, ifiles(i), dest, tags;
 
-	 _hdoc_headtail, dest, finaldest, title = rtdir + "/" + rtname;
+	 hdoc_headtail, dest, finaldest, title = rtdir + "/" + rtname;
       }
       write, "";
    }
@@ -653,7 +653,7 @@ func hdoc_funcindex(rtname, tags, to) {
 
    if (rtname == "global") title="Yorick routines defined in all files";
    else title="Yorick routines defined in file " + rtname + ".i";
-   _hdoc_head, f, title, table=1, doc=doc; 
+   hdoc_head, f, title, table=1, doc=doc; 
    wryte, f, "<center><h1>";
    if (rtname == "global") wryte, f,  "all routines";
    else wryte, f,  title;
@@ -696,7 +696,7 @@ func hdoc_funcindex(rtname, tags, to) {
       wryte, f, "</tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, title, table=1, doc=doc;
+   hdoc_tail, f, title, table=1, doc=doc;
 }
 
 
@@ -714,7 +714,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
 
 	 f = open(to+"html_xref/"+rtname+"-doc.html","w");
          title = "section " + aprev + " of routines in " + rtname + ".i";
-         _hdoc_head, f, title, table=1, doc=doc;
+         hdoc_head, f, title, table=1, doc=doc;
 	 wryte, f, "<center><h1>";
 	 if (rtname == "global") {
 	    wryte, f, " all functions  - " + aprev;
@@ -832,7 +832,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
       }
       wryte, f, "</table>";
    }
-   _hdoc_tail, f, title, table=1, doc=doc;
+   hdoc_tail, f, title, table=1, doc=doc;
    close, f;
 }
 
@@ -936,7 +936,7 @@ func hdoc_toptemplate (to) {
    }
    title = "yorick reference";
    doc="index";
-   _hdoc_head, f, title, table=1, toroot="", doc=doc;
+   hdoc_head, f, title, table=1, toroot="", doc=doc;
 
 
    wryte, f, "<h1><center>Yorick</center></h1>";
@@ -983,15 +983,15 @@ func hdoc_toptemplate (to) {
 
    wryte, f, "<hrule>";
 
-   _hdoc_tail, f, title, table=1, toroot="", doc=doc;
+   hdoc_tail, f, title, table=1, toroot="", doc=doc;
 
    f = open (to + "copyright.html", "w");
    title = "yorick copyright";
-   _hdoc_head, f, title, table=1, toroot="";
+   hdoc_head, f, title, table=1, toroot="";
    wryte, f, "<center><h1>Yorick</h1></center>";
    _hdoc_skip, f, 4;
    _hdoc_copyright, f;
-   _hdoc_tail, f, title, table=1, toroot="";
+   hdoc_tail, f, title, table=1, toroot="";
 }
 
 
@@ -1069,7 +1069,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
    f = open (to + "html_xref/packages.html", "w");
    title = "Yorick packages";
    doc="xref";
-   _hdoc_head, f, title, table=1, doc=doc;
+   hdoc_head, f, title, table=1, doc=doc;
 
    was_entry = 0;
        wryte, f, ("<table cellspacing=0 border=0" +
@@ -1116,7 +1116,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
    }
    wryte, f, "</table> &nbsp;<br>&nbsp;<br>&nbsp;<br>";
 
-   _hdoc_tail, f, title, table=1, doc=doc;
+   hdoc_tail, f, title, table=1, doc=doc;
    close, f;
 }
 
@@ -1131,8 +1131,8 @@ func hdoc_extract_embedded (template_file,to=) {
 
       A template may have one or two line identical to
       "%content%". Everything above the first one is used as a header
-      (see _hdoc_head), everything after the last one as a footer (see
-      _hdoc_tail). Between these two line, it is possible to embed the
+      (see hdoc_head), everything after the last one as a footer (see
+      hdoc_tail). Between these two line, it is possible to embed the
       content of one or several files. This function extract these
       files, setting their header and footer accordingly to the
       template.
@@ -1154,7 +1154,7 @@ func hdoc_extract_embedded (template_file,to=) {
       using hdoc_parse and written fo FILE_NAME.
 
      SEE ALSO: hdoc_read_template, mktexi2html_init
-       low level: _hdoc_head, _hdoc_tail, hdoc_parse
+       low level: hdoc_head, hdoc_tail, hdoc_parse
   */
   if (!is_void(template_file)) hdoc_read_template(template_file);
   ind=where(_hdoc_template=="%content%");
@@ -1175,9 +1175,9 @@ func hdoc_extract_embedded (template_file,to=) {
     doc=control(3);
     toroot=control(4);
     f=open(to+fname,"w");
-    _hdoc_head, f, title, table=1, toroot=toroot, doc=doc;
+    hdoc_head, f, title, table=1, toroot=toroot, doc=doc;
     hdoc_parse, f, scont+ind(n)+1:scont+indf(n), toroot=toroot,title=title,doc=doc;
-    _hdoc_tail, f, title, table=1, toroot=toroot, doc=doc;
+    hdoc_tail, f, title, table=1, toroot=toroot, doc=doc;
     close, f;
   }
 }
@@ -1200,7 +1200,7 @@ func hdoc_keywordindex (tags, keywords, to) {
    f = open (to + "html_xref/keywords.html", "w");
    doc="xref";
    title = "Yorick keyword index";
-   _hdoc_head, f, title, table=1, doc=doc;
+   hdoc_head, f, title, table=1, doc=doc;
 
    wryte, f, ("<table cellspacing=2 border=0" +
 		  " cellpadding=4 width=100\%>");
@@ -1239,7 +1239,7 @@ func hdoc_keywordindex (tags, keywords, to) {
       wryte, f, "</tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f, title, table=1, doc=doc;
+   hdoc_tail, f, title, table=1, doc=doc;
    close, f;
 
    for (i = 0; i < 26; i++) {
@@ -1262,7 +1262,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
 
    f = open (fnm, "w");
    doc="xref";
-   _hdoc_head, f, fnm, table=1, doc=doc; 
+   hdoc_head, f, fnm, table=1, doc=doc; 
 
    wryte, f, ("<table cellspacing=2 border=0" +
 		  " cellpadding=2 width=100\%>");
@@ -1315,7 +1315,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
       wryte, f, "</td></tr>";
    }
    wryte, f, "</table>";
-   _hdoc_tail, f,fnm,  table=1, doc=doc;
+   hdoc_tail, f,fnm,  table=1, doc=doc;
    close, f;
 }
 
@@ -1340,9 +1340,9 @@ func _hdoc_startbody (f)
 
 
 /* a simple page can be made with 
-       _hdoc_head, f, title;
+       hdoc_head, f, title;
        ... write some html;
-       _hdoc_tail, f, title;
+       hdoc_tail, f, title;
 
        with the 'table' option set, it puts a margin on the left and
        the text is put inside a table - the left column is the margin,
@@ -1490,7 +1490,7 @@ func hdoc_parse (g, spec, toroot=,title=,doc=,text=) {
   }
 }
 
-func _hdoc_head (g, title, table=, toroot=, doc=) {
+func hdoc_head (g, title, table=, toroot=, doc=) {
    if (table) {
      last_line=min(where(_hdoc_template=="%content%"))-1;
      hdoc_parse, g, 1:last_line, toroot=toroot, title=title, doc=doc;
@@ -1504,7 +1504,7 @@ func _hdoc_head (g, title, table=, toroot=, doc=) {
    }
 }
 
-func _hdoc_tail (g, title, table=, toroot=, doc=) {
+func hdoc_tail (g, title, table=, toroot=, doc=) {
   if (do_disclaimer) {
     wryte, g, "<P><HR><a href=\"http://www.llnl.gov/disclaimer.html\">";
     wryte, g, "<small>LLNL Disclaimers</small></a></P>";
@@ -1519,8 +1519,8 @@ func _hdoc_tail (g, title, table=, toroot=, doc=) {
   }
 }
 
-func _hdoc_headtail (src, dest, rm, title= , toroot=, doc=) {
-  /* DOCUMENT _hdoc_headtail, src, dest [, rm, title= , toroot=, doc=]
+func hdoc_headtail (src, dest, rm, title= , toroot=, doc=) {
+  /* DOCUMENT hdoc_headtail, src, dest [, rm, title= , toroot=, doc=]
 
       Adds HTML header and footer specified by currently loaded
       template to file SRC. Saves the result to DEST. Removes SRC
@@ -1530,10 +1530,10 @@ func _hdoc_headtail (src, dest, rm, title= , toroot=, doc=) {
   if (is_void(rm)) rm=1;
    g = open (dest, "w");
    if (is_void(title)) title = dest;
-   _hdoc_head, g, title, table=1, toroot=toroot, doc=doc;
+   hdoc_head, g, title, table=1, toroot=toroot, doc=doc;
    line = hdoc_read_file(src);
    hdoc_parse, g, 1:0, text=line, toroot=toroot, doc=doc, title=title;
-   _hdoc_tail, g, title, table=1, toroot=toroot, doc=doc;
+   hdoc_tail, g, title, table=1, toroot=toroot, doc=doc;
    close, g;
    if (rm) remove, src;
 }
@@ -1618,7 +1618,7 @@ func hdoc_wrap (dir) {
 	 write, "- nothing done";
 	 
       } else {
-	 _hdoc_headtail, tmpfile, fnms(i); 
+	 hdoc_headtail, tmpfile, fnms(i); 
       }
    }
 }

@@ -22,11 +22,11 @@ for (t=2;t<=numberof(TARGETS);t++) {
     continue;
   }
   if (target=="../README.html-mac") {
-    _hdoc_headtail,"README-install.html.content",to+"../README.html", 0,title="Yorick: Installation Instructions",toroot="doc/", doc="installmac";
+    hdoc_headtail,"README-install.html.content",to+"../README.html", 0,title="Yorick: Installation Instructions",toroot="doc/", doc="installmac";
     continue;
   }
   if (target=="../README.html-win") {
-    _hdoc_headtail,"README-install.html.content",to+"../README.html", 0,title="Yorick: Installation Instructions",toroot="doc/", doc="installwin";
+    hdoc_headtail,"README-install.html.content",to+"../README.html", 0,title="Yorick: Installation Instructions",toroot="doc/", doc="installwin";
     continue;
   }
   if (target=="refcard") {
@@ -44,9 +44,9 @@ for (t=2;t<=numberof(TARGETS);t++) {
       el=max(where(strmatch(text,"</div>"))-1);
       body=text(bl:el);
       f=open(outDIR+files(n),"w");
-      _hdoc_head,f,title,table=1,doc="qref";
+      hdoc_head,f,title,table=1,doc="qref";
       write,f,body;
-      _hdoc_tail,f,title,table=1,doc="qref";
+      hdoc_tail,f,title,table=1,doc="qref";
       close,f;
     }
     continue;
