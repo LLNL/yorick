@@ -1,5 +1,5 @@
 /*  ************************** htmldoc.i *****************   */
-// $Id: htmldoc.i,v 1.5 2007-11-30 12:47:22 paumard Exp $
+// $Id: htmldoc.i,v 1.6 2007-12-04 18:42:00 paumard Exp $
 
 /* DOCUMENT htmldoc.i 
    html documentation tools. By default the function mkhtmldoc constructs 
@@ -132,7 +132,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    } 
 
    if (is_void(template)) template="template.html";
-   if (open(template,"r",1)) hdoc_read_template,"template.html";
+   if (open(template,"r",1)) hdoc_read_template,template;
 
    /* directories for html files: html_xref for alphabetical function
       listings, create the directories manual and refcard to hold the
@@ -1030,7 +1030,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
 	 split= strtok(line);
 	 if (!split(1) || split(1) == "func" || split(1) == "extern") done=1;
 	 if (strmatch(line, "/* DOCUMENT")) {
-	    while (line = rdline(f) && !done) {
+	    while ((line = rdline(f)) && !done) {
 	       if (strmatch(line, "*/")) {
 		  done = 1;
 	       }  else { 
