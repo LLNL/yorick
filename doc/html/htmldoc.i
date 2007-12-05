@@ -1,14 +1,26 @@
 /*  ************************** htmldoc.i *****************   */
-// $Id: htmldoc.i,v 1.6 2007-12-04 18:42:00 paumard Exp $
+// $Id: htmldoc.i,v 1.7 2007-12-05 14:54:28 paumard Exp $
 
-/* DOCUMENT htmldoc.i 
+/* DOCUMENT htmldoc.i
+   
    html documentation tools. By default the function mkhtmldoc constructs 
    html pages from the installed i0 and i directories. 
    Document comments are extracted, and cross-referenced to each other and to 
    the original function definitions. Crude indexing is performed by matching
    a list of keywords to the document comments.
-   Functions mkhtmldoc, hdoc_read_template, hdoc_extract_embedded, mktexi2html_init
-   Lower level: hdoc_head, hdoc_tail, hdoc_headtail
+
+   Batch mode:
+    yorick -batch htmldoc.i [--quiet|-q] [--nosrc|-s] [--nofunc|-f] \
+      [--from=dir1,dir2,...] [--to=destdir] [--keywords=keywords.txt] \
+      [--packinfo=packinfo.txt] [--aliases=aliases.txt] \
+      [--template=template.html] [--warn=warnfile]
+   
+   In batch mode, mkhtmldoc() is automatically called. Each
+   mkhtmldoc() keyword has an equivalent long option form. The boolean
+   options also have a short option form.
+
+   SEE ALSO: mkhtmldoc, hdoc_read_template, hdoc_extract_embedded,
+             mktexi2html_init, hdoc_head, hdoc_tail, hdoc_headtail
  */
 
 
@@ -21,12 +33,13 @@ Copyright (c) 2005-2007, The Regents of the University of California.
 */
 
 
-func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, warn=,aliases=)
+func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, warn=,aliases=,quiet=)
 /* DOCUMENT mkhtmldoc         generate html documentation tree
     
             mkhtmldoc, from=, to=,
-                       keywords=, packinfo=, aliases=,
-                       nosrc=, nofunc=
+                       keywords=, packinfo=, aliases=, template=,
+                       nosrc=, nofunc=, quiet=,
+                       warn=
    generates html documentation from yorick files in selected directories.
    Without any arguments the subdirectories i0 and i
    of Y_SITE are scanned for function definitions, and the documentation is 
@@ -47,7 +60,8 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    further information on some or all of the files in the source directories.
    It defaults to packinfo.txt if not specified. An "aliases" file can  also be
    specified to merge the functions from several .i files in a single .html
-   file. It defaults to aliases.txt in the current directory if this file exists.
+   file. It defaults to aliases.txt in the current directory if this file
+   exists.
    
    The keywords nosrc and nofunc, if non null cut out the slowest parts 
    of the document creation process - crossreferencing the source files, 
@@ -63,49 +77,31 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    to cope with them.
 
 
-   The documentation tree is generated in seven stages.
+   The documentation tree is generated in five stages.
    1 - read through all the source files, extracting function names 
        extern declarations of builtin functions, and document comments
-   2 - reread the source files writing them out as preformatted html with 
-       anchors for each function declaration and links to the (as yet 
-       unwritten) function documentation
-   3 - for each source file, compile a series of html pages of the document 
+   2 - for each source file, compile a series of html pages of the document 
        comments for the functions in that file. One html file is generated 
        for each first letter.  
-   4 - compile a series of html pages for all the functions together, again
+   3 - compile a series of html pages for all the functions together, again
        grouped into pages according to first letters.
-   5 - if a keywords file is available, match keywords in the document 
+   4 - if a keywords file is available, match keywords in the document 
        comments, and compile a keyword index pointing to all the matched 
        functions.
-   6 - if a packinfo file is available, match source file names with 
+   5 - if a packinfo file is available, match source file names with 
        the packinfo file and compile a package list with the corresponding 
        descriptions. Alternatively, if a document comments appears near 
        the top of a source files, unattached to a function, this will be used
        instead. 
 
 
-
-   By default, mkhtmldoc, will create links to the yorick manual, but 
-   it does nothing to the manual itself. To get the manual in the right place, 
-   run texi2html on the texinfo file yorick.tex putting the files in
-   the 'manual' directory. To put an index bar at the top of each page
-   and set up a margin and background colours, run hdoc_wrap on the manual 
-   directory 
-   eg, if you are creating the documentation in the current directory, 
-   and Y_SITE is where yorick i installed, then 
-   >   cp Y_SITE/doc/yorick.tex  manual
-   >   cd manual
-   >   texi2html yorick.tex
-
-   then in yorick, 
-   >  hdoc_wrap, manual
-     
-   So as not to overwrite carefully modified pages, the "home" link 
-   on the indexbar points to index.html in the documentation directory, but 
-   mkhtmldoc writes its template to index-raw.html.
-   This should be moved to index.html and edited by hand as necessary
-
-   KEYWORDS: keywords, packinfo, from, to, nosrc, nofunc
+   Unless QUIET is set to 1, mkhtmldoc outputs a lot of information,
+   including warnings. These warnings can be redirected to a file
+   using the WARN keyword (it is the only way to get them if QUIET is
+   set).
+   
+   KEYWORDS: keywords, packinfo, aliases, template, from, to, nosrc, nofunc,
+             quiet, warn
 
    SEE ALSO:  mkdoc, tagscan, srcanchor, hdoc_read_template,
               mktexi2html_init, hdoc_extract_embedded
@@ -140,7 +136,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
       placeholder files in them)
       */ 
    
-   dnames = ["manual","refcard","html_xref","images"];
+   dnames = ["html_xref"];
    // make these directories under the 'to' directory if they don't exist;
    for (i = 1; i <= numberof (dnames); i++) {
       todir = to + dnames(i);
@@ -163,9 +159,9 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    maxtags = 256;
    tags = array(string, 6, maxtags);
    ntags = 0;
-   write, "scanning files for function definitions";
+   if (!quiet) write, "scanning files for function definitions";
    for (i=1 ; i <= numberof(ifiles) ; i++) {
-      write, format = "%s           \n", ifiles(i) ;
+      if (!quiet) write, format = "%s           \n", ifiles(i) ;
       newtags = tagscan(ifiles(i));
       nt = numberof(newtags)/6;
       if (nt) {
@@ -184,7 +180,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
      tags = tags(,1:ntags);
      tags = tags(,where(strlen(tags(6,))>6));
    }
-   write, "";
+   if (!quiet) write, "";
 
    /* STAGE 2 - copy the files name.i to tmp_name_i.html in the directories 
       under 'to', html quoting the characters "<" and ">" and adding
@@ -192,7 +188,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
       */
    // this part is slow - set nosrc to 1 to skip it;
    if (never_do && !nosrc) {
-      write, "anchoring and linking source files";
+      if (!quiet) write, "anchoring and linking source files";
       for (i=1 ; i <= numberof(ifiles) ; i++) {
 	 name= [".", ifiles(i)];
 	 do {
@@ -204,12 +200,12 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
 	 
 	 dest = to + "html_i/tmp_" + rtname +"_i.html";
 	 finaldest = to + "html_i/" + rtname +"_i.html";
-	 write, format = "%s           \n", ifiles(i) ;      
-	 srcanchor, ifiles(i), dest, tags;
+	 if (!quiet) write, format = "%s           \n", ifiles(i) ;      
+	 srcanchor, ifiles(i), dest, tags, quiet=quiet;
 
 	 hdoc_headtail, dest, finaldest, title = rtdir + "/" + rtname;
       }
-      write, "";
+      if (!quiet) write, "";
    }
 
    if (!nofunc) {
@@ -254,9 +250,9 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
          }
          if (found) {
            list=where(tags(3,)==rname);
-           write, format = "writing index and doc pages for %s \n", rname;
+           if (!quiet) write, format = "writing index and doc pages for %s \n", rname;
            hdoc_funcindex, rname, tags(,list), to;
-           hdoc_funcdocs, rname, tags(,list), tags, to;
+           hdoc_funcdocs, rname, tags(,list), tags, to, quiet=quiet;
          }
        }
        close,fal;
@@ -271,13 +267,13 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
       tags = tags(,sort(strcase(0,tags(1,))));
       for (i=1;i<=numberof(rtx);i++) rtname = rtname(where(rtname!=rtx(i)));
       for (i = 1; i <= numberof(rtname); i++) {
-	 write, format = "writing index and doc pages for %s      \n", 
+	 if (!quiet) write, format = "writing index and doc pages for %s      \n", 
            rtname(i);
          w = where(tags(3,)==rtname(i));
          hdoc_funcindex, rtname(i), tags(,w), to;
-         hdoc_funcdocs, rtname(i), tags(,w), tags, to;
+         hdoc_funcdocs, rtname(i), tags(,w), tags, to, quiet=quiet;
       }
-      write, "";
+      if (!quiet) write, "";
    }
 
 
@@ -285,20 +281,20 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
       // STAGE 4 - function listings for all builtin and extern functions;
       // w = where (tags(5,) !=  "local");
      w = [];
-      write, "writing global index and doc pages";
+      if (!quiet) write, "writing global index and doc pages";
       hdoc_funcindex, "global", tags(,w), to;
       // hdoc_funcdocs, "global", tags(,w), tags, to;
    }
 
 
    // STAGE 5 - package listing;
-   write, "making package listing";
+   if (!quiet) write, "making package listing";
    hdoc_packagelist, from, tags, packinfo=packinfo, to=to;
 
 
    //STAGE 6 - keywords
    if (keywords) {
-      write, "making keyword index ";
+      if (!quiet) write, "making keyword index ";
       hdoc_keywordindex, tags, keywords, to;
    }
 
@@ -487,7 +483,7 @@ func _hdoc_cross(loc, names, crossref)
 
 
 
-func srcanchor (infile, outfile, tags) {
+func srcanchor (infile, outfile, tags, quiet=) {
   /* DOCUMENT  
             srcanchor, infile, outfile, tags
     convert yorick source to html
@@ -539,9 +535,9 @@ func srcanchor (infile, outfile, tags) {
 	 if (numberof (w) != 1) {
 	    if (strlen(name) > 1 && name != "junk" && name != "op") {
 	       // silently ignore failed one character matches;
-	       if (nwsf == 0) write, format = "\n %s", "";
+	       if (nwsf == 0 & !quiet) write, format = "\n %s", "";
 	       nwsf++;
-	       write, fwarn, format = 
+	       if (!quiet|!is_void(warn)) write, fwarn, format = 
 		      "warning: %i tag matches for %s \n",
 	               numberof(w), name;
 	       nwarn++;
@@ -701,7 +697,7 @@ func hdoc_funcindex(rtname, tags, to) {
 
 
 
-func hdoc_funcdocs (rtname, tags, atags, to) {
+func hdoc_funcdocs (rtname, tags, atags, to, quiet=) {
    if (is_void (to)) to = "./"; 
    name_list =tags(1,);
    doc_list = tags(6,);
@@ -711,7 +707,7 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
    aprev = "";
    f = [];
    n = numberof (name_list);
-
+   doc="xref";
 	 f = open(to+"html_xref/"+rtname+"-doc.html","w");
          title = "section " + aprev + " of routines in " + rtname + ".i";
          hdoc_head, f, title, table=1, doc=doc;
@@ -762,8 +758,8 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
 		 " line " + strtrim (swrite(atags(4, igl))) + "</a>");
 	 /* grow, db, sdef; */
       } else {
-	 if (nwsf == 0) write, format = "\n %s", "";
-	 print, "zero or multiple names ", w, myname;
+	 if (nwsf == 0 & !quiet) write, format = "\n %s", "";
+	 if (!quiet) print, "zero or multiple names ", w, myname;
 	 nwsf++;
       }
 
@@ -813,8 +809,8 @@ func hdoc_funcdocs (rtname, tags, atags, to) {
 	       igl = w(1);
 	       defroot = "../html_xref/" + atags(3, igl);
 	    } else {
-	       if (nwsf == 0) write, format = "\n %s", "";
-	       write, fwarn, format = " warning: %i tag matches for  %s \n", 
+	       if (nwsf == 0 & !quiet) write, format = "\n %s", "";
+	       if (!quiet|!is_void(warn)) write, fwarn, format = " warning: %i tag matches for  %s \n", 
 	             numberof (w), ssa;
 	       nwsf++;
 	    }
@@ -1066,6 +1062,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
       }
    }
 
+   if (!is_void(ptext)) {
    f = open (to + "html_xref/packages.html", "w");
    title = "Yorick packages";
    doc="xref";
@@ -1118,6 +1115,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
 
    hdoc_tail, f, title, table=1, doc=doc;
    close, f;
+   }
 }
 
 
@@ -1247,10 +1245,10 @@ func hdoc_keywordindex (tags, keywords, to) {
       w = where (strpart (kwl, 1:1) == ch);
       if (!numberof(w)) continue;
       fnm = to+"html_xref/keywords-" + ch + ".html";
-      write, format = "\n %s   ", fnm;
+      if (!quiet) write, format = "\n %s   ", fnm;
       hdoc_keywordref, fnm, kwl(w), tags;
    }
-   write, "";
+   if (!quiet) write, "";
 }
 
 
@@ -1589,7 +1587,7 @@ func _hdoc_margintable (f) {
 
 
 
-func hdoc_wrap (dir) {
+func hdoc_wrap (dir, quiet=) {
    tmpfile = "hdoc_tmp.tmp";
    fnms = _lsm1 (dir, ext = ".html");
    nfls = numberof (fnms);
@@ -1614,8 +1612,8 @@ func hdoc_wrap (dir) {
       close, f;
 
       if (!gotbody) {
-	 write, format = "html file %s contains no <BODY> statement ", fnm;
-	 write, "- nothing done";
+	 if (!quiet) write, format = "html file %s contains no <BODY> statement ", fnm;
+	 if (!quiet) write, "- nothing done";
 	 
       } else {
 	 hdoc_headtail, tmpfile, fnms(i); 
@@ -1778,9 +1776,42 @@ func mktexi2html_init (infile,outfile) {
 
 if (batch()) {
   args = get_argv();
-  do_disclaimer = (numberof(args)==2 && args(2)=="llnl");
-  if (!do_disclaimer) write, "creating yorick html document set";
-  else write, "creating yorick html documents set (LLNL version)";
-  mkhtmldoc;
+  junk=args(where(strpart(args,1:1)!="-"));
+  do_disclaimer = (numberof(junk)==2 && junk(2)=="llnl");
+  if (anyof(strpart(args,1:1)=="-")) {
+    junk=args(where(strpart(args,1:1)=="-"));
+    for (i=1;i<=numberof(junk);i++) {
+      if (junk(i)=="--quiet" | junk(i)=="-q")
+        quiet=1;
+      else if (junk(i)=="--nosrc" | junk(i)=="-s")
+        nosrc=1;
+      else if (junk(i)=="--nofunc" | junk(i)=="-f")
+        nofunc=1;
+      else if (junk(i)=="--llnl" | junk(i)=="-l")
+        do_disclaimer=1;
+      else if (strpart(junk(i),1:strlen("--warn="))=="--warn=")
+        warn=strpart(junk(i),strlen("--warn=")+1:0);
+      else if (strpart(junk(i),1:strlen("--from="))=="--from=")
+        from=pathsplit(strpart(junk(i),strlen("--from=")+1:0),delim=",");
+      else if (strpart(junk(i),1:strlen("--to="))=="--to=")
+        to=strpart(junk(i),strlen("--to=")+1:0);
+      else if (strpart(junk(i),1:strlen("--template="))=="--template=")
+        template=strpart(junk(i),strlen("--template=")+1:0);
+      else if (strpart(junk(i),1:strlen("--keywords="))=="--keywords=")
+        keywords=strpart(junk(i),strlen("--keywords=")+1:0);
+      else if (strpart(junk(i),1:strlen("--aliases="))=="--aliases=")
+        aliases=strpart(junk(i),strlen("--aliases=")+1:0);
+      else if (strpart(junk(i),1:strlen("--packinfo="))=="--packinfo=")
+        packinfo=strpart(junk(i),strlen("--packinfo=")+1:0);
+      else
+        continue;
+    }
+  }
+  if (!quiet) {
+    if (!do_disclaimer) write, "creating yorick html document set";
+    else write, "creating yorick html documents set (LLNL version)";
+  }
+  mkhtmldoc,from=from, to=to, keywords=keywords, packinfo=packinfo,
+    template=template, aliases=aliases, nosrc=nosrc, nofunc=nofunc,
+    warn=warn, quiet=quiet;
 }
- 

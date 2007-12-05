@@ -1,4 +1,5 @@
-# $Id: Makefile,v 1.4 2007-11-29 14:37:57 paumard Exp $
+# $Id: Makefile,v 1.5 2007-12-05 14:54:28 paumard Exp $
+# This file is part of Yorick and shares its BSD-type copyright.
 # For the "manual" target, you need a recent texi2html that accepts
 # "--split node". Mac users: The one in fink (1.64) is too old, get one from
 # http://www.nongnu.org/texi2html/
@@ -11,16 +12,19 @@ BUILDDIR=compiled-doc/
 
 all: html-doc
 
-html-doc: html_xref manual refcard $(BUILDDIR)doc/README.html $(BUILDDIR)README.html $(BUILDDIR)doc/images/triangle3.jpg $(BUILDDIR)doc/skull.css $(BUILDDIR)doc/style.css
+html-doc: html_xref manual refcard README.html README-install.html images css
 
+css: $(BUILDDIR)doc/skull.css $(BUILDDIR)doc/style.css
 $(BUILDDIR)doc/skull.css $(BUILDDIR)doc/style.css:
 	mkdir -p $(BUILDDIR)doc/
 	cp skull.css style.css $(BUILDDIR)doc/
 
+images: $(BUILDDIR)doc/images/triangle3.jpg
 $(BUILDDIR)doc/images/triangle3.jpg:
 	mkdir -p $(BUILDDIR)doc/images
 	cp -p images/*.* $(BUILDDIR)doc//images/
 
+README-install.html: $(BUILDDIR)README.html
 $(BUILDDIR)README.html:
 	$(YORICK) -batch make-doc.i --to=$(BUILDDIR)doc/ ../README.html-$(PLATFORM)
 
@@ -28,6 +32,7 @@ html_xref: $(BUILDDIR)doc/html_xref/packages.html $(BUILDDIR)doc/html_xref/keywo
 $(BUILDDIR)doc/html_xref/packages.html $(BUILDDIR)doc/html_xref/keywords-z.html:
 	$(YORICK) -batch make-doc.i --to=$(BUILDDIR)doc/ html_xref
 
+README.html: $(BUILDDIR)doc/README.html
 $(BUILDDIR)doc/README.html:
 	$(YORICK) -batch make-doc.i --to=$(BUILDDIR)doc/ extract_embedded
 
@@ -59,3 +64,5 @@ clean:
 	rm -Rf compiled-doc texi2html.init ../yorick/ *~
 
 distclean:: clean
+
+.PHONY: all html-doc clean distclean install html_xref manual refcard README.html README-install.html images css
