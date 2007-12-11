@@ -1,6 +1,6 @@
 #!/usr/bin/yorick -batch
 /*
-  $Id: pkginst.i,v 1.2 2007-12-11 12:56:54 paumard Exp $
+  $Id: pkginst.i,v 1.3 2007-12-11 16:58:06 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   It is considered obsolete to call this script as documented below.
@@ -113,8 +113,8 @@ for (packn=1;packn<=numberof(packages);packn++) {
       close,f;
       if (strgrep("."+ext+"$",line)(2)!=-1 & !strmatch(line," "))
         file=line;
-      mkdirpv,DESTDIR+"usr/share/yorick-doc";
-      syscall,"cp "+file+" "+DESTDIR+"usr/share/yorick-doc/";
+      mkdirpv,DESTDIR+"/usr/share/yorick-doc";
+      syscall,"cp "+file+" "+DESTDIR+"/usr/share/yorick-doc/";
     }
   }
   // package info file
