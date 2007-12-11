@@ -1,6 +1,6 @@
 /*
  * pathfun.i
- * $Id: pathfun.i,v 1.3 2006-06-05 00:12:25 dhmunro Exp $
+ * $Id: pathfun.i,v 1.4 2007-12-11 19:56:20 frigaut Exp $
  * manipulate path names and file names
  */
 /* Copyright (c) 2006, The Regents of the University of California.
@@ -235,4 +235,29 @@ func get_user_sys_path(path, &user_path, &sys_path) {
     user_path = [];
     sys_path = path;
   }
+}
+
+func find_in_path(filename,takefirst=) {
+/* DOCUMENT find_in_path(filename,takefirst=)
+     returns the full path (including filename) where filename has been found.
+
+     Rules:
+     - If filename has not been found, [] is returned
+     - if filename has been found at several locations, a string vector with all
+       locations is returned
+
+     If takefirst=1, will return when the first occurence of filename is found (
+     returns a string scalar).
+   SEE ALSO: get_path, dirname, basename
+ */
+  local path,valid;
+  path = pathsplit(get_path(),delim=":");
+  valid = array(0,numberof(path));
+
+  for (i=1;i<=numberof(path);i++) {
+    if (open(path(i)+filename,"r",1)) valid(i)=1;
+    if (takefirst&&valid(i)) return path(i)+filename;
+  }
+  if (noneof(valid)) return;
+  return path(where(valid))+filename;
 }
