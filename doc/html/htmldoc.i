@@ -1,5 +1,5 @@
 /*  ************************** htmldoc.i *****************   */
-// $Id: htmldoc.i,v 1.7 2007-12-05 14:54:28 paumard Exp $
+// $Id: htmldoc.i,v 1.8 2007-12-11 10:22:19 paumard Exp $
 
 /* DOCUMENT htmldoc.i
    
@@ -11,9 +11,9 @@
 
    Batch mode:
     yorick -batch htmldoc.i [--quiet|-q] [--nosrc|-s] [--nofunc|-f] \
-      [--from=dir1,dir2,...] [--to=destdir] [--keywords=keywords.txt] \
-      [--packinfo=packinfo.txt] [--aliases=aliases.txt] \
-      [--template=template.html] [--warn=warnfile]
+      [--from=dir1:dir2,...] [--to=destdir] [--xref-dir=html_xref] \
+      [--keywords=keywords.txt] [--packinfo=packinfo.txt] \
+      [--aliases=aliases.txt] [--template=template.html] [--warn=warnfile]
    
    In batch mode, mkhtmldoc() is automatically called. Each
    mkhtmldoc() keyword has an equivalent long option form. The boolean
@@ -33,10 +33,12 @@ Copyright (c) 2005-2007, The Regents of the University of California.
 */
 
 
-func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, warn=,aliases=,quiet=)
+func mkhtmldoc(from=, to=, xref_dir=,
+               keywords=, packinfo=, template=, aliases=, warn=,
+               nosrc=, nofunc=, quiet=)
 /* DOCUMENT mkhtmldoc         generate html documentation tree
     
-            mkhtmldoc, from=, to=,
+            mkhtmldoc, from=, to=, xref_dir=,
                        keywords=, packinfo=, aliases=, template=,
                        nosrc=, nofunc=, quiet=,
                        warn=
@@ -53,6 +55,9 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    If specified, the  'from' keyword should be a string array of 
    directories to scan. The 'to' keyword can be used to set a 
    destination directory other than the current directory.
+   The cross-reference DOCUMENT comments are extracted into
+   TO/XREF_DIR, where XREF_DIR defaults to "html_xref".
+
    A keyword keywords= can be used to specify a file containing a list 
    of keywords from which to create a crude index. If not specified, and 
    if there is a file keywords.txt in the current directory, then that is 
@@ -101,7 +106,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    set).
    
    KEYWORDS: keywords, packinfo, aliases, template, from, to, nosrc, nofunc,
-             quiet, warn
+             quiet, warn, xref_dir
 
    SEE ALSO:  mkdoc, tagscan, srcanchor, hdoc_read_template,
               mktexi2html_init, hdoc_extract_embedded
@@ -116,6 +121,8 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
    }
    if (is_void (to)) to = get_cwd();
    if (strpart (to, strlen(to):) != "/") to += "/";
+   if (is_void(xref_dir)) xref_dir="html_xref/";
+   if (strpart (xref_dir, strlen(xref_dir):) != "/") xref_dir += "/";
    if (is_void (keywords)) {
       if (open("keywords.txt","r",1)) keywords = "keywords.txt";
    }
@@ -136,7 +143,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
       placeholder files in them)
       */ 
    
-   dnames = ["html_xref"];
+   dnames = [xref_dir];
    // make these directories under the 'to' directory if they don't exist;
    for (i = 1; i <= numberof (dnames); i++) {
       todir = to + dnames(i);
@@ -201,7 +208,7 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
 	 dest = to + "html_i/tmp_" + rtname +"_i.html";
 	 finaldest = to + "html_i/" + rtname +"_i.html";
 	 if (!quiet) write, format = "%s           \n", ifiles(i) ;      
-	 srcanchor, ifiles(i), dest, tags, quiet=quiet;
+	 srcanchor, ifiles(i), dest, tags, quiet=quiet, xref_dir=xref_dir;
 
 	 hdoc_headtail, dest, finaldest, title = rtdir + "/" + rtname;
       }
@@ -251,8 +258,8 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
          if (found) {
            list=where(tags(3,)==rname);
            if (!quiet) write, format = "writing index and doc pages for %s \n", rname;
-           hdoc_funcindex, rname, tags(,list), to;
-           hdoc_funcdocs, rname, tags(,list), tags, to, quiet=quiet;
+           hdoc_funcindex, rname, tags(,list), to, xref_dir;
+           hdoc_funcdocs, rname, tags(,list), tags, to, xref_dir, quiet=quiet;
          }
        }
        close,fal;
@@ -270,8 +277,8 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
 	 if (!quiet) write, format = "writing index and doc pages for %s      \n", 
            rtname(i);
          w = where(tags(3,)==rtname(i));
-         hdoc_funcindex, rtname(i), tags(,w), to;
-         hdoc_funcdocs, rtname(i), tags(,w), tags, to, quiet=quiet;
+         hdoc_funcindex, rtname(i), tags(,w), to, xref_dir;
+         hdoc_funcdocs, rtname(i), tags(,w), tags, to, xref_dir, quiet=quiet;
       }
       if (!quiet) write, "";
    }
@@ -282,20 +289,20 @@ func mkhtmldoc(from=, to=, keywords=, packinfo=, template=, nosrc=, nofunc=, war
       // w = where (tags(5,) !=  "local");
      w = [];
       if (!quiet) write, "writing global index and doc pages";
-      hdoc_funcindex, "global", tags(,w), to;
-      // hdoc_funcdocs, "global", tags(,w), tags, to;
+      hdoc_funcindex, "global", tags(,w), to, xref_dir;
+      // hdoc_funcdocs, "global", tags(,w), tags, to, xref_dir;
    }
 
 
    // STAGE 5 - package listing;
    if (!quiet) write, "making package listing";
-   hdoc_packagelist, from, tags, packinfo=packinfo, to=to;
+   hdoc_packagelist, from, tags, packinfo=packinfo, to=to, xref_dir=xref_dir;
 
 
    //STAGE 6 - keywords
    if (keywords) {
       if (!quiet) write, "making keyword index ";
-      hdoc_keywordindex, tags, keywords, to;
+      hdoc_keywordindex, tags, keywords, to, xref_dir;
    }
 
    //STAGE 7 - miscellaneous;
@@ -483,7 +490,7 @@ func _hdoc_cross(loc, names, crossref)
 
 
 
-func srcanchor (infile, outfile, tags, quiet=) {
+func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
   /* DOCUMENT  
             srcanchor, infile, outfile, tags
     convert yorick source to html
@@ -549,7 +556,7 @@ func srcanchor (infile, outfile, tags, quiet=) {
 	    /* for the definition/declaration itself, put in an anchor and 
                a link back to the documentation tree */
 	    wryte, g, ("<b>" + split(1) + " <a name = " + tagdat(1) + 
-		       " href = ../html_xref/" + tagdat(3) + 
+		       " href = ../" + xref_dir + tagdat(3) + 
 		       "-doc.html" + "#" + tagdat(1) + 
 		       ">" + tagdat(1) + "</a></b> " + rest);  
 	 }
@@ -620,7 +627,7 @@ func _alphabsuffix (name) {
 }
 
 
-func hdoc_funcindex(rtname, tags, to) {
+func hdoc_funcindex(rtname, tags, to, xref_dir) {
    if (is_void(to)) to = ".";
 
    name_list = tags(1:3:2,);
@@ -645,7 +652,7 @@ func hdoc_funcindex(rtname, tags, to) {
    idxbg0 = "\"#ffffff\"";
 
    doc="xref";
-   f = open (to + "html_xref/" + rtname + "-index.html", "w");
+   f = open (to + xref_dir + rtname + "-index.html", "w");
 
    if (rtname == "global") title="Yorick routines defined in all files";
    else title="Yorick routines defined in file " + rtname + ".i";
@@ -697,7 +704,7 @@ func hdoc_funcindex(rtname, tags, to) {
 
 
 
-func hdoc_funcdocs (rtname, tags, atags, to, quiet=) {
+func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
    if (is_void (to)) to = "./"; 
    name_list =tags(1,);
    doc_list = tags(6,);
@@ -708,7 +715,7 @@ func hdoc_funcdocs (rtname, tags, atags, to, quiet=) {
    f = [];
    n = numberof (name_list);
    doc="xref";
-	 f = open(to+"html_xref/"+rtname+"-doc.html","w");
+	 f = open(to+xref_dir+rtname+"-doc.html","w");
          title = "section " + aprev + " of routines in " + rtname + ".i";
          hdoc_head, f, title, table=1, doc=doc;
 	 wryte, f, "<center><h1>";
@@ -807,7 +814,7 @@ func hdoc_funcdocs (rtname, tags, atags, to, quiet=) {
 	    w = where (anames == ssa);
 	    if (numberof(w) == 1) {
 	       igl = w(1);
-	       defroot = "../html_xref/" + atags(3, igl);
+	       defroot = "../" + xref_dir + atags(3, igl);
 	    } else {
 	       if (nwsf == 0 & !quiet) write, format = "\n %s", "";
 	       if (!quiet|!is_void(warn)) write, fwarn, format = " warning: %i tag matches for  %s \n", 
@@ -993,7 +1000,7 @@ func hdoc_toptemplate (to) {
 
 
 
-func hdoc_packagelist (from, tags, packinfo=, to=) {
+func hdoc_packagelist (from, tags, packinfo=, to=, xref_dir=) {
 
    name_list = tags(1,);
    dir_list = tags (2,);
@@ -1063,7 +1070,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=) {
    }
 
    if (!is_void(ptext)) {
-   f = open (to + "html_xref/packages.html", "w");
+   f = open (to + xref_dir + "packages.html", "w");
    title = "Yorick packages";
    doc="xref";
    hdoc_head, f, title, table=1, doc=doc;
@@ -1182,7 +1189,7 @@ func hdoc_extract_embedded (template_file,to=) {
 
 
 
-func hdoc_keywordindex (tags, keywords, to) {
+func hdoc_keywordindex (tags, keywords, to, xref_dir) {
 
    // read the list if keywords - assumed to be one per line, with 
    // nothing else in the file
@@ -1195,7 +1202,7 @@ func hdoc_keywordindex (tags, keywords, to) {
    s = sort (kwl);
    kwl = kwl(s);
 
-   f = open (to + "html_xref/keywords.html", "w");
+   f = open (to + xref_dir + "keywords.html", "w");
    doc="xref";
    title = "Yorick keyword index";
    hdoc_head, f, title, table=1, doc=doc;
@@ -1208,7 +1215,7 @@ func hdoc_keywordindex (tags, keywords, to) {
       w = where (strpart (kwl, 1:1) == ch);
       if (!numberof(w)) continue;
       wryte, f, "<td>"; 
-      wryte, f, "<a href = ../html_xref/keywords-"+ch+".html>"+ch+"</a>";
+      wryte, f, "<a href = ../"+xref_dir+"keywords-"+ch+".html>"+ch+"</a>";
       wryte, f, "</td>" 
    }
    wryte, f, "</tr></table>";
@@ -1227,7 +1234,7 @@ func hdoc_keywordindex (tags, keywords, to) {
 	    myw = kwl(irc);
 	    suff = strcase(0, strpart (myw, 1:1));
 	    wryte, f, "<td>";
-	    wryte, f, ("<a href = ../html_xref/keywords-" + suff +
+	    wryte, f, ("<a href = ../"+xref_dir+"keywords-" + suff +
 		       ".html#" + strcomp(myw) + ">" + myw + "</a>");
 	    wryte, f, "</td>";
 	 } else {
@@ -1244,16 +1251,16 @@ func hdoc_keywordindex (tags, keywords, to) {
       ch = string (&(char('a' + i)));
       w = where (strpart (kwl, 1:1) == ch);
       if (!numberof(w)) continue;
-      fnm = to+"html_xref/keywords-" + ch + ".html";
+      fnm = to+xref_dir+"keywords-" + ch + ".html";
       if (!quiet) write, format = "\n %s   ", fnm;
-      hdoc_keywordref, fnm, kwl(w), tags;
+      hdoc_keywordref, fnm, kwl(w), tags, xref_dir;
    }
    if (!quiet) write, "";
 }
 
 
 
-func hdoc_keywordref (fnm, kwl, tags) {
+func hdoc_keywordref (fnm, kwl, tags, xref_dir) {
    name_list = tags(1,);
    file_list = tags (3,);
    doc_list = tags (6,);
@@ -1268,7 +1275,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
    for (i = 0; i < 26; i++) {
       ch = string (&(char(int(*pointer ("a"))(1) + i)));
       wryte, f, "<td>"; 
-      wryte, f, "<a href = ../html_xref/keywords-" + ch + ".html>"+ch+"</a>";
+      wryte, f, "<a href = ../"+xref_dir+"keywords-" + ch + ".html>"+ch+"</a>";
       wryte, f, "</td>" 
    }
    wryte, f, "</td></tr></table>";
@@ -1286,7 +1293,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
 
       w = where (name_list == myk);
       if (numberof (w) > 0) {
-	 defroot = "../html_xref/" + file_list(w(1));
+	 defroot = "../"+xref_dir + file_list(w(1));
 	 wryte, f, (" <b><a href=\"" + defroot +
 		    "-doc.html#"+myk + "\">" + 
 		    myk + "</a></b> &nbsp;&nbsp;&nbsp;");
@@ -1303,7 +1310,7 @@ func hdoc_keywordref (fnm, kwl, tags) {
 	 nsa = numberof (w);
 	 for (j = 1; j <= nsa; j++) {
 	    ssa = name_list(w(j));
-	    defroot = "../html_xref/" + file_list(w(j));
+	    defroot = "../" + xref_dir + file_list(w(j));
 	    wryte, f, (" <a href=\"" + defroot +
 		        "-doc.html#"+ssa + "\">" + ssa + "</a>"+ 
 		       ((j < nsa) ? ", &nbsp; " : " &nbsp; ")); 
@@ -1549,6 +1556,7 @@ func _hdoc_skip (f, n) {
 
 
 func _hdoc_indexbartags (&htags, &hfiles, toroot=) {
+  // this (obsolete) routine should be customized.
   if (is_void(toroot)) toroot="../";
    htags = ["home", "manual",  "packages", "index", "keywords"];
    hfiles = toroot+["index.html", "manual/yorick.html", 
@@ -1557,6 +1565,7 @@ func _hdoc_indexbartags (&htags, &hfiles, toroot=) {
 }
 
 func _hdoc_indexbar(f) {
+  // this (obsolete) routine should be customized.
    _hdoc_indexbartags, htags, hfiles;
    hbg1 = "\"#bbddff\"";
    wryte, f, "<table border=0 cellpadding=5 cellspacing=0 width = 100\%>";
@@ -1792,7 +1801,7 @@ if (batch()) {
       else if (strpart(junk(i),1:strlen("--warn="))=="--warn=")
         warn=strpart(junk(i),strlen("--warn=")+1:0);
       else if (strpart(junk(i),1:strlen("--from="))=="--from=")
-        from=pathsplit(strpart(junk(i),strlen("--from=")+1:0),delim=",");
+        from=pathsplit(strpart(junk(i),strlen("--from=")+1:0),delim=":");
       else if (strpart(junk(i),1:strlen("--to="))=="--to=")
         to=strpart(junk(i),strlen("--to=")+1:0);
       else if (strpart(junk(i),1:strlen("--template="))=="--template=")
@@ -1803,6 +1812,8 @@ if (batch()) {
         aliases=strpart(junk(i),strlen("--aliases=")+1:0);
       else if (strpart(junk(i),1:strlen("--packinfo="))=="--packinfo=")
         packinfo=strpart(junk(i),strlen("--packinfo=")+1:0);
+      else if (strpart(junk(i),1:strlen("--xref-dir="))=="--xref-dir=")
+        xref_dir=strpart(junk(i),strlen("--xref-dir=")+1:0);
       else
         continue;
     }
@@ -1813,5 +1824,5 @@ if (batch()) {
   }
   mkhtmldoc,from=from, to=to, keywords=keywords, packinfo=packinfo,
     template=template, aliases=aliases, nosrc=nosrc, nofunc=nofunc,
-    warn=warn, quiet=quiet;
+    warn=warn, quiet=quiet, xref_dir=xref_dir;
 }
