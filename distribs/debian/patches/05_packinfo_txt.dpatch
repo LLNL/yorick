@@ -2,21 +2,28 @@
 ## 05_packinfo_txt.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
 ##
 ## All lines beginning with `## DP:' are a description of the patch.
-## DP: remove yorz-specific code.
-## DP: discuss it with upstream.
+## DP: Adapt packages index.
+## DP: Debian-specific.
 
 @DPATCH@
 
---- yorick-2.1.04+dfsg+cvs20071118.orig/doc/html/packinfo.txt	2007-11-21 16:52:06.000000000 +0100
-+++ yorick-2.1.04+dfsg+cvs20071118/doc/html/packinfo.txt	2007-11-21 16:52:40.000000000 +0100
+--- orig/doc/html/packinfo.txt  2007-12-05 09:19:48.000000000 +0100
++++ tp/doc/html/packinfo.txt    2007-12-05 09:21:09.000000000 +0100
 @@ -15,10 +15,6 @@
  :newsection
  Compiled (plugin) Yorick Packages
- 
+
 -:yorz
 -read and write png or jpeg grephics files, write mpeg-1 movie files,
 - and interface to zlib (gzip) compression library
 -
  :drat
  a 2D transport equation solver for (r,z) meshes
- 
+
+@@ -246,3 +242,6 @@
+
+ :sysafe
+ Replacement for system function (but not $ syntax)
++
++:newsection
++Add-on packages

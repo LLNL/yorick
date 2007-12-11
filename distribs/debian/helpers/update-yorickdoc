@@ -1,0 +1,97 @@
+#!/bin/sh
+# $Id: update-yorickdoc,v 1.1 2007-12-11 12:56:54 paumard Exp $
+
+set -e
+
+# First set "builtin" defaults, see conffile for details:
+CONFFILE=/etc/yorick-doc
+USERFILE=${HOME}/.`basename ${CONFFILE}`
+ENABLE_AUTO=1
+SRC_DIR=/usr/share/yorick-doc
+TEMPLATE=${SRC_DIR}/template.html
+FROM=/usr/share/yorick/i:/usr/share/yorick/i0
+TO=/usr/share/doc/yorick-doc
+XREF_DIR=html_xref
+
+# source CONFFILE to possibly override these defaults:
+if [ -r $CONFFILE ]; then
+    . $CONFFILE
+fi
+if [ -r $USERFILE ]; then
+    . $USERFILE
+fi
+
+# parse command-line
+PURGE=0
+for opt; do
+    case $opt in
+	--auto)
+	    if [ $ENABLE_AUTO -eq 0 ]; then
+		echo "ENABLE_AUTO set to zero in $CONFFILE or equivalent"
+		echo "Not updating Yorick documentation"
+		exit 0
+	    fi
+	    ;;
+	--purge)
+	    PURGE=1
+	    ;;
+	--src-dir=*)
+	    SRC_DIR=${opt#--*=}
+	    ;;
+	--from=*)
+	    FROM=${opt#--*=}
+	    ;;
+	--to=*)
+	    TO=${opt#--*=}
+	    ;;
+	--template=*)
+	    TEMPLATE=${opt#--*=}
+	    ;;
+	--xref-dir=*) 
+	    XREF_DIR=${opt#--*=}
+	    ;;
+	--conf=*) 
+	    CUSTOMRC=${opt#--*=}
+	    if [ -r $CUSTOMRC ]; then
+		. $CUSTOMRC
+	    else
+		echo "Warning: $CUSTOMRC not found"
+	    fi
+	    ;;
+	*)
+	    echo Unknown parameter $opt
+	    exit 1
+	    ;;
+    esac
+done
+
+# Do the actual work
+echo Updating Yorick documentation in ${TO}/${XREF_DIR}
+if [ -e ${TO}/${XREF_DIR} ]; then
+    rm -Rf ${TO}/${XREF_DIR}
+fi
+
+if [ $PURGE = 1 ]; then
+    echo "${TO}/${XREF_DIR} deleted."
+    exit 0
+fi
+
+if [ -x "`which yorick`" ]; then
+    PACKINFO=`mktemp`
+    KEYWORDS=`mktemp`
+    ALIASES=`mktemp`
+
+    cat ${SRC_DIR}/*.packinfo >> $PACKINFO
+    cat ${SRC_DIR}/*.keywords | sort | uniq >> $KEYWORDS
+    cat ${SRC_DIR}/*.aliases >> $ALIASES
+
+    yorick -batch htmldoc.i --template=$TEMPLATE --quiet --packinfo=$PACKINFO \
+	--keywords=$KEYWORDS --aliases=$ALIASES --from=$FROM --to=$TO \
+	--xref-dir=$XREF_DIR
+
+    rm -f $PACKINFO $KEYWORDS $ALIASES
+else
+    echo "Yorick not found; ${TO}/${XREF_DIR} deleted."
+fi
+
+exit 0

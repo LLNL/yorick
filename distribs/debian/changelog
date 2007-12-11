@@ -1,20 +1,21 @@
-yorick (2.1.04+dfsg+cvs20071118-1~bpo40+1) etch-backports; urgency=low
-
-  * etch backport (no integration effort)
-
- -- Thibaut Paumard <paumard@users.sourceforge.net>  Thu, 22 Nov 2007 12:07:52 +0100
-
-yorick (2.1.04+dfsg+cvs20071118-1) unstable; urgency=low
+yorick (2.1.05+dfsg-1) unstable; urgency=low
 
   * update to cvs.
-  * build yorick-doc package from yorick sources.
-  * remove ASCII version of the DOCUMENT comments.
-  * move PDF version of the Yorick manual and reference card to the
-    yorick-doc package.
-  * add doc-building files (css, jpeg and htmldoc.i) to yorick-dev.
   * add linda and lintian overrides.
+  * new yorick-doc package.
+     * move most txt and pdf documentation there.
+     * add html documentation.
+     * add update-yorickdoc command.
+  * large development of pkginst.i from yorick-dev:
+     * add dh_installyorick link to this file, which now behaves 
+       like a debhelper script.
+     * fix bashism which caused FTBFS on Ubuntu, thanks to Luca 
+       Falavigna.
+     * add lines in maintainer scripts to call update-yorickdoc.
+  * add code in yorick-data.postrm to purge /etc/yorick if 
+    necessary.
 
- -- Thibaut Paumard <paumard@users.sourceforge.net>  Thu, 22 Nov 2007 10:09:35 +0100
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Mon, 10 Dec 2007 10:09:35 +0100
 
 yorick (2.1.04+dfsg-1) unstable; urgency=low
 

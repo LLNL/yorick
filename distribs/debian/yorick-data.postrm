@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+case $1 in
+    remove)
+	if [ -e /usr/share/yorick ]; then
+	    rm -Rf /usr/share/yorick
+	fi
+	;;
+    purge)
+	# remove dangling conffiles from previous version
+	# if Yorick is purged but they are still around
+	if [ -e /etc/yorick ] && \
+	    [ "`dpkg-query -s yorick|grep Status`" = "Status: purge ok not-installed" ]; then
+	    rm -Rf /etc/yorick
+	fi
+	if [ -e /etc/emacs/site-start.d/50yorick-auto.el ]; then
+	    rm -f /etc/emacs/site-start.d/50yorick-auto.el
+	fi
+	;;
+esac
+#DEBHELPER#

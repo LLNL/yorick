@@ -1,0 +1,74 @@
+.\" $Id: dh_installyorick.1,v 1.1 2007-12-11 12:56:54 paumard Exp $
+.\"
+.IX Title "DH_INSTALLYORICK 1"
+.TH DH_INSTALLYORICK 1 "2007-12-10" "" "Debhelper"
+.SH "NAME"
+dh_installyorick \- install Yorick add-on packages
+.SH "SYNOPSIS"
+.IX Header "SYNOPSIS"
+\&\fBdh_installyorick\fR [\fIdebhelper\ options\fR] [\fB\-n\fR] [\fB\-\-no\-make\-install\fR]
+.SH "DESCRIPTION"
+.IX Header "DESCRIPTION"
+dh_installyorick is a debhelper program that installs the files of
+your Yorick add-on at the right place when building a Debian
+package. For a simple plug-in package, this is mostly done by calling
+"make DESTDIR=debian/<package> install" and then moving
+arch-independent files to usr/share. Note that there is no
+Y_SITE/contrib directory in the Debian packages, its content is merged
+into YSITE/i.
+.PP
+Calling "make ... install" can be disabled by using the
+"\-\-no\-make\-install" flag. This is useful in particular for interpreted
+add-on packages, which don't ship with a standard Yorick Makefile.
+.PP
+Unless the "\-n" flag is used, dh_installyorick will also add line to
+your package's postinst and postrm scripts to call "update-yorickdoc
+\-\-auto" if the yorick-doc package is installed. It is necessary to
+call dh_installdeb after dh_installyorick for this to work.
+.PP
+dh_installyorick will look for a number a files named
+debian/<package>.* for fine tuning its behavior (see \fBFILES\fR
+below). For each of these files, the prefix "<package>." can be
+omitted for the main binary package being built (usally the first one
+listed in debian/control).
+.SH "OPTIONS"
+.IX Header "OPTIONS"
+.IP "\fB\-n\fR\fR" 4
+.IX Item "-n"
+Do not modify postinst/postrm scripts.
+.IP "\fB\-\-no\-make\-install\fR\fR" 4
+.IX Item "--no-make-install"
+Do not call "make DESTDIR=debian/<package> install".
+.SH "FILES"
+.IX Header "FILES"
+.IP "\fBdebian/<package>.ynfo\fR" 4
+.IX Item "debian/<package>.ynfo"
+either a one-liner pointing to the pkg_mngr.i info file for this
+package or the info file itself. Each add-on should provide such a
+file so that Yorick's internal package manager can determine what
+add-ons are installed at the system level. dh_installyorick will
+install this file or the one it points to at the right location,
+currently /usr/share/yorick/packages/installed. It will also change
+the file extension from .ynfo to .info if necessary: pkg_mngr.i
+expects .info, but dh_installyorick uses .ynfo to avoid a name clash
+with dh_installinfo.
+.IP "\fBdebian/<package>.packinfo\fR, \fB.keywords\fR and \fB.aliases\fR" 4
+.IX Item "debian/<package>.packinfo, .keywords and .aliases"
+additional files for building Yorick HTML documentation with
+update-yorickdoc. see \&\fIupdate-yorickdoc\fR\|(1) and
+/usr/share/yorick/i/htmldoc.i in the yorick-doc packages. These files
+can also be one-liners pointing to the right files.
+.IP "\fBdebian/<package>.i\fR, \fB.i0\fR, \fB.i-start\fR, \fB.g\fR and \fB.lib\fR" 4
+.IX Item "debian/<package>.packinfo, .keywords and .aliases"
+lists of additional files to install in the corresponding directories in Y_SITE or Y_HOME.
+.SH "SEE ALSO"
+.IX Header "SEE ALSO"
+\&\fIdebhelper\fR\|(7),
+\&\fIupdate-yorickdoc\fR\|(1)
+.PP
+This program is a part of yorick-dev but is made to work with
+debhelper. Note that only compatibilty level 5 has been implemented
+and tested.
+.SH "AUTHORS"
+.IX Header "AUTHORS"
+Thibaut Paumard <paumard@users.sourceforge.net>

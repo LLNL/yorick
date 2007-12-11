@@ -1,7 +1,4 @@
 build/yorick-dev/* usr
 debian/helpers/instdirs.i usr/share/yorick/i/debian
 debian/helpers/pkginst.i usr/share/yorick/i/debian
-doc/html/htmldoc.i usr/share/yorick/i/debian
-doc/html/*.css usr/share/yorick/i/debian
-doc/html/images/skull*.jpeg usr/share/yorick/i/debian
 debian/linda-overrides.d/yorick-dev usr/share/linda/overrides

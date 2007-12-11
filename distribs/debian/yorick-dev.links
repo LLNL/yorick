@@ -3,3 +3,4 @@ usr/share/yorick/Make.cfg usr/lib/yorick/Make.cfg
 usr/share/yorick/Makedll usr/lib/yorick/Makedll
 usr/share/yorick/Makeexe usr/lib/yorick/Makeexe
 usr/share/yorick/Makepkg usr/lib/yorick/Makepkg
+usr/share/yorick/i/debian/pkginst.i usr/bin/dh_installyorick

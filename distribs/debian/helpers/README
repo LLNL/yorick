@@ -1,0 +1,24 @@
+		Yorick Documentation
+
+The files in this Y_SITE/doc directory are:
+
+    yorick.tex   TeXinfo source for the Yorick manual
+    refs.tex     TeX source for a short reference card
+  (these two files are precompiled in PDF and HTML formats in the
+  yorick-doc package)
+
+  Alphabetized DOCUMENT comments for Yorick functions in gzipped
+  text format (the same information is found in cross-referenced
+  HTML format in the yorick-doc package):
+    std.doc      standard Yorick functions.
+    graph.doc    Yorick graphics functions.
+    math.doc     matrix and FFT functions.
+    drat.doc     sample Drat transport equation solver. This is probably
+                 of interest only as an example of how to write a
+                 complete Yorick application.
+    hex.doc      a 3D transport equation solver.
+    library.doc  an index of the include files shipped with this Yorick
+                 package.
+
+    FILE_FORMATS  pointers to descriptions of all the binary file formats
+                  recognized or produced by Yorick

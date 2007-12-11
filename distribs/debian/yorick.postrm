@@ -9,10 +9,15 @@ case $1 in
       rm -Rf /usr/lib/yorick
     fi
     ;;
+  remove)
+    if [ -x "`which update-yorickdoc 2>/dev/null`" ]; then
+	update-yorickdoc --auto
+    fi
+    ;;
   abort-upgrade)
-    [ -e /usr/lib/yorick/pakages/pkg_setup.i ] ||
-       ln -s /etc/yorick/pakages/pkg_setup.i \\
-         /usr/lib/yorick/pakages/pkg_setup.i
+    [ -e /usr/lib/yorick/packages/pkg_setup.i ] ||
+       ln -s /etc/yorick/packages/pkg_setup.i \\
+         /usr/lib/yorick/packages/pkg_setup.i
     ;;
 esac
 #DEBHELPER#

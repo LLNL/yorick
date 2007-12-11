@@ -1,0 +1,31 @@
+# $ID: $
+# This file configures the behavior of the update-yorickdoc command
+# from the yorick-doc package.
+# It is sourced by update-yorickdoc, which is a standard shell script.
+
+# Should automatic updates ever happen?
+# Yorick add-ons call update-yorickdoc with the --auto flag whenever they 
+# are installed or uninstalled. This is a no-op if the following is set to 0.
+
+#ENABLE_AUTO=1
+
+# Default directory for update-yorickdoc files (*.packinfo,
+# *.keywords, and *.aliases). Also adjust the location of the template
+# file if you change that. Note that this option only controls
+# where update-yorickdoc looks for these files, packages will always
+# drop their files in the default location.
+
+#SRC_DIR=/usr/share/yorick-doc
+#TEMPLATE=${SRC_DIR}/template.html
+
+# The following variables are defaults for the command line options.
+# FROM:     a semicolon-separated list of directories to scan for yorick
+#           include files.
+# TO:       the top-level folder of the documentation tree.
+# XREF_DIR: the subdirectory of $TO where to put the files we will
+#           construct. Warning: the content of this directory wll be first 
+#           erased, don't use a directory which contains something you value.
+
+#FROM=/usr/share/yorick/i/:/usr/share/yorick/i0/
+#TO=/usr/share/doc/yorick-doc
+#XREF_DIR=html_xref

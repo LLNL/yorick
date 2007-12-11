@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+case $1 in
+  configure|reconfigure)
+    if [ -e "/usr/share/yorick/i" ]; then
+	update-yorickdoc --auto
+    fi
+    ;;
+esac
+#DEBHELPER#

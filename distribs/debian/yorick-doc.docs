@@ -1,4 +1,1 @@
 build/doc/*
-doc/html/images
-doc/html/*.css
-debian/helpers/index.html

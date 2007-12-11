@@ -33,9 +33,11 @@ configure: configure-stamp
 configure-stamp: patch-stamp
 	dh_testdir
 	make Y_HOME=relocate ysite
+	chmod a+x debian/helpers/*.i
 	touch configure-stamp
 
 
+BUILDDIR=../../build/
 build: build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
@@ -45,7 +47,8 @@ build-stamp: configure-stamp
 	mkdir -p build/share
 	mkdir -p build/lib/yorick
 	cp -a relocate build/share/yorick
-	rm -Rf build/share/yorick/doc
+	mv build/share/yorick/doc build
+	cp debian/helpers/README build/doc
 	mkdir -p build/share/yorick/packages/installed
 	mv build/share/yorick/bin build/lib/yorick/
 	mv build/share/yorick/lib build/lib/yorick/
@@ -59,16 +62,10 @@ build-stamp: configure-stamp
 	cp emacs/yorick-auto.el build/50yorick-auto.el
 	convert icons/yicon32.png build/yorick32x32.xpm
 	convert icons/yicon16.png build/yorick16x16.xpm
-	mkdir -p build/doc/html
-	relocate/bin/yorick -i debian/helpers/mkdoc.i
-	rm build/doc/index.html
-	cd build/doc ; texi2html -init-file ../../debian/helpers/texi2html.init ../../doc/yorick.tex
-	mv build/doc/yorick/* build/doc/manual/
-	rmdir build/doc/yorick
-	rmdir build/doc/html_i
-	cp -a doc/yorick.pdf build/doc/manual.pdf
-	cp -a doc/refs.pdf build/doc/refcard.pdf
-	rm -rf doc/html_i
+	$(MAKE) -C doc/html BUILDDIR=$(BUILDDIR) manual refcard $(BUILDDIR)doc/README.html $(BUILDDIR)doc/images/triangle3.jpg $(BUILDDIR)doc/skull.css
+	cp doc/html/packinfo.txt build/00yorick.packinfo
+	cp doc/html/keywords.txt build/00yorick.keywords
+	cp doc/html/aliases.txt build/00yorick.aliases
 	touch build-stamp
 
 clean: configure-stamp clean-patched unpatch
@@ -78,6 +75,7 @@ clean-patched:
 	-rm -Rf build-stamp configure-stamp build relocate
 	$(MAKE) distclean
 	$(MAKE) Y_HOME=. ysite
+	$(MAKE) -C doc/html clean
 	dh_clean
 
 # Must not depend on anything. This is to be called by
@@ -112,8 +110,6 @@ binary-common:
 binary-indep: build-stamp
 	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
 
-#binary-indep:
-
 # Build architecture dependant packages using the common target.
 binary-arch: build-stamp
 	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
@@ -122,7 +118,8 @@ binary-arch: build-stamp
 Y_VERS:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/+.*//')
 CVSROOT:=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
 CVSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }')
-CVSVERS:=$(Y_VERS)+dfsg+cvs$(CVSDATE).orig
+CVSVERSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//')
+CVSVERS:=$(Y_VERS)+dfsg+cvs$(CVSVERSDATE).orig
 ORIG_URL:=http://dl.sourceforge.net/sourceforge/yorick/
 ORIG_TGZ:=yorick-$(Y_VERS).tgz
 # Non-DFSG-free files (see copyright):
