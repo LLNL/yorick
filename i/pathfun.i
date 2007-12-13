@@ -1,6 +1,6 @@
 /*
  * pathfun.i
- * $Id: pathfun.i,v 1.4 2007-12-11 19:56:20 frigaut Exp $
+ * $Id: pathfun.i,v 1.5 2007-12-13 15:34:27 frigaut Exp $
  * manipulate path names and file names
  */
 /* Copyright (c) 2006, The Regents of the University of California.
@@ -237,27 +237,37 @@ func get_user_sys_path(path, &user_path, &sys_path) {
   }
 }
 
-func find_in_path(filename,takefirst=) {
-/* DOCUMENT find_in_path(filename,takefirst=)
+func find_in_path(filename,takefirst=,path=) {
+/* DOCUMENT find_in_path(filename,takefirst=,path=)
      returns the full path (including filename) where filename has been found.
 
      Rules:
-     - If filename has not been found, [] is returned
-     - if filename has been found at several locations, a string vector with all
-       locations is returned
+      - If filename has not been found, [] is returned
+      - if filename has been found at several locations, a string vector
+        with all locations is returned (unless takefirst is set, see below)
 
-     If takefirst=1, will return when the first occurence of filename is found (
-     returns a string scalar).
+     If takefirst=1, will return when the first occurence of filename is
+      found (returns a string scalar).
+     If path= is set, it will be used instead of the default yorick path as
+      returned by get_path(). Note that path must use the same syntax as
+      the result of get_path(), i.e. a single string with ":" delimiters
+      between the directories (and entries MUST end with a "/"), e.g.:
+      path="/usr/local/share/yao/:/home/frigaut/Yorick/"
+     
    SEE ALSO: get_path, dirname, basename
  */
-  local path,valid;
-  path = pathsplit(get_path(),delim=":");
-  valid = array(0,numberof(path));
+  local lpath,valid;
 
-  for (i=1;i<=numberof(path);i++) {
-    if (open(path(i)+filename,"r",1)) valid(i)=1;
-    if (takefirst&&valid(i)) return path(i)+filename;
+  findpath = get_path();
+  if (path!=[]) findpath=path;
+
+  lpath = pathsplit(findpath,delim=":");
+  valid = array(0,numberof(lpath));
+
+  for (i=1;i<=numberof(lpath);i++) {
+    if (open(lpath(i)+filename,"r",1)) valid(i)=1;
+    if (takefirst&&valid(i)) return lpath(i)+filename;
   }
   if (noneof(valid)) return;
-  return path(where(valid))+filename;
+  return lpath(where(valid))+filename;
 }
