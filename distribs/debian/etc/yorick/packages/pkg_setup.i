@@ -28,20 +28,27 @@ PKG_Y_HOME = localtree;
 PKG_Y_SITE = localtree;
 PKG_OTHER_INSTALLED = Y_SITE+"packages/installed/";
 
-write,format="\n"+
-" \n"+
-" Debian configuration for the pkg_mngr loaded.\n"+
-" \n"+
-" Will install packages under %s.\n"+
-" \n"+
-" See /usr/share/doc/yorick/README.Debian.packages.gz for details.\n"+
-" \n",localtree;
-
 // read packages/pkg_setup.i if it exists
 PKG_SETUP=localtree+"packages/pkg_setup.i";
 if (open(PKG_SETUP,"r",1)) {
   require,PKG_SETUP;
-  write,format="\n Local setup loaded from %s\n\n",PKG_SETUP;
+  sync_done=1;
 } else {
-  write,format="%s\n","Please run pkg_sync.\nIf your architecture is not i386, please run pkg_setup before.\n";
+  sync_done=0;
 }
+
+write,format="\n"+
+  " \n"+
+  " System-wide configuration for the pkg_mngr loaded.\n"+
+  " \n"+
+  " Local Y_HOME tree: %s\n"+
+  " Local Y_SITE tree: %s\n"+
+  " \n"+
+  " See /usr/share/doc/yorick/README.Debian.packages.gz for details.\n"+
+  " \n",PKG_Y_HOME,PKG_Y_SITE;
+
+f=popen("test -w "+localtree+" ; echo $?",0);
+line=rdline(f);
+close,f;
+if (line=="0" & !sync_done)
+  write,format="%s\n","Please run pkg_sync.\nIf your architecture is not i386, please run pkg_setup before.\n";

@@ -1,6 +1,6 @@
 #!/usr/bin/yorick -batch
 /*
-  $Id: pkginst.i,v 1.3 2007-12-11 16:58:06 paumard Exp $
+  $Id: pkginst.i,v 1.4 2007-12-14 13:28:39 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   It is considered obsolete to call this script as documented below.
@@ -18,12 +18,27 @@
   installed in the relevant directory.
   
 */
+extern VERBOSE, NO_ACT, DESTDIR;
 quiet=1; // avoid printing out install directories
 #include "debian/instdirs.i"
-extern VERBOSE, NO_ACT;
 if (anyof(options=="-v" | options=="--verbose") | get_env("DH_VERBOSE")=="1")
  VERBOSE=1;
 if (anyof(options=="--no-act") | get_env("DH_NO_ACT")=="1") NO_ACT=1;
+
+func make_link(target, link) {
+  starget=pathsplit(target,delim="/");
+  slink=pathsplit(link,delim="/");
+  shortest=min(numberof(starget),numberof(slink));
+  fdif=(starget(1:shortest)==slink(1:shortest))(mnx);
+  target=pathform(starget(fdif:0),delim="/");
+  if (pathform(starget(1:fdif-1),delim="/")+"/"==DESTDIR) {
+    target="/"+target;
+  } else {
+    for (i=1;i<=numberof(slink)-fdif;i++) target="../"+target;
+  }
+  mkdirpv,dirname(link);
+  syscall,"ln -s "+target+" "+link;
+}
 
 func syscall(command) {
   if (VERBOSE) write, format="\t%s\n",command;
@@ -92,6 +107,8 @@ if (noneof(options=="--no-make-install") & numberof(packages)==1) {
 //  1) install various types of files listed in debian/package.*
 //  2) add snipets to postinst.debhelper etc...
 debian_files=lsdir(DEBIAN,dirs);
+sy_site=pathsplit(Y_SITE,delim="/");
+dy_site=numberof(sy_site); // depth of Y_SITE
 for (packn=1;packn<=numberof(packages);packn++) {
   package=packages(packn);
   if (package==MAINPACKAGE) ISMAIN=1; else ISMAIN=0;
@@ -102,60 +119,64 @@ for (packn=1;packn<=numberof(packages);packn++) {
          DESTDIR+streplace(Y_HOME,strfind("usr/lib/",Y_HOME),"usr/share/");
     else INDEPDIR=DESTDIR+Y_SITE;
   }
-  // HTML doc building files
-  exts=["packinfo","aliases","keywords"];
-  for (i=1;i<=numberof(exts);i++) {
-    ext=exts(i);
-    if (ISMAIN & anyof(debian_files==ext)) file=DEBIAN+ext;
-    else file=DEBIAN+package+"."+ext;
-    if (f=open(file,"r",1)) {
-      line=rdline(f);
-      close,f;
-      if (strgrep("."+ext+"$",line)(2)!=-1 & !strmatch(line," "))
-        file=line;
-      mkdirpv,DESTDIR+"/usr/share/yorick-doc";
-      syscall,"cp "+file+" "+DESTDIR+"/usr/share/yorick-doc/";
-    }
-  }
-  // package info file
-  ext="ynfo";
-  if (ISMAIN & anyof(debian_files=="ynfo")) file=DEBIAN+"ynfo";
-  else file=DEBIAN+package+".ynfo";
-  if (ISMAIN & !is_void(INFILE)) file=INFILE;
-  if (f=open(file,"r",1)) {
-    line=rdline(f);
-    close,f;
-    if (strgrep("."+ext+"$",line)(2)!=-1 & !strmatch(line," "))
-        file=line;
-    if (strgrep(".info$",line)(2)!=-1 & !strmatch(line," "))
-        file=line;
-    outfile=basename(streplace(file,strfind(".ynfo",file),".info"));
-    mkdirpv,INDEPDIR+"packages/installed";
-    syscall,"cp "+file+" "+INDEPDIR+"packages/installed/"+outfile;
-  }
-  // platform independent files
-  exts=["i","i0","i-start","g"];
-  for (i=1;i<=numberof(exts);i++) {
-    ext=exts(i);
-    if (ISMAIN & anyof(debian_files==ext)) file=DEBIAN+ext;
-    else file=DEBIAN+package+"."+ext;
-    if (open(file,"r",1)) {
-      line=hdoc_read_file(file);
-      mkdirpv,INDEPDIR+ext;
-      for (j=1;j<=numberof(line);j++) syscall,"cp "+line(j)+" "+INDEPDIR+ext;
-    }
-  }
-  // platform dependent files
-  exts=["lib"];
-  for (i=1;i<=numberof(exts);i++) {
-    ext=exts(i);
-    if (ISMAIN & anyof(debian_files==ext)) file=DEBIAN+ext;
-    else file=DEBIAN+package+"."+ext;
-    if (open(file,"r",1)) {
-      line=hdoc_read_file(file);
-      mkdirpv,DEPDIR+ext;
-      for (j=1;j<=numberof(line);j++) syscall,"cp "+line(j)+" "+DEPDIR+ext;
-    }
+
+  ext="ynstall";
+  if (ISMAIN & anyof(debian_files==ext)) file=DEBIAN+ext;
+  else file=DEBIAN+package+"."+ext;
+  if (open(file,"r",1)) {
+    line=hdoc_read_file(file);
+    for (j=1;j<=numberof(line);j++) {
+      words=strpart(line(j),strword(line(j),,3));
+      file=words(1);
+      if (!file) continue;
+      if (strpart(file,[0,1])=="#") continue;
+      is_exec=0;
+      if (words(2)) {
+        // we've got a destination.
+        dest=words(2);
+        sdest=pathsplit(dest,delim="/");
+        if (numberof(sdest)>=dy_site && sdest(1:dy_site)==sy_site){
+          sdest=grow(["Y_SITE"],sdest(dy_site+1:));
+          dest=pathform(sdest,delim="/");
+        }
+        if (anyof(sdest(1)==DIRS)) dest=INDEPDIR+dest;
+        else if (anyof(sdest(1)==["lib","bin"])) dest=DEPDIR+dest;
+        else {
+          if (sdest(1)=="Y_HOME") dest=DEPDIR+pathform(sdest(2:),delim="/");
+          else if (sdest(1)=="Y_SITE") {
+            dest=pathform(sdest(2:),delim="/");
+            make_link,INDEPDIR+dest+"/"+basename(file),
+              DEPDIR+dest+"/"+basename(file);
+            dest=INDEPDIR+dest;
+            mkdirpv,dest;
+          } else dest=DESTDIR+"/"+dest;
+        }
+      } else {
+        // guess destination
+        ext=pathsplit(file,delim=".")(0);
+        if (ext=="i") dest=INDEPDIR+"i"; // so i0 and i-sart must be specified
+        else if (anyof(ext==["gs","gp"])) dest=INDEPDIR+"g";
+        else if (ext=="info") dest=INDEPDIR+"packages/installed";
+        else if (ext=="so") dest=DEPDIR+"lib";
+        else if (anyof(ext==["packinfo","keywords","aliases"]))
+          dest=DESTDIR+"/usr/share/yorick-doc";
+      }
+      mkdirpv,dest;
+      syscall,"cp "+file+" "+dest;
+      if (words(3)) {
+        // we've got a link.
+        link=pathsplit(words(3),delim="/");
+        if (link(1)=="Y_HOME") link=DEPDIR+pathform(link(2:),delim="/");
+        else if (link(1)=="Y_SITE") link=INDEPDIR+pathform(link(2:),delim="/");
+        else if (anyof(link(1)==DIRS)) link=INDEPDIR+words(3);
+        else if (anyof(link(1)==["lib","bin"])) link=DEPDIR+words(3);
+        else link=DESTDIR+"/"+words(3);
+        make_link,dest+"/"+basename(file),link;
+        if (anyof(basename(dirname(link))==["bin","sbin"])) is_exec=1;
+      }
+      if (anyof(basename(dest)==["bin","sbin"])) is_exec=1;
+      if (is_exec) syscall,"chmod a+x "+dest+"/"+basename(file);
+    }       
   }
   // add maintainer script snipets
   if (noneof(options=="-n")) {
