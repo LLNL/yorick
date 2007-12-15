@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.6 2007-07-29 21:53:33 frigaut Exp $
+ * $Id: graph.i,v 1.7 2007-12-15 23:59:05 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -213,7 +213,7 @@ func eps(name, pdf=)
      dumping is turned on for the current window.
      The external variable EPSGS_CMD contains the command to start
      ghostscript.
-   SEE ALSO: pdf, epsi, hcps, window, fma, hcp, hcp_finish, plg
+   SEE ALSO: pdf, png, jpeg, epsi, hcps, window, fma, hcp, hcp_finish, plg
  */
 {
   if (strpart(name, -3:0) == ".eps") name = strpart(name,1:-4);
@@ -303,7 +303,7 @@ func pdf(name)
      dumping is turned on for the current window.
      The external variable EPSGS_CMD contains the command to start
      ghostscript.
-   SEE ALSO: eps, hcps, window, fma, hcp, hcp_finish, plg
+   SEE ALSO: eps, png, jpeg, hcps, window, fma, hcp, hcp_finish, plg
  */
 {
   if (strpart(name, -3:0) == ".pdf") name = strpart(name,1:-4);
@@ -312,6 +312,56 @@ func pdf(name)
   /* second run ghostscript to produce the cropped pdf */
   gscmd = EPSGS_CMD+" -sDEVICE=pdfwrite -sOutputFile=\"%s\" \"%s\"";
   system, swrite(format=gscmd, name+".pdf", psname);
+  remove, psname;
+}
+
+func png(name, dpi=, gray=)
+/* DOCUMENT png, name
+     writes the picture in the current graphics window to the PNG
+     file NAME+".png" (i.e.- the suffix .png is added to NAME).  The
+     png file is intended to be imported into MS PowerPoint or other
+     commercial presentation software.  This function starts ghostscript
+     using the EPSGS_CMD variable.  With the gray=1 keyword, you get
+     the pnggray ghostscript device, otherwise png16m.
+     The default yorick graphics window is 6 inches square, and by
+     default png produces 72 dpi (dot per inch) output.  You can change
+     this with the dpi= keyword; dpi=300 is extremely high resolution.
+   SEE ALSO: eps, pdf, jpeg, hcps, window, plg
+ */
+{
+  if (strpart(name, -3:0) == ".png") name = strpart(name,1:-4);
+  /* first run ghostscript to produce an eps translated to (0,0) */
+  psname = eps(name+".png", pdf=1);
+  /* second run ghostscript to produce the png */
+  gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\" \"%s\"";
+  dev = gray? "pnggray" : "png16m";
+  dpi = dpi? "-r"+print(dpi)(1) : "";
+  system, swrite(format=gscmd, dev, dpi, name+".png", psname);
+  remove, psname;
+}
+
+func jpeg(name, dpi=, gray=)
+/* DOCUMENT jpeg, name
+     writes the picture in the current graphics window to the JPEG
+     file NAME+".jpg" (i.e.- the suffix .jpg is added to NAME).  The
+     jpeg file is intended to be imported into MS PowerPoint or other
+     commercial presentation software.  This function starts ghostscript
+     using the EPSGS_CMD variable.  With the gray=1 keyword, you get
+     the jpeggray ghostscript device, otherwise jpeg.
+     The default yorick graphics window is 6 inches square, and by
+     default png produces 72 dpi (dot per inch) output.  You can change
+     this with the dpi= keyword; dpi=300 is extremely high resolution.
+   SEE ALSO: eps, png, pdf, hcps, window, plg
+ */
+{
+  if (strpart(name, -3:0) == ".jpg") name = strpart(name,1:-4);
+  /* first run ghostscript to produce an eps translated to (0,0) */
+  psname = eps(name+".jpg", pdf=1);
+  /* second run ghostscript to produce the cropped pdf */
+  gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\" \"%s\"";
+  dev = gray? "jpeggray" : "jpeg";
+  dpi = dpi? "-r"+print(dpi)(1) : "";
+  system, swrite(format=gscmd, dev, dpi, name+".jpg", psname);
   remove, psname;
 }
 
@@ -1758,7 +1808,7 @@ func spann(zmin, zmax, n, fudge=)
    SEE ALSO: span, spanl, plc, plfc
  */
 {
-  if (is_void(fudge)) fudge= 
+  if (is_void(fudge)) fudge= 1.e-12;
   reverse= zmin>zmax;
   if (reverse) { dz=zmin; zmin=zmax; zmax=dz; }
   dz= (zmax-zmin)/max(double(n),0.);
