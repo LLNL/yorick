@@ -1,5 +1,5 @@
 /*
- * $Id: graph0.c,v 1.1 2005-09-18 22:04:06 dhmunro Exp $
+ * $Id: graph0.c,v 1.2 2007-12-26 04:25:46 dhmunro Exp $
  * Define graphics related functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -458,6 +458,7 @@ long *BuildMeshBndy(double *x, double *y, int *reg,
   barray= 
     PushDataBlock(NewArray(&longStruct,
                            NewDimension(nedges, 1L, (Dimension *)0)));
+  barray->type.dims->references--;
   bndy= barray->value.l;
   *nbndy= nedges;
 

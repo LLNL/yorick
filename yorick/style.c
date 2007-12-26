@@ -1,5 +1,5 @@
 /*
- * $Id: style.c,v 1.1 2005-09-18 22:04:15 dhmunro Exp $
+ * $Id: style.c,v 1.2 2007-12-26 04:25:46 dhmunro Exp $
  * Set/get details of graphics style for style.i functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -141,6 +141,7 @@ void Y_viewport(int nArgs)
     PushDataBlock(NewArray(&doubleStruct,
                            NewDimension(4L, 1L, (Dimension *)0)));
   double *port= array->value.d;
+  array->type.dims->references--;
   port[0]= gistD.trans.viewport.xmin;
   port[1]= gistD.trans.viewport.xmax;
   port[2]= gistD.trans.viewport.ymin;
