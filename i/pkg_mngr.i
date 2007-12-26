@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.12 2006-05-24 12:55:25 paumard Exp $
+ * $Id: pkg_mngr.i,v 1.13 2007-12-26 15:25:59 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -483,6 +483,7 @@ func pkg_list(server,sync=,verbose=)
     if (numberof(w)) {
       is_inst = "i";
       instvers = (parse_info_file(instdir+instname(w(1))+".info")).vers;
+      if (instvers<pkg.vers) is_inst="u"; // upgradable (2007dec26)
     } 
 
     // is pkg installed in another place?
@@ -578,12 +579,19 @@ func pkg_setup(first=)
   if (PKG_RUN_CHECK==[]) PKG_RUN_CHECK=0;
 
 
-  write,format="\n%s\n","What is your OS-machine type?";
-  PKG_OS = strtrim(kinput("PKG_OS (e.g. linux-x86)",PKG_OS));
   write,format="\n%s\n","System command syntax to fetch URL?";
   PKG_FETCH_CMD = strtrim(kinput("PKG_FETCH_CMD",PKG_FETCH_CMD));
   write,format="\n%s\n","Where to retrieve binary packages?";
   PKG_SERVER = strtrim(kinput("PKG_SERVER",PKG_SERVER));
+
+  // 2007dec26: modify order to fetch possible OSes/architectures
+  oses = pkg_probe_oses(verbose=verbose);
+  write,format="\n%s\n","What is your OS-machine type?";
+  for (i=1;i<=numberof(oses);i++) write,format="  (%d) %s\n",i,oses(i);
+  osn=0;
+  while ((osn<1)|(osn>numberof(oses))) read,prompt="PKG_OS (enter a number): ",osn;
+  PKG_OS = oses(osn);
+  
   write,format="\n%s\n","System command syntax to untar the package tarballs?";
   PKG_GUNTAR_CMD = strtrim(kinput("PKG_GUNTAR_CMD",PKG_GUNTAR_CMD));
   //  PKG_TMP_DIR = kinput("PKG_TMP_DIR",PKG_TMP_DIR);
@@ -733,8 +741,88 @@ func pkg_setup(first=)
   }
 }
 
+func pkg_upgrade(pkgnames,verbose=)
+/* DOCUMENT pkg_upgrade,pkgnames,verbose=
+   Upgrade requested packages, or all upgradable packages if no arguments
+   Upgrade to highest available version.
+   
+   pkg_upgrade,packages
+   pkgname can be a string scalar, vector, and contains wildcard to
+   install multiple packages in one call.
+   
+   examples: pkg_upgrade,"y*" or pkg_upgrade,["soy","yao"] or pkg_upgrade,"*"
 
-func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
+   Without arguments, upgrade all upgradable packages.
+   
+   bug: I don't correctly parse the version, so 0.5.03 is considered
+   lower than 0.5.2
+   SEE ALSO:
+ */
+{
+  if (is_void(pkgnames)) {
+    pkgnames="*";
+    askall=1;
+  }
+  
+  instpkg = get_avail_pkg();
+  allpkg = [];
+  for (np=1;np<=numberof(pkgnames);np++) {
+    w = where(strglob(pkgnames(np),instpkg));
+    if (numberof(w)==0) {
+      write,format="WARNING: No such package \"%s\"\n",pkgnames(np);
+      continue;
+    }
+    grow,allpkg,instpkg(w);
+  }
+  pkgnames = allpkg;
+  if (numberof(pkgnames)==0) return 0;
+
+  
+  li = pkg_list();
+  upgradable = (strpart(li,1:1)=="u");
+  pname = strtrim(strpart(li,3:16));
+  uvers = strtrim(strpart(li,17:24));
+  ivers = strtrim(strpart(li,26:32));
+  ww=[];
+  
+  for (i=1;i<=numberof(pkgnames);i++) {
+    w = where(pkgnames(i)==pname)(1);
+    if (ivers(w)=="-") continue; // not installed, ignore.
+    if (numberof(w)==0) {
+      write,format="WARNING: No such package \"%s\"\n",pkgnames(i);
+      continue;
+    }
+    if (upgradable(i)) {
+      write,format="Upgrade: %s from version %s to %s\n",
+        pname(w),ivers(w),uvers(w);
+      grow,ww,w;
+    } else {
+      if (!askall) \
+        write,format="Package %s is already at the latest version %s\n",
+          pname(w),ivers(w);
+    }
+  }
+
+  if (numberof(ww)==0) {
+    write,format="%s\n","No package to upgrade";
+    return 0;
+  }
+  
+  if (PKG_ASK_CONFIRM) {
+    ans = strtolower(strtrim(kinput("OK","y")));
+    if (ans!="y") {
+      write,format="%s\n","Aborting";
+      return; 
+    }
+  }
+  
+  for (i=1;i<=numberof(ww);i++) {
+    pkg_install,pname(ww(i)),noconfirm=1,verbose=verbose,_version=uvers(ww(i));
+  }
+}
+
+
+func pkg_install(pkgnames,verbose=,check=,force=,noconfirm=,_recur=,_version=,_vrel=)
 /* DOCUMENT pkg_install,pkgname,force=,check=,verbose=
    Install package "pkgname" (string vector)
    Grabs the tarball from a central server, untar it, copy the files
@@ -777,7 +865,7 @@ func pkg_install(pkgnames,verbose=,check=,force=,_recur=,_version=,_vrel=)
     pkgnames = allpkg;
     if (numberof(pkgnames)==0) return 0;
 
-    if (PKG_ASK_CONFIRM) {
+    if ((PKG_ASK_CONFIRM)&(noconfirm!=1)) {
       write,format="%s\n","Packages to install :";
       write,pkgnames;
       if (kinput("OK? ","y")!="y") return 0;
@@ -1391,6 +1479,23 @@ func pkg_sys(cmd,verbose=)
   return 0;
 }
 
+func pkg_probe_oses(void,verbose=)
+{
+  write,format="%s\n","\nRetrieving OS-ARCH alternatives...please wait";
+  pkg_fetch_url,PKG_SERVER,PKG_TMP_DIR+".oses",verbose=verbose;
+  ctn = rdfile(PKG_TMP_DIR+".oses");
+  match = strmatch(ctn,"[DIR]");
+  if (anyof(match)) {
+    ctn = ctn(where(match));
+    oses = strpart(ctn,strgrep("([HREF,href]=\\\")([a-zA-Z0-9\_\.\+\-]+)",ctn,sub=2));
+    oses = oses(where(oses));
+    oses = oses(where(oses!="tarballs"));
+    oses = oses(where(oses!="src"));
+    oses = oses(where(oses!="linux")); // deprecated. now linux-arch
+    oses = oses(where(oses!="macosx")); // depracated, now darinw-arch
+  } else error,swrite(format="Did not find any OS directory at %s\n",PKG_SERVER);
+  return oses;
+}
 
 func pkg_fetch_url(url,dest,verbose=)
 /* DOCUMENT pkg_fetch_url(url,dest,verbose=)
