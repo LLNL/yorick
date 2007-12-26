@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.14 2007-12-26 20:06:08 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.15 2007-12-26 22:11:18 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1483,6 +1483,7 @@ func pkg_sys(cmd,verbose=)
 func pkg_probe_oses(void,verbose=)
 {
   write,format="%s\n","\nRetrieving OS-ARCH alternatives...please wait";
+  mkdirp,PKG_TMP_DIR;
   pkg_fetch_url,PKG_SERVER,PKG_TMP_DIR+".oses",verbose=verbose;
   ctn = rdfile(PKG_TMP_DIR+".oses");
   match = strmatch(ctn,"[DIR]");
