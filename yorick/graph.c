@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.4 2007-07-28 02:15:26 dhmunro Exp $
+ * $Id: graph.c,v 1.5 2007-12-26 16:52:03 thiebaut Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -74,6 +74,7 @@ extern BuiltIn Y__pl_init;  /* called at initialization by graph.i */
 
 extern BuiltIn Y_mouse, Y_contour, Y_mesh_loc, Y_pause, Y_current_window;
 extern BuiltIn Y_keybd_focus, Y_rgb_read;
+extern BuiltIn Y_current_mouse;
 
 /*--------------------------------------------------------------------------*/
 
@@ -3961,5 +3962,40 @@ my_rgb_read(Engine *eng, GpColor *rgb, long *nx, long *ny)
   return 1;
 }
 #endif
+
+/*--------------------------------------------------------------------------*/
+
+void
+Y_current_mouse(argc)
+{
+  double x, y;
+  int sys, win, target_win;
+  Array *array;
+  double *result;
+
+  if (argc != 1) {
+    YError("current_mouse takes exactly one, possibly nil, argument");
+  }
+  win = GhGetPlotter();
+  if (YNotNil(sp)) {
+    target_win = (int)YGetInteger(sp);
+  } else {
+    target_win = win;
+  }
+  if (target_win != win || win < 0 || win >= GH_NDEVS ||
+      ! ghDevices[win].display) {
+    PushDataBlock(RefNC(&nilDB));
+  } else {
+    GxGetMouse(&sys, &x, &y);
+    array = PushDataBlock(NewArray(&doubleStruct,
+				   NewDimension(4L, 1L, (Dimension *)0)));
+    --array->type.dims->references;
+    result = array->value.d;
+    result[0] = x;
+    result[1] = y;
+    result[2] = sys;
+    result[3] = win;
+  }
+}
 
 /*--------------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.h,v 1.1 2005-09-18 22:04:26 dhmunro Exp $
+ * $Id: xfancy.h,v 1.2 2007-12-26 16:52:03 thiebaut Exp $
  * Declare the fancy X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -68,5 +68,10 @@ PLUG_API int GxPointClick(Engine *engine, int style, int system,
                           int (*CallBack)(Engine *engine, int system,
                                           int release, GpReal x, GpReal y,
                                           int butmod, GpReal xn, GpReal yn));
+
+
+/* The GxGetMouse function stores the current coordinate system and
+   mouse position at SYS, X and Y repectively (any of them can be NULL). */
+PLUG_API void GxGetMouse(int *sys, double *x, double *y);
 
 #endif

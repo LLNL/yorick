@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.7 2007-12-15 23:59:05 dhmunro Exp $
+ * $Id: graph.i,v 1.8 2007-12-26 16:52:03 thiebaut Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -115,6 +115,19 @@ extern current_window;
 /* DOCUMENT n= current_window()
      returns the number of the current graphics window, or -1 if none.
  */
+
+extern current_mouse;
+/* DOCUMENT current_mouse()
+       -or- current_mouse(win)
+  
+     Returns current mouse position in current window or in window
+     WIN.  If there is no active graphic window or if WIN is specified
+     but is not the current window, the result is empty; otherwise,
+     the result is an array of double's in the form [X, Y, SYS, WIN]
+     where X and Y are the mouse coordinates in the coordinate
+     system SYS.
+  
+   SEE ALSO: current_window, mouse, window. */
 
 extern hcp_file;
 /* DOCUMENT hcp_file, filename, dump=0/1, ps=0/1

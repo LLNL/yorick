@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.c,v 1.3 2007-07-28 03:34:37 frigaut Exp $
+ * $Id: xfancy.c,v 1.4 2007-12-26 16:52:03 thiebaut Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -440,9 +440,17 @@ static char stdFormat[] = "%7.4f";
 static int rubberBanding = 0;
 static int anchorX, anchorY, oldX, oldY;
 
-/* FR, 2007jun11: expose this for use in plugins */
-GpReal xWCS, yWCS;
-int sysWCS;
+/* Current mouse system and position. */
+static int current_sys;
+static GpReal current_x, current_y;
+
+void
+GxGetMouse(int *sys, double *x, double *y)
+{
+  if (sys) *sys = current_sys;
+  if (x) *x = current_x;
+  if (y) *y = current_y;
+}
 
 static void
 MovePointer(FXEngine *fxe, Drauing *drawing,
@@ -486,9 +494,9 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
     sprintf(fxe->msgText, format, locked? "=" : ":", iSystem, xWC, yWC);
 
     /* FR hack 2007jun11 */
-    xWCS = xWC;
-    yWCS = yWC;
-    sysWCS = iSystem;
+    current_x = xWC;
+    current_y = yWC;
+    current_sys = iSystem;
     
     RedrawMessage(fxe);
   }
