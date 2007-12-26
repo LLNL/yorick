@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.15 2007-12-26 22:11:18 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.16 2007-12-26 22:37:11 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -793,7 +793,7 @@ func pkg_upgrade(pkgnames,verbose=)
       write,format="WARNING: No such package \"%s\"\n",pkgnames(i);
       continue;
     }
-    if (upgradable(i)) {
+    if (upgradable(w)) {
       write,format="Upgrade: %s from version %s to %s\n",
         pname(w),ivers(w),uvers(w);
       grow,ww,w;
