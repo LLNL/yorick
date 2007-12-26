@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.5 2007-12-26 16:52:03 thiebaut Exp $
+ * $Id: graph.c,v 1.6 2007-12-26 17:43:08 thiebaut Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3968,25 +3968,28 @@ my_rgb_read(Engine *eng, GpColor *rgb, long *nx, long *ny)
 void
 Y_current_mouse(argc)
 {
+#ifdef NO_XLIB
+  PushDataBlock(RefNC(&nilDB));
+#else
   double x, y;
-  int sys, win, target_win;
+  int sys, win;
   Array *array;
   double *result;
+  Engine *engine;
 
   if (argc != 1) {
     YError("current_mouse takes exactly one, possibly nil, argument");
   }
-  win = GhGetPlotter();
   if (YNotNil(sp)) {
-    target_win = (int)YGetInteger(sp);
+    win = (int)YGetInteger(sp);
   } else {
-    target_win = win;
+    win = GhGetPlotter();
   }
-  if (target_win != win || win < 0 || win >= GH_NDEVS ||
-      ! ghDevices[win].display) {
+  if (win < 0 || win >= GH_NDEVS ||
+      (engine = ghDevices[win].display) == NULL) {
     PushDataBlock(RefNC(&nilDB));
   } else {
-    GxGetMouse(&sys, &x, &y);
+    GxGetMouse(engine, &sys, &x, &y);
     array = PushDataBlock(NewArray(&doubleStruct,
 				   NewDimension(4L, 1L, (Dimension *)0)));
     --array->type.dims->references;
@@ -3996,6 +3999,7 @@ Y_current_mouse(argc)
     result[2] = sys;
     result[3] = win;
   }
+#endif
 }
 
 /*--------------------------------------------------------------------------*/

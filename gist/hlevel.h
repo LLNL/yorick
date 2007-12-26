@@ -1,5 +1,5 @@
 /*
- * $Id: hlevel.h,v 1.2 2007-12-26 16:52:03 thiebaut Exp $
+ * $Id: hlevel.h,v 1.3 2007-12-26 17:43:08 thiebaut Exp $
  * Declare routines for recommended GIST interactive interface
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -120,8 +120,9 @@ PLUG2_API int GxPointClick(Engine *engine, int style, int system,
 
 /* The GxGetMouse function stores the current coordinate system and
    mouse position at SYS, X and Y repectively (any of them can be
-   NULL). */
-PLUG2_API void GxGetMouse(int *sys, double *x, double *y);
+   NULL).  ENGINE must have been created by GpFXEngine (fancy X
+   engine). */
+PLUG2_API void GxGetMouse(Engine *engine, int *sys, double *x, double *y);
 
 PLUG2_API int g_rgb_read(Engine *eng, GpColor *rgb, long *nx, long *ny);
 PLUG_API void (*g_on_idle)(void);
