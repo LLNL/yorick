@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.13 2007-12-26 15:25:59 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.14 2007-12-26 20:06:08 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -25,6 +25,7 @@ local pkg_mngr;
  *                         the last available version, the installed version
  *                         (when applicable) and a short description.
  * pkg_install,"pkg_name"  Install package "pkg_name"
+ * pkg_upgrade,"pkg_name"  Upgrade package "pkg_name"
  * pkg_remove,"pkg_name"   Remove package "pkg_name"
  * pkg_info,"pkg_name"     Print detail info about package "pkg_name"
  * pkg_save                Saves PKG global variables in default file,
