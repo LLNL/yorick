@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.17 2007-12-27 08:39:11 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.18 2007-12-27 15:19:29 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -871,8 +871,44 @@ func pkg_install(pkgnames,verbose=,check=,force=,noconfirm=,_recur=,_version=,_v
     if (numberof(pkgnames)==0) return 0;
 
     if ((PKG_ASK_CONFIRM)&(noconfirm!=1)) {
-      write,format="%s\n","Packages to install :";
+      if (force) write,format="%s\n","Packages to (re)install :";
+      else write,format="%s\n","Packages to install :";
       write,pkgnames;
+      // figure out dependencies (ignore version for now)
+      depjunk=[];
+      infodir = PKG_VAR_STATE+"info/";
+      instdir = PKG_VAR_STATE+"installed/";
+      for (i=1;i<=numberof(pkgnames);i++) {
+        ins=parse_info_file(infodir+pkgnames(i)+".info");
+        tmp=ins.depends_pkg;
+        tmp=tmp(where(tmp));
+        grow,depjunk,tmp;
+      }
+      if (depjunk!=[]) {
+        // already installed packages:
+        ins = lsdir(instdir);
+        instname = "yorick";
+        if (ins!=[]) {
+          w = strgrep("([a-zA-Z0-9\_\.\+\-]*)(.info$)",ins,sub=[1]);
+          tmp = strpart(ins,w);
+          grow,instname,tmp(where(tmp));
+        }
+        // sort dependencies in alphabetical order
+        tmp=depjunk(sort(depjunk));
+        depjunk=[];
+        // get rid of yorick and double entries
+        for (i=1;i<=numberof(tmp);i++) {
+          if (tmp(i)=="yorick") continue;
+          if ((anyof(strmatch(instname,tmp(i))))&(!force)) continue; // already installed
+          if (depjunk==[]) grow,depjunk,tmp(i);
+          else if (tmp(i)!=depjunk(0)) grow,depjunk,tmp(i);
+        }
+        if (depjunk!=[]) {
+          if (force) write,format="%s\n","Dependencies to be re-installed :";
+          else write,format="%s\n","Dependencies to be installed :";
+          write,depjunk;
+        }
+      }
       if (kinput("OK? ","y")!="y") return 0;
     }
   }
@@ -1487,9 +1523,10 @@ func pkg_sys(cmd,verbose=)
 func pkg_probe_oses(void,verbose=)
 {
   write,format="%s\n","\nRetrieving OS-ARCH alternatives...please wait";
-  mkdirp,PKG_TMP_DIR;
-  pkg_fetch_url,PKG_SERVER,PKG_TMP_DIR+".oses",verbose=verbose;
-  ctn = rdfile(PKG_TMP_DIR+".oses");
+  tmpdir="/tmp/pkg_mngr/"; // PKG_TMP_DIR not yet defined by user
+  mkdirp,tmpdir;
+  pkg_fetch_url,PKG_SERVER,tmpdir+".oses",verbose=verbose;
+  ctn = rdfile(tmpdir+".oses");
   match = strmatch(ctn,"[DIR]");
   if (anyof(match)) {
     ctn = ctn(where(match));
