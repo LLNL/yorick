@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.16 2007-12-26 22:37:11 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.17 2007-12-27 08:39:11 frigaut Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -43,10 +43,13 @@ local pkg_mngr;
  *  ... will ask for parameters for your OS/installation
  *  ... just set the OS, most of the other defaults should be OK.
  *
- *   PKG_OS              : OS. "macosx","linux","windows"
- *   PKG_SERVER          : URL of central server with info files
  *   PKG_FETCH_CMD       : system cmd to fetch a file through an
  *                          internet connection [ex: curl]
+ *   PKG_SERVER          : URL of central server with info files
+ *   PKG_OS              : OSTYPE-ARCHTYPE. There is a limited number
+ *                          of these available. pkg_setup will fetch
+ *                          available value from the server and propose
+ *                          a list to the user.
  *   PKG_GUNTAR_CMD      : system cmd to gunzip and untar a tgz file
  *                          [ex; "tar -zxf"]
  *   PKG_TMP_DIR         : temporary directory. Normaly Y_HOME/packages/tmp
@@ -73,7 +76,8 @@ local pkg_mngr;
  *
  *  --- IN CASE OF PROBLEMS:
  *  In case something went wrong and you downloaded a bad tarball:
- *  Go in Y_HOME/packages/tarballs
+ *  Solution 1: try reloading with force=1
+ *  Solution 2: Go in Y_HOME/packages/tarballs
  *  and remove the offensive tgz file. In doubt, you can just wipe
  *  up the whole directory content. tarballs will be downloaded again
  *  if pkg_mngr does not find existing local ones.
