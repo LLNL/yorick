@@ -1,5 +1,5 @@
 /*
- * $Id: hlevel.h,v 1.3 2007-12-26 17:43:08 thiebaut Exp $
+ * $Id: hlevel.h,v 1.4 2007-12-28 20:20:18 thiebaut Exp $
  * Declare routines for recommended GIST interactive interface
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -118,11 +118,17 @@ PLUG2_API int GxPointClick(Engine *engine, int style, int system,
                                            int release, GpReal x, GpReal y,
                                            int butmod, GpReal xn, GpReal yn));
 
-/* The GxGetMouse function stores the current coordinate system and
+/* Variables to store engine which currently has mouse focus and
+   coordinate system and mouse coordinates after last mouse motion. */
+PLUG2_API Engine *gxCurrentEngine;
+PLUG2_API int gxCurrentSys;
+PLUG2_API GpReal gxCurrentX, gxCurrentY;
+
+/* The GhGetMouse function stores the current coordinate system and
    mouse position at SYS, X and Y repectively (any of them can be
-   NULL).  ENGINE must have been created by GpFXEngine (fancy X
-   engine). */
-PLUG2_API void GxGetMouse(Engine *engine, int *sys, double *x, double *y);
+   NULL) and returns the device number which has the mouse focus.
+   If no device currently has the focus, -1 is returned. */
+PLUG_API int GhGetMouse(int *sys, double *x, double *y);
 
 PLUG2_API int g_rgb_read(Engine *eng, GpColor *rgb, long *nx, long *ny);
 PLUG_API void (*g_on_idle)(void);

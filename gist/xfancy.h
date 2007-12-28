@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.h,v 1.3 2007-12-26 17:43:08 thiebaut Exp $
+ * $Id: xfancy.h,v 1.4 2007-12-28 20:20:19 thiebaut Exp $
  * Declare the fancy X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -35,10 +35,6 @@ struct FXEngine {
   int zoomSystem;   /* system number in xe.drawing */
   int zoomAxis;     /* 1 for x-axis, 2 for y-axis, 3 for both */
   GpReal zoomX, zoomY; /* initial coordinates for zoom/pan operation */
-  
-  GpReal currentX, currentY; /* mouse coordinates after last motion
-			        (xmv and ymv are in pixel units) */
-  int currentSys; /* current coordinate system */
 };
 
 /* zoom factor for point-and-click zooming */
@@ -73,9 +69,9 @@ PLUG_API int GxPointClick(Engine *engine, int style, int system,
                                           int release, GpReal x, GpReal y,
                                           int butmod, GpReal xn, GpReal yn));
 
-/* The GxGetMouse function stores the current coordinate system and
-   mouse position at SYS, X and Y repectively (any of them can be
-   NULL).  ENGINE must have been created by GpFXEngine (fancy X
-   engine). */
-PLUG_API void GxGetMouse(Engine *engine, int *sys, double *x, double *y);
+/* Variables to store coordinate system and mouse coordinates after
+   last mouse motion (also see gxCurrentEngine in xbasic.h). */
+PLUG_API int gxCurrentSys;
+PLUG_API GpReal gxCurrentX, gxCurrentY;
+
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.6 2007-12-26 17:43:08 thiebaut Exp $
+ * $Id: graph.c,v 1.7 2007-12-28 20:20:19 thiebaut Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3972,7 +3972,7 @@ Y_current_mouse(argc)
   PushDataBlock(RefNC(&nilDB));
 #else
   double x, y;
-  int sys, win;
+  int sys, win, target_win;
   Array *array;
   double *result;
   Engine *engine;
@@ -3980,16 +3980,15 @@ Y_current_mouse(argc)
   if (argc != 1) {
     YError("current_mouse takes exactly one, possibly nil, argument");
   }
+  win = GhGetMouse(&sys, &x, &y);
   if (YNotNil(sp)) {
-    win = (int)YGetInteger(sp);
+    target_win = (int)YGetInteger(sp);
   } else {
-    win = GhGetPlotter();
+    target_win = win;
   }
-  if (win < 0 || win >= GH_NDEVS ||
-      (engine = ghDevices[win].display) == NULL) {
+  if (win < 0 || win != target_win) {
     PushDataBlock(RefNC(&nilDB));
   } else {
-    GxGetMouse(engine, &sys, &x, &y);
     array = PushDataBlock(NewArray(&doubleStruct,
 				   NewDimension(4L, 1L, (Dimension *)0)));
     --array->type.dims->references;

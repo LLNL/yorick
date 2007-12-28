@@ -1,5 +1,5 @@
 /*
- * $Id: hlevel.c,v 1.1 2005-09-18 22:04:25 dhmunro Exp $
+ * $Id: hlevel.c,v 1.2 2007-12-28 20:20:18 thiebaut Exp $
  * Define routines for recommended GIST interactive interface
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -205,6 +205,39 @@ int GhGetPlotter(void)
 {
   return currentDevice;
 }
+
+/* Query mouse system and position. */
+int
+GhGetMouse(int *sys, double *x, double *y)
+{
+#ifdef NO_XLIB
+  if (sys) *sys = -1;
+  if (x) *x = 0.0;
+  if (y) *y = 0.0;
+  return -1;  
+#else
+  int j, win = -1;
+  if (gxCurrentEngine != NULL) {
+    for (j = 0; j < GH_NDEVS; ++j) {
+      if (ghDevices[j].display == gxCurrentEngine) {
+	win = j;
+	break;
+      }
+    }
+  }
+  if (win >= 0) {
+    if (sys) *sys = gxCurrentSys;
+    if (x) *x = gxCurrentX;
+    if (y) *y = gxCurrentY;
+  } else {
+    if (sys) *sys = -1;
+    if (x) *x = 0.0;
+    if (y) *y = 0.0;
+  }
+  return win;
+#endif
+}
+
 
 #ifndef NO_XLIB
 /* xbasic.c supplies a hook in its error handlers to allow the hlevel

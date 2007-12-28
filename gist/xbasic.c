@@ -1,5 +1,5 @@
 /*
- * $Id: xbasic.c,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
+ * $Id: xbasic.c,v 1.3 2007-12-28 20:20:18 thiebaut Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -71,6 +71,11 @@ extern int GxJustifyNext(const char **text, int *ix, int *iy);
 
 static int gxErrorFlag= 0;
 static void GxErrorHandler(void);
+
+/* Engine which currently has mouse focus (set to NULL when the
+   "current" engine get destroyed or when mouse leaves the "current"
+   engine window, set to engine address on mouse motion). */
+Engine *gxCurrentEngine = NULL;
 
 /* ------------------------------------------------------------------------ */
 
@@ -1091,6 +1096,7 @@ static void
 g_on_motion(void *c,int md,int x,int y)
 {
   XEngine *xeng = c;
+  gxCurrentEngine = (Engine *)c;
   if (xeng->e.on==&g_x_on) {
     if (!xeng->w) return;
     if (xeng->HandleMotion)
@@ -1127,6 +1133,7 @@ static void
 g_on_focus(void *c,int in)
 {
   XEngine *xeng = c;
+  if (in == 2) gxCurrentEngine = NULL; /* current window has lost mouse focus */
   if (xeng->e.on==&g_x_on) {
     if (xeng->w && xeng->HandleMotion && in==2)
       xeng->HandleMotion(&xeng->e, 0, -1, -1);
@@ -1646,6 +1653,7 @@ ShutDown(XEngine *xeng)
   p_scr *s = xeng->s;
   p_win *w = xeng->w;
   p_win *win = xeng->win;
+  if ((Engine *)xeng == gxCurrentEngine) gxCurrentEngine = NULL;
   xeng->mapped= 0;
   /* turn off all event callbacks (probably unnecessary) */
   xeng->e.on = 0;

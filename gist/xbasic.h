@@ -1,5 +1,5 @@
 /*
- * $Id: xbasic.h,v 1.2 2007-06-24 20:32:49 dhmunro Exp $
+ * $Id: xbasic.h,v 1.3 2007-12-28 20:20:18 thiebaut Exp $
  * Declare the basic play engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -59,6 +59,9 @@ PLUG_API int gx75height, gx100height;  /* defaults are 450 and 600 pixels */
 /* hack for p_subwindow communication */
 PLUG_API unsigned long gx_parent;
 PLUG_API int gx_xloc, gx_yloc;
+
+/* Engine which currently has mouse focus. */
+PLUG_API Engine *gxCurrentEngine;
 
 /* GxEngine creates an XEngine and adds it to the list of GIST engines.
    The top window will generally be smaller than the graphics

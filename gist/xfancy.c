@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.c,v 1.5 2007-12-26 17:43:08 thiebaut Exp $
+ * $Id: xfancy.c,v 1.6 2007-12-28 20:20:19 thiebaut Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -440,15 +440,11 @@ static char stdFormat[] = "%7.4f";
 static int rubberBanding = 0;
 static int anchorX, anchorY, oldX, oldY;
 
-/* Query mouse system and position. */
-void
-GxGetMouse(Engine *engine, int *sys, double *x, double *y)
-{
-  FXEngine *fxe = (FXEngine *)engine;
-  if (sys) *sys = fxe->currentSys;
-  if (x) *x = fxe->currentX;
-  if (y) *y = fxe->currentY;
-}
+
+/* Variables to store coordinate system and mouse coordinates after
+   last mouse motion. */
+int gxCurrentSys = -1;
+GpReal gxCurrentX = 0, gxCurrentY = 0;
 
 static void
 MovePointer(FXEngine *fxe, Drauing *drawing,
@@ -491,10 +487,11 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
     sprintf(format, "%%s%%2d (%s, %s)", f1, f2);
     sprintf(fxe->msgText, format, locked? "=" : ":", iSystem, xWC, yWC);
 
-    /* save mouse coordinates */
-    fxe->currentX = xWC;
-    fxe->currentY = yWC;
-    fxe->currentSys = iSystem;
+    /* Save mouse coordinates. */
+    gxCurrentX = xWC;
+    gxCurrentY = yWC;
+    gxCurrentSys = iSystem;
+    gxCurrentEngine = (Engine *)fxe;
     
     RedrawMessage(fxe);
   }
