@@ -1,11 +1,12 @@
-This package was debianized by Thibaut Paumard <paumard@users.sourceforge.net> on
-Fri,  5 May 2006 16:43:44 +0200.
+This package was debianized by Thibaut Paumard <paumard@users.sourceforge.net>
+on Fri,  5 May 2006 16:43:44 +0200.
 
-It was downloaded from http://dl.sourceforge.net/sourceforge/yorick/yorick-2.1.04.tgz
+It was downloaded from
+http://dl.sourceforge.net/sourceforge/yorick/yorick-2.1.04.tgz
 
 Author: David H. Munro
 
-Copyright (c) 2005, The Regents of the University of California.
+Copyright © 2005, The Regents of the University of California.
 Produced at the Lawrence Livermore National Laboratory.
 Written by David H. Munro <dhmunro at users.sourceforge.net>.
 UCRL-CODE-155996
@@ -71,9 +72,9 @@ Authors & copyright for specific files:
 
 David H. Munro wrote Yorick and Gist.
 
-Individual files were contributed by �ric Thi�baut (e.g. i/fits.i), Fran�ois
+Individual files were contributed by Éric Thiébaut (e.g. i/fits.i), François
 Rigaut (e.g. i/pkg_mngr.i), Bert Still (mpy/).
-i/fits.i is Copyright (c) 2000-2002 Eric THIEBAUT
+i/fits.i is Copyright © 2000-2002 Eric THIEBAUT
 
 Berkeley Yacc (byacc) generated the Yorick parser.
 
@@ -88,7 +89,7 @@ i/idlsave.i in the upstream source derivates from work by Craig Markwardt. It
   being, extract it from the upstream source if needed.
 
 regexp/yregexp.c derivates from work by Henry Spencer regexp/yregexp.c is
-  Copyright (c) 1986 University of Toronto.
+  Copyright © 1986 University of Toronto.
   Written by Henry Spencer.  Not derived from licensed software.
 
   Permission is granted to anyone to use this software for any
@@ -108,22 +109,22 @@ regexp/yregexp.c derivates from work by Henry Spencer regexp/yregexp.c is
 
   4. This notice must not be removed or altered.
 
-doc/refs.tex derivates from work by Stephen Gildea, Copyright (c) 1987 Free
+doc/refs.tex derivates from work by Stephen Gildea, Copyright © 1987 Free
   Software Foundation, Inc. under GPL v. 1 or later.
-  On Debian systems, the GPL (v. 2) can be found in /usr/share/common-licenses/GPL
+  On Debian systems, the GPL (v. 2) can be found in
+  /usr/share/common-licenses/GPL
 
 play/hacks/hack103.c of the upstream sources derivates from work Copyright (c)
-  1999-2003 Apple Computer, Inc. under the Apple Public Source License Version 2.0
-  (the 'License'). All Rights Reserved. It is not included in the Debian sources as
-  it is not used in the Linux port of Yorick and would prevent Yorick from being
-  DFSG-free.
+  1999-2003 Apple Computer, Inc. under the Apple Public Source License Version
+  2.0. It is not included in the Debian sources as it is not used in the Linux
+  port of Yorick and would prevent Yorick from being DFSG-free.
 
 regexp/yfnmatch.c derivates from work by Guido van Rossum, Copyright (c) 1989,
   1993, 1994 The Regents of the University of California under BSD license.
 
-The the content of the upstream `opengl' directory may not be DFSG-free as it
+The content of the upstream `opengl' directory may not be DFSG-free as it
 uses GLX. It is not used and is removed from the Debian source tree. For
 OpenGL support, look at yorick-gl in non-free.
 
-The content of the debian/ directory is Copyright (C) 2006-2007 Thibaut Paumard,
-under GPL v.2.
+The content of the debian/ directory is Copyright © 2006-2007 Thibaut Paumard,
+under GPL v. 2 or later.

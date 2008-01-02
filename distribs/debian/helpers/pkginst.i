@@ -1,6 +1,6 @@
 #!/usr/bin/yorick -batch
 /*
-  $Id: pkginst.i,v 1.4 2007-12-14 13:28:39 paumard Exp $
+  $Id: pkginst.i,v 1.5 2008-01-02 14:19:27 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   It is considered obsolete to call this script as documented below.
@@ -76,7 +76,8 @@ func write_snipet (package, stage) {
 
 // single package special case:
 // start with "make DESTDIR=debian/package/ install"
-DIRS=["i-start","include","i0","i","g","doc","packages"];//,"contrib"];
+DIRS=["i-start","include","i0","i","g","doc","packages",
+      "python","glade","data"];
 if (noneof(options=="--no-make-install") & numberof(packages)==1) {
   syscall,"make DESTDIR="+DESTDIR+" install";
   
@@ -157,6 +158,8 @@ for (packn=1;packn<=numberof(packages);packn++) {
         if (ext=="i") dest=INDEPDIR+"i"; // so i0 and i-sart must be specified
         else if (anyof(ext==["gs","gp"])) dest=INDEPDIR+"g";
         else if (ext=="info") dest=INDEPDIR+"packages/installed";
+        else if (ext=="py") dest=INDEPDIR+"python";
+        else if (ext=="glade") dest=INDEPDIR+"glade";
         else if (ext=="so") dest=DEPDIR+"lib";
         else if (anyof(ext==["packinfo","keywords","aliases"]))
           dest=DESTDIR+"/usr/share/yorick-doc";
@@ -174,7 +177,7 @@ for (packn=1;packn<=numberof(packages);packn++) {
         make_link,dest+"/"+basename(file),link;
         if (anyof(basename(dirname(link))==["bin","sbin"])) is_exec=1;
       }
-      if (anyof(basename(dest)==["bin","sbin"])) is_exec=1;
+      if (anyof(basename(dest)==["bin","sbin","python"])) is_exec=1;
       if (is_exec) syscall,"chmod a+x "+dest+"/"+basename(file);
     }       
   }

@@ -2,6 +2,7 @@ yorick: menu-command-not-in-package /usr/share/menu/yorick:3 rlwrap
 # The actual menu command uses rlwrap only is it is installed,
 # and works also if it isn't.
 # Besides, rlwrap is "recommended" by yorick.
+
 yorick: menu-icon-missing yorick32x32.xpm
 yorick: menu-icon-missing yorick16x16.xpm
 # The icons are in yorick-data, on which yorick "depends".

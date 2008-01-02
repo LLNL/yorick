@@ -5,24 +5,32 @@ This is the `Yorick' interpreted language by David H. Munro, prepackaged for
 Debian GNU/Linux.
 
 This package was put together by Thibaut Paumard <thibaut.paumard@free.fr>
-from the sourceforge CVS sources. The changes are regularly committed back to the
-CVS.
+from the sourceforge CVS sources. The changes are regularly committed back to
+the CVS.
 
 
-1) Website
+1) Documentation
 2) Configuration
 3) Add-ons
 4) Relocation
 5) Suppressed material
+6) Additional documentation
 
 
-1) Website:
------------
+1) Documentation
+----------------
 
 The homepage is full-featured with an active forum, bug-tracker etc.
 
    http://yorick.sourceforge.net
 
+Install the yorick-doc package for off-line documentation. It contains
+the Yorick Manual and Quick-Reference Cards in HTML and PDF formats,
+as well as HTML documentation for all the Yorick functions installed
+on your system. By default, this documentation is updated each time
+you install, update, or remove Yorick or a Yorick add-on package. See
+the `update-yorickdoc'command in the yorick-doc package if this is not
+what you want, or if this does not work for some reason.
 
 
 2) Configuration:
@@ -40,10 +48,10 @@ Each user can have one user directory, one of ~/.yorick, ~/yorick and
 ~/Yorick. If you have several of them and want to know which one Yorick is
 using , look at the Y_USER variable. Any .i script found in Y_USER/i-start/
 will be sourced by Yorick on start-up (in alphabetic order). This can be used
-for user-wide configuration.
+for user-level configuration.
 
 Additionally, Yorick will look for custom.i in the path. This can be used for
-"task-wide" customizations by putting a custom.i in the directory from which
+"task-level" customizations by putting a custom.i in the directory from which
 you start Yorick for a given task.
 
 
@@ -69,7 +77,7 @@ This build of Yorick is relocatable. This means that you can keep a functional
 copy of this version e.g. before upgrading by simply copying the entire
 /usr/lib/yorick directory anywhere. If you do that:
   - make sure you dereference symbolic links (-L option to cp);
-  - you may want want to remove i-start/zzdebian.i, which makes an
+  - you may want to remove i-start/zzdebian.i, which makes an
     `include_all,"/etc/yorick";';
   - you may also want to have a look at packages/pkg_setup.i
     and check whether it does something useful for you (you probably want to
@@ -102,4 +110,4 @@ system-wide install, ~/.yorick/ for per-user install).
 
 
 Thibaut Paumard <paumard@users.sourceforge.net>,  
-Tue, 21 Nov 2006 17:29:54 +0100
+Sat, 29 Dec 2007 15:31:24 +0100

@@ -3,14 +3,15 @@ Section: math
 Priority: optional
 Maintainer: Thibaut Paumard <paumard@users.sourceforge.net>
 Build-Depends: libx11-dev, texinfo, debhelper (>= 5.0.0), dpatch, imagemagick, po-debconf, texi2html
-Standards-Version: 3.7.2.0
+Standards-Version: 3.7.3.0
+Homepage: http://yorick.sourceforge.net
 
 Package: yorick
 Architecture: any
 Depends: yorick-data (= ${source:Version}), ${shlibs:Depends}, ${misc:Depends}, debconf
 Replaces: yorick-data (<< 2.1.04+dfsg-1)
 Recommends: rlwrap
-Suggests: yorick-almost-everything, yorick-gl, yorick-doc, yorick-dev, emacsen, curl
+Suggests: yorick-gl, yorick-doc, yorick-dev, yorick-yutils, yorick-yeti, yorick-hdf5, yorick-soy, yorick-z, yorick-imutil, yorick-curses, yorick-yeti-fftw, yorick-yeti-regex, yorick-yeti-tiff, emacsen, curl
 Description: interpreted language and scientific graphics
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -28,8 +29,6 @@ Description: interpreted language and scientific graphics
  .
  This package includes an emacs-based development environment, which
  you can launch by typing M-x yorick in emacs.
- .
- Homepage: http://yorick.sourceforge.net
 
 Package: yorick-data
 Architecture: all
@@ -44,13 +43,10 @@ Description: interpreted library for the Yorick language
  .
  The yorick-data package contains all the architecture-independent data, which
  is mostly the standard interpreted library.
- .
- Homepage: http://yorick.sourceforge.net
 
 Package: yorick-dev
 Architecture: any
 Depends: yorick (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Conflicts: yorick-gist
 Description: development files for the Yorick interpreted language
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -60,31 +56,12 @@ Description: development files for the Yorick interpreted language
  .
  The yorick-dev package contains the files needed to compile (or package)
  plug-ins or custom `yorick' executables.
- .
- Homepage: http://yorick.sourceforge.net
-
-Package: yorick-almost-everything
-Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, yorick, yorick-data, yorick-dev, yorick-doc, yorick-yutils, yorick-yeti, yorick-hdf5, yorick-soy, yorick-z, yorick-imutil, yorick-curses, yorick-yeti-fftw, yorick-yeti-regex, yorick-yeti-tiff, yorick-mpeg
-Suggests: yorick-gl
-Description: (almost) complete Yorick system
- Yorick is an interpreted programming language for:
-  * scientific simulations or calculations
-  * postprocessing or steering large simulation codes
-  * interactive scientific graphics
-  * reading, writing, and translating large files of numbers
- .
- This convenience package contains nothing in itself but depends on Yorick and
- all add-on packages in Debian as of writing (the packages in non-free are
- suggested, not depended upon).
- .
- Homepage: http://yorick.sourceforge.net
 
 Package: yorick-doc
+Section: doc
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: yorick (>= 2.1.04+dfsg+cvs20071130)
-Suggests: yorick-gl
 Description: documentation for the Yorick interpreted language
  Yorick is an interpreted programming language for:
   * scientific simulations or calculations
@@ -102,5 +79,3 @@ Description: documentation for the Yorick interpreted language
  .
  Once this package is installed, simply point your preferred web
  browser to file:///usr/share/doc/yorick-doc/README.html .
- .
- Homepage: http://yorick.sourceforge.net

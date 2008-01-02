@@ -26,7 +26,7 @@ dependencies and contains only the functionalities needed in most setups.
 Add-on packages exist for a variety of more specific problems, ranging from
 fairly general purpose file format support (e.g. jpeg support in the yorick-z
 package) to very specialized software (e.g. modelling of the adaptive optics
-systems in modern telescopes in the yao package).
+systems used in modern telescopes in the yorick-yao package).
 
 Some of these add-ons are purely interpreted libraries, others contain
 compiled code (and are then called plug-ins).
@@ -40,7 +40,7 @@ There are basically three ways of installing add-ons:
   - even more can be downloaded from the Internet as source code that you have
     to compile and install yourself.
 
-We will describe the last two methods below.
+We will describe the last two methods below, as the first is straightforward.
 
 2) How to install add-on packages under Debian?
 -----------------------------------------------
@@ -120,6 +120,7 @@ file in ~/.yorick/i-start):
  require, "pathfun.i";
  add_y_home,"~/.yorick/";
 
+pkg_setup will offer to do it for you.
 
 
 3) Technical details
@@ -133,15 +134,15 @@ in the same directory. The following is advisable:
 
   - packages installed using Debian's apt-get are installed in the main Yorick
     tree (/usr/lib/yorick/);
-  - packages installed system-wide using Yorick's pkg_mngr or compiled manually are
-    installed in a local tree (/usr/local/lib/yorick/);
+  - packages installed system-wide using Yorick's pkg_mngr or compiled manually
+    are installed in a local tree (/usr/local/lib/yorick/);
   - additionally, users can install packages in their home directory.
 
  3.2 Why?
  --------
 
-Apt is not aware of packages installed through the pkg_mngr. On the other hand, the
-pkg_mngr is aware of packages installed through apt, but not that they have
+Apt is not aware of packages installed through the pkg_mngr. On the other hand,
+the pkg_mngr is aware of packages installed through apt, but not that they have
 been installed through apt. So you could easily install a package with apt and
 remove it with the pkg_mngr, leaving your system in an inconsistent
 state.
@@ -172,33 +173,6 @@ Y_HOME/packages, that pkg_mngr.i reads when it is first loaded, unless the
 variable PKG_SETUP is set.
 
 There are copies of these two files in /usr/share/doc/yorick/examples/ .
-
-During installation (or upgrade) of the Yorick package, the postinst script
-checks whether the file /usr/lib/yorick/packages/pkg_setup.i already
-exists. This would be a sign that the sysadmin has already used the package
-manager to install add-ons in the main Yorick directory. In this case:
- 1) any pre-existing /etc/yorickpackages/pkg_setup.i is moved to
-    packages/pkg_setup.i.dpkg-bak;
- 2) the pre-existing /usr/lib/yorick/packages/pkg_setup.i is moved to
-    /etc/yorick/packages/pkg_setup.i;
- 3) dpkg asks the admin whether to install the new Debian file or keep the old.
-
-If you choose to keep your old configuration, pkg_mngr will continue using
-the main yorick directory foor it's packages.
-
-If this is your case, you certainly want to revert to the default Debian behavior:
-  - start Yorick as root and execute:
-    pkg_list;       // note the installed packages;
-    pkg_remove,"*"; // remove them;
-    quit;           // exit Yorick
-  - move or copy /etc/yorick/packages/pkg_setup.dpkg-new to
-    /etc/yorick/packages/pkg_setup.i;
-  - start Yorick again and reinstall the packages:
-    #include "pkg_mngr.i";
-    pkg_sync;
-    pkg_install,"package";                   // for a single package, or
-    pkg_install,["package1","package2",...]; // for several packages
-    quit;
 
 
 4) Bugs
@@ -248,4 +222,5 @@ this is a bug.
 
 
 Thibaut Paumard <paumard@users.sourceforge.net>
-Wed, 19 Sep 2007 12:52:06 +0200
+Sat, 29 Dec 2007 15:31:24 +0100
+

@@ -1,0 +1,8 @@
+yorick-data: package-contains-empty-directory usr/share/yorick/packages/installed/
+yorick-data: package-contains-empty-directory usr/share/yorick/python/
+yorick-data: package-contains-empty-directory usr/share/yorick/glade/
+yorick-data: package-contains-empty-directory usr/share/yorick/data/
+# Those directories are used by some add-on packages.  They are linked
+# to from /usr/lib/yorick.  It is necessary to create the links in the
+# yorick package. yorick-data creates the directories to avoid
+# dangling links.

@@ -1,29 +1,29 @@
-.\" $Id: dh_installyorick.1,v 1.2 2007-12-14 13:28:39 paumard Exp $
+.\" $Id: dh_installyorick.1,v 1.3 2008-01-02 14:19:27 paumard Exp $
 .\"
 .IX Title "DH_INSTALLYORICK 1"
-.TH DH_INSTALLYORICK 1 "2007-12-10" "" "Debhelper"
+.TH DH_INSTALLYORICK 1 "2007\-12\-10" "" "Debhelper"
 .SH "NAME"
-dh_installyorick \- install Yorick add-on packages
+dh_installyorick \- install Yorick add\-on packages
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 \&\fBdh_installyorick\fR [\fIdebhelper\ options\fR] [\fB\-n\fR] [\fB\-\-no\-make\-install\fR]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 dh_installyorick is a debhelper program that installs the files of
-your Yorick add-on at the right place when building a Debian
-package. For a simple plug-in package, this is mostly done by calling
+your Yorick add\-on at the right place when building a Debian
+package. For a simple plug\-in package, this is mostly done by calling
 "make DESTDIR=debian/<package> install" and then moving
-arch-independent files to usr/share. Note that there is no
+arch\-independent files to usr/share. Note that there is no
 Y_SITE/contrib directory in the Debian packages, its content is merged
 into YSITE/i.
 .PP
 Calling "make ... install" can be disabled by using the
 "\-\-no\-make\-install" flag. This is useful in particular for interpreted
-add-on packages, which do not ship with a standard Yorick Makefile.
+add\-on packages, which do not ship with a standard Yorick Makefile.
 .PP
 Unless the "\-n" flag is used, dh_installyorick will also add lines to
-your package's postinst and postrm scripts to call "update-yorickdoc
-\-\-auto" if the yorick-doc package is installed. It is necessary to
+your package's postinst and postrm scripts to call "update\-yorickdoc
+\-\-auto" if the yorick\-doc package is installed. It is necessary to
 call dh_installdeb after dh_installyorick for this to work.
 .PP
 dh_installyorick will look for a file named
@@ -43,16 +43,16 @@ directory, are installed with execution permission for everyone.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
 .IP "\fB\-n\fR\fR" 4
-.IX Item "-n"
+.IX Item "\-n"
 Do not modify postinst/postrm scripts.
 .IP "\fB\-\-no\-make\-install\fR\fR" 4
-.IX Item "--no-make-install"
+.IX Item "\-\-no\-make\-install"
 Do not call "make DESTDIR=debian/<package> install".
 .SH "YNSTALL FILE"
 .IX Header "YNSTALL FILE"
 Blank lines are ignored, several blank character are counted as one,
 and line starting with "#" (possibly following one or more blanks) are
-ignored. Each non-comment, non-blank line should be of the form:
+ignored. Each non\-comment, non\-blank line should be of the form:
 .PP
 \&\fIfile\fR [\fIdirectory\fR [\fIlink\fR]] 
 .PP
@@ -67,7 +67,7 @@ globs and actually denote sevral files. If \fIdirectory\fR is not
 specified, it is guessed from the extension of \fIfile\fR: .i files
 are installed in Y_SITE/i, .gs and .gp in Y_SITE/g, .info in
 Y_SITE/packages/installed, .packinfo, .aliases and .keywords in
-/usr/share/yorick-doc, and .so in Y_HOME/lib.
+/usr/share/yorick\-doc, and .so in Y_HOME/lib.
 .IP "\fIdirectory\fR" 4
 .IX Item "directory"
 the full path (without leading "/") into which the file should be
@@ -76,7 +76,7 @@ Y_HOME directory (which will almost alway be the case), it is possible
 (and advisable) to not specify the full path, but to write "Y_SITE/"
 or "Y_HOME" followed by the relative path from there. It is also
 possible to omit this "Y_SITE/" or "Y_HOME/" prefix if \fIdirectory\fR
-starts whith one of: Y_SITE/i, Y_SITE/i0, Y_SITE/i-start, Y_SITE/g,
+starts whith one of: Y_SITE/i, Y_SITE/i0, Y_SITE/i\-start, Y_SITE/g,
 Y_SITE/packages, Y_HOME/bin or Y_HOME/lib.
 .IP "\fIlink\fR" 4
 .IX Item link
@@ -104,17 +104,17 @@ somefile.i i0
 .PP
 Example with a symlink. Here, somefile.i is a script that is both useful
 #included from within Yorick or from the command line. Its first line
-reads "#!/usr/bin/yorick -batch".
+reads "#!/usr/bin/yorick \-batch".
 .br
 somefile.i i usr/bin/command_name
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIdebhelper\fR\|(7),
-\&\fIupdate-yorickdoc\fR\|(1)
+\&\fIupdate\-yorickdoc\fR\|(1)
 .PP
-This program is a part of yorick-dev but is made to work with
+This program is a part of yorick\-dev but is made to work with
 debhelper. Note that only compatibilty level 5 has been implemented
-and tested. This script is not idempotent, dh_clean -k should be
+and tested. This script is not idempotent, dh_clean \-k should be
 executed between any two runs.
 .SH "AUTHORS"
 .IX Header "AUTHORS"
