@@ -4,7 +4,8 @@ yorick (2.1.04+dfsg+cvs20080101-1) unstable; urgency=low
   * add linda and lintian overrides.
   * add data, python and glade directories.
   * add watch file
-  * revert Ubuntu-specific change to debian/control
+  * aknowledging Ubuntu fix to debian/helpers/pkginst.i.
+    Closes: #459137, #459138, #459142, #459143, #459144, #459145
   * new yorick-doc package.
      * move most txt and pdf documentation there.
      * add html documentation.
