@@ -3,18 +3,19 @@
  *
  *	Implement FITS files input/output and editing in Yorick.
  *
- * Copyright (c) 2000-2002 Eric THIEBAUT.
+ * Copyright (C) 2000-2008 Eric THIEBAUT.
  *
  * History:
- *	$Id: fits.i,v 1.25 2007-02-15 08:19:38 thiebaut Exp $
+ *	$Id: fits.i,v 1.26 2008-02-11 07:52:53 thiebaut Exp $
  *	$Log: fits.i,v $
- *	Revision 1.25  2007-02-15 08:19:38  thiebaut
- *	Force CVS revison number to match RCS one.
+ *	Revision 1.26  2008-02-11 07:52:53  thiebaut
+ *	 - Recoding of the reading/writing of binary tables.
+ *	 - Various fixes to handle multidimensional columns in
+ *	   binary tables (keyword automatically checked for
+ *	   consistency if it exists or created if not).
  *
- *	Revision 1.4  2006/11/27 16:56:15  thiebaut
- *	fixed True and Not methods for built-in and interpreted functions
- *	
- *	Revision 1.25  2006/11/03 12:09:18  eric
+ *	Revision 1.25  2007/02/15 08:19:38  thiebaut
+ *	 - Forced CVS revison number to match RCS one.
  *	 - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for
  *	   discovering this bug).
  *	 - Slightly change the calling sequence of fits_pack_bintable
@@ -141,7 +142,7 @@
 
 /*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.25 $";
+fits = "$Revision: 1.26 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
@@ -288,6 +289,7 @@ fits = "$Revision: 1.25 $";
        fits_get_data_size  - get size of data part in current HDU.
        fits_get_dims       - get dimension list of array data
        fits_get_gcount     - get GCOUNT value
+       fits_get_groups     - get GROUPS value
        fits_get_history    - get value(s) of HISTORY card(s)
        fits_get_keywords   - get list of defined keywords
        fits_get_list       - get list of integer values
@@ -868,7 +870,7 @@ func fits_read_header(fh)
        fits_id for efficiency reasons and because any errors will be
        raised later). */
     block_id = _fits_id(block);
-    
+
     /* Pre-search for the END keyword to cleanup header after the END card
        (in case invalid/corrupted FITS cards have been left after this
        card). */
@@ -1128,13 +1130,14 @@ func fits_get_dims(fh, fix)
 {
   naxis = fits_get_naxis(fh, fix);
   if (! naxis) return;
-  dims = array(naxis, naxis+1);
-  for (ith=1 ; ith<=naxis ; ++ith) {
-    key = swrite(format="NAXIS%d", ith);
+  fmt = "NAXIS%d";
+  dims = array(naxis, naxis + 1);
+  for (nth = 1; nth <= naxis; ++nth) {
+    key = swrite(format=fmt, nth);
     id = fits_id(key);
-    value = fits_get_special(fh, key, id, 3+ith, fix);
+    value = fits_get_special(fh, key, id, 3 + nth, fix);
     if (structof(value) != long || value < 0) error, "bad "+key+" value";
-    dims(ith+1) = value;
+    dims(nth + 1) = value;
   }
   if (nallof(dims)) return; /* empty data */
   return dims;
@@ -1387,17 +1390,34 @@ func fits_get_data_size(fh, fix)
    SEE ALSO: fits, fits_read_header. */
 {
   bitpix = fits_get_bitpix(fh, fix);
-  dims   = fits_get_dims(fh, fix);
+  naxis = fits_get_naxis(fh, fix);
+  groups = fits_get_groups(fh);
   gcount = fits_get_gcount(fh);
   pcount = fits_get_pcount(fh);
-  if (is_void(dims)) {
-    naxis = 0;
-    ndata = 0;
-  } else {
-    naxis = dims(1);
-    i = numberof(dims);
+  if (naxis) {
+    fmt = "NAXIS%d";
     ndata = 1;
-    while (i > 1) ndata *= dims(i--);
+    for (nth = 1; nth <= naxis; ++nth) {
+      key = swrite(format=fmt, nth);
+      id = fits_id(key);
+      value = fits_get_special(fh, key, id, 3 + nth, fix);
+      if (structof(value) != long || value < 0) {
+        error, "bad "+key+" value";
+      }
+      if (nth == 1) {
+        if (groups == 'T') {
+          if (value != 0) {
+            error, "bad "+key+" value for random group extension";
+          }
+        } else {
+          ndata *= value;
+        }
+      } else {
+        ndata *= value;
+      }
+    }
+  } else {
+    ndata = 0;
   }
   return (abs(bitpix)/8)*gcount*(pcount + ndata);
 }
@@ -2077,7 +2097,7 @@ func fits_new_bintable(fh, comment)
   return fh;
 }
 
-func fits_write_bintable(fh, ptr, logical=)
+func fits_write_bintable(fh, ptr, logical=, fixdims=)
 /* DOCUMENT fits_write_bintable(fh, ptr)
      Writes contents  of pointer PTR in  a binary table in  FITS handle FH.
      Arrays pointed  by PTR  become the  fields of the  table (in  the same
@@ -2119,6 +2139,11 @@ func fits_write_bintable(fh, ptr, logical=)
      long's  nor short's nor  char's).  The  default is  to save  arrays of
      int's as array of 32 bits integers.
 
+     If  keyword FIXDIMS is  true (non  nil and  non-zero) then  the repeat
+     count in  "TFORMn" cards and the  dimension list in  the "TDIMn" cards
+     already  present in the  header of  the current  HDU are  corrected to
+     match the actual dimensions of the n-th columnin PTR.
+
      The returned value is FH.
 
    SEE ALSO: fits, fits_new_bintable, fits_read_bintable. */
@@ -2136,186 +2161,195 @@ func fits_write_bintable(fh, ptr, logical=)
   }
 
   /* Find the format. */
+  tform3 = "%d%1[LXBIJAEDCMP]%s";
+  tform2 =   "%1[LXBIJAEDCMP]%s";
   tfields = numberof(ptr);
   mult = size = array(long, tfields);
   nrows = -1;
-  for (i=1 ; i<=tfields ; ++i) {
+  for (i = 1; i <= tfields; ++i) {
     local a; eq_nocopy, a, *ptr(i);
     if (is_void(a)) {
+      dims = [];
+      ndims = 0;
       ncells = 0;
+      first_dim = 0;
+      other_dims = [];
     } else {
       if (! is_array(a)) error, "unexpected non-array field for BINTABLE";
-      dims = dimsof(a);
-      ndims = dims(1);
+      dimlist = dimsof(a);
+      ndims = dimlist(1);
       if (ndims == 0) {
         /* fix for scalars */
         ndims = 1;
-        dims = [1,1];
+        first_dim = 1;
+      } else {
+        first_dim = dimlist(2);
+      }
+      if (ndims >= 2) {
+        other_dims = dimlist(3:);
+      } else {
+        other_dims = [];
       }
       if (i == 1) {
-        nrows = dims(2);
-      } else if (dims(2) != nrows) {
+        nrows = first_dim;
+      } else if (first_dim != nrows) {
         error, "all fields of a BINTABLE must have the same number of rows";
       }
       ncells = numberof(a)/nrows;
     }
     type = structof(a);
-    if (type == string && ncells != 1) {
-      error, "only string vectors implemented in BINTABLE";
-    }
 
-    /* Deal with TDIM# card. */
-    key = swrite(format="TDIM%d", i);
-    tdim = fits_get_list(fh, key);
-    if (is_void(tdim)) {
-      if (ndims > 2) {
-        str = swrite(format="(%d", dims(3));
-        for (j = 4 ; j <= ndims ; ++j) {
-          str += swrite(format=",%d", dims(j));
-        }
-        str += ")";
-        fits_set, fh, key, str, swrite(format="array dimensions for column %d", i);
-      }
-    } else {
-      if (min(tdim) <= 0) {
-        error, "bad dimension list for FITS card \"" + key + "\"";
-      }
-      if (numberof(tdim) != ndims - 1 || anyof(tdim != dims(3:))) {
-        error, "incompatible dimension list in FITS card \"" + key + "\"";
-      }
-    }    
-
-    /* Get/check the format if already specified */
+    /* Parse TFORMn card or guess format specification form the current
+       column data.  T is the type code in the TFORMn card, M is the repeat
+       count, and S is the size (in bytes) of an element. */
     key = swrite(format="TFORM%d", i);
     tform = fits_get(fh, key);
+    write_tform = is_void(tform);
     if (structof(tform) == string) {
-
-      /**
-      *** Parse TFORM# FITS cards.
-      **/
-
+      /* Parse TFORMn card and perform required conversions. */
       m = -1;
       s = nil = string(0);
-      if (sread(format="%d%1s%s", tform, m, s, nil) != 2) {
-        m = (sread(format="%1s%s", tform, s, nil) == 1 ? 1 : -1);
+      if (sread(format=tform2, tform, s, nil) == 1) {
+        m = 1;
+      } else if (sread(format=tform3, tform, m, s, nil) != 2 || m < 0) {
+        error, ("bad format specification in FITS card \"" + key + "\"");
       }
-      if (m < 0) error, "bad format string in FITS card \""+key+"\"";
-      if ((type == string ? m <= 0 : ncells != m)) {
-        error, ("bad number of cells in "+fits_nth(i)
-                +" field of binary table");
-      }
-      mult(i) = m;
       t = (*pointer(s))(1);
-      if (ncells) {
-        if (t == 'A') {
-          size(i) = 1;
-          bad_type = (type != (cast = char) && type != string);
-          if (type == string) {
-            len = strlen(a);
-            tmp = array(char, nrows, m);
-            for (k=1 ; k<=nrows ; ++k) {
-              if ((l = min(len(k), m))) {
-                tmp(k, 1:l) = (*pointer(a(k)))(1:l);
-              }
-            }
-            ptr(i) = &tmp; /* only affect local (private) copy */
-            a = [];
-            type = cast; /* prevent conversion below */
-          }
-        } else if (t == 'B') {
-          size(i) = 1;
-          bad_type = (type != (cast = char) &&
-                      type != long && type != int && type != short);
-        } else if (t == 'I') {
-          size(i) = 2;
-          bad_type = (type != (cast = short) &&
-                      type != long && type != int && type != char);
-        } else if (t == 'J') {
-          size(i) = 4;
-          bad_type = (type != (cast = long) &&
-                      type != int && type != short && type != char);
-        } else if (t == 'E') {
-          size(i) = 4;
-          bad_type = (type != (cast = float) &&
-                      type != double && type != long &&
-                      type != int && type != short && type != char);
-        } else if (t == 'D') {
-          size(i) = 8;
-          bad_type = (type != (cast = double) &&
-                      type != float && type != long &&
-                      type != int && type != short && type != char);
-        } else if (t == 'C') {
-          size(i) = 8;
-          bad_type = (type != complex &&
-                      type != double && type != float && type != long &&
-                      type != int && type != short && type != char);
-          if (! bad_type) {
-            tmp = array(float, nrows, 2*ncells);
-            tmp(,1::2) = float(a);
-            if (type == complex) tmp(,2::2) = a.im;
-            ptr(i) = &tmp;
-            a = [];
-            type = cast = float; /* prevent conversion below */
-          }
-        } else if (t == 'M') {
-          size(i) = 16;
-          bad_type = (type != (cast = complex) &&
-                      type != double && type != float && type != long &&
-                      type != int && type != short && type != char);
-        } else if (t == 'L') {
-          size(i) = 1;
-          bad_type = (type != (cast = char) &&
-                      type != long && type != int && type != short);
-          if (! bad_type && type != cast) {
-            tmp = array('T', nrows, ncells);
-            if (is_array((a = where(! a)))) tmp(a) = 'F';
-            ptr(i) = &tmp;
-            a = [];
-            type = cast; /* prevent conversion below */
-          }
-        } else if (t == 'X') {
-          error, "bit array in FITS binary table not yet implemented";
-        } else if (t == 'P') {
-          error, "pointer array in FITS binary table not yet implemented";
-        } else {
-          error, "bad format letter in FITS card "+key;
+      if (ncells == 0) {
+        s = 0;
+        if (m != 0) {
+          error, ("repeat count must be 0 for empty "
+                  + fits_nth(i) + " column");
         }
-
-        /* Maybe convert data type. */
-        if (bad_type) {
-          error, "unconsistent data formats for "+fits_nth(i)+" field";
+      } else if (t == 'A') {
+        if (type != string) {
+          error, ("expecting string array for " + fits_nth(i) + " column");
         }
-        if (cast != type) {
-          ptr(i) = &cast(a);
+        s = 1;
+        if (m < ncells || m%ncells != 0) {
+          error, ("string array cannot fit in " + fits_nth(i) + " column");
+        }
+        length = strlen(a);
+        maxlen = m/ncells;
+        if (max(length) > maxlen) {
+          _fits_warn, ("truncation of input string(s) to fit into "
+                       + fits_nth(i) + " column");
+        }
+        tmp = array(char, nrows, maxlen, ncells);
+        if (anyof(length)) {
+          index = where(length);
+          length = min(length(index), maxlen);
+          j1 = 1 + (index - 1)%nrows;
+          j3 = 1 + (index - 1)/nrows;
+          for (k = numberof(index); k >= 1; --k) {
+            range = 1 : length(k);
+            tmp(j1(k), range, j3(k)) = (*pointer(a(index(k))))(range);
+          }
+        }
+        other_dims = grow(maxlen, other_dims);
+        ++ndims;
+        ptr(i) = &tmp;
+        a = [];
+      } else if (m != ncells) {
+        error, ("bad number of elements for "  + fits_nth(i) + " column");
+      } else if (t == 'B' && (type == long || type == int ||
+                              type == short || type == char)) {
+        s = 1;
+        if (min(a) < 0 || max(a) > 255) {
+          _fits_warn, ("truncation of input values in "
+                       + fits_nth(i) + " column");
+        }
+        if (type != char) {
+          ptr(i) = &char(a);
           a = [];
         }
+      } else if (t == 'I' && (type == long || type == int ||
+                              type == short || type == char)) {
+        s = 2;
+        if (min(a) < -32768 || max(a) > 32767) {
+          _fits_warn, ("truncation of input values in "
+                       + fits_nth(i) + " column");
+        }
+        if (type != short) {
+          ptr(i) = &short(a);
+          a = [];
+        }
+      } else if (t == 'J' && (type == long || type == int ||
+                              type == short || type == char)) {
+        s = 4;
+        if (min(a) < -2147483648.0 || max(a) > 2147483647.0) {
+          _fits_warn, ("truncation of input values in "
+                       + fits_nth(i) + " column");
+        }
+        if (type != long || type != int) {
+          ptr(i) = &long(a);
+          a = [];
+        }
+      } else if (t == 'E' && (type == double || type == float ||
+                              type == long || type == int ||
+                              type == short || type == char)) {
+        s = 4;
+        if (type != float) {
+          ptr(i) = &float(a);
+          a = [];
+        }
+      } else if (t == 'D' && (type == double || type == float ||
+                              type == long || type == int ||
+                              type == short || type == char)) {
+        s = 8;
+        if (type != double) {
+          ptr(i) = &double(a);
+          a = [];
+        }
+      } else if (t == 'C' && (type == complex || type == double ||
+                              type == float || type == long || type == int ||
+                              type == short || type == char)) {
+        s = 8;
+        tmp = array(float, nrows, 2, other_dims);
+        tmp(,1,) = float(a);
+        if (type == complex) tmp(,2,) = a.im;
+        ptr(i) = &tmp;
+        a = [];
+      } else if (t == 'M' && (type == complex || type == double ||
+                              type == float || type == long || type == int ||
+                              type == short || type == char)) {
+        s = 16;
+        if (type != complex) {
+          ptr(i) = &complex(a);
+          a = [];
+        }
+      } else if (t == 'L' && (type == long || type == int ||
+                              type == short || type == char)) {
+        s = 1;
+        if (type != char) {
+          tmp = array('T', nrows, ncells);
+          if (is_array((a = where(! a)))) tmp(a) = 'F';
+          ptr(i) = &tmp;
+          a = [];
+        }
+      } else if (t == 'X') {
+        error, "bit array in FITS binary table not yet implemented";
+      } else if (t == 'P') {
+        error, "pointer array in FITS binary table not yet implemented";
+      } else {
+        error, ("illegal data type conversion in " + fits_nth(i) + " column");
       }
-
     } else if (is_void(tform)) {
-
-      /**
-      *** Otherwise guess it from data tables contents.
-      **/
-
+      m = ncells;  /* except for strings, the repeat count is
+                      the number of cells in a column */
       if (ncells == 0) {
-        t = 'A';
-        size(i) = 1;
-      } else if (type == double) {
-        t = 'D';
-        size(i) = 8;
-      } else if (type == long) {
-        t = 'J';
-        size(i) = 4;
+        t = 'B';
+        s = 0;
       } else if (type == char) {
         t = 'B';
-        size(i) = 1;
-      } else if (type == complex) {
-        t = 'M';
-        size(i) = 16;
+        s = 1;
+      } else if (type == short) {
+        t = 'I';
+        s = 2;
       } else if (type == int) {
         if (logical) {
           t = 'L';
-          size(i) = 1;
+          s = 1;
           tmp = array('F', dims); /* array of "false" values */
           if (logical == 2) {
             /* Treats strictly negative values as "bad" values and strictly
@@ -2327,36 +2361,83 @@ func fits_write_bintable(fh, ptr, logical=)
             if (is_array((j = where(a)))) tmp(j) = 'T';
           }
           ptr(i) = &tmp; /* only affect local (private) copy */
+          a = [];
         } else {
           t = 'J';
-          size(i) = 4;
+          s = 4;
         }
+      } else if (type == long) {
+        t = 'J';
+        s = 4;
       } else if (type == float) {
         t = 'E';
-        size(i) = 4;
-      } else if (type == short) {
-        t = 'I';
-        size(i) = 2;
+        s = 4;
+      } else if (type == double) {
+        t = 'D';
+        s = 8;
+      } else if (type == complex) {
+        t = 'M';
+        s = 16;
       } else if (type == string) {
         t = 'A';
-        size(i) = 1;
-        ncells = max((len = strlen(a)));
-        tmp = array(char, nrows, ncells);
-        for (k=1 ; k<=nrows ; ++k) {
-          if ((l = len(k))) tmp(k, 1:l) = (*pointer(a(k)))(1:l);
+        s = 1;
+        length = strlen(a);
+        maxlen = max(length);
+        m = maxlen*ncells;
+        tmp = array(char, nrows, maxlen, ncells);
+        if (anyof(length)) {
+          index = where(length);
+          length = length(index);
+          j1 = 1 + (index - 1)%nrows;
+          j3 = 1 + (index - 1)/nrows;
+          for (k = numberof(index); k >= 1; --k) {
+            range = 1 : length(k);
+            tmp(j1(k), range, j3(k)) = (*pointer(a(index(k))))(range);
+          }
         }
-        ptr(i) = &tmp; /* only affect local (private) copy */
+        other_dims = grow(maxlen, other_dims);
+        ++ndims;
+        ptr(i) = &tmp;
+        a = [];
       } else if (type == pointer) {
         error, "pointer fields not yet implemented in BINTABLE";
       } else {
         error, "unsupported data type in BINTABLE";
       }
-      mult(i) = ncells;
-      fits_set, fh, key, swrite(format="%d%c", ncells, t),
+      fits_set, fh, key, swrite(format="%d%c", m, t),
         "format of " + fits_nth(i) + " field";
-
     } else {
-      error, "bad value for FITS card "+key;
+      error, ("bad type for FITS card " + key);
+    }
+    size(i) = s;
+    mult(i) = m;
+
+    /* Deal with TDIM# card. */
+    key = swrite(format="TDIM%d", i);
+    tdim = fits_get_list(fh, key);
+    if (is_void(tdim)) {
+      if (ndims > 2) {
+        str = swrite(format="(%d", other_dims(1));
+        for (j = 2 ; j < ndims ; ++j) {
+          str += swrite(format=",%d", other_dims(j));
+        }
+        str += ")";
+        fits_set, fh, key, str,
+          swrite(format="array dimensions for column %d", i);
+      }
+    } else if (ncells == 0) {
+      /* empty column */
+      if (anyof(tdim)) {
+        error, ("bad dimension list for empty column in FITS card \""
+                + key + "\"");
+      }
+    } else {
+      if (min(tdim) <= 0) {
+        error, ("bad dimension list for FITS card \"" + key + "\"");
+      }
+      if (numberof(tdim) != ndims - 1 || anyof(tdim != other_dims)) {
+        error, ("incompatible dimension list in FITS card \"" + key + "\"");
+      }
     }
   }
 
@@ -2370,17 +2451,23 @@ func fits_write_bintable(fh, ptr, logical=)
   local offset; eq_nocopy, offset, _car(fh, 3);
   stream = _car(fh, 4);
   address = offset(3);
-  if (tfields == 1) {
+  index = where(size > 0);
+  number = numberof(index);
+  if (number == 1) {
     /* Fast write in this case. */
-    _write, stream, address, *ptr(1);
+    _write, stream, address, *ptr(index(1));
     address += nbytes*nrows;
-  } else {
+  } else if (number > 0) {
     /* Write data, one row at a time, one field at a time. This is really
        inefficient, but I do not see any other way to do that (using some
        equivalent structure in Yorick defined "on-the-fly" would be very
        complicated and cannot solve for all the cases). */
+    if (number < numberof(ptr)) {
+      ptr = ptr(index);
+      size = size(index);
+    }
     for (j=1 ; j<=nrows ; ++j) {
-      for (i=1 ; i<=tfields ; ++i) {
+      for (i=1 ; i<=number ; ++i) {
         _write, stream, address, (*ptr(i))(j,..);
         address += size(i);
       }
@@ -2466,15 +2553,18 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
   s = nil = string(0);
   m = 0;
   warn_X = warn_P = 1;
+  tform3 = "%d%1[LXBIJAEDCMP]%s";
+  tform2 =   "%1[LXBIJAEDCMP]%s";
   for (i=1 ; i<=tfields ; ++i) {
     tform = fits_get(fh, (key = swrite(format="TFORM%d", i)));
     if (structof(tform) != string) {
       error, ((is_void(tform) ? "missing" : "unexpected data type for")
-              + " FITS card \""+key+"\"");
+              + " FITS card \"" + key + "\"");
     }
-    if (sread(format="%d%1s%s", tform, m, s, nil) != 2) {
-      if (sread(format="%1s%s", tform, s, nil) == 1) m = 1;
-      else error, "bad format string in FITS card \""+key+"\"";
+    if (sread(format=tform2, tform, s, nil) == 1) {
+      m = 1;
+    } else if (sread(format=tform3, tform, m, s, nil) != 2 || m < 0) {
+      error, ("bad format specification in FITS card \"" + key + "\"");
     }
     c = (*pointer(s))(1);
     if (c == 'L') {
@@ -2856,7 +2946,7 @@ local fits_toupper, fits_tolower;
        -or- fits_toupper(s)
      Converts a string or an array of strings S to lower/upper case letters.
 
-   SEE ALSO: fits, fits_trim. */
+   SEE ALSO: fits, fits_trim, fits_strchar. */
 
 local _fits_tolower;
 local _fits_toupper;
@@ -2903,7 +2993,7 @@ func fits_trim(s)
      Removes trailing  spaces (character 0x20) from scalar  string S (note:
      trailing spaces are not significant in FITS).
 
-   SEE ALSO: fits, fits_tolower, fits_toupper. */
+   SEE ALSO: fits, fits_tolower, fits_toupper, fits_strchar. */
 {
   if (! (i = numberof((c = *pointer(s))))) return string(0);
   while (--i) { if (c(i) != ' ') return string(&c(1:i)); }
@@ -2953,6 +3043,27 @@ if (is_func(strcase) == 2) {
 _fits_toupper_0 = _fits_toupper_1 = [];
 _fits_tolower_0 = _fits_tolower_1 = [];
 _fits_strcmp_0 = _fits_strcmp_1 = [];
+
+func fits_strchar(s)
+/* DOCUMENT fits_strchar(s)
+     Converts string array S into a vector of characters.
+
+   SEE ALSO: fits, fits_toupper, fits_trim. */
+{
+  k = strlen(s);
+  w = where(k);
+  k = (k + 1)(cum);
+  c = array(char, k(0));
+  n = numberof(w);
+  for (i = 1; i <= n; ++i) {
+    j = w(i);
+    c(k(j) + 1 : k(j + 1)) = *pointer(s(j));
+  }
+  return c;
+}
+if (is_func(strchar) != 2) {
+  strchar = fits_strchar;
+}
 
 func fits_map(op, src)
 /* DOCUMENT fits_map(op, src)
@@ -3539,6 +3650,10 @@ func fits_get_bzero(fh) {
 
    SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
 
+func fits_get_groups(fh) {
+  if (structof((value = fits_get(fh, _fits_id_groups, default='F')))
+      == char) return value;
+  _fits_warn, "bad value type for GROUPS"; return 'F'; }
 func fits_get_gcount(fh) {
   if (structof((value = fits_get(fh, _fits_id_gcount, default=1)))
       == long) return value;
@@ -3547,20 +3662,31 @@ func fits_get_pcount(fh) {
   if (structof((value = fits_get(fh, _fits_id_pcount, default=0)))
       == long) return value;
   _fits_warn, "bad value type for PCOUNT"; return 0; }
-/* DOCUMENT fits_get_gcount(fh)
-       -or- fits_get_pcount(fh)
-     Get PCOUNT and  GCOUNT values for FITS handle FH.   PCOUNT shall be an
-     integer  equal  to  the  number  of parameters  preceding  each  group
-     (default value 0).  GCOUNT shall be  an integer equal to the number of
-     random groups present (default value  1).  The total number of bits in
-     the data  array (exclusive of  fill that is  needed after the  data to
-     complete the last record) is given by the following expression:
-
-         NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS1*NAXIS2*...*NAXISm)
-
-
-   SEE ALSO: fits, fits_get, fits_get_bitpix,
-             fits_read_array, fits_write_array. */
+/* DOCUMENT fits_get_groups(fh)
+ *     -or- fits_get_gcount(fh)
+ *     -or- fits_get_pcount(fh)
+ *
+ *   Get GROUPS, PCOUNT or GCOUNT values for FITS handle FH.  GROUPS shall
+ *   be a logical value: 'T' (true), if the current HDU contains a random
+ *   group extension; 'F' (false), otherwise.  The default value for GROUPS
+ *   is 'F' (false).  PCOUNT shall be an integer equals to the number of
+ *   parameters preceding each group (default value 0).  GCOUNT shall be an
+ *   integer equal to the number of random groups present (default value
+ *   1).  When GROUPS is false, the total number of bits in the data array
+ *   (exclusive of fill that is needed after the data to complete the last
+ *   record) is given by the following expression:
+ *
+ *       NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS1*NAXIS2*...*NAXISm)
+ *
+ *   where NAXISm is the length of the last axis; for a random group (i.e.
+ *   when GROUPS is true), NAXIS1=0 and the total number of bits is:
+ *
+ *       NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS2*...*NAXISm)
+ *
+ *
+ * SEE ALSO: fits, fits_get, fits_get_bitpix,
+ *           fits_read_array, fits_write_array.
+ */
 
 func fits_get_history(fh) {
   if (structof((value = fits_get(fh, _fits_id_history))) == string
@@ -3712,6 +3838,7 @@ func fits_init(sloopy=, allow=, blank=)
   extern _fits_id_xtension, _fits_id_extname, _fits_id_special;
   extern _fits_id_bscale,   _fits_id_bzero;
   extern _fits_id_pcount,   _fits_id_gcount;
+  extern _fits_id_groups;
   extern _fits_strict;
 
   /* Strict FITS compliance? */
@@ -3773,6 +3900,7 @@ func fits_init(sloopy=, allow=, blank=)
   _fits_id_bzero    = fits_id("BZERO");
   _fits_id_pcount   = fits_id("PCOUNT");
   _fits_id_gcount   = fits_id("GCOUNT");
+  _fits_id_groups   = fits_id("GROUPS");
   //_fits_id_extend = fits_id("EXTEND");
   _fits_id_special  = [_fits_id_simple, _fits_id_bitpix, _fits_id_naxis,
                        _fits_id_end, 0.0, _fits_id_comment, _fits_id_history,
@@ -3957,4 +4085,11 @@ func _fits_strsplit(s)
   return r(1:i);
 }
 
-/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*
+ * Local Variables:                                                          *
+ * mode: Yorick                                                              *
+ * tab-width: 8                                                              *
+ * fill-column: 75                                                           *
+ * coding: latin-1                                                           *
+ * End:                                                                      *
+ *---------------------------------------------------------------------------*/
