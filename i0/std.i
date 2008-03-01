@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.14 2007-04-16 16:02:54 dhmunro Exp $
+ * $Id: std.i,v 1.15 2008-03-01 05:47:53 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2602,7 +2602,9 @@ func process_argv(msg)
  */
 {
   if (is_void(get_command_line)) command_line= get_argv();
+  else if (get_command_line == process_argv) return command_line;
   else command_line= get_command_line();
+  get_command_line = process_argv;  /* try to avoid infinite loops */
   if (numberof(command_line)>=2) {
     command_line= command_line(2:);
     mask= strmatch(strpart(command_line, 1:2), "-i");
