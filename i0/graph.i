@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.9 2007-12-28 20:20:19 thiebaut Exp $
+ * $Id: graph.i,v 1.10 2008-03-01 03:59:14 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -26,9 +26,10 @@ extern window;
      The X window will appear on your default display at 75 dpi, unless
      you specify the display and/or dpi keywords.  A dpi=100 X window
      is larger than a dpi=75 X window; both represent the same thing
-     on paper.  Use display="" to create a graphics window which has
-     no associated X window (you should do this if you want to make
-     plots in a non-interactive batch mode).
+     on paper.  Use display="",hcp="filename" to create a graphics window
+     which has no associated X window, but instead plots to a hardcopy
+     file (you should do this if you want to make plots in a non-interactive
+     batch mode).
 
      By default, if the X window needs to be created, the graphics area
      will be 450x450 pixels if dpi=75, or 600x600 pixels if dpi=100,
