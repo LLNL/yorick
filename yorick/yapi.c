@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.8 2007-06-15 03:28:12 dhmunro Exp $
+ * $Id: yapi.c,v 1.9 2008-03-01 04:54:32 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1219,6 +1219,7 @@ void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
 {
   y_uo_t *uo;
   if (! uo_type->uo_ops) {
+    /* side effect on first call -- somewhat dangerous! */
     Operations *ops = p_malloc(sizeof(Operations));
     memcpy(ops, &y_scratch_ops, sizeof(Operations));
     ops->typeName = uo_type->type_name;
@@ -1358,6 +1359,12 @@ ypush_scratch(unsigned long size, void (*on_free)(void *))
   y_scratch_t *obj;
   uo = p_malloc(sizeof(y_uo_t) + sizeof(y_scratch_t)
                 - 2*sizeof(union y_uo_body_t) + size);
+  /* uo is a y_uo_t whose body begins with a copy of y_scratch_obj,
+   * which is a y_userobj_t -- the specified on_free method gets
+   * inserted into this copy, becoming a special y_userobj_t for
+   * this scratch object only
+   * after y_scratch_obj comes the size bytes of scratch space
+   */
   uo->references = 0;
   uo->ops = &y_scratch_ops;
   obj = (y_scratch_t *)uo->body.c;
@@ -1365,6 +1372,7 @@ ypush_scratch(unsigned long size, void (*on_free)(void *))
   memcpy(&obj->uot, &y_scratch_obj, sizeof(y_userobj_t));
   obj->uot.on_free = on_free;
   memset(obj->body.c, 0, size);
+  PushDataBlock(uo);
   return obj->body.c;
 }
 
