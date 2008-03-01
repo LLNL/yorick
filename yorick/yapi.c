@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.9 2008-03-01 04:54:32 dhmunro Exp $
+ * $Id: yapi.c,v 1.10 2008-03-01 05:01:17 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -996,18 +996,18 @@ yarg_drop(int n)
 void
 yarg_swap(int iarg1, int iarg2)
 {
-  OpTable *ops1 = sp[iarg1].ops;
-  long index1 = sp[iarg1].index;
-  SymbolValue value1 = sp[iarg1].value;
-  OpTable *ops2 = sp[iarg2].ops;
-  sp[iarg1].ops = &intScalar;
-  sp[iarg1].index = sp[iarg2].index;
-  sp[iarg1].value = sp[iarg2].value;
-  sp[iarg2].ops = &intScalar;
-  sp[iarg1].ops = ops2;
-  sp[iarg2].value = value1;
-  sp[iarg2].index = index1;
-  sp[iarg2].ops = ops1;
+  OpTable *ops1 = sp[-iarg1].ops;
+  long index1 = sp[-iarg1].index;
+  SymbolValue value1 = sp[-iarg1].value;
+  OpTable *ops2 = sp[-iarg2].ops;
+  sp[-iarg1].ops = &intScalar;
+  sp[-iarg1].index = sp[-iarg2].index;
+  sp[-iarg1].value = sp[-iarg2].value;
+  sp[-iarg2].ops = &intScalar;
+  sp[-iarg1].ops = ops2;
+  sp[-iarg2].value = value1;
+  sp[-iarg2].index = index1;
+  sp[-iarg2].ops = ops1;
 }
 
 /* result bits:
