@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: update-yorickdoc,v 1.2 2008-03-14 12:42:54 paumard Exp $
+# $Id: update-yorickdoc,v 1.3 2008-03-14 13:50:36 paumard Exp $
 
 set -e
 
@@ -18,7 +18,7 @@ QUIET=1
 if [ -r $CONFFILE ]; then
     . $CONFFILE
 fi
-if [ -r $USERFILE ]; then
+if [ `id -u` -eq 0 -a -r $USERFILE ]; then
     . $USERFILE
 fi
 
