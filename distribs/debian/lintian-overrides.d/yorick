@@ -1,4 +1,4 @@
-yorick: menu-command-not-in-package /usr/share/menu/yorick:3 rlwrap
+yorick: menu-command-not-in-package /usr/share/menu/yorick:4 rlwrap
 # The actual menu command uses rlwrap only is it is installed,
 # and works also if it isn't.
 # Besides, rlwrap is "recommended" by yorick.
