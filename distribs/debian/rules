@@ -19,7 +19,8 @@ PATH_TO_DEBIAN := $(shell dirname $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LI
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
-include /usr/share/dpatch/dpatch.make
+QUILT_STAMPFN   = patch-stamp
+include /usr/share/quilt/quilt.make
 
 CFLAGS = -Wall -g
 
@@ -59,6 +60,7 @@ build-stamp: configure-stamp
 	cd build/lib/yorick/lib; \
 	   mv codger install.grp install.sh libdep.sh libyor.a main.o \
               $(CURDIR)/build/yorick-dev/lib/yorick/lib
+	strip --remove-section=.comment --remove-section=.note build/yorick-dev/lib/yorick/lib/main.o
 	cp emacs/yorick-auto.el build/50yorick-auto.el
 	convert icons/yicon32.png build/yorick32x32.xpm
 	convert icons/yicon16.png build/yorick16x16.xpm
@@ -116,6 +118,7 @@ binary-arch: build-stamp
 
 ###### Getting the original source:
 Y_VERS:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/+.*//')
+CVSTAG:=y_$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/Version: //' | sed 's/+.*//' | tr . _)
 CVSROOT:=:pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
 CVSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//' | awk '{ printf "%08.0f", $$1+1 }')
 CVSVERSDATE:=$(shell dpkg-parsechangelog -l$(PATH_TO_DEBIAN)/changelog | grep Version | sed 's/.*cvs//' | sed 's/-.*//')
@@ -125,13 +128,13 @@ ORIG_TGZ:=yorick-$(Y_VERS).tgz
 # Non-DFSG-free files (see copyright):
 PRUNEFILES:=play/hacks/hack103.c i/idlsave.i opengl
 
-# Use this rule to get the original sources if the current verion is from
-# cvs. Breaks when sourceforge change their CVS access.
+# Use this rule to get the original sources if the current version contains
+# "+cvsyyyymmdd". Breaks when sourceforge change their CVS access.
 #
 # WARNING: Side effect: this will use and remove the
 # directory "orig-sources" and overwrite yorick-(version).orig/
 # and yorick_(version).orig.tar.gz.
-get-cvs-source:
+get-cvs-date:
 	-rm -Rf ../orig-sources
 	mkdir ../orig-sources
 	cvs -d$(CVSROOT) login
@@ -140,16 +143,33 @@ get-cvs-source:
 	mv ../orig-sources/yorick ../yorick-$(CVSVERS)
 	rm -Rf ../orig-sources
 	cd ../yorick-$(CVSVERS); rm -Rf $(PRUNEFILES)
-	cd ..; tar cf yorick_$(CVSVERS).tar yorick-$(CVSVERS)
-	gzip -9 ../yorick_$(CVSVERS).tar
+	cd ..; tar cf yorick_$(CVSVERS).orig.tar yorick-$(CVSVERS)
+	gzip -9 ../yorick_$(CVSVERS).orig.tar
 
-get-orig-source:
+# check copyright to see whether was from cvs or from tgz.
+get-cvs-tag:
+	-rm -Rf ../orig-sources
+	mkdir ../orig-sources
+	cvs -d$(CVSROOT) login
+	cd ../orig-sources ; cvs -z3 -d$(CVSROOT) export -r $(CVSTAG) yorick
+	-rm -Rf ../yorick-$(CVSVERS)
+	mv ../orig-sources/yorick ../yorick-$(Y_VERS)+dfsg
+	rm -Rf ../orig-sources
+	cd ../yorick-$(Y_VERS)+dfsg; rm -Rf $(PRUNEFILES)
+	cd ..; tar cf yorick_$(Y_VERS)+dfsg.orig.tar yorick-$(Y_VERS)+dfsg
+	gzip -9 ../yorick_$(Y_VERS)+dfsg.orig.tar
+
+get-tgz:
 	cd ..; wget $(ORIG_URL)$(ORIG_TGZ)
 	cd ..; tar xvzf $(ORIG_TGZ)
 	mv ../yorick-2.1 ../yorick-$(CVSVERS)
 	cd ../yorick-$(CVSVERS); rm -Rf $(PRUNEFILES)
 	cd ..; tar cf yorick_$(CVSVERS).tar yorick-$(CVSVERS)
 	gzip -9 ../yorick_$(CVSVERS).tar
+
+get-orig-source get-orig-sources:
+	echo "For a stable release try get-tgz or get-cvs-tag"
+	echo "for a +cvs release try get-cvs-date"
 
 binary: binary-arch binary-indep
 .PHONY: build clean binary-indep binary-arch binary configure

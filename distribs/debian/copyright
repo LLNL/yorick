@@ -1,8 +1,10 @@
 This package was debianized by Thibaut Paumard <paumard@users.sourceforge.net>
-on Fri,  5 May 2006 16:43:44 +0200.
+on Mon, 07 Jan 2008 15:32:08 +0100
 
-It was downloaded from
-http://dl.sourceforge.net/sourceforge/yorick/yorick-2.1.04.tgz
+It was downloaded CVS using
+YCVSROOT=pserver:anonymous:@yorick.cvs.sourceforge.net:/cvsroot/yorick
+cvs -d:$YCVSROOT login
+cvs -d:$YCVSROOT export -r y_2_1_05 yorick
 
 Author: David H. Munro
 
