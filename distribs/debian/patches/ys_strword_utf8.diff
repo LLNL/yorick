@@ -1,0 +1,53 @@
+# Sent to upstream. Closes: 463746
+# Adds some support for UTF strings in strtok/strword
+
+diff -urN yorick-2.1/yorick/ystr.c yorick-2.1-tp/yorick/ystr.c
+--- yorick-2.1/yorick/ystr.c	2005-11-13 22:01:56.000000000 +0100
++++ yorick-2.1-tp/yorick/ystr.c	2008-03-13 16:16:17.000000000 +0100
+@@ -611,7 +611,8 @@
+ void
+ ys_strword(int argc, int tok)
+ {
+-  char **delim=&ys_default, **s, *str;
++  char **delim=&ys_default, **s;
++  unsigned char *str, dmax=127;
+   long ndelim=1, ncount=1, *o, npairs, idel;
+   int iarg, final, trailing, supress;
+   long nstr, i, off, iout, *out, o0=0;
+@@ -668,11 +669,13 @@
+         while (d[0]) {
+           if (d[0]=='-' && dprev && d[1]) {  /* range of characters */
+             while (++dprev <= (unsigned char)d[1]) is_delim[dprev] = v;
++	    if (dprev>128) dmax=255;
+             d += 2;
+             dprev = 0;
+           } else {  /* single character or first character of range */
+             dprev = *d++;
+             is_delim[dprev] = v;
++	    if (dprev>127) dmax=255;
+           }
+         }
+       }
+@@ -694,11 +697,11 @@
+         if (str[off]) {
+           if (!final || !trailing) {
+             is_delim[0] = 1;
+-            while (!is_delim[(unsigned int)str[off]]) off++;
++            while (str[off]>dmax || !is_delim[str[off]]) off++;
+           } else {
+             /* ncount==0 special case, trim trailing delimeter */
+             while (str[off]) off++;
+-            while (off && is_delim[(unsigned int)str[off-1]]) off--;
++            while (off && (str[off-1]<=dmax && is_delim[str[off-1]])) off--;
+           }
+           out[iout-1] = off;  /* end of previous word (this delimiter) */
+           if (str[off]) off++;
+@@ -713,7 +716,7 @@
+          * (strtok has slightly different semantics for trailing part) */
+         if (str && (!tok || !final)) {
+           is_delim[0] = 0;
+-          while (is_delim[(unsigned int)str[off]]) off++;
++          while (str[off]<=dmax && is_delim[str[off]]) off++;
+         }
+         out[iout] = off;
+ 

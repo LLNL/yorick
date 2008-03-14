@@ -1,9 +1,5 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 05_packinfo_txt.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: Adapt packages index.
-## DP: Debian-specific.
+## Adapt packages index.
+## Debian-specific.
 
 @DPATCH@
 

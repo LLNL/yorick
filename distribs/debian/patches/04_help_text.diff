@@ -1,10 +1,6 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 04_help_text.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: change text of the "help" command to take the yorick-doc package
-## DP: into account.
-## DP: Debian-specific.
+## Change text of the "help" command to take the yorick-doc package
+## into account.
+## Debian-specific.
 
 diff -urN orig/i0/std.i tp/i0/std.i
 --- orig/i0/std.i	2007-12-11 08:56:59.000000000 +0100

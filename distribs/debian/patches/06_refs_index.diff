@@ -1,11 +1,5 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 06_refs_index.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: change link to PDF version of refcard.
-## DP: Debian-specific.
-
-@DPATCH@
+## change link to PDF version of refcard.
+## Debian-specific.
 
 --- yorick-2.1.04+dfsg+cvs20071118.orig/doc/refs-html/index.html	2007-11-21 17:08:56.000000000 +0100
 +++ yorick-2.1.04+dfsg+cvs20071118/doc/refs-html/index.html	2007-11-21 17:12:31.000000000 +0100

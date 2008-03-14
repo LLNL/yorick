@@ -1,10 +1,4 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 03_template_html.dpatch.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: Customize HTML documentation
-
-@DPATCH@
+## Customize HTML documentation
 
 diff -urN orig/doc/html/template.html tp/doc/html/template.html
 --- orig/doc/html/template.html	2007-11-27 23:17:16.000000000 +0100

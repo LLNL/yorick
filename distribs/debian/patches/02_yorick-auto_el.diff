@@ -1,10 +1,4 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 02_yorick-auto_el.dpatch by Thibaut Paumard <paumard@users.sourceforge.net>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: Enables yorick-mode even if yorick is not yet loaded
-
-@DPATCH@
+## Enables yorick-mode even if yorick is not yet loaded
 
 diff -urN orig/emacs/yorick-auto.el debian/emacs/yorick-auto.el
 --- orig/emacs/yorick-auto.el   2007-08-20 09:13:52.000000000 +0200
