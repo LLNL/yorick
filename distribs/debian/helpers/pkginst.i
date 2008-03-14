@@ -1,6 +1,6 @@
 #!/usr/bin/yorick -batch
 /*
-  $Id: pkginst.i,v 1.5 2008-01-02 14:19:27 paumard Exp $
+  $Id: pkginst.i,v 1.6 2008-03-14 12:21:34 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   It is considered obsolete to call this script as documented below.
@@ -101,6 +101,12 @@ if (noneof(options=="--no-make-install") & numberof(packages)==1) {
     if (VERBOSE) write, format="\trmdir%s\n";
     if (!NO_ACT) remove,temp;
     temp=dirname(temp);
+  }
+
+  if (INFILE) {
+    dest=INDEPDIR+"packages/installed";
+    mkdirpv,dest;
+    syscall,"cp "+INFILE+" "+dest;
   }
 }
 
