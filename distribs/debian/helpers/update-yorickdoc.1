@@ -1,7 +1,7 @@
-.\" $Id: update-yorickdoc.1,v 1.2 2008-01-02 14:19:27 paumard Exp $
+.\" $Id: update-yorickdoc.1,v 1.3 2008-03-14 12:42:53 paumard Exp $
 .\"
 .IX Title "UPDATE\-YORICKDOC 1"
-.TH UPDATE\-YORICKDOC 1 "2007\-12\-10" "" "Yorick"
+.TH UPDATE\-YORICKDOC 1 "2008\-03\-14" "" "Yorick"
 .SH "NAME"
 update\-yorickdoc \- Build HTML documentation for Yorick
 .SH "SYNOPSIS"
@@ -14,13 +14,13 @@ script that extracts DOCUMENT comments from Yorick source files and
 turns them into a set of HTML files. update\-yorickdoc merges files
 from a "source directory" (default: /usr/share/yorick\-doc,
 command\-line option: \-\-src\-dir), deletes the target directory
-(default: /usr/share/doc/yorick\-doc/html_xref), and, if yorick is
+(default: /usr/share/doc/yorick\-doc/html_xref), and, if Yorick is
 installed, calls "yorick \-batch htmldoc.i" to compile HTML
 documentation for all currently installed functions (either from the
 main Yorick package or from add\-on packages).
 .PP
 update\-yorickdoc is meant to be called automatically whenever a
-yorick package is installed or removed. It is possible to prevent
+Yorick package is installed or removed. It is possible to prevent
 automatic updates by setting "ENABLE_AUTO" to 0 in /etc/yorick\-doc. It
 is also possible to use update\-yorickdoc manually to create
 documentation from custom directories (e.g. a user's own ~/Yorick/
@@ -36,11 +36,11 @@ encouraged to provide additional information in the same place. See
 \fBFILES\fR below.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.IP "\fB\-\-auto\fR" 4
+.IP "\fB\-\-auto\fR | \fB\-a" 4
 .IX Item "\-\-auto"
 This flag is used when update\-yorickdoc is being called
 automaticallly from a script, notably during instalation and removal
-of yorick packages. It is possible to turn update\-yorickdoc into a
+of Yorick packages. It is possible to turn update\-yorickdoc into a
 no\-op when this flag is set by setting ENABLE_AUTO to 0 in /etc/yorick\-doc.
 .IP "\fB\-\-conf=\fRfile" 4
 .IX Item "\-\-conf=file"
@@ -50,11 +50,16 @@ is found on the command line, overwriting the options coming before.
 .IX Item "\-\-from=directory1:directory2..."
 Colon\-separated list of directories to scan for Yorick files. Default:
 /usr/share/yorick/i:/usr/share/yorick/i0.
-.IP "\fB\-\-purge" 4
+.IP "\fB\-\-purge\fR | \fB\-p" 4
 .IX Item "\-\-purge"
 Only delete /usr/share/doc/yorick\-doc/html_xref (or the directory set
 using \-\-to and \-\-xref\-dir, or the equivalent variables in
 /etc/yorick\-doc), do not rebuild the documentation afterwards.
+.IP "\fB\-\-quiet\fR | \fB\-q" 4
+.IX Item "\-\-quiet"
+Be quiet, only telling shortly what update\-yorickdoc does. This is
+the built-in default but may have been overriden in a configuration
+file.
 .IP "\fB\-\-src\-dir=\fRdirectory" 4
 .IX Item "\-\-src\-dir=directory"
 Directory containing .packinfo, .keywords and .aliases files when
@@ -71,6 +76,11 @@ htmldoc.i. Default: /usr/share/yorick\-doc/template.html.
 Top\-level directory of the Yorick HTML hierarchy to update. This is
 one level above the directory that will be deleted and/or
 (re)built. Defaults to /usr/share/doc/yorick\-doc.
+.IP "\fB\-\-verbose\fR | \fB\-v" 4
+.IX Item "\-\-verbose"
+Be verbose, outputting lots of debugging information. The built-in
+default is to be quiet, just telling shortly what update\-yorickdoc
+does.
 .IP "\fB\-\-xref\-dir=\fRword" 4
 .IX Item "\-\-xref\-dir=word"
 The sub\-directory of the "TO" directory in which to compile the

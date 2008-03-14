@@ -1,4 +1,4 @@
-# $ID: $
+# $Id: yorick-doc,v 1.2 2008-03-14 12:42:54 paumard Exp $
 # This file configures the behavior of the update-yorickdoc command
 # from the yorick-doc package.
 # It is sourced by update-yorickdoc, which is a standard shell script.
@@ -12,7 +12,7 @@
 # Default directory for update-yorickdoc files (*.packinfo,
 # *.keywords, and *.aliases). Also adjust the location of the template
 # file if you change that. Note that this option only controls
-# where update-yorickdoc looks for these files, packages will always
+# where update-yorickdoc looks for these files, Debian packages will always
 # drop their files in the default location.
 
 #SRC_DIR=/usr/share/yorick-doc
@@ -26,6 +26,17 @@
 #           construct. Warning: the content of this directory wll be first 
 #           erased, don't use a directory which contains something you value.
 
-#FROM=/usr/share/yorick/i/:/usr/share/yorick/i0/
+# Default:
+#FROM=/usr/share/yorick/i:/usr/share/yorick/i0
 #TO=/usr/share/doc/yorick-doc
 #XREF_DIR=html_xref
+#
+# A user would typically use:
+#FROM=/usr/share/yorick/i:/usr/share/yorick/i0:$HOME/.yorick
+#TO=$HOME
+#XREF_DIR=yorick-doc
+
+# By default, yorick-doc only says briefly what it's doing. Set QUIET
+# to 0 to get verbose (debugging) information.
+
+#QUIET=1

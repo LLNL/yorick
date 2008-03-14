@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: update-yorickdoc,v 1.1 2007-12-11 12:56:54 paumard Exp $
+# $Id: update-yorickdoc,v 1.2 2008-03-14 12:42:54 paumard Exp $
 
 set -e
 
@@ -12,6 +12,7 @@ TEMPLATE=${SRC_DIR}/template.html
 FROM=/usr/share/yorick/i:/usr/share/yorick/i0
 TO=/usr/share/doc/yorick-doc
 XREF_DIR=html_xref
+QUIET=1
 
 # source CONFFILE to possibly override these defaults:
 if [ -r $CONFFILE ]; then
@@ -21,19 +22,30 @@ if [ -r $USERFILE ]; then
     . $USERFILE
 fi
 
+usage() {
+    echo Usage: `basename $0` '[--auto|-a] [--purge|-p] [--verbose|-v|--quiet|-q] \'
+    echo '   [--src-dir=] [--from=] [--to=] [--template=] [--xref-dir=] [--conf=]'
+}
+
 # parse command-line
 PURGE=0
 for opt; do
     case $opt in
-	--auto)
+	--auto|-a)
 	    if [ $ENABLE_AUTO -eq 0 ]; then
 		echo "ENABLE_AUTO set to zero in $CONFFILE or equivalent"
 		echo "Not updating Yorick documentation"
 		exit 0
 	    fi
 	    ;;
-	--purge)
+	--purge|-p)
 	    PURGE=1
+	    ;;
+	--verbose|-v)
+	    QUIET=0
+	    ;;
+	--quiet|-q)
+	    QUIET=1
 	    ;;
 	--src-dir=*)
 	    SRC_DIR=${opt#--*=}
@@ -60,10 +72,17 @@ for opt; do
 	    ;;
 	*)
 	    echo Unknown parameter $opt
+	    usage
 	    exit 1
 	    ;;
     esac
 done
+
+if [ $QUIET -eq 1 ]; then
+    QUIET=--quiet
+else
+    QUIET=
+fi
 
 # Do the actual work
 echo Updating Yorick documentation in ${TO}/${XREF_DIR}
@@ -71,12 +90,13 @@ if [ -e ${TO}/${XREF_DIR} ]; then
     rm -Rf ${TO}/${XREF_DIR}
 fi
 
-if [ $PURGE = 1 ]; then
+if [ $PURGE -eq 1 ]; then
     echo "${TO}/${XREF_DIR} deleted."
     exit 0
 fi
 
 if [ -x "`which yorick`" ]; then
+    mkdir -p $TO
     PACKINFO=`mktemp`
     KEYWORDS=`mktemp`
     ALIASES=`mktemp`
@@ -85,9 +105,9 @@ if [ -x "`which yorick`" ]; then
     cat ${SRC_DIR}/*.keywords | sort | uniq >> $KEYWORDS
     cat ${SRC_DIR}/*.aliases >> $ALIASES
 
-    yorick -batch htmldoc.i --template=$TEMPLATE --quiet --packinfo=$PACKINFO \
+    yorick -batch htmldoc.i --template=$TEMPLATE --packinfo=$PACKINFO \
 	--keywords=$KEYWORDS --aliases=$ALIASES --from=$FROM --to=$TO \
-	--xref-dir=$XREF_DIR
+	--xref-dir=$XREF_DIR $QUIET
 
     rm -f $PACKINFO $KEYWORDS $ALIASES
 else
