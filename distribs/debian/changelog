@@ -1,11 +1,31 @@
-yorick (2.1.04+dfsg+cvs20080101-1) unstable; urgency=low
+yorick (2.1.05+dfsg-3) unstable; urgency=low
+
+  * Convert from dpatch to quilt.
+  * Re-introduce -dSAFER in EPSGS_CMD. Fixes wrong bounding boxes when
+    using the eps et al. functions. (Closes: #468336).
+  * Strip main.o in yorick-dev.
+  * Add longtitle to Debian menu item.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Thu, 28 Feb 2008 16:38:53 +0100
+
+yorick (2.1.05+dfsg-2) unstable; urgency=low
+
+  * debian/copyright: fixed typo in download information:
+    y_2_1_04 -> y_2_1_05
+  * debian/control: add XS-DM-Upload-Allowed field
+  * fix a regression: pkginst.i now installs correctly again the infofile
+    specified on the command-line.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Thu, 10 Jan 2008 13:43:45 +0100
+
+yorick (2.1.05+dfsg-1) unstable; urgency=low
 
   * update to cvs.
   * add linda and lintian overrides.
   * add data, python and glade directories.
   * add watch file
-  * aknowledging Ubuntu fix to debian/helpers/pkginst.i.
-    Closes: #459137, #459138, #459142, #459143, #459144, #459145
+  * aknowledging Ubuntu fix to debian/helpers/pkginst.i
+    (closes: #459137, #459138, #459142, #459143, #459144, #459145).
   * new yorick-doc package.
      * move most txt and pdf documentation there.
      * add html documentation.
@@ -15,9 +35,9 @@ yorick (2.1.04+dfsg+cvs20080101-1) unstable; urgency=low
        like a debhelper script.
      * add lines in maintainer scripts to call update-yorickdoc.
   * add code in yorick-data.postrm to purge /etc/yorick if 
-    necessary. Closes: #454387
+    necessary (closes: #454387).
 
- -- Thibaut Paumard <paumard@users.sourceforge.net>  Wed,  2 Jan 2008 13:48:31 +0100
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Mon,  7 Jan 2008 15:43:38 +0100
 
 yorick (2.1.04+dfsg-1ubuntu1) hardy; urgency=low
 
@@ -280,7 +300,3 @@ yorick (1.3-1) unstable; urgency=low
   * Initial Release.
 
  -- David H. Munro <munro@icf.llnl.gov>  Thu, 2 Jan 1997 12:38:08 -0800
-
-Local variables:
-mode: debian-changelog
-End:
