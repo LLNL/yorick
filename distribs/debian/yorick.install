@@ -2,4 +2,3 @@ build/lib usr
 debian/etc/yorick etc
 build/50yorick-auto.el etc/emacs/site-start.d
 debian/lintian-overrides.d/yorick usr/share/lintian/overrides
-debian/linda-overrides.d/yorick usr/share/linda/overrides

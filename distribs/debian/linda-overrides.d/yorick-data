@@ -1,7 +1,0 @@
-Tag: no-upstream-changelog
-# OK, I know.
-
-Tag: empty-directory-in-pkg
-Data: usr/share/yorick/(packages/installed|data|python|glade)
-# add-on packages may install files there.  yorick contains links to
-# those places, which should therefore exist.
