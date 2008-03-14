@@ -1,3 +1,22 @@
+yorick (2.1.05+dfsg-4) unstable; urgency=low
+
+  * Bug fix: "update-yorickdoc crashes when parsing UTF-8 files", thanks
+    to Aaron M. Ucko, Dave Munro and Arnaud Sevin (Closes: #463746).  The
+    fix consist in patching the strtok function, which now behaves well on
+    UTF-8 strings.
+  * Move menu entry to Applications/Science/Data Analysis.
+  * Move doc-base entry to Science/Data Analysis.
+  * Update-yorickdoc:
+    + Add --quiet/--verbose options and short options (-a, -p, -v, -q).
+    + Ignore $HOME/.yorick-doc for the root user, else problems happen
+      when using sudo.
+    + update-yorickdoc now creates $TO directory if needed and gives usage
+      notice if called with unkown arguments (e.g. --help).
+  * Remove obsolete linda overrides and yorick-almost-everything files
+    from source package.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Fri, 14 Mar 2008 14:57:16 +0100
+
 yorick (2.1.05+dfsg-3) unstable; urgency=low
 
   * Convert from dpatch to quilt.
