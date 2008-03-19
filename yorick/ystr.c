@@ -1,5 +1,5 @@
 /*
- * $Id: ystr.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: ystr.c,v 1.3 2008-03-19 20:40:22 dhmunro Exp $
  * Yorick string manipulation functions
  *
  * This interface was inspired by the regexp package written by
@@ -694,11 +694,11 @@ ys_strword(int argc, int tok)
         if (str[off]) {
           if (!final || !trailing) {
             is_delim[0] = 1;
-            while (!is_delim[(unsigned int)str[off]]) off++;
+            while (!is_delim[(unsigned char)str[off]]) off++;
           } else {
             /* ncount==0 special case, trim trailing delimeter */
             while (str[off]) off++;
-            while (off && is_delim[(unsigned int)str[off-1]]) off--;
+            while (off && is_delim[(unsigned char)str[off-1]]) off--;
           }
           out[iout-1] = off;  /* end of previous word (this delimiter) */
           if (str[off]) off++;
@@ -713,7 +713,7 @@ ys_strword(int argc, int tok)
          * (strtok has slightly different semantics for trailing part) */
         if (str && (!tok || !final)) {
           is_delim[0] = 0;
-          while (is_delim[(unsigned int)str[off]]) off++;
+          while (is_delim[(unsigned char)str[off]]) off++;
         }
         out[iout] = off;
 
@@ -891,7 +891,7 @@ ys_findf(ys_state_t *state, char *str)
   }
 }
 
-#define YS_EQ_NOCASE(c,d) ((ys_table[(unsigned int)c]&4)? !((c^d)&0xdf):(c==d))
+#define YS_EQ_NOCASE(c,d) ((ys_table[(unsigned char)c]&4)?!((c^d)&0xdf):(c==d))
 
 static void
 ys_findcf(ys_state_t *state, char *str)
