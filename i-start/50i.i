@@ -25,6 +25,7 @@ autoload, "movie.i", movie;
 autoload, "msort.i", msort;
 autoload, "netcdf.i", nc_open, nc_create;
 autoload, "pathfun.i", dirname, basename, pathform, pathsplit;
+autoload, "pathfun.i", add_y_home, find_in_path;
 autoload, "plwf.i", plwf;
 autoload, "pnm.i", pnm_read, pnm_write;
 autoload, "random.i", random_x, random_u, random_n, random_ipq, random_rej;
