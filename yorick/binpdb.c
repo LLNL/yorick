@@ -1,5 +1,5 @@
 /*
- * $Id: binpdb.c,v 1.2 2006-05-12 03:35:48 dhmunro Exp $
+ * $Id: binpdb.c,v 1.3 2008-03-20 19:28:09 dhmunro Exp $
  * Define Yorick interface to PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1245,7 +1245,7 @@ static int GrabSymbol(char *dataName, IOStream *file, int goofCount,
     /* shift arrays with the stated default origin to user's preference
        -- this is not quite ideal, since there is no way for the file
        format to force these to the defaultOrigin... */
-    if (origin==defaultOrigin) origin= 1L;
+    /*if (origin==defaultOrigin)*/ origin= 1L;
     token= strtok(0, "\001");
     if (!token || (length=strtol(token, (char**)0, 10))<=0) {
       nitems= 0;
