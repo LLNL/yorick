@@ -1,5 +1,5 @@
 /*
- * $Id: heapsort.c,v 1.1 2005-09-18 22:03:44 dhmunro Exp $
+ * $Id: heapsort.c,v 1.2 2008-04-13 19:18:03 dhmunro Exp $
  * heapsort sorting routines
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -17,8 +17,9 @@ void hs_d_sort(long n, long s, double *vals, long *ndxs)
 {
   double v;
   long w, i, j;
-  long k = (n/2-1)*s;
+  long k = (n/2)*s;
   n *= s;
+  if (n <= 0) return;
 
   for (;;) {
     if (k > 0) {
@@ -48,8 +49,9 @@ void hs_l_sort(long n, long s, long *vals, long *ndxs)
 {
   long v;
   long w, i, j;
-  long k = (n/2-1)*s;
+  long k = (n/2)*s;
   n *= s;
+  if (n <= 0) return;
 
   for (;;) {
     if (k > 0) {
@@ -79,8 +81,9 @@ void hs_q_sort(long n, long s, char **vals, long *ndxs)
 {
   char *v, vj, vj1;
   long w, i, j;
-  long k = (n/2-1)*s;
+  long k = (n/2)*s;
   n *= s;
+  if (n <= 0) return;
 
   for (;;) {
     if (k > 0) {
