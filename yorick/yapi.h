@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.5 2007-04-06 22:04:33 thiebaut Exp $
+ * $Id: yapi.h,v 1.6 2008-04-18 16:11:52 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -181,7 +181,7 @@ returns either a double (possibly promoting its argument) or a
 complex, and yget_any returns any array (never converting its type).
 */
 PLUG_API double *ygeta_dz(int iarg, long *ntot, long *dims, int *is_z);
-PLUG_API void *ygeta_any(int iarg, long *ntot, long *dims, int *typeid);
+PLUG_API void *ygeta_any(int iarg, long *ntot, long *dims, int *the_typeid);
 /*
 The ygeta_coerce function allows you to convert a numeric array to any
 other numeric data type, after you have retrieved it using ygeta_any.
