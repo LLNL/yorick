@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.15 2008-03-01 05:47:53 dhmunro Exp $
+ * $Id: std.i,v 1.16 2008-04-19 16:25:03 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1162,8 +1162,10 @@ func spanl(start, stop, n, which)
    SEE ALSO: span, indgen, array
  */
 {
-  return exp(span(log(abs(start)), log(abs(stop)), n,
-                  (is_void(which)? 1 : which)))*sign(start);
+  if (is_void(which)) which = 1;
+  s = sign(start);
+  return exp(span(log(abs(start)), log(abs(stop)), n, which)) *
+             span(s,s,n,which);
 }
 
 extern digitize;
