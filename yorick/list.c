@@ -1,5 +1,5 @@
 /*
- * $Id: list.c,v 1.4 2006-07-20 04:28:30 dhmunro Exp $
+ * $Id: list.c,v 1.5 2008-04-24 20:38:56 dhmunro Exp $
  * Rudimentary list data type for Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -256,7 +256,7 @@ ypush_cdr(int iarg, long n)
       } else {
         List_Cell *list = (List_Cell *)s->value.db;
         List_Cell *copy = NewList_Cell(&list->sym);
-        sp[1].value.db = (DataBlock *)Ref(copy);
+        sp[1].value.db = (DataBlock *)copy;
         sp[1].ops = &dataBlockSym;
         sp++;
         n = -n - 1;
