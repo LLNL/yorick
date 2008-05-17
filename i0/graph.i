@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.10 2008-03-01 03:59:14 dhmunro Exp $
+ * $Id: graph.i,v 1.11 2008-05-17 04:33:36 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -280,11 +280,35 @@ func eps(name, pdf=)
 
   /* use ghostscript to compute true bounding box */
   bbname = name+".bbeps";
-  gscmd = EPSGS_CMD+" -sDEVICE=bbox -sOutputFile=- \"%s\" >>\"%s\" 2>&1";
-  system, swrite(format=gscmd, psname, bbname);
-  bb = rdline(open(bbname), 20);
-  bb = bb(where(bb));
-  remove, bbname;
+  for (;;) {
+    gscmd = EPSGS_CMD+" -sDEVICE=bbox -sOutputFile=- \"%s\" >>\"%s\" 2>&1";
+    system, swrite(format=gscmd, psname, bbname);
+    bb = rdline(open(bbname), 20);
+    bb = bb(where(bb));
+    remove, bbname;
+    tok = strtok(bb);
+    list = where(tok(1,) == "%%HiResBoundingBox:");
+    if (!numberof(list)) {
+      list = where(tok(1,) == "%%BoundingBox:");
+    }
+    xmn = ymn = xmx = ymx = 0.;
+    if (!numberof(list) || sread(tok(2,list(1)), xmn, ymn, xmx, ymx) != 4) {
+      /* Ghostscript 7.07 bbox fails if -dSAFER present,
+       * Ghostscript 8.61 bbox fails if -dSAFER absent
+       * the 8.61 failure gives an incorrect bounding box, so will never
+       *   reach this workaround code
+       * the 7.07 bug produces no BoundingBox comments at all, so will
+       *   reach here
+       * therefore, -dSAFER should be present in EPSGS_CMD initially
+       *   and be removed for a second try with code that works in 7.07
+       */
+      if (strpart(EPSGS_CMD, -7:0) == " -dSAFER")
+        EPSGS_CMD = strpart(EPSGS_CMD, 1:-8);
+      else
+        error, "ghostscript sDEVICE=bbox bug workaround failed";
+    }
+    break;
+  }
 
   if (!pdf) {
     write, f, format="%s\n", bb;
@@ -295,16 +319,6 @@ func eps(name, pdf=)
      * by Sebastian Rahtz and Heiko Oberdiek,
      * distributed as part of the TeTeX package, see http://www.tug.org
      */
-    tok = strtok(bb);
-    list = where(tok(1,) == "%%HiResBoundingBox:");
-    if (!numberof(list)) {
-      list = where(tok(1,) == "%%BoundingBox:");
-      if (!numberof(list))
-        error, "ghostscript bounding box not found";
-    }
-    xmn = ymn = xmx = ymx = 0.;
-    if (sread(tok(2,list(1)), xmn, ymn, xmx, ymx) != 4)
-      error, "ghostscript bounding box format bug";
     write, f, format="%%BoundingBox: 0 0 %f %f\n", xmx-xmn, ymx-ymn;
     write, f, format="<< /PageSize [ %f %f ] >> setpagedevice\n",
       xmx-xmn, ymx-ymn;
@@ -332,7 +346,8 @@ func eps(name, pdf=)
   close, f;
   return name+".eps";
 }
-if (is_void(EPSGS_CMD)) EPSGS_CMD= "gs -q -dNOPAUSE -dBATCH";
+/* -dSAFER option should be present (see above) and must be last */
+if (is_void(EPSGS_CMD)) EPSGS_CMD= "gs -q -dNOPAUSE -dBATCH -dSAFER";
 
 func pdf(name)
 /* DOCUMENT pdf, name
