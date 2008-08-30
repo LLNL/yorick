@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.17 2008-07-02 03:12:51 dhmunro Exp $
+ * $Id: std.i,v 1.18 2008-08-30 19:34:15 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2603,38 +2603,44 @@ func process_argv(msg)
    SEE ALSO: batch
  */
 {
-  if (is_void(get_command_line)) command_line= get_argv();
+  if (is_void(get_command_line)) command_line = get_argv();
   else if (get_command_line == process_argv) return command_line;
-  else command_line= get_command_line();
+  else command_line = get_command_line();
   get_command_line = process_argv;  /* try to avoid infinite loops */
   if (numberof(command_line)>=2) {
-    command_line= command_line(2:);
-    mask= strmatch(strpart(command_line, 1:2), "-i");
-    list= where(mask);
-    n= numberof(list);
-    for (i=1 ; i<=n ; i++) {
-      file= strpart(command_line(list(i)), 3:);
-      if (file=="") {
-        if (list(i)==numberof(command_line)) break;  /* ignore trailing -i */
-        file= command_line(list(i)+1);
-        mask(list(i)+1)= 1;
+    command_line = command_line(2:);
+    mask = (strpart(command_line, 1:2) == "-i");
+    j = (command_line(0) == "-i");
+    if (j) mask(0) = 0;
+    list = where(mask);
+    n = numberof(list);
+    if (n) {
+      file = strpart(command_line(list), 3:);
+      i = where(file == "");
+      if (numberof(i)) {
+        list = list(i) + 1;
+        file(i) = command_line(list);
+        mask(list) = 1;
       }
-      include, file;
+      /* push onto stack in reverse order, to include in given order */
+      for (i=n ; i>=1 ; --i) include, file(i);
     }
+    if (j) mask(0) = 1;
     command_line= command_line(where(!mask));
   } else {
     command_line= [];
   }
-  if (numberof(command_line)<1 || noneof(command_line=="-q")) {
+  mask = (command_line == "-q");
+  if (noneof(mask)) {
     if (is_void(msg)) {
-      v= Y_VERSION;
-      msg= [
+      v = Y_VERSION;
+      msg = [
 " Copyright (c) 2005.  The Regents of the University of California.",
 " All rights reserved.  Yorick "+v+" ready.  For help type 'help'"];
     }
     write, msg, format="%s\n";
-  } else {
-    command_line= command_line(where(command_line!="-q"));
+  } else if (numberof(command_line)) {
+    command_line = command_line(where(!mask));
   }
   return command_line;
 }
