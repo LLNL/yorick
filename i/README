@@ -120,8 +120,8 @@
    filter.i   -- analog signal processing functions
      Functions: filter, fil_response, fil_butter, fil_bessel, fil_cheby1,
                 fil_cheby2, fil_cauer, fil_make, fil_delay, to_db, to_phase
-   convol.i   - convolution product using fft
-     Functions: convol, fft_good
+   convol.i   - convolution product using fft, smoothing array data
+     Functions: convol, fft_good, convoln, gaussm, boxcar
    random.i   - gaussian deviates, arbitrary piecewise linear deviates,
                 rejection method, poisson deviates, more
      Functions: random_x, random_n, random_ipq, random_rej, poisson, ...

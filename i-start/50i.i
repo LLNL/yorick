@@ -5,7 +5,7 @@ autoload, "calendar.i", calendar, unix_time, julian_day;
 autoload, "calendar.i", datestamp, base60, tz_set;
 autoload, "cheby.i", cheby_fit, cheby_eval;
 autoload, "cheby.i", cheby_integ, cheby_deriv, cheby_poly;
-autoload, "convol.i", convol, fft_good;
+autoload, "convol.i", convol, fft_good, convoln, gaussm, boxcar;
 autoload, "dawson.i", dawson, erf, erfc;
 autoload, "digit2.i", digit2, interp2;
 autoload, "elliptic.i", ell_am, dn_, ell_f, ell_e, ellip_k, ellip_e;
