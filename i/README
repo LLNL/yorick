@@ -58,6 +58,8 @@
    I/O functions:
    --------------
 
+   textload.i - read and write Unix, DOS, or Mac text and .csv files
+     Functions: text_lines, text_cells, text_load
    netcdf.i   - read and write netcdf binary files
      Functions: nc_open, nc_create, nc_vardef, nc_enddef, nc_addrec
                 (if you only need to read a netcdf file, just use openb
