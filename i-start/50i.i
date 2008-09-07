@@ -41,4 +41,5 @@ autoload, "silo.i", silo_open;
 autoload, "spline.i", spline, tspline;
 autoload, "splinef.i", splinef, splined, splinei, spline_coef, splinelsq;
 autoload, "style.i", get_style, set_style, write_style;
+autoload, "textload.i", text_load, text_lines, text_cells;
 autoload, "zroots.i", zroots, laguerre;
