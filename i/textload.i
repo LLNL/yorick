@@ -1,5 +1,5 @@
 /* textload.i
- * $Id: textload.i,v 1.1 2008-09-07 16:18:57 dhmunro Exp $
+ * $Id: textload.i,v 1.2 2008-09-27 16:52:37 dhmunro Exp $
  * read text files with any end-of-line convention
  *   (handles UNIX LF, Windows/DOS CRLF, or old Mac CR)
  * functions:
@@ -59,7 +59,7 @@ func text_lines(filename)
   if (!numberof(c)) return [];
   list = where(c == '\012');
   if (numberof(list)) c(list) = '\0';
-  return strchar(c);
+  return strchar(c)(*);  /* do not return scalar string for single line */
 }
 
 func text_cells(filename, delim, quote=)
