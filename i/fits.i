@@ -3,19 +3,42 @@
  *
  *	Implement FITS files input/output and editing in Yorick.
  *
- * Copyright (C) 2000-2008 Eric THIEBAUT.
+ *-----------------------------------------------------------------------------
  *
- * History:
- *	$Id: fits.i,v 1.26 2008-02-11 07:52:53 thiebaut Exp $
+ *      Copyright (C) 2000-2008, Eric Thiébaut <thiebaut@obs.univ-lyon1.fr>
+ *
+ *	This file is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License version 2 as
+ *	published by the Free Software Foundation.
+ *
+ *	This file is distributed in the hope that it will be useful, but
+ *	WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *-----------------------------------------------------------------------------
+ *
+ *	$Id: fits.i,v 1.27 2008-09-30 14:04:18 thiebaut Exp $
  *	$Log: fits.i,v $
- *	Revision 1.26  2008-02-11 07:52:53  thiebaut
+ *	Revision 1.27  2008-09-30 14:04:18  thiebaut
+ *	Preliminary support for HIERARCH.  New fits_copy_* functions for editing FITS files.
+ *
+ *	Revision 1.28  2008/09/30 13:56:41  eric
+ *	 - Formatting of real values changed to improve readability of
+ *	   values, e.g. 0.0 instead of 0.0000000000000E+00.
+ *	 - New functions fits_copy_header, fits_copy_data and
+ *	   fits_copy_hdu which can be used to edit FITS files.
+ *
+ *	Revision 1.27  2008/07/12 05:19:11  eric
+ *	 - Very basic handling of HIERARCH keywords (thanks to Thibaut
+ *	   Paumard).
+ *
+ *	Revision 1.26  2008/02/11 07:41:31  eric
  *	 - Recoding of the reading/writing of binary tables.
  *	 - Various fixes to handle multidimensional columns in
  *	   binary tables (keyword automatically checked for
  *	   consistency if it exists or created if not).
  *
- *	Revision 1.25  2007/02/15 08:19:38  thiebaut
- *	 - Forced CVS revison number to match RCS one.
+ *	Revision 1.25  2006/11/03 12:09:18  eric
  *	 - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for
  *	   discovering this bug).
  *	 - Slightly change the calling sequence of fits_pack_bintable
@@ -138,11 +161,11 @@
  *	Revision 1.1  2003/01/07 17:10:59  eric
  *	Initial revision
  *
+ *-----------------------------------------------------------------------------
  */
 
-/*---------------------------------------------------------------------------*/
 local fits;
-fits = "$Revision: 1.26 $";
+fits = "$Revision: 1.27 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
@@ -340,8 +363,13 @@ fits = "$Revision: 1.26 $";
        fits_nth            - format a string in the form: "1st", "2nd", ...
        fits_tolower        - convert string(s) to lower case letters
        fits_toupper        - convert string(s) to upper case letters
-       fits_trim           - removes trailing spaces
+       fits_trimright      - removes trailing spaces
        fits_strcmp         - compare strings according to FITS conventions
+
+    Copy routines (can be used to perform editing of FITS files):
+       fits_copy_header    - copy header part of current HDU;
+       fits_copy_data      - copy header data of current HDU;, dst, src;
+       fits_copy_hdu       - copy current HDU;
 
 
    CHANGES WITH RESPECT TO "OLD" FITS PACKAGES
@@ -376,11 +404,11 @@ fits = "$Revision: 1.26 $";
                  of cards);
         descr  = descriptor, vector of long integers:
                    DESCR(1)= current HDU number (1 for primary HDU);
-                   DESCR(2)= file address of the current HDU
-                   DESCR(3)= file address of the data part for the current HDU
+                   DESCR(2)= file address of the current HDU;
+                   DESCR(3)= file address of the data part for the current HDU;
                    DESCR(4)= file address of the next HDU in read mode,
-                             number of written bytes in write mode
-                   DESCR(5)= file mode: 'r' (read) or 'w' (write)
+                             total number of written bytes in write mode;
+                   DESCR(5)= file mode: 'r' (read), or 'w' (write), or 'a' (append).
         stream = void (no associated file) or stream for input or output;
 
      Of course the  end-user should never directly access  the items of the
@@ -1370,15 +1398,6 @@ func fits_write_header(fh)
   return fh;
 }
 
-//func _fits_check_offset(offset)
-//{
-//  n1 = offset(3) - offset(2);
-//  n2 = offset(4) - offset(3);
-//  if (n1 < 0 || n1 % 2880 || n2 < 0 || n2 % 2880)
-//    error, "corrupted FITS handle";
-//  return [n1, n2];
-//}
-
 func fits_get_data_size(fh, fix)
 /* DOCUMENT fits_get_data_size(fh)
        -or- fits_get_data_size(fh, fix)
@@ -1396,7 +1415,7 @@ func fits_get_data_size(fh, fix)
   pcount = fits_get_pcount(fh);
   if (naxis) {
     fmt = "NAXIS%d";
-    ndata = 1;
+    ndata = 1L;
     for (nth = 1; nth <= naxis; ++nth) {
       key = swrite(format=fmt, nth);
       id = fits_id(key);
@@ -1503,6 +1522,155 @@ func fits_new_hdu(fh, xtension, comment)
   _car, fh, 2, []; /* clear keys */
   return fits_set(fh, "XTENSION", xtension, comment);
 }
+
+local fits_copy_header, fits_copy_data, fits_copy_hdu;
+/* DOCUMENT fits_copy_header, dst, src;
+       -or- fits_copy_data, dst, src;
+       -or- fits_copy_hdu, dst, src;
+
+     For all these routines, SRC (the source) and DST (the destination) are
+     FITS handles, DST must be write/append mode.
+
+     The routine fits_copy_header copies the header part of the current HDU of
+     SRC into DST.  SRC and DST are both FITS handles.  DST must be in a
+     "fresh" state, that is just after a fits_open, fits_create or
+     fits_new_hdu.  Nothing is actually written to the destination stream,
+     fits_write_header must be used for that.  The idea is that additional
+     keywords can be set in DST (for instance history or comments) prior to
+     actually writing the header.
+
+     The routine fits_copy_data copies (writes) the data part of the current
+     HDU of SRC into DST.  DST must be in the same state as just after a
+     fits_write_header.
+
+     The routine fits_copy_hdu copies the header and data parts of the current
+     HDU of SRC into DST.  The data is automatically padded with zeroes.  The
+     call fits_copy_hdu, DST, SRC; is identical to:
+
+       fits_copy_header, dst, src;
+       fits_write_header, dst;
+       fits_copy_data, dst, src;
+       fits_pad_hdu, dst;
+
+     When called as functions, all these routines return DST.
+
+
+   EXAMPLES:
+
+     To copy an HDU with a new HISTORY card:
+       fits_copy_header, dst, src;
+       fits_set, dst, "HISTORY", "This HDU is a copy.";
+       fits_write_header, dst;
+       fits_copy_data, dst, src;
+
+     To sequentially copy several HDU's, call fits_new_hdu with a NULL or
+     empty extension name:
+     
+       // Open input and output FITS files:
+       src = fits_open("input.fits");
+       dst = fits_open("output.fits", 'w');
+
+       // Copy & edit primary HDU:
+       fits_copy_header, dst, src;
+       fits_set, dst, "HISTORY", "This primary HDU is a copy.";
+       fits_write_header, dst;
+       fits_copy_data, dst, src;
+
+       // Copy & edit extensions:
+       while (! fits_eof(fits_next_hdu(src))) {
+         fits_new_hdu, dst, "";  // add undefined extension
+         fits_copy_header, dst, src;
+         fits_set, dst, "HISTORY", "This extension HDU is also a copy.";
+         fits_write_header, dst;
+         fits_copy_data, dst, src;
+       }
+       fits_close, dst;
+
+   SEE ALSO: fits_open, fits_create, fits_new_hdu, fits_write_header.
+ */
+
+func fits_copy_header(dst, src)
+{
+  /* Check destination descriptor. */
+  local dst_descr;
+  eq_nocopy, dst_descr, _car(dst, 3);
+  dst_mode = dst_descr(5);
+  if (dst_mode != 'w' && dst_mode != 'a')
+    error, "destination FITS handle not open for writing/appending";
+  dst_address = dst_descr(2);
+  if (dst_descr(3) != dst_address || dst_descr(4) != dst_address)
+    error, "current HDU in destination FITS handle must be a fresh one";
+
+  /* Make a copy of the FITS cards and corresponding identifiers. */
+  _car, dst, 1, (cpy = _car(src, 1));
+  _car, dst, 2, (cpy = _car(src, 2));
+
+  return dst;
+}
+
+func fits_copy_data(dst, src)
+{
+  /* Notes:
+   *   DESCR(1) = current HDU number (1 for primary HDU);
+   *   DESCR(2) = file address of the current HDU;
+   *   DESCR(3) = file address of the data part for the current HDU;
+   *   DESCR(4) = file address of the next HDU in read mode,
+   *              total number of written bytes in write mode;
+   *   DESCR(5) = file mode: 'r' (read) or 'w' (write) or 'a' (append).
+   */
+
+  /* Check destination descriptor. */
+  local dst_descr;
+  eq_nocopy, dst_descr, _car(dst, 3);
+  dst_header_offset = dst_descr(2);
+  dst_data_offset = dst_descr(3);
+  dst_file_size = dst_descr(4);
+  dst_mode = dst_descr(5);
+  if (dst_mode != 'w' && dst_mode != 'a')
+    error, "destination FITS handle not open for writing/appending";
+  if ((n1 = dst_data_offset - dst_header_offset) < 0 || n1 % 2880 ||
+      (n2 = dst_file_size - dst_data_offset) < 0) error, "corrupted destination FITS handle";
+  if (n1 == 0) error, "destination header must be written first";
+  if (n2 != 0) error, "some data already written in current HDU of destination FITS handle";
+
+  /* Check source descriptor. */
+  local src_descr;
+  eq_nocopy, src_descr, _car(src, 3);
+  src_header_offset = src_descr(2);
+  src_data_offset = src_descr(3);
+  src_file_size = src_descr(4);
+  if ((n1 = src_data_offset - src_header_offset) < 0 || n1 % 2880 ||
+      (n2 = src_file_size - src_data_offset) < 0) error, "corrupted source FITS handle";
+
+  /* Read the data from the source and copy it to the destination. */
+  data_size = fits_get_data_size(dst);
+  if (fits_get_data_size(src) != data_size) error, "incompatible data size";
+  temp_size = 8*1024*1024; /* not too large size for copy buffer */
+  copy_size = 0; /* number of bytes actually copied */
+  src_stream = _car(src, 4);
+  dst_stream = _car(dst, 4);
+  while (copy_size < data_size) {
+    temp_size = min(temp_size, data_size - copy_size);
+    temp = array(char, temp_size);
+    if (_read(src_stream, src_data_offset + copy_size, temp) != temp_size)
+      error, "short source FITS file";
+    _write, dst_stream, dst_data_offset + copy_size, temp;
+    copy_size += temp_size;
+    dst_descr(4) = dst_data_offset + copy_size;
+  }
+
+  return dst;
+}
+
+func fits_copy_hdu(dst, src)
+{
+  fits_copy_header, dst, src;
+  fits_write_header, dst;
+  fits_copy_data, dst, src;
+  fits_pad_hdu, dst;
+  return dst;
+}
+
 
 /*---------------------------------------------------------------------------*/
 /* SETTING VALUE OF FITS CARDS */
@@ -1707,6 +1875,7 @@ func _fits_format_integer(key, value, comment)
                         key, value, (is_void(comment)?"":comment)), 1:80);
 }
 
+local _fits_format_real_table;
 func _fits_format_real(key, value, comment)
 /* DOCUMENT _fits_format_real(key, value)
        -or- _fits_format_real(key, value, comment)
@@ -1720,9 +1889,20 @@ func _fits_format_real(key, value, comment)
    SEE ALSO: fits, fits_set. */
 {
   /* With exponential representation, the maximum number of significant digit
-     is LEN-7=13 hence the %20.12E format */
-  return strpart(swrite(format="%-8s= %20.12E / %-47s",
-                        key, value, (is_void(comment)?"":comment)), 1:80);
+     is LEN-7=13 hence the %20.12E format. */
+  extern _fits_format_real_table;
+  if (structof(_fits_format_real_table) != int) {
+    _fits_format_real_table = array(int, 256);
+    _fits_format_real_table(1 + ['.', 'e', 'E']) = 1n;
+  }
+  s = swrite(format="%.13G", value);
+  if (noneof(_fits_format_real_table(1 + strchar(s)))) {
+    s = swrite(format="%.1f", value);
+  }
+  return strpart(swrite(format="%-8s= %20s / %-47s",
+                        key, s, (is_void(comment)?"":comment)), 1:80);
+  //return strpart(swrite(format="%-8s= %20.12E / %-47s",
+  //                      key, value, (is_void(comment)?"":comment)), 1:80);
 }
 
 func _fits_format_complex(key, value, comment)
@@ -2925,7 +3105,7 @@ func fits_index_of_table_field(fh, name)
   n = numberof(name);
   index = array(long, dimsof(name)); // result will have same geometry
   for (i=1 ; i<=n ; ++i) {
-    j = where(fits_tolower(fits_trim(name(i))) == ttype);
+    j = where(fits_tolower(fits_trimright(name(i))) == ttype);
     if (numberof(j) != 1) {
       if (is_array(j)) error, "more than one field match \""+name(i)+"\"";
       error, "no field matches \""+name(i)+"\"";
@@ -2946,7 +3126,7 @@ local fits_toupper, fits_tolower;
        -or- fits_toupper(s)
      Converts a string or an array of strings S to lower/upper case letters.
 
-   SEE ALSO: fits, fits_trim, fits_strchar. */
+   SEE ALSO: fits, fits_trimright, fits_strchar. */
 
 local _fits_tolower;
 local _fits_toupper;
@@ -2988,17 +3168,20 @@ func _fits_toupper_1(s)
   return strcase(1, s);
 }
 
-func fits_trim(s)
-/* DOCUMENT fits_trim(s)
-     Removes trailing  spaces (character 0x20) from scalar  string S (note:
-     trailing spaces are not significant in FITS).
+local _fits_blank;
+func fits_trimright(s)
+/* DOCUMENT fits_trimright(s)
+     Removes trailing ordinary spaces (character 0x20) from (array of)
+     string(s) S.  Note that trailing spaces are usually not significant
+     in FITS.
 
-   SEE ALSO: fits, fits_tolower, fits_toupper, fits_strchar. */
+   SEE ALSO: fits, fits_tolower, fits_toupper, fits_strchar,
+             strpart, strword.
+ */
 {
-  if (! (i = numberof((c = *pointer(s))))) return string(0);
-  while (--i) { if (c(i) != ' ') return string(&c(1:i)); }
-  return "";
+  return strpart(s, strword(s, _fits_blank, 0));
 }
+_fits_blank = [string(0), " "];
 
 local fits_strcmp;
 /* DOCUMENT fits_strcmp(a, b)
@@ -3026,8 +3209,7 @@ func _fits_strcmp_0(a,b) /* code for Yorick versions older than 1.6 */
 func _fits_strcmp_1(a,b)
 {
   blank=" "; /* only trim ordinary spaces */
-  return (strcase(1, strtrim(a, 2, blank=blank)) ==
-          strcase(1, strtrim(b, 2, blank=blank)));
+  return (strcase(1, fits_trimright(a)) == strcase(1, fits_trimright(b)));
 }
 
 /* Install function code according to Yorick capabilities. */
@@ -3048,7 +3230,7 @@ func fits_strchar(s)
 /* DOCUMENT fits_strchar(s)
      Converts string array S into a vector of characters.
 
-   SEE ALSO: fits, fits_toupper, fits_trim. */
+   SEE ALSO: fits, fits_toupper, fits_trimright. */
 {
   k = strlen(s);
   w = where(k);
@@ -3305,15 +3487,25 @@ func fits_parse(card, id, safe=)
    SEE ALSO: fits, fits_get, fits_id. */
 {
   extern _fits_parse_comment;
-  extern _fits_id_comment, _fits_id_history;
+  extern _fits_id_comment, _fits_id_history, _fits_id_hierarch;
 
   if (is_void(id)) id = fits_id(card);
-  tail = strpart(card, 9:);
 
-  /* Deal with commentary card. */
   if (id == 0.0 || id == _fits_id_comment || id == _fits_id_history) {
+    /* Deal with commentary card. */
     _fits_parse_comment = [];
-    return tail;
+    return strpart(card, 9:);
+  } else if (id == _fits_id_hierarch) {
+    /* Deal with HIERARCH cards. */
+    offset = strfind("=", card)(2);
+    if (offset < 0) {
+      /* assume empty value */
+      return;
+    }
+    tail = strpart(card, offset : );
+  } else {
+    /* Deal with other cards. */
+    tail = strpart(card, 9:);
   }
 
   /* Use first non-space character after '=' for faster guess (I don't
@@ -3360,9 +3552,11 @@ func fits_parse(card, id, safe=)
     /* String value. */
     q = p1 = p2 = string(0);
     value = "";
+    fmt1 = "%[^']%[']%[^\a]";
+    fmt2 = "%[']%[^\a]";
     do {
-      if (sread(s, format="%[^']%[']%[^\a]", p1, q, p2)) value += p1;
-      else if (! sread(s, format="%[']%[^\a]", q, p2)) break;
+      if (sread(s, format=fmt1, p1, q, p2)) value += p1;
+      else if (! sread(s, format=fmt2, q, p2)) break;
       if ((n = strlen(q)) > 1) value += strpart(q, :n/2);
     } while ((s=p2) && !(n%2));
     if (! sread(s, format="%1s %[^\a]", q, _fits_parse_comment) || q=="/") {
@@ -3467,6 +3661,10 @@ func fits_match(fh, pattern)
      Global/extern  variable  _fits_match_id  is  set  with  the  numerical
      identifier of PATTERN (without last '#' if any).
 
+     "HIERARCH"  cards are  supported.  The  '#' special  character  is not
+     supported on them, though.
+
+
    SEE ALSO: fits, fits_get_cards, fits_rehash. */
 {
   extern _fits_multiplier, _fits_match_id;
@@ -3475,6 +3673,15 @@ func fits_match(fh, pattern)
     return (_car(fh,2) == (_fits_match_id = pattern));
   } else if (s != string) {
     error, "PATTERN must be a scalar string or a numerical identifier";
+  }
+  if (strpart(pattern, 1:8) == "HIERARCH") {
+    test = (_car(fh,2) == (_fits_match_id = _fits_id_hierarch));
+    if (anyof(test)) {
+      index = where(test);
+      test(index) = (fits_trimright(strtok(_car(fh,1)(index), "=")(1,))
+                     == fits_trimright(pattern));
+    }
+    return test;
   }
   if (strpart(pattern, 0:0) != "#") {
     return (_car(fh,2) == (_fits_match_id = fits_id(pattern)));
@@ -3538,7 +3745,7 @@ func fits_id(card)
      same identifier as if they were padded (right filled) with spaces.  In
      other words, all the values  returned by the following expressions are
      identical:
-       fits_id("SIMPLE = T / conforming FITS file");
+       fits_id("SIMPLE  = T / conforming FITS file");
        fits_id("SIMPLE ");
        fits_id("SIMPLE");
 
@@ -3765,12 +3972,12 @@ local _fits_digitize, _fits_multiplier, _fits_alphabet, _fits_max_id;
    SEE ALSO: fits, fits_init, fits_rehash, fits_id, fits_key. */
 
 local _fits_id_simple, _fits_id_bitpix, _fits_id_naxis, _fits_id_end;
-local _fits_id_comment, _fits_id_history, _fits_id_xtension;
-local _fits_id_bscale, _fits_id_bzero, _fits_id_gcount, _fits_id_pcount;
+local _fits_id_comment, _fits_id_history, _fits_id_xtension, _fits_id_bscale;
+local _fits_id_bzero, _fits_id_gcount, _fits_id_pcount, _fits_id_hierarch;
 /* DOCUMENT _fits_id_simple    _fits_id_bitpix   _fits_id_naxis
             _fits_id_end       _fits_id_comment  _fits_id_history
             _fits_id_xtension  _fits_id_bscale   _fits_id_bzero
-            _fits_id_gcount    _fits_id_pcount
+            _fits_id_gcount    _fits_id_pcount   _fits_id_hierarch
      Numerical  identifers of  common FITS  keywords. If  you  experiment a
      strange behaviour  of FITS  routines, it may  be because one  of these
      values get corrupted;  in that case, just run  subroutine fits_init to
@@ -3834,7 +4041,7 @@ func fits_init(sloopy=, allow=, blank=)
   extern _fits_alphabet,    _fits_max_id;
   extern _fits_id_simple,   _fits_id_bitpix;
   extern _fits_id_naxis,    _fits_id_end;
-  extern _fits_id_comment,  _fits_id_history;
+  extern _fits_id_comment,  _fits_id_history, _fits_id_hierarch;
   extern _fits_id_xtension, _fits_id_extname, _fits_id_special;
   extern _fits_id_bscale,   _fits_id_bzero;
   extern _fits_id_pcount,   _fits_id_gcount;
@@ -3892,6 +4099,7 @@ func fits_init(sloopy=, allow=, blank=)
   _fits_id_bitpix   = fits_id("BITPIX");
   _fits_id_naxis    = fits_id("NAXIS");
   _fits_id_history  = fits_id("HISTORY");
+  _fits_id_hierarch = fits_id("HIERARCH");
   _fits_id_comment  = fits_id("COMMENT");
   _fits_id_end      = fits_id("END");
   _fits_id_xtension = fits_id("XTENSION");
@@ -4089,7 +4297,8 @@ func _fits_strsplit(s)
  * Local Variables:                                                          *
  * mode: Yorick                                                              *
  * tab-width: 8                                                              *
- * fill-column: 75                                                           *
+ * fill-column: 78                                                           *
+ * c-basic-offset: 2                                                         *
  * coding: latin-1                                                           *
  * End:                                                                      *
  *---------------------------------------------------------------------------*/
