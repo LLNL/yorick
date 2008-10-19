@@ -1,5 +1,5 @@
 /*
- * $Id: ystr.c,v 1.3 2008-03-19 20:40:22 dhmunro Exp $
+ * $Id: ystr.c,v 1.4 2008-10-19 22:19:24 dhmunro Exp $
  * Yorick string manipulation functions
  *
  * This interface was inspired by the regexp package written by
@@ -548,47 +548,47 @@ Y_streplace(int argc)
 
   for (i=0 ; i<n ; i++,out++) {
     inp = s[iter.str[0]];
-    if (!inp) continue;
-    len = strlen(inp);
-    isel = iter.off[0]*nlead;
-    ito = todim[0]*tlead;
+    if (inp) {
+      len = strlen(inp);
+      isel = iter.off[0]*nlead;
+      ito = todim[0]*tlead;
 
-    lfrom = lto = 0;
-    for (j=0,m=-1 ; j<nlead ; j+=2) {
-      iarg = (tlead>1 || !j);
-      if (iarg) im = -1, to = t[ito++];
-      mn = sel[isel+j];
-      mx = sel[isel+j+1];
-      if (mx>=mn && mx<=len && mn>=0) {
-        if (m<0 || mn>=m)
-          m = mx;
-        else
-          y_error("streplace start-end list not disjoint and increasing");
-        lfrom += mx-mn;
-        if (im < 0) {
-          if (to && to[0]) for (im=1 ; to[im] ; im++);
-          else im = 0;
+      lfrom = lto = 0;
+      for (j=0,m=-1 ; j<nlead ; j+=2) {
+        iarg = (tlead>1 || !j);
+        if (iarg) im = -1, to = t[ito++];
+        mn = sel[isel+j];
+        mx = sel[isel+j+1];
+        if (mx>=mn && mx<=len && mn>=0) {
+          if (m<0 || mn>=m)
+            m = mx;
+          else
+            y_error("streplace start-end list not disjoint and increasing");
+          lfrom += mx-mn;
+          if (im < 0) {
+            if (to && to[0]) for (im=1 ; to[im] ; im++);
+            else im = 0;
+          }
+          lto += im;
         }
-        lto += im;
       }
-    }
-    ito -= tlead;
-    out[0] = p_malloc(len - lfrom + lto + 1);
-    out[0][0] = '\0';
-    for (j=m=im=0 ; j<nlead ; j+=2) {
-      if (tlead>1 || !j) to = t[ito++];
-      mn = sel[isel+j];
-      mx = sel[isel+j+1];
-      if (mx>=mn && mx<=len && mn>=0) {
-        while (im < mn) out[0][m++] = inp[im++];
-        im = mx;
-        if (to) for (k=0 ; to[k] ; k++) out[0][m++] = to[k];
+      ito -= tlead;
+      out[0] = p_malloc(len - lfrom + lto + 1);
+      out[0][0] = '\0';
+      for (j=m=im=0 ; j<nlead ; j+=2) {
+        if (tlead>1 || !j) to = t[ito++];
+        mn = sel[isel+j];
+        mx = sel[isel+j+1];
+        if (mx>=mn && mx<=len && mn>=0) {
+          while (im < mn) out[0][m++] = inp[im++];
+          im = mx;
+          if (to) for (k=0 ; to[k] ; k++) out[0][m++] = to[k];
+        }
       }
+      while ((out[0][m++] = inp[im++]));
+
+      if (in_place) p_free(inp);  /* nlead==2 in this case */
     }
-    while ((out[0][m++] = inp[im++]));
-
-    if (in_place && inp) p_free(inp);  /* nlead==2 in this case */
-
     ys_inc3(&iter, todim);
   }
 }
