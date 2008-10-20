@@ -1,5 +1,5 @@
 /*
- * $Id: funcdef.c,v 1.3 2007-03-19 18:38:06 dhmunro Exp $
+ * $Id: funcdef.c,v 1.4 2008-10-20 00:46:43 dhmunro Exp $
  * mini-parser converting simple command line to interpreted function
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -39,7 +39,6 @@ yfd_tmp_free(void *vtmp)
       p_free(tmp->ctab), tmp->ctab = 0;
     }
     if (tmp->code) p_free(tmp->code), tmp->code = 0;
-    p_free(tmp);
   }
 }
 

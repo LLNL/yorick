@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.10 2008-03-01 05:01:17 dhmunro Exp $
+ * $Id: yapi.c,v 1.11 2008-10-20 00:46:43 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1204,7 +1204,9 @@ static void y_uo_eval(Operand *op);
 static void y_uo_extract(Operand *op, char *name);
 static void y_uo_print(Operand *op);
 
-static Operations y_scratch_ops = {
+static void y_scratch_free(void *vuo);
+
+static Operations y_uo_ops = {
   &y_uo_free, T_OPAQUE, 0, T_STRING, "scratch_object",
   {&PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX},
   &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX,
@@ -1221,7 +1223,7 @@ void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
   if (! uo_type->uo_ops) {
     /* side effect on first call -- somewhat dangerous! */
     Operations *ops = p_malloc(sizeof(Operations));
-    memcpy(ops, &y_scratch_ops, sizeof(Operations));
+    memcpy(ops, &y_uo_ops, sizeof(Operations));
     ops->typeName = uo_type->type_name;
     uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
   }
@@ -1248,7 +1250,7 @@ yfunc_obj(y_userobj_t *uo_type)
       y_error("(BUG) foreign function-like object with no on_eval method makes no sense");
     }
     ops = p_malloc(sizeof(Operations));
-    memcpy(ops, &y_scratch_ops, sizeof(Operations));
+    memcpy(ops, &y_uo_ops, sizeof(Operations));
     ops->Setup = y_setup_func_hack;
     ops->typeName = uo_type->type_name;
     uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
@@ -1344,6 +1346,17 @@ y_print(const char *text, int newline)
   if (newline) ForceNewline();
 }
 
+static Operations y_scratch_ops = {
+  &y_scratch_free, T_OPAQUE, 0, T_STRING, "scratch_object",
+  {&PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX, &PromXX},
+  &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX, &ToAnyX,
+  &NegateX, &ComplementX, &NotX, &TrueX,
+  &AddX, &SubtractX, &MultiplyX, &DivideX, &ModuloX, &PowerX,
+  &EqualX, &NotEqualX, &GreaterX, &GreaterEQX,
+  &ShiftLX, &ShiftRX, &OrX, &AndX, &XorX,
+  &AssignX, &y_uo_eval, &SetupX, &y_uo_extract, &MatMultX, &y_uo_print
+};
+
 y_userobj_t y_scratch_obj = { "scratch", 0, 0, 0, 0, &y_scratch_ops };
 
 typedef struct y_scratch_t y_scratch_t;
@@ -1351,6 +1364,18 @@ struct y_scratch_t {
   y_userobj_t uot;
   union y_uo_body_t body;
 };
+
+static void
+y_scratch_free(void *vuo)
+{
+  y_uo_t *uo = vuo;
+  y_scratch_t *obj = (y_scratch_t *)uo->body.c;
+  if (uo->uo_type->uo_ops != uo->ops)
+    y_error("(BUG) corrupted user object in y_uo_free");
+  if (obj->uot.on_free)
+    obj->uot.on_free(obj->body.c);
+  p_free(uo);
+}
 
 void *
 ypush_scratch(unsigned long size, void (*on_free)(void *))
