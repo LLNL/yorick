@@ -1,5 +1,5 @@
 /*
- * $Id: xfancy.c,v 1.6 2007-12-28 20:20:19 thiebaut Exp $
+ * $Id: xfancy.c,v 1.7 2008-10-28 04:02:30 dhmunro Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -735,11 +735,16 @@ static int FindSystem(FXEngine *fxe, Drauing *drawing, int x, int y,
   GeSystem *sys= drawing->systems, *thesys=sys;
   int nSystems= drawing->nSystems;
   GpXYMap *map= &fxe->xe.e.map;  /* NDC->VDC (x,y) mapping */
-  GpReal xn= ((GpReal)x - map->x.offset)/map->x.scale;
-  GpReal yn= ((GpReal)y - map->y.offset)/map->y.scale;
+  GpReal xn, yn;
   GpBox *box;
   int i, iSystem=0;
   GpReal min=9., tmp; /* assume all viewports have area<9 */
+  if (fxe->xe.w != fxe->xe.win) { /* adjust for animation mode margins */
+    x -= fxe->xe.a_x;
+    y -= fxe->xe.a_y;
+  }
+  xn = ((GpReal)x - map->x.offset)/map->x.scale;
+  yn = ((GpReal)y - map->y.offset)/map->y.scale;
   for (i=nSystems ; i>0 ; i--) {
     sys= (GeSystem *)sys->el.prev;
     if (!sys->elements ||
@@ -794,9 +799,14 @@ static void Find1System(FXEngine *fxe, Drauing *drawing, int iSystem,
                         GpReal *xr, GpReal *yr)
 {
   GpXYMap *map= &fxe->xe.e.map; /* NDC->VDC (x,y) mapping */
-  GpReal xn= ((GpReal)x - map->x.offset)/map->x.scale;
-  GpReal yn= ((GpReal)y - map->y.offset)/map->y.scale;
+  GpReal xn, yn;
   GeSystem *sys= GetSystemN(drawing, iSystem);
+  if (fxe->xe.w != fxe->xe.win) { /* adjust for animation mode margins */
+    x -= fxe->xe.a_x;
+    y -= fxe->xe.a_y;
+  }
+  xn = ((GpReal)x - map->x.offset)/map->x.scale;
+  yn = ((GpReal)y - map->y.offset)/map->y.scale;
   if (sys && (!(sys->rescan || sys->unscanned>=0) ||
               !GdScan(sys))) {
     FindCoordinates(sys, xn, yn, xr, yr);
