@@ -1,5 +1,5 @@
 /*
- * $Id: files.c,v 1.4 2007-02-23 01:07:29 dhmunro Exp $
+ * $Id: files.c,v 1.5 2008-11-09 20:27:02 dhmunro Exp $
  * UNIX version of play file operations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -31,7 +31,8 @@
 struct p_file {
   FILE *fp;  /* use FILE* for text file operations */
   int fd;    /* use file descriptor for binary file operations */
-  int binary;
+  int binary;    /* 1 to use read/write/lseek, 2 if pipe */
+  int errflag;   /* bit 1 is eof, bit 2 is error for binary==1 */
 };
 
 p_file *
@@ -44,7 +45,10 @@ p_fopen(const char *unix_name, const char *mode)
     f->fd = fileno(fp);
     for (; mode[0] ; mode++) if (mode[0]=='b') break;
     f->binary = (mode[0]=='b');
+    f->errflag = 0;
     u_fdwatch(f->fd, 1);
+  } else if (fp) {
+    fclose(fp);
   }
   return f;
 }
@@ -59,7 +63,10 @@ p_popen(const char *command, const char *mode)
     f->fp = fp;
     f->fd = fileno(fp);
     f->binary = 2;
+    f->errflag = 0;
     u_fdwatch(f->fd, 1);
+  } else if (fp) {
+    pclose(fp);
   }
   return f;
 #else
@@ -124,9 +131,9 @@ p_fread(p_file *file, void *buf, unsigned long nbytes)
       char *cbuf = buf;
       for (;;) {
         n = read(file->fd, cbuf+nb, nbytes-nb);
-        if (n == 0) return nb;
+        if (n == 0) { file->errflag |= 1;  return nb; }
         if ((nb+=n) == nbytes) return nbytes;
-        if (n < 0) return -1L;
+        if (n < 0) { file->errflag |= 2;  return -1L; }
       }
     }
     return n;
@@ -147,7 +154,7 @@ p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
       for (;;) {
         n = write(file->fd, cbuf+nb, nbytes-nb);
         if ((nb+=n) == nbytes) return nbytes;
-        if (n <= 0) return -1L;
+        if (n <= 0) { file->errflag |= 2;  return -1L; }
       }
     }
     return n;
@@ -170,6 +177,7 @@ p_ftell(p_file *file)
 int
 p_fseek(p_file *file, unsigned long addr)
 {
+  file->errflag &= ~1;
   if (file->binary & 1)
     return -(lseek(file->fd, addr, SEEK_SET)==-1L);
   else if (!(file->binary & 2))
@@ -187,14 +195,15 @@ p_fflush(p_file *file)
 int
 p_feof(p_file *file)
 {
-  return feof(file->fp);  /* does not work for file->binary */
+  return (file->binary&1)? ((file->errflag&1) != 0) : feof(file->fp);
 }
 
 int
 p_ferror(p_file *file)
 {
-  int flag = ferror(file->fp);
+  int flag = (file->binary&1)? ((file->errflag&2) != 0) : ferror(file->fp);
   clearerr(file->fp);
+  file->errflag = 0;
   return flag;
 }
 
