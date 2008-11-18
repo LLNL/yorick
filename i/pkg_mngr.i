@@ -1,6 +1,6 @@
 /*
  * pkg_mngr.i
- * $Id: pkg_mngr.i,v 1.18 2007-12-27 15:19:29 frigaut Exp $
+ * $Id: pkg_mngr.i,v 1.19 2008-11-18 13:47:27 paumard Exp $
  * Yorick package manager
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1523,7 +1523,7 @@ func pkg_sys(cmd,verbose=)
 func pkg_probe_oses(void,verbose=)
 {
   write,format="%s\n","\nRetrieving OS-ARCH alternatives...please wait";
-  tmpdir="/tmp/pkg_mngr/"; // PKG_TMP_DIR not yet defined by user
+  tmpdir=Y_USER+"packages/tmp/"; // PKG_TMP_DIR not yet defined by user
   mkdirp,tmpdir;
   pkg_fetch_url,PKG_SERVER,tmpdir+".oses",verbose=verbose;
   ctn = rdfile(tmpdir+".oses");
