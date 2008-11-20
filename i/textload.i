@@ -1,17 +1,11 @@
 /* textload.i
- * $Id: textload.i,v 1.2 2008-09-27 16:52:37 dhmunro Exp $
+ * $Id: textload.i,v 1.3 2008-11-20 02:20:20 dhmunro Exp $
  * read text files with any end-of-line convention
  *   (handles UNIX LF, Windows/DOS CRLF, or old Mac CR)
  * functions:
  *   text_load   low level worker, returns char array
  *   text_lines  returns one string per line (no trailing newline)
  *   text_cells  returns 2D array with comma or tab column separator
- */
-/* Copyright (c) 2008, David H. Munro.
- * All rights reserved.
- * This file is part of yorick (http://yorick.sourceforge.net).
- * BSD license at http://www.opensource.org/licenses/bsd-license.php
- * <OWNER> = <ORGANIZATION> = David H. Munro, <YEAR> = 2008.
  */
 
 func text_load(filename)
@@ -59,7 +53,7 @@ func text_lines(filename)
   if (!numberof(c)) return [];
   list = where(c == '\012');
   if (numberof(list)) c(list) = '\0';
-  return strchar(c)(*);  /* do not return scalar string for single line */
+  return strchar(c);
 }
 
 func text_cells(filename, delim, quote=)
@@ -84,11 +78,13 @@ func text_cells(filename, delim, quote=)
   } else {
     c = text_load(filename);
     if (is_void(delim) && strmatch(strpart(filename,-3:0), ".csv", 1))
-      delim = ",";
+      delim = ',';
   }
   if (!numberof(c)) return [];
   if (is_void(delim))
     delim = anyof(c=='\t')? '\t' : ',';
+  else if (structof(delim) == string)
+    delim = (*pointer(delim))(1);
 
   /* make mask that is 1 for delim, -1 for eol */
   mask = (c == delim) - (c == '\012');
