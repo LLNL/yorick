@@ -1,5 +1,5 @@
 /* textload.i
- * $Id: textload.i,v 1.3 2008-11-20 02:20:20 dhmunro Exp $
+ * $Id: textload.i,v 1.4 2008-11-21 01:46:56 dhmunro Exp $
  * read text files with any end-of-line convention
  *   (handles UNIX LF, Windows/DOS CRLF, or old Mac CR)
  * functions:
@@ -89,7 +89,7 @@ func text_cells(filename, delim, quote=)
   /* make mask that is 1 for delim, -1 for eol */
   mask = (c == delim) - (c == '\012');
   /* allow for CSV quoted delimiter convention */
-  if (is_void(quote)) quote = (delim == ",");
+  if (is_void(quote)) quote = (delim == ',');
   if (quote) mask *= text_unquoted(c);
 
   fields = where(mask);
@@ -106,6 +106,10 @@ func text_cells(filename, delim, quote=)
 
   s = array(string, ncols, nrows);
   s(where(mask)) = strchar(c);
+  if (quote) {
+    list = where((strpart(s,1:1)=="\"") & (strpart(s,0:0)=="\""));
+    if (numberof(list)) s(list) = strpart(s(list),2:-1);
+  }
   return s;
 }
 
@@ -119,13 +123,16 @@ func text_cells(filename, delim, quote=)
 func text_unquoted(c)
 {
   quotes = (c == '"');
-  ws = (c==' ') | (c=='\t') | (c=='\v') | (c=='\f');
   list = where(quotes);
   if (numberof(list) < 2) return !quotes;
   /* note that if numberof(list) is odd, we know the quoting is incorrect */
   /* mark open quotes as 1, character following close quotes as -1 */
   list = list(2::2);
   quotes(list) = 0;  /* close quote itself is part of the quote */
+  if (list(0) == numberof(c)) {
+    if (numberof(list) < 2) return !quotes(psum);
+    list = list(1:-1);
+  }
   --quotes(list+1);  /* if was open quote, don't open, else close */
-  return quotes(psum);
+  return !quotes(psum);
 }
