@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.3 2007-02-24 23:14:41 dhmunro Exp $
+ * $Id: ascio.c,v 1.4 2008-12-07 03:17:42 dhmunro Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -267,8 +267,28 @@ void Y_close(int nArgs)
 
   Drop(1);
   if (binary) {
+    HistoryInfo *history = binary->history;
+    ClearPointees(binary, 0);
+    if (history) {
+      IOStream *child = history->child;
+      ClearPointees(child, 0);
+      if (child->CloseHook) {
+        child->CloseHook(child);
+        child->CloseHook = 0;
+      }
+      if (child->stream) {
+        if (child->stream == binary->stream) FlushFile(child, 1);
+        else if (child->stream) child->ioOps->Close(child);
+        child->stream = 0;
+      }
+      if (child->contentsLog != binary->contentsLog) FreeClogFile(child);
+    } else if (binary->CloseHook) {
+      binary->CloseHook(binary);
+      binary->CloseHook = 0;
+    }
     if (binary->stream) binary->ioOps->Close(binary);
-    binary->stream= 0;
+    binary->stream = 0;
+    if (binary->contentsLog) FreeClogFile(binary);
   }
 }
 

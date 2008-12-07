@@ -1,5 +1,5 @@
 /*
- * $Id: binio.c,v 1.1 2005-09-18 22:03:49 dhmunro Exp $
+ * $Id: binio.c,v 1.2 2008-12-07 03:17:42 dhmunro Exp $
  * Define Yorick functions for dealing with binary I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -888,14 +888,20 @@ void FreeIOStream(void *ios)
       parent= history->parent;
       if (io->fullname==parent->fullname) io->fullname= 0;
       if (stream==parent->stream) stream= 0;
-      if (io->CloseHook) io->CloseHook(io);
+      if (io->CloseHook) {
+        io->CloseHook(io);
+        io->CloseHook = parent->CloseHook = 0;
+      }
       /* if io->ioOps->Close will be called for parent only, flush child */
-      if (!stream) FlushFile(io, 1);
+      if (!stream && io->stream) FlushFile(io, 1);
     }
     io->history= 0;
 
   } else {
-    if (io->CloseHook) io->CloseHook(io);
+    if (io->CloseHook) {
+      io->CloseHook(io);
+      io->CloseHook = 0;
+    }
   }
 
   /* closing the file discards any cache blocks */
