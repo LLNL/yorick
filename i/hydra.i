@@ -1,5 +1,5 @@
 /*
- * $Id: hydra.i,v 1.2 2007-03-19 21:17:16 dhmunro Exp $
+ * $Id: hydra.i,v 1.3 2009-02-06 05:45:49 dhmunro Exp $
  * functions to access hydra-generated Silo/PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -266,22 +266,27 @@ func h_show(f)
   vars = *get_vars(_h_get_file(f, 1, , _h_legacy))(1);
   list = where(strpart(vars,1:7)=="/hblk0/");
   if (numberof(list)) {
+    /* this coding must be consistent with _h_translate */
     vars = strpart(vars(list),8:0);
     vars = vars(where(strlen(vars)>0));
     vars = vars(where(!strmatch(vars,"/")));
-    mask = strmatch(vars,"_");
+    mask = strpart(vars,-4:0) == "_data";
+    list = where(mask);
+    if (numberof(list)) vars(list) = strpart(vars(list),1:-5);
+    list = where(vars=="Materials_matlist");
+    if (numberof(list)) { mask(list) = 1;  vars(list) = "Materials"; }
+    mask += 2*(vars=="hydro_mesh_coord0") + 3*(vars=="hydro_mesh_coord1") +
+      4*(vars=="hydro_mesh_coord2");
     list = where(mask);
     if (numberof(list)) {
-      v = strpart(vars(list), -1:-1);
-      i = where(v == "_");
-      if (numberof(i)) v(i) = strpart(vars(list(i)), 0:0);
-      i = where((v>="0") & (v<="9"));
-      if (numberof(i)) mask(list(i)) = 0;
+      vars = vars(list);
+      mask = mask(list);
+      list = where(mask > 1);
+      if (numberof(list)) vars(list) = ["x","y","z"](mask(list)-1);
+      vars = vars(sort(vars));
     }
-    vars = vars(where(!mask));
-    vars = vars(sort(vars));
   }
-  if (am_subroutine()) {
+  if (am_subroutine() && numberof(vars)) {
     write, vars;
     nrecs = h_jr(f);
     if (nrecs > 1) {
