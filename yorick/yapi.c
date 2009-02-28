@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.11 2008-10-20 00:46:43 dhmunro Exp $
+ * $Id: yapi.c,v 1.12 2009-02-28 21:04:58 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1166,9 +1166,9 @@ yput_global(long vndex, int iarg)
       Unref(globTab[vndex].value.db);
     }
     if (s->ops == &dataBlockSym)
-      globTab[vndex].value.db = Ref(sp->value.db);
+      globTab[vndex].value.db = Ref(s->value.db);
     else
-      globTab[vndex].value = sp->value;
+      globTab[vndex].value = s->value;
     globTab[vndex].ops = s->ops;
   }
 }
