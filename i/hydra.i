@@ -1,5 +1,5 @@
 /*
- * $Id: hydra.i,v 1.3 2009-02-06 05:45:49 dhmunro Exp $
+ * $Id: hydra.i,v 1.4 2009-03-11 03:37:59 dhmunro Exp $
  * functions to access hydra-generated Silo/PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -259,7 +259,7 @@ func h_show(f)
 
      prints names of variables available for h_data, h_mix, h_array.
 
-   SEE ALSO: h_data, h_openb
+   SEE ALSO: h_data, h_openb, h_ushow
  */
 {
   { local _h_legacy; }
@@ -1013,7 +1013,7 @@ func h_iparm(f, name)
      or parameters (NAME is index in the returned list of names),
      for example h_iparm(f,1:0) returns all parameters.
 
-   SEE ALSO: hydra_xyz, h_fparm, h_parm
+   SEE ALSO: hydra_xyz, h_fparm, h_parm, h_uparm
  */
 {
   return h_parm(f, name, iorf="i");
@@ -1030,7 +1030,7 @@ func h_fparm(f, name)
      or parameters (NAME is index in the returned list of names),
      for example h_fparm(f,1:0) returns all parameters.
 
-   SEE ALSO: hydra_xyz, h_iparm, h_parm
+   SEE ALSO: hydra_xyz, h_iparm, h_parm, h_uparm
  */
 {
   return h_parm(f, name, iorf="f");
@@ -1043,7 +1043,7 @@ func h_parm(f, name, iorf=)
      returns value of hydra parameter NAME from file F,
      or a list of all names in NAME is not supplied.
 
-   SEE ALSO: hydra_xyz, h_fparm, h_iparm
+   SEE ALSO: hydra_xyz, h_fparm, h_iparm, h_uparm
  */
 {
   { local _h_legacy, lparm, mparm; }
@@ -1104,6 +1104,100 @@ func _h_parm_fix(parms, &lparm)
     parms = dims;
   }
   return parms;
+}
+
+func h_ushow(f)
+/* DOCUMENT h_ushow, f
+         or varnames = h_ushow(f)
+
+     prints names of user defined variables (def cards) in hydra file F.
+     As a function, returns array of def names.  The index of each name
+     in the returned list is 1 plus its index in the file F.  (Missing
+     indices in F will have string(0) in varnames -- shouldn't happen.)
+
+   SEE ALSO: h_uparm, h_show, h_openb
+ */
+{
+  gpdat = "gpdat";
+  prefix = "/Global/"+gpdat;
+  vars = *get_vars(_h_get_file(f, 1))(1);
+  vars = vars(where(strpart(vars,-3:0) == "/sym"));
+  if (!numberof(vars)) return vars;
+  vars = vars(where(strpart(vars,1:strlen(prefix)) == prefix));
+  n = numberof(vars)
+  if (!n) return vars;
+  vars = strpart(vars, strlen(prefix)+1:-4);
+  ndxs = array(-1, n);
+  names = array(string, n);
+  ndx = 0;
+  for (i=1 ; i<=n ; ++i) {
+    if (sread(vars(i),ndx)!=1 || ndx<0) continue;
+    ndxs(i) = ndx;
+    names(i) = string(&h_global(f, gpdat+vars(i)+"/sym"));
+  }
+  list = where(ndxs >= 0);
+  ndxs = ndxs(list);
+  names = names(list);
+  if (!numberof(list)) return names;
+  if (am_subroutine()) {
+    write, names(sort(names));
+  } else {
+    list = sort(ndxs);
+    ndxs= ndxs(list);
+    names = names(list);
+    n = ndxs(0) + 1;
+    list = array(0, n);
+    list(ndxs+1) = 1;
+    vars = array(string, n);
+    vars(where(list)) = names;
+    return vars;
+  }
+}
+
+func h_uparm(f, name, isstr=, isint=)
+/* DOCUMENT values = h_uparm(f, names)
+
+     returns values of user defined variables (def cards) in hydra file F.
+     NAMES is a name or array of names; the returned values have the
+     same dimensions as NAMES.  All values are type double.
+
+     Note that integer valued variables can be returned as integers
+     with long(h_uparm(f, names)).
+
+     User defined variables are stored as strings.  You can retrieve
+     the strings instead of the numeric values with the isstr=1
+     keyword.  Without isstr=1, any string which cannot be converted
+     to a number will appear as -1.e99.
+
+   SEE ALSO: h_ushow, h_uparm, h_fparm, h_parm
+ */
+{
+  names = h_ushow(f);
+  if (!isstr) {
+    dims = dimsof(name);
+    scalar = !dims(1);
+    value = scalar? [0.] : array(0., dims);
+  } else {
+    value = name;
+  }
+  n = numberof(value);
+  d = 0.0;
+  for (i=1 ; i<=n ; ++i) {
+    list = where(name(i) == names);
+    if (!numberof(list)) error, "unknown user variable name "+name;
+    v = h_global(f, swrite(format="gpdat%ld/val", list(1)-1));
+    if (!isstr) {
+      if (sread(string(&v), d) != 1) d = -1.e99;
+      value(i) = d;
+    } else {
+      value(i) = string(&v);
+    }
+  }
+  if (!isstr) {
+    if (scalar) value = value(1);
+    if (isint) value = long(value);  /* better for caller to convert */
+  }
+  return value;
 }
 
 func h_global(f, name, prefix=)
