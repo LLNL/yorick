@@ -1,5 +1,5 @@
 /*
- * $Id: netcdf.i,v 1.1 2005-09-18 22:06:02 dhmunro Exp $
+ * $Id: netcdf.i,v 1.2 2009-03-20 04:22:27 dhmunro Exp $
  * Yorick procedures to open a netCDF file
  *
  * The definitive reference for netCDF files is:
@@ -59,8 +59,10 @@ func raw_not_cdf(f)
 {
   i= array(char, 4);
   _read, f, 0, i;
-  if (string(&i)!="CDF\001") return 1;  /* test magic number */
+  if (string(&i(1:3))!="CDF" || i(4)<1 || i(4)>2)
+    return 1;  /* test magic number */
 
+  _nc_version = i(4);
   xdr_primitives, f;
 
   numrecs= long(0);
@@ -643,6 +645,12 @@ func NC_ReadVar(f, &address)
   address+= 4;
   _read, f, address, addr;
   address+= 4;
+  if (_nc_version == 2) {
+    addrlo = long(0);
+    _read, f, address, addrlo;
+    address+= 4;
+    addr = (addr<<32) | addrlo;
+  }
   return NC_var(name= name, dimlist= dimlist, attrs= attrs, type= type,
                 len= len, address= addr);
 }
