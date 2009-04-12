@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.6 2008-04-18 16:11:52 dhmunro Exp $
+ * $Id: yapi.h,v 1.7 2009-04-12 20:23:56 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -423,8 +423,37 @@ always start on a newline, and a newline will be forced after the
 final text you emit (whether or not your final call to y_print sets
 newline).
 
+Yorick memory management works by reference counting.  Your compiled
+code may need to own a use of a yorick object, for example, when one
+user object type contains a pointer to another and both are visible
+to interpreted code.  The yget_use function obtains a private use of
+an object on the stack.  You can obtain a use of a yorick user defined
+persistent object or array (but not a double, long, or int scalar)
+by calling yget_use.  The returned handle is opaque -- you must save it
+and call ypush_use to push the object back onto the stack and give up
+your use.  After calling ypush_use, you must zero all your copies of
+the opaque handle.  You can use the ygeta_* or yget_obj functions to
+get the pointers to the actual data.
+*/
+PLUG_API void *yget_use(int iarg);
+PLUG_API void ypush_use(void *handle);
+/*
+Your compiled package may need to execute code after the interpreter
+shuts down on a quit operation or after a fatal error.  This function
+cannot use the interpreted stack or variables, so you must take care
+to store any required information as compiled variables.  An on_quit
+function must execute in a short time and be bullet-proof -- no error
+recovery is possible, and yorick may be in the process of exiting after
+a fatal error.  The on_quit functions are executed in reverse order
+to the ycall_on_quit calls.  Use ycancel_on_quit to remove an on_quit
+function.  Multiple calls to ycall_on_quit do no harm, but on_quit
+will only be called once.
+*/
+PLUG_API void ycall_on_quit(void (*on_quit)(void));
+PLUG_API void ycancel_on_quit(void (*on_quit)(void));
+/*
 The ypush_func function is the compiled version of the interpreted
-funcdef function; the resulting anonymous function is pushed onto the
+funcdef function; it pushes the resulting anonymous function onto the
 top of the stack.  If the funcdef string cannot be parsed, ypush_func
 returns non-zero and pushes nil [] onto the stack.
 */
@@ -434,11 +463,13 @@ The y_error function emits a standard error message, and does not
 return to the caller.  This is intended as a replacement for the
 original YError API.  The y_errorn and y_errorq variants handle the
 frequent cases for which the message is a format string including a
-%ld or %s descriptor.
+%ld or %s descriptor.  The y_errquiet variant emits no error message;
+use it to transfer control to a catch or after_error handler.
 */
 PLUG_API void y_error(const char *msg);
 PLUG_API void y_errorn(const char *msg_format, long n);
 PLUG_API void y_errorq(const char *msg_format, char *q);
+PLUG_API void y_errquiet(void);
 
 END_EXTERN_C
 

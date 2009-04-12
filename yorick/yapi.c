@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.12 2009-02-28 21:04:58 dhmunro Exp $
+ * $Id: yapi.c,v 1.13 2009-04-12 20:23:56 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1401,6 +1401,85 @@ ypush_scratch(unsigned long size, void (*on_free)(void *))
   return obj->body.c;
 }
 
+void *
+yget_use(int iarg)
+{
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops==&referenceSym) s = &globTab[s->index];
+    if (s->ops == &dataBlockSym) {
+      if (s->value.db->ops == &lvalueOps) {
+        Operations *ops;
+        Member *type;
+        ygeta_array(iarg, &ops, &type);
+      }
+      return Ref(s->value.db);
+    }
+  }
+  return 0;
+}
+
+void
+ypush_use(void *handle)
+{
+  DataBlock *db = handle;
+  PushDataBlock(db);
+}
+
+/* defined in task.c */
+extern void (*CleanUpForExit)(void);
+static void (*y_obsolete_cleanup)(void) = 0;
+static void yon_quit_caller(void);
+static struct yon_quit_t {
+  void (*on_quit)(void);
+  struct yon_quit_t *next;
+} *yon_quit_stack = 0;
+static
+void yon_quit_caller(void)
+{
+  struct yon_quit_t *oqcb = yon_quit_stack;
+  while (oqcb) {
+    oqcb->on_quit();
+    oqcb = oqcb->next;
+  }
+  if (y_obsolete_cleanup) y_obsolete_cleanup();
+}
+static int yon_quit_installed = 0;
+
+void
+ycall_on_quit(void (*on_quit)(void))
+{
+  struct yon_quit_t *oqcb = yon_quit_stack;
+  while (oqcb) {
+    if (oqcb->on_quit == on_quit) return;
+    oqcb = oqcb->next;
+  }
+  oqcb = p_malloc(sizeof(struct yon_quit_t));
+  oqcb->on_quit = on_quit;
+  oqcb->next = yon_quit_stack;
+  yon_quit_stack = oqcb;
+  if (!yon_quit_installed) {
+    y_obsolete_cleanup = CleanUpForExit;
+    CleanUpForExit = &yon_quit_caller;
+    yon_quit_installed = 1;
+  }
+}
+
+void
+ycancel_on_quit(void (*on_quit)(void))
+{
+  struct yon_quit_t *oqcb = yon_quit_stack, **prev = &yon_quit_stack;
+  while (oqcb) {
+    if (oqcb->on_quit == on_quit) {
+      *prev = oqcb->next;
+      p_free(oqcb);
+      return;
+    }
+    prev = &oqcb->next;
+    oqcb = *prev;
+  }
+}
+
 void
 y_error(const char *msg)
 {
@@ -1462,4 +1541,10 @@ y_errorq(const char *msg_format, char *q)
     strncat(msg+nmsg, fmt, nmax-nmsg);
   }
   YError(msg);
+}
+
+void
+y_errquiet(void)
+{
+  YError(".SYNC.");
 }
