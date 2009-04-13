@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.13 2009-04-12 20:23:56 dhmunro Exp $
+ * $Id: yapi.c,v 1.14 2009-04-13 16:25:41 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -984,6 +984,21 @@ ypush_range(long mnmxst[3], int flags)
   PushDataBlock(NewRange(mnmxst[0], mnmxst[1], mnmxst[2], flgs));
 }
 
+int
+ypush_ptr(ypointer_t ptr, long *ntot)
+{
+  int typeid = Y_VOID;
+  Array *a = Pointee(ptr);
+  PushDataBlock(a);
+  if (a && (a != (Array*)&nilDB)) {
+    yget_dims(ntot, (long*)0, a->type);
+    typeid = a->ops->typeID;
+  } else {
+    if (ntot) *ntot = 0;
+  }
+  return typeid;
+}
+
 void
 yarg_drop(int n)
 {
@@ -1405,16 +1420,8 @@ void *
 yget_use(int iarg)
 {
   if (iarg >= 0) {
-    Symbol *s = sp - iarg;
-    if (s->ops==&referenceSym) s = &globTab[s->index];
-    if (s->ops == &dataBlockSym) {
-      if (s->value.db->ops == &lvalueOps) {
-        Operations *ops;
-        Member *type;
-        ygeta_array(iarg, &ops, &type);
-      }
-      return Ref(s->value.db);
-    }
+    DataBlock *db = ForceToDB(sp - iarg);
+    if (db != &nilDB) return Ref(db);
   }
   return 0;
 }
@@ -1422,8 +1429,8 @@ yget_use(int iarg)
 void
 ypush_use(void *handle)
 {
-  DataBlock *db = handle;
-  PushDataBlock(db);
+  if (!handle) ypush_nil();
+  else PushDataBlock(handle);
 }
 
 /* defined in task.c */

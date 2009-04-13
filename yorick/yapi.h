@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.7 2009-04-12 20:23:56 dhmunro Exp $
+ * $Id: yapi.h,v 1.8 2009-04-13 16:25:42 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -247,6 +247,14 @@ PLUG_API ypointer_t *ypush_p(long *dims);
 
 PLUG_API void ypush_range(long min_max_step[3], int flags);
 /*
+The ypush_ptr function allows you to push the pointee (object pointed to)
+corresponding to a ypointer_t pointer onto the stack, where you can use
+the yarg_* or ygeta_any functions to query its data type and dimensions.
+The return value is the typeid and the number of elements is also returned,
+in anticipation of at least those simple queries.
+*/
+PLUG_API int ypush_ptr(ypointer_t ptr, long *number);
+/*
 You can also create scratch space on the stack.  If your function
 faults (or run long enough that the user types C-c to abort it),
 anything you allocate that is not on the interpreted stack will be
@@ -433,7 +441,10 @@ by calling yget_use.  The returned handle is opaque -- you must save it
 and call ypush_use to push the object back onto the stack and give up
 your use.  After calling ypush_use, you must zero all your copies of
 the opaque handle.  You can use the ygeta_* or yget_obj functions to
-get the pointers to the actual data.
+get the pointers to the actual data.  As a side effect, yget_use converts
+a scalar double, long, or int stack element into a rank 0 array, since
+you can't own a use of the scalars.  This invalidates any existing pointer
+you may have retrieved using ygeta_*, so call yget_use first.
 */
 PLUG_API void *yget_use(int iarg);
 PLUG_API void ypush_use(void *handle);
