@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.14 2009-04-13 16:25:41 dhmunro Exp $
+ * $Id: yapi.c,v 1.15 2009-04-16 03:03:02 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -991,7 +991,7 @@ ypush_ptr(ypointer_t ptr, long *ntot)
   Array *a = Pointee(ptr);
   PushDataBlock(a);
   if (a && (a != (Array*)&nilDB)) {
-    yget_dims(ntot, (long*)0, a->type);
+    yget_dims(ntot, (long*)0, &a->type);
     typeid = a->ops->typeID;
   } else {
     if (ntot) *ntot = 0;
@@ -1493,8 +1493,41 @@ y_error(const char *msg)
   YError(msg);
 }
 
+static void y_ew_n(const char *msg_format, long n, int warn);
+static void y_ew_q(const char *msg_format, char *q, int warn);
+
 void
 y_errorn(const char *msg_format, long n)
+{
+  y_ew_n(msg_format, n, 0);
+}
+
+void
+y_errorq(const char *msg_format, char *q)
+{
+  y_ew_q(msg_format, q, 0);
+}
+
+void
+y_warn(const char *msg)
+{
+  YWarning(msg);
+}
+
+void
+y_warnn(const char *msg_format, long n)
+{
+  y_ew_n(msg_format, n, 1);
+}
+
+void
+y_warnq(const char *msg_format, char *q)
+{
+  y_ew_q(msg_format, q, 1);
+}
+
+static void
+y_ew_n(const char *msg_format, long n, int warn)
 {
   char msg[192];
   long nmax = 130;
@@ -1520,11 +1553,12 @@ y_errorn(const char *msg_format, long n)
     if (fmt[-1]=='l') fmt++;
     strncat(msg+nmsg, fmt, nmax-nmsg);
   }
-  YError(msg);
+  if (warn) YWarning(msg);
+  else YError(msg);
 }
 
-void
-y_errorq(const char *msg_format, char *q)
+static void
+y_ew_q(const char *msg_format, char *q, int warn)
 {
   char msg[192];
   long nmax = 130;
@@ -1547,7 +1581,8 @@ y_errorq(const char *msg_format, char *q)
     fmt += 2;
     strncat(msg+nmsg, fmt, nmax-nmsg);
   }
-  YError(msg);
+  if (warn) YWarning(msg);
+  else YError(msg);
 }
 
 void

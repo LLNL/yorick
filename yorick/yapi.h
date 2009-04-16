@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.8 2009-04-13 16:25:42 dhmunro Exp $
+ * $Id: yapi.h,v 1.9 2009-04-16 03:03:02 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -481,6 +481,9 @@ PLUG_API void y_error(const char *msg);
 PLUG_API void y_errorn(const char *msg_format, long n);
 PLUG_API void y_errorq(const char *msg_format, char *q);
 PLUG_API void y_errquiet(void);
+PLUG_API void y_warn(const char *msg);
+PLUG_API void y_warnn(const char *msg_format, long n);
+PLUG_API void y_warnq(const char *msg_format, char *q);
 
 END_EXTERN_C
 
