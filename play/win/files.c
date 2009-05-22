@@ -1,5 +1,5 @@
 /*
- * $Id: files.c,v 1.1 2005-09-18 22:05:35 dhmunro Exp $
+ * $Id: files.c,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
  * MS Windows version of plib file operations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -18,10 +18,32 @@
 #include <fcntl.h>
 
 struct p_file {
+  p_file_ops *ops;
   FILE *fp;  /* use FILE* for text file operations */
   int fd;    /* use file descriptor for binary file operations */
   int binary;
 };
+
+static unsigned long pv_fsize(p_file *file);
+static unsigned long pv_ftell(p_file *file);
+static int pv_fseek(p_file *file, unsigned long addr);
+
+static char *pv_fgets(p_file *file, char *buf, int buflen);
+static int pv_fputs(p_file *file, const char *buf);
+static unsigned long pv_fread(p_file *file,
+                              void *buf, unsigned long nbytes);
+static unsigned long pv_fwrite(p_file *file,
+                               const void *buf, unsigned long nbytes);
+
+static int pv_feof(p_file *file);
+static int pv_ferror(p_file *file);
+static int pv_fflush(p_file *file);
+static int pv_fclose(p_file *file);
+
+static p_file_ops w_file_ops = {
+  &pv_fsize, &pv_ftell, &pv_fseek,
+  &pv_fgets, &pv_fputs, &pv_fread, &pv_fwrite,
+  &pv_feof, &pv_ferror, &pv_fflush, &pv_fclose };
 
 p_file *
 p_fopen(const char *unix_name, const char *mode)
@@ -29,6 +51,7 @@ p_fopen(const char *unix_name, const char *mode)
   FILE *fp = fopen(w_pathname(unix_name), mode);
   p_file *f = fp? p_malloc(sizeof(p_file)) : 0;
   if (f) {
+    f->ops = &w_file_ops;
     f->fp = fp;
     f->fd = _fileno(fp);
     for (; mode[0] ; mode++) if (mode[0]=='b') break;
@@ -53,6 +76,7 @@ p_popen(const char *command, const char *mode)
   FILE *fp = _popen(command, mode);
   p_file *f = fp? p_malloc(sizeof(p_file)) : 0;
   if (f) {
+    f->ops = &w_file_ops;
     f->fp = fp;
     f->fd = fileno(fp);
     for (; mode[0] ; mode++) if (mode[0]=='b') break;
@@ -61,16 +85,16 @@ p_popen(const char *command, const char *mode)
   return f;
 }
 
-int
-p_fclose(p_file *file)
+static int
+pv_fclose(p_file *file)
 {
   int flag = (file->binary&2)? _pclose(file->fp) : fclose(file->fp);
   p_free(file);
   return flag;
 }
 
-char *
-p_fgets(p_file *file, char *buf, int buflen)
+static char *
+pv_fgets(p_file *file, char *buf, int buflen)
 {
   char *b = fgets(buf, buflen, file->fp);
   if (b) {
@@ -85,8 +109,8 @@ p_fgets(p_file *file, char *buf, int buflen)
   return b;
 }
 
-int
-p_fputs(p_file *file, const char *buf)
+static int
+pv_fputs(p_file *file, const char *buf)
 {
   int n, dn, i;
   char b[1026];
@@ -105,8 +129,8 @@ p_fputs(p_file *file, const char *buf)
   return n;
 }
 
-unsigned long
-p_fread(p_file *file, void *buf, unsigned long nbytes)
+static unsigned long
+pv_fread(p_file *file, void *buf, unsigned long nbytes)
 {
   if (file->binary&1) {
     int fd = fileno(file->fp);
@@ -116,8 +140,8 @@ p_fread(p_file *file, void *buf, unsigned long nbytes)
   }
 }
 
-unsigned long
-p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
+static unsigned long
+pv_fwrite(p_file *file, const void *buf, unsigned long nbytes)
 {
   if (file->binary&1) {
     int fd = fileno(file->fp);
@@ -127,8 +151,8 @@ p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
   }
 }
 
-unsigned long
-p_ftell(p_file *file)
+static unsigned long
+pv_ftell(p_file *file)
 {
   if (file->binary&1)
     return _tell(file->fd);
@@ -136,8 +160,8 @@ p_ftell(p_file *file)
     return ftell(file->fp);
 }
 
-int
-p_fseek(p_file *file, unsigned long addr)
+static int
+pv_fseek(p_file *file, unsigned long addr)
 {
   if (file->binary&1)
     return -(_lseek(file->fd, addr, SEEK_SET)==-1L);
@@ -145,28 +169,28 @@ p_fseek(p_file *file, unsigned long addr)
     return fseek(file->fp, addr, SEEK_SET);
 }
 
-int
-p_fflush(p_file *file)
+static int
+pv_fflush(p_file *file)
 {
   return fflush(file->fp);
 }
 
-int
-p_feof(p_file *file)
+static int
+pv_feof(p_file *file)
 {
   return feof(file->fp);
 }
 
-int
-p_ferror(p_file *file)
+static int
+pv_ferror(p_file *file)
 {
   int flag = ferror(file->fp);
   clearerr(file->fp);
   return flag;
 }
 
-unsigned long
-p_fsize(p_file *file)
+static unsigned long
+pv_fsize(p_file *file)
 {
   return _filelength(file->fd);
 }

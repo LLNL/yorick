@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.18 2008-08-30 19:34:15 dhmunro Exp $
+ * $Id: std.i,v 1.19 2009-05-22 04:02:26 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1986,7 +1986,41 @@ extern open;
      F as if it were a data structure instance (e.g.- f.x refers to
      variable x in the binary file f).
   SEE ALSO: create, close, read, write, rdline, bookmark, backup, popen
-            rename, remove, save, restore
+            vopen, rename, remove, save, restore
+ */
+
+extern vopen;
+/* DOCUMENT f = vopen(source)
+         or f = vopen(source, 1)
+     opens SOURCE, which can be a string or char array, as if it were a
+     file, returning a file handle.  The file handle will be a text file
+     unless the optional second argument is non-nil and non-zero, as in
+     the second form.  For the case of a binary file, SOURCE must be a
+     char array.  Any dimensions of a char array are ignored in either
+     case.  For a text file, if SOURCE is a string array, each array element
+     is treated as one line of text.  For a text file char array, "\n",
+     "\r", "\r\n", or "\0" are all recognized as newline markers.  These
+     are read only files.
+
+     If SOURCE is nil, the file handle will be read-write.  After writing
+     the in-memory file, you can retrieve the finished array with the
+     vclose function.  If the file is text, the array will be an array of
+     strings, one per line.  If the file is binary, the array will be an
+     array of char.
+
+  SEE ALSO: vclose, open, system
+ */
+
+extern vclose;
+/* DOCUMENT contents = vclose(handle)
+     closes a file handle opened with vopen, returning the contents as
+     an array.  As a side effect, the handle is set to nil [], as in
+     close.  For a read-only handle, the contents will be the same as
+     the array passed to the vopen call which returned the handle.
+     For a read-write handle, vclose is the only way to get back what
+     you have written to the file; if you close such a file using the
+     ordinary close function, you will lose what you have written.
+  SEE ALSO: vopen, close
  */
 
 extern popen;
@@ -2300,9 +2334,14 @@ extern backup;
 extern include;
 extern require;
 /* DOCUMENT #include "yorick_source.i"
-            require, filename
-            include, filename
-         or include, filename, now
+            require, source
+            include, source
+         or include, source, now
+
+     The SOURCE argument can be a scalar string, interpreted as a
+     filename like "yorick_source.i", the text in a char array, or
+     the text in a 1D array of strings (as returned by a two argument
+     call to rdline).
 
      #include is a parser directive, not a Yorick statement.  Use it
      to read Yorick source code which you have saved in a file; the
@@ -2354,6 +2393,21 @@ extern require;
      study.  Stick with #include.
 
    SEE ALSO: set_path, Y_SITE, plug_in, autoload, include_all, funcdef
+             include1
+ */
+
+extern include1;
+/* DOCUMENT function = include1(source)
+     is similar to include, but parses SOURCE only until the first
+     executable *main* program, which it returns as an interpreted
+     function rather than executing immediately.
+
+     The SOURCE argument can be a scalar string, interpreted as a
+     filename like "yorick_source.i", the text in a char array, or
+     the text in a 1D array of strings (as returned by a two argument
+     call to rdline).
+
+   SEE ALSO: include, funcdef
  */
 
 func include_all(dir, ..)
@@ -2366,7 +2420,7 @@ func include_all(dir, ..)
      even if they end in ".i".  The files are included in alphabetical
      order, DIR1 first, then DIR2, and so on.
 
-   SEE ALSO: include, autoload
+   SEE ALSO: include, include1, autoload
  */
 {
   for (i=0 ; !is_void(dir) ; dir=next_arg()) {
@@ -2648,8 +2702,8 @@ func process_argv(msg)
 /*--------------------------------------------------------------------------*/
 
 func openb(filename, clogfile, update, open102=)
-/* DOCUMENT file= openb(filename)
-         or file= openb(filename, clogfile)
+/* DOCUMENT file = openb(filename)
+         or file = openb(filename, clogfile)
      open the existing file FILENAME for read-only binary I/O.
      (Use updateb or createb, respectively, to open an existing file
       with read-write access or to create a new file.)
@@ -2665,14 +2719,18 @@ func openb(filename, clogfile, update, open102=)
      The restore function may be used to make memory copies of data
      in the file; this will be faster than a large number of
      references to "file.var".
-   SEE ALSO: updateb, createb, open, cd
+     FILENAME may be a file handle to skip the initial open operation.
+     This feature is intended to enable in-memory files created with
+     vopen to be opened:
+       file = openb(vopen(char_array,1));
+   SEE ALSO: updateb, createb, open, vopen, cd
              show, jt, jc, restore
              get_vars, get_times, get_ncycs, get_member, has_records
              set_blocksize, dump_clog, read_clog, recover_file
              openb_hooks, open102, close102, get_addrs
  */
 {
-  f= open(filename, (update? "r+b" : "rb"));
+  f = is_stream(filename)? filename : open(filename, (update? "r+b" : "rb"));
   if (!is_void(clogfile)) return read_clog(f, clogfile);
   if (!is_void(open102)) yPDBopen= ((open102&3)|(at_pdb_open&~3));
   else yPDBopen= at_pdb_open;
@@ -2932,12 +2990,17 @@ func createb(filename, primitives, close102=)
         vax_primitives    -- appropriate for VAXen only (H doubles)
         vaxg_primitives   -- appropriate for VAXen only (G doubles)
         xdr_primitives    -- appropriate for XDR files
-  SEE ALSO: openb, updateb, cd
+
+     FILENAME may also be char (that is, the char datatype) in order to
+     create an in-memory binary file using vopen.  Such a file must be
+     closed with vclose or everything written to it will be lost.
+
+  SEE ALSO: openb, updateb, vopen, cd
             save, add_record, set_filesize, set_blocksize
             close102, close102_default, at_pdb_open, at_pdb_close
  */
 {
-  file= open(filename, "w+b");
+  file = (filename==char)? vopen(,1) : open(filename, "w+b");
   if (!is_void(primitives)) primitives, file;
   if (!is_void(close102)) yPDBclose= ((close102&1)|(at_pdb_close&~1));
   else if (is_void(close102_default)) yPDBclose= at_pdb_close;

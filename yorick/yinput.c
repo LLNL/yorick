@@ -1,5 +1,5 @@
 /*
- * $Id: yinput.c,v 1.1 2005-09-18 22:03:50 dhmunro Exp $
+ * $Id: yinput.c,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
  * Implement Yorick program text reader.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -165,6 +165,22 @@ p_file *YpPushInclude(const char *filename)
   return PushInclude(filename, 1);
 }
 
+static p_file *default_on_include(const char *filename);
+static yon_include_cb *open_include = &default_on_include;
+static p_file *
+default_on_include(const char *filename)
+{
+  return p_fopen(filename, "r");
+}
+
+yon_include_cb *
+ycall_on_include(yon_include_cb *on_include)
+{
+  yon_include_cb *old = open_include;
+  open_include = on_include? on_include : &default_on_include;
+  return old;
+}
+
 static p_file *PushInclude(const char *filename, int clear)
 {
   p_file *file= 0;
@@ -173,7 +189,7 @@ static p_file *PushInclude(const char *filename, int clear)
 
   if (YIsAbsolute(filename)) {
     /* absolute pathname doesn't need any prefix */
-    file= p_fopen(filename, "r");
+    file= open_include(filename);
     if (!file) return 0;
     name= p_strcpy(filename);
 
@@ -192,7 +208,7 @@ static p_file *PushInclude(const char *filename, int clear)
         name= YExpandName(filename);
         if (!YIsAbsolute(name)) break;
       }
-      file= p_fopen(name, "r");
+      file= open_include(name);
       if (file) break;
       p_free(name);
     }
@@ -213,6 +229,22 @@ static p_file *PushInclude(const char *filename, int clear)
   ypIncludes[nYpIncludes++].index = -1;
   prevErrLine= -1;
   return file;
+}
+
+void
+y_push_include(p_file *file, const char *filename)
+{
+  if (nYpIncludes >= maxYpIncludes) {
+    int newSize = maxYpIncludes + 4;
+    ypIncludes = p_realloc(ypIncludes, sizeof(IncludeFile)*newSize);
+    maxYpIncludes = newSize;
+  }
+
+  ypIncludes[nYpIncludes].file = file;
+  ypIncludes[nYpIncludes].filename = p_strcpy(filename);
+  ypIncludes[nYpIncludes].lastLineRead = 0;
+  ypIncludes[nYpIncludes++].index = -1;
+  prevErrLine= -1;
 }
 
 static int need_endif= 0;

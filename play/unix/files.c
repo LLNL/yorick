@@ -1,5 +1,5 @@
 /*
- * $Id: files.c,v 1.5 2008-11-09 20:27:02 dhmunro Exp $
+ * $Id: files.c,v 1.6 2009-05-22 04:02:26 dhmunro Exp $
  * UNIX version of play file operations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -29,11 +29,33 @@
 #include <sys/stat.h>
 
 struct p_file {
+  p_file_ops *ops;
   FILE *fp;  /* use FILE* for text file operations */
   int fd;    /* use file descriptor for binary file operations */
   int binary;    /* 1 to use read/write/lseek, 2 if pipe */
   int errflag;   /* bit 1 is eof, bit 2 is error for binary==1 */
 };
+
+static unsigned long pv_fsize(p_file *file);
+static unsigned long pv_ftell(p_file *file);
+static int pv_fseek(p_file *file, unsigned long addr);
+
+static char *pv_fgets(p_file *file, char *buf, int buflen);
+static int pv_fputs(p_file *file, const char *buf);
+static unsigned long pv_fread(p_file *file,
+                              void *buf, unsigned long nbytes);
+static unsigned long pv_fwrite(p_file *file,
+                               const void *buf, unsigned long nbytes);
+
+static int pv_feof(p_file *file);
+static int pv_ferror(p_file *file);
+static int pv_fflush(p_file *file);
+static int pv_fclose(p_file *file);
+
+static p_file_ops u_file_ops = {
+  &pv_fsize, &pv_ftell, &pv_fseek,
+  &pv_fgets, &pv_fputs, &pv_fread, &pv_fwrite,
+  &pv_feof, &pv_ferror, &pv_fflush, &pv_fclose };
 
 p_file *
 p_fopen(const char *unix_name, const char *mode)
@@ -41,6 +63,7 @@ p_fopen(const char *unix_name, const char *mode)
   FILE *fp = fopen(u_pathname(unix_name), mode);
   p_file *f = fp? p_malloc(sizeof(p_file)) : 0;
   if (f) {
+    f->ops = &u_file_ops;
     f->fp = fp;
     f->fd = fileno(fp);
     for (; mode[0] ; mode++) if (mode[0]=='b') break;
@@ -60,6 +83,7 @@ p_popen(const char *command, const char *mode)
   FILE *fp = popen(command, mode[0]=='w'? "w" : "r");
   p_file *f = fp? p_malloc(sizeof(p_file)) : 0;
   if (f) {
+    f->ops = &u_file_ops;
     f->fp = fp;
     f->fd = fileno(fp);
     f->binary = 2;
@@ -74,8 +98,8 @@ p_popen(const char *command, const char *mode)
 #endif
 }
 
-int
-p_fclose(p_file *file)
+static int
+pv_fclose(p_file *file)
 {
   int flag = (file->binary&2)? pclose(file->fp) : fclose(file->fp);
   u_fdwatch(file->fd, 0);
@@ -99,20 +123,20 @@ u_fdwatch(int fd, int on)
   if (on && fd>=u_fd_max) u_fd_max = fd+1;
 }
 
-char *
-p_fgets(p_file *file, char *buf, int buflen)
+static char *
+pv_fgets(p_file *file, char *buf, int buflen)
 {
   return fgets(buf, buflen, file->fp);
 }
 
-int
-p_fputs(p_file *file, const char *buf)
+static int
+pv_fputs(p_file *file, const char *buf)
 {
   return fputs(buf, file->fp);
 }
 
-unsigned long
-p_fread(p_file *file, void *buf, unsigned long nbytes)
+static unsigned long
+pv_fread(p_file *file, void *buf, unsigned long nbytes)
 {
   if (file->binary & 1) {
     long n = read(file->fd, buf, nbytes);
@@ -142,8 +166,8 @@ p_fread(p_file *file, void *buf, unsigned long nbytes)
   }
 }
 
-unsigned long
-p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
+static unsigned long
+pv_fwrite(p_file *file, const void *buf, unsigned long nbytes)
 {
   if (file->binary & 1) {
     long n = write(file->fd, buf, nbytes);
@@ -163,8 +187,8 @@ p_fwrite(p_file *file, const void *buf, unsigned long nbytes)
   }
 }
 
-unsigned long
-p_ftell(p_file *file)
+static unsigned long
+pv_ftell(p_file *file)
 {
   if (file->binary & 1)
     return lseek(file->fd, 0L, SEEK_CUR);
@@ -174,8 +198,8 @@ p_ftell(p_file *file)
     return -1L;
 }
 
-int
-p_fseek(p_file *file, unsigned long addr)
+static int
+pv_fseek(p_file *file, unsigned long addr)
 {
   file->errflag &= ~1;
   if (file->binary & 1)
@@ -186,20 +210,20 @@ p_fseek(p_file *file, unsigned long addr)
     return -1;
 }
 
-int
-p_fflush(p_file *file)
+static int
+pv_fflush(p_file *file)
 {
   return (file->binary & 1)? 0 : fflush(file->fp);
 }
 
-int
-p_feof(p_file *file)
+static int
+pv_feof(p_file *file)
 {
   return (file->binary&1)? ((file->errflag&1) != 0) : feof(file->fp);
 }
 
-int
-p_ferror(p_file *file)
+static int
+pv_ferror(p_file *file)
 {
   int flag = (file->binary&1)? ((file->errflag&2) != 0) : ferror(file->fp);
   clearerr(file->fp);
@@ -207,8 +231,8 @@ p_ferror(p_file *file)
   return flag;
 }
 
-unsigned long
-p_fsize(p_file *file)
+static unsigned long
+pv_fsize(p_file *file)
 {
   struct stat buf;
   if (fstat(file->fd, &buf)) return 0;

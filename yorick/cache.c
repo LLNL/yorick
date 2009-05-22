@@ -1,5 +1,5 @@
 /*
- * $Id: cache.c,v 1.4 2007-08-04 01:03:01 dhmunro Exp $
+ * $Id: cache.c,v 1.5 2009-05-22 04:02:26 dhmunro Exp $
  * Define caching (disk buffering) scheme used for random access
  * binary I/O.
  */
@@ -128,6 +128,11 @@ static long RawRead(IOStream *file, void *buf, long addr, long len)
   if (!(file->permissions & 1))
     YErrorIO("attempt to read from binary file opened in w or a mode");
 
+  if (y_vopen_file(file->stream)) {
+    file->ioOps->Seek(file, addr);
+    return file->ioOps->Read(file, buf, sizeof(char), len);
+  }
+
   /* similar to strtok -- buf==0 identifies a follow-up call
      when the first call did not meet the entire request */
   if (buf) {
@@ -215,6 +220,13 @@ static const char *wrtBuffer;
 static long RawWrite(IOStream *file, const void *buf, long addr, long len)
 {
   long last= addr+len;
+
+  if (y_vopen_file(file->stream)) {
+    file->ioOps->Seek(file, addr);
+    file->ioOps->Write(file, buf, sizeof(char), len);
+    if (last > file->nextAddress) file->nextAddress = last;
+    return len;
+  }
 
   /* similar to strtok -- buf==0 identifies a follow-up call
      when the first call did not meet the entire request */

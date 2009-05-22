@@ -1,5 +1,5 @@
 /*
- * $Id: binio.h,v 1.1 2005-09-18 22:03:49 dhmunro Exp $
+ * $Id: binio.h,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
  * Declare structures and functions for arrays of data that have
  * meaningful interpretations on disk.
  *
@@ -204,6 +204,11 @@ struct IOStream {
                                to aid in pointee reads or writes */
   void (*CloseHook)(IOStream *file);  /* if non-0, called before close */
 };
+
+/* check to see if this is in-memory file created by vopen
+ * return value is the Array* or 0, stream is p_file*
+ */
+PLUG_API void *y_vopen_file(void *stream);
 
 /*--------------------------------------------------------------------------*/
 

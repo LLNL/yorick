@@ -1,5 +1,5 @@
 /*
- * $Id: yio.h,v 1.1 2005-09-18 22:04:16 dhmunro Exp $
+ * $Id: yio.h,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
  * Declare Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -127,6 +127,17 @@ PLUG_API void IncludeNow(void);
 PLUG_API void YpPush(const char *filename);      /* filename will be copied */
 PLUG_API p_file *YpPop(void);  /* call YpPushInclude with top of input list */
 PLUG_API void YpClearIncludes(void);
+/* like YpPushInclude, but does not open file */
+PLUG_API void y_push_include(p_file *file, const char *filename);
+/*
+  The on_include callback returns a p_file* on success, or 0 on failure.
+  ycall_on_include sets this callback, returing the old callback.
+  ycall_on_include(0) resets the default include file open function,
+    which is simply p_fopen
+  (This is an esoteric function needed by mpy.)
+*/
+typedef p_file *yon_include_cb(const char *filename);
+PLUG_API yon_include_cb *ycall_on_include(yon_include_cb *on_include);
 
 PLUG_API void ResetStack(int hard);
 PLUG_API void yr_reset(void);

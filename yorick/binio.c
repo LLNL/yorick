@@ -1,5 +1,5 @@
 /*
- * $Id: binio.c,v 1.2 2008-12-07 03:17:42 dhmunro Exp $
+ * $Id: binio.c,v 1.3 2009-05-22 04:02:26 dhmunro Exp $
  * Define Yorick functions for dealing with binary I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -638,10 +638,14 @@ int AddVariable(IOStream *file, long address, const char *name,
 HistoryInfo *AddHistory(IOStream *file, long size)
 {
   IOStream *child;
-  HistoryInfo *history= p_malloc(sizeof(HistoryInfo));
+  HistoryInfo *history;
   long nStructs, i;
   StructDef **structList, *base;
 
+  if (y_vopen_file(file->stream))
+    YError("vopen binary file handles do not support history records");
+
+  history= p_malloc(sizeof(HistoryInfo));
   history->parent= file;
   history->child= 0;  /* temporary */
   history->nFamily= 1;

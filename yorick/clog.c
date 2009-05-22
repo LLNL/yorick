@@ -1,5 +1,5 @@
 /*
- * $Id: clog.c,v 1.2 2006-02-15 04:31:04 dhmunro Exp $
+ * $Id: clog.c,v 1.3 2009-05-22 04:02:26 dhmunro Exp $
  * Define routines to handle Contents Log (CLOG) language
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -121,6 +121,8 @@ void CLupdate(IOStream *file)
   HistoryInfo *history= file->history;
   CLbuffer *clBuffer= file->contentsLog;
 
+  if (file->fullname && y_vopen_file(file->stream)) return;
+
   if (history) {
     file= history->parent;
     if (!clBuffer) clBuffer= history->child->contentsLog;
@@ -147,8 +149,11 @@ int DumpClogFile(IOStream *file, const char *name)
 {
   HistoryInfo *history= file->history;
   CLbuffer clBuffer;
+  p_file *stream;
 
-  p_file *stream= p_fopen(name, "w+");  /* create the Clog file */
+  if (file->fullname && y_vopen_file(file->stream)) return 0;
+
+  stream= p_fopen(name, "w+");  /* create the Clog file */
   if (!stream) return 1;
 
   CLinit(&clBuffer, stream, 1024L, 0);

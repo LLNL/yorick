@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.7 2007-02-24 23:14:41 dhmunro Exp $
+ * $Id: task.c,v 1.8 2009-05-22 04:02:26 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -525,31 +525,427 @@ void IncludeNow(void)
   if (ym_state&Y_QUITTING) YHalt();
 }
 
+static char *y_include_arg(p_file **file);
+
 void
 Y_include(int nArgs)
 {
-  long now;
+  long now = 0;
   char *name;
+  p_file *file = 0;
   if (nArgs!=1 && nArgs!=2)
     YError("include function takes exactly one or two arguments");
-  now = (nArgs>1)? YGetInteger(sp) : 0;
-  name = YGetString(sp-nArgs+1);
+  if (nArgs > 1) {
+    now = YGetInteger(sp);
+    Drop(1);
+  }
+  name = y_include_arg(&file);
   if (name[0]) {  /* name=="" special hack cleans out pending includes */
     if (now >= 0) {
-      if (!YpPushInclude(name)) {
+      if (file) {
+        y_push_include(file, name);
+      } else if (!YpPushInclude(name)) {
         if (!(now&2))
           YError("missing include file specified in include function");
         now = 0;
       }
     } else {
+      if (file) YError("include: now<0 only possible with filename argument");
       YpPush(name);          /* defer until all pending input parsed */
     }
   }
-  Drop(nArgs);
+  Drop(1);
   if (now>0) IncludeNow(); /* parse and maybe execute file to be included
                             * -- without now, this won't happen until the
                             * next line is parsed naturally */
 }
+
+void
+Y_include1(int nArgs)
+{
+  int i0 = nYpIncludes;
+  int t0 = nTasks;
+  char *name;
+  p_file *file = 0;
+  if (nArgs != 1) YError("include1 function takes exactly one argument");
+  name = y_include_arg(&file);
+  if (file) y_push_include(file, name);
+  else if (!YpPushInclude(name))
+    YError("missing include file specified in include1 function");
+  Drop(nArgs);
+  if (ym_state & Y_SUSPENDED)
+    YError("include1 called while suspended waiting for event");
+  while (nTasks<=t0 && (nYpIncludes>i0 || (nYpIncludes==i0 &&
+         ypIncludes[i0-1].file))) YpParse((void *)0);
+  if (nTasks == t0+1) {
+    (sp+1)->ops = &dataBlockSym;
+    (sp+1)->value.db = (DataBlock *)tasks[--nTasks];  /* use owned by stack */
+    sp++;
+  } else if (nTasks <= t0) {
+    PushDataBlock(RefNC(&nilDB));
+  } else {
+    YError("include1 created more than one task (impossible?)");
+  }
+}
+
+static p_file *ynew_vopen(Array *array, int binary);
+static char *y_vopen_name = "(vopen file)";
+
+static char *
+y_include_arg(p_file **file)
+{
+  Operand op;
+  char *name = y_vopen_name;
+  if (!sp->ops) YError("unexpected keyword argument in include or include1");
+  sp->ops->FormOperand(sp, &op);
+  if (op.ops->typeID == T_STRING) {
+    if (!op.type.dims) {
+      char **q = op.value;
+      if (!q[0]) YError("string(0) filename to include or include1");
+      name = q[0];
+    } else {
+      *file = ynew_vopen((Array *)sp->value.db, 0);
+      name = y_vopen_name;
+    }
+  } else if (op.ops->typeID == T_CHAR) {
+    *file = ynew_vopen((Array *)sp->value.db, 0);
+    name = y_vopen_name;
+  } else if (op.ops == &textOps) {
+    /* first few members of TextStream same as IOStream */
+    name = ((IOStream *)op.value)->fullname;
+  } else {
+    if (op.ops == &streamOps)
+      YError("include or include1 cannot accept binary file handle");
+    YError("include or include1 cannot convert argument to text file handle");
+  }
+  return name;
+}
+
+/* ----- begin vopen implementation ----- */
+
+static unsigned long yv_fsize(p_file *file);
+static unsigned long yv_ftell(p_file *file);
+static int yv_fseek(p_file *file, unsigned long addr);
+
+static char *yv_fgets(p_file *file, char *buf, int buflen);
+static int yv_fputs(p_file *file, const char *buf);
+static unsigned long yv_fread(p_file *file,
+                              void *buf, unsigned long nbytes);
+static unsigned long yv_fwrite(p_file *file,
+                               const void *buf, unsigned long nbytes);
+
+static int yv_feof(p_file *file);
+static int yv_ferror(p_file *file);
+static int yv_fflush(p_file *file);
+static int yv_fclose(p_file *file);
+
+static p_file_ops y_vopen_ops = {
+  &yv_fsize, &yv_ftell, &yv_fseek,
+  &yv_fgets, &yv_fputs, &yv_fread, &yv_fwrite,
+  &yv_feof, &yv_ferror, &yv_fflush, &yv_fclose };
+
+typedef struct y_vopen_t y_vopen_t;
+struct y_vopen_t {
+  p_file_ops *ops;
+  Array *array;
+  long addr, maxaddr;
+  int binary;
+};
+
+static p_file *
+ynew_vopen(Array *array, int binary)
+{
+  y_vopen_t *file = p_malloc(sizeof(y_vopen_t));
+  file->ops = &y_vopen_ops;
+  file->array = Ref(array);
+  file->addr = 0;
+  file->maxaddr = (binary&2)? 0 : ((y_vopen_t *)file)->array->type.number;
+  file->binary = binary;
+  return (p_file *)file;
+}
+
+void *
+y_vopen_file(void *stream)
+{
+  y_vopen_t *file = stream;
+  return (file->ops==&y_vopen_ops)? file->array : 0;
+}
+
+void
+Y_vopen(int argc)
+{
+  Operand op;
+  p_file *file = 0;
+  int binary = 0, wrt = 0;
+  if (argc == 2) {
+    if (!sp[-1].ops) YError("vopen: unexpected keyword argument");
+    binary = (YGetInteger(sp) != 0);
+    Drop(1);
+  } else if (argc != 1) {
+    YError("vopen takes one or two arguments");
+  }
+  sp->ops->FormOperand(sp, &op);
+  if (op.ops->typeID == T_VOID) {
+    Dimension *tmp = tmpDims;
+    tmpDims = 0;
+    FreeDimension(tmp);
+    tmpDims = NewDimension(binary? 16384L : 1024L, 1L, (Dimension *)0);
+    Drop(1);
+    if (binary) PushDataBlock(NewArray(&charStruct, tmpDims));
+    else PushDataBlock(NewArray(&stringStruct, tmpDims));
+    sp->ops->FormOperand(sp, &op);
+    binary |= (wrt = 2);
+  }
+  if (op.ops->typeID!=T_STRING && op.ops->typeID!=T_CHAR)
+    YError("vopen argument must be string or char array");
+  file = ynew_vopen((Array *)sp->value.db, binary);
+  if (binary&1)
+    PushDataBlock(NewIOStream(p_strcpy(y_vopen_name), file, 9|wrt));
+  else
+    PushDataBlock(NewTextStream(p_strcpy(y_vopen_name), file, 1|wrt, 0L, 0L));
+}
+
+void
+Y_vclose(int argc)
+{
+  long index = -1;
+  Operand op;
+  if (argc != 1) YError("vclose takes exactly one argument");
+  if (sp->ops == &referenceSym) index = sp->index;
+  sp->ops->FormOperand(sp, &op);
+  if (op.ops==&textOps || op.ops==&streamOps) {
+    IOStream *ios = op.value;  /* first few members match TextStream */
+    y_vopen_t *file = ios->stream;
+    if (file && file->ops==&y_vopen_ops) {
+      long len;
+      len = file->maxaddr;
+      if (!len) {
+        PushDataBlock(RefNC(&nilDB));
+      } else {
+        if (file->binary & 2) {
+          if (file->binary & 1) {
+            if (ios->CloseHook) {
+              ios->CloseHook(ios);
+              ios->CloseHook = 0;
+              len = file->maxaddr;
+            }
+          }
+          if (file->array->type.number > len) {
+            /* shrink array to elements actually used */
+            file->array->type.number =
+              file->array->type.dims->number = len;
+            if (!(file->binary & 1)) len *= sizeof(char*);
+            len += (char *)file->array->value.q - (char *)file->array;
+            file->array = p_realloc(file->array, len);
+          }
+        }
+        PushDataBlock(Ref(file->array));
+        if ((file->binary & 3) == 3) {
+          ios->ioOps->Close(ios);
+          ios->stream = 0;
+        }
+      }
+      if (index >= 0) {
+        /* set reference argument to nil */
+        Symbol *s = &globTab[index];
+        if (s->ops==&dataBlockSym && s->value.db==op.value) {
+          s->ops = &intScalar;
+          Unref(s->value.db);
+          s->value.db = RefNC(&nilDB);
+          s->ops = &dataBlockSym;
+        }
+      }
+      return;
+    }
+  }
+  YError("vclose: already closed, not vopen handle, or not a file handle");
+}
+
+static unsigned long
+yv_fsize(p_file *file)
+{
+  if (((y_vopen_t *)file)->binary & 2) return ((y_vopen_t *)file)->maxaddr;
+  else return ((y_vopen_t *)file)->array->type.number;
+}
+
+static unsigned long
+yv_ftell(p_file *file)
+{
+  return ((y_vopen_t *)file)->addr;
+}
+
+static int
+yv_fseek(p_file *file, unsigned long addr)
+{
+  long len = ((y_vopen_t *)file)->array->type.number;
+  if (((y_vopen_t *)file)->binary & 2) {
+    if (((y_vopen_t *)file)->binary & 1) {
+      if (addr > len) {
+        long j, n = 2*((y_vopen_t *)file)->array->type.number;
+        long nhead = (char *)((y_vopen_t *)file)->array->value.c -
+          (char *)((y_vopen_t *)file)->array;
+        while (n < addr) n += n;
+        ((y_vopen_t *)file)->array = p_realloc(((y_vopen_t *)file)->array,
+                                               nhead+n);
+        for (j=len ; j<n ; j++) ((y_vopen_t *)file)->array->value.c[j] = '\0';
+        ((y_vopen_t *)file)->array->type.number =
+          ((y_vopen_t *)file)->array->type.dims->number = n;
+      }
+      len = addr;
+    } else {
+      len = ((y_vopen_t *)file)->maxaddr;
+    }
+  }
+  if (addr<0 || addr>len) return -1;
+  ((y_vopen_t *)file)->addr = addr;
+  if (addr > ((y_vopen_t *)file)->maxaddr)
+    ((y_vopen_t *)file)->maxaddr = addr;
+  return 0;
+}
+
+static char *
+yv_fgets(p_file *file, char *buf, int buflen)
+{
+  int strng = (((y_vopen_t *)file)->array->ops->typeID == T_STRING);
+  char *txt, c='\0';
+  long jeof;
+  int i, j;
+  if (!strng) {
+    txt = ((y_vopen_t *)file)->array->value.c + ((y_vopen_t *)file)->addr;
+    jeof = ((y_vopen_t *)file)->array->type.number - ((y_vopen_t *)file)->addr;
+  } else {
+    txt = ((y_vopen_t *)file)->array->value.q[((y_vopen_t *)file)->addr];
+    jeof = 0L;
+  }
+  if (buflen <= 0) return 0;
+  for (i=j=0 ; i<buflen-1 && c!='\n' ; i++,j++) {
+    if (!strng && j>=jeof) break;
+    if (!txt || !txt[j]) {
+      c = '\n';
+    } else if (txt[j] == '\r') {
+      if (j<jeof-1 && txt[j+1]=='\n') j++;
+      c = '\n';
+    } else {
+      c = txt[j];
+    }
+    buf[i] = c;
+  }
+  buf[i] = '\0';
+  if (!strng) ((y_vopen_t *)file)->addr += j;
+  else ((y_vopen_t *)file)->addr++;
+  return buf;
+}
+
+static int
+yv_fputs(p_file *file, const char *buf)
+{
+  if (!buf) return 0;
+  if (((y_vopen_t *)file)->binary == 2) {
+    long n, addr = ((y_vopen_t *)file)->addr;
+    long len = ((y_vopen_t *)file)->array->type.number;
+    long nhead = (char *)((y_vopen_t *)file)->array->value.q -
+      (char *)((y_vopen_t *)file)->array;
+    char *line;
+    for (;;) {
+      if (addr == len) {
+        n = nhead + (len+len)*sizeof(char*);
+        ((y_vopen_t *)file)->array = p_realloc(((y_vopen_t *)file)->array, n);
+        for (n=0 ; n<len ; n++) ((y_vopen_t *)file)->array->value.q[len+n] = 0;
+        ((y_vopen_t *)file)->array->type.number =
+          ((y_vopen_t *)file)->array->type.dims->number = len + len;
+      }
+      for (n=0 ; buf[n] && buf[n]!='\n' ; n++);
+      line = ((y_vopen_t *)file)->array->value.q[addr];
+      if (n) {
+        ((y_vopen_t *)file)->array->value.q[addr] = p_strncat(line, buf, n);
+        if (line) p_free(line);
+      } else if (!line) {
+        ((y_vopen_t *)file)->array->value.q[addr] = p_strcpy("");
+      }
+      if (buf[n] == '\n') addr++, n++;
+      if (!buf[n]) break;
+      buf += n;
+    }
+    ((y_vopen_t *)file)->addr = addr;
+    if (addr > ((y_vopen_t *)file)->maxaddr)
+      ((y_vopen_t *)file)->maxaddr = addr;
+  } else {
+    YError("p_fputs to binary or read-only vopen file handle");
+  }
+  return 0;
+}
+
+static unsigned long
+yv_fread(p_file *file, void *buf, unsigned long nbytes)
+{
+  int strng = (((y_vopen_t *)file)->array->ops->typeID == T_STRING);
+  char *cbuf=buf, *txt, c;
+  unsigned long j, jeof;
+  if (!strng) {
+    txt = ((y_vopen_t *)file)->array->value.c + ((y_vopen_t *)file)->addr;
+    jeof = ((y_vopen_t *)file)->array->type.number - ((y_vopen_t *)file)->addr;
+  } else {
+    YError("p_fread from text vopen file handle");
+  }
+  if (!nbytes) return 0L;
+  for (j=0 ; j<nbytes ; j++) {
+    if (!strng && j>=jeof) break;
+    cbuf[j] = txt[j];
+    if (strng && !txt[j]) break;
+  }
+  if (!strng) ((y_vopen_t *)file)->addr += j;
+  else ((y_vopen_t *)file)->addr++;
+  return j;
+}
+
+static unsigned long
+yv_fwrite(p_file *file, const void *buf, unsigned long nbytes)
+{
+  if (((y_vopen_t *)file)->binary == 3) {
+    long len = ((y_vopen_t *)file)->array->type.number;
+    long i = ((y_vopen_t *)file)->addr;
+    if (i+nbytes > len) {
+      /* double array size if at eof */
+      long j, n = len + len;
+      long nhead = (char *)((y_vopen_t *)file)->array->value.c -
+        (char *)((y_vopen_t *)file)->array;
+      while (n < i+nbytes) n += n;
+      ((y_vopen_t *)file)->array = p_realloc(((y_vopen_t *)file)->array,
+                                             nhead + n);
+      for (j=len ; j<n ; j++) ((y_vopen_t *)file)->array->value.c[j] = '\0';
+      ((y_vopen_t *)file)->array->type.number =
+        ((y_vopen_t *)file)->array->type.dims->number = n;
+    }
+    if (nbytes) memcpy(((y_vopen_t *)file)->array->value.c+i, buf, nbytes);
+    ((y_vopen_t *)file)->addr = (i += nbytes);
+    if (i > ((y_vopen_t *)file)->maxaddr) ((y_vopen_t *)file)->maxaddr = i;
+  } else {
+    YError("p_fwrite to text or read-only vopen file handle");
+  }
+  return nbytes;
+}
+
+static int
+yv_feof(p_file *file)
+{
+  return (((y_vopen_t *)file)->addr
+          >= ((y_vopen_t *)file)->array->type.number);
+}
+
+static int yv_ferror(p_file *file) { return 0; }
+static int yv_fflush(p_file *file) { return 0; }
+
+static int
+yv_fclose(p_file *file)
+{
+  Array *array = ((y_vopen_t *)file)->array;
+  ((y_vopen_t *)file)->array = 0;
+  Unref(array);
+  p_free(file);
+  return 0;
+}
+
+/* ----- end vopen implementation ----- */
 
 static char **yplug_path = 0;
 

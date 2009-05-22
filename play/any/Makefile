@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2005-09-18 22:05:43 dhmunro Exp $
+# $Id: Makefile,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
 SHELL=/bin/sh
 MAKE=make
 include ../../Make.cfg
@@ -9,7 +9,7 @@ CCLOAD=$(CC) $(COPT) $(Y_LDFLAGS)
 
 OBJS=hash.o hash0.o hashctx.o hashid.o mm.o mminit.o \
   alarms.o pmemcpy.o pstrcpy.o pstrncat.o p595.o \
-  bitrev.o bitlrot.o bitmrot.o
+  bitrev.o bitlrot.o bitmrot.o pstdio.o
 
 all: libplay
 
@@ -59,6 +59,8 @@ bitrev.o: $(PLAY_CFG)/config.h ../play.h $(PLUGEXT)
 bitlrot.o: $(PLAY_CFG)/config.h ../play.h $(PLUGEXT)
 bitmrot.o: $(PLAY_CFG)/config.h ../play.h $(PLUGEXT)
 p595.o: ../play.h $(PLUGEXT)
+
+pstdio.o: $(PLAY_CFG)/config.h ../pstdio.h $(PLUGEXT)
 
 test2d.o: ../play.h ../pstdlib.h ../pstdio.h $(PLUGEXT)
 hashtest.o: ../phash.h ../pstdlib.h ../pstdio.h $(PLUGEXT)

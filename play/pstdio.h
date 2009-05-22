@@ -1,5 +1,5 @@
 /*
- * $Id: pstdio.h,v 1.1 2005-09-18 22:05:31 dhmunro Exp $
+ * $Id: pstdio.h,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
  * portability layer I/O wrappers
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -21,6 +21,29 @@ typedef struct p_file p_file;
 typedef struct p_dir p_dir;
 
 BEGIN_EXTERN_C
+
+/* support virtual file objects:
+ * first member of struct p_file is p_file_ops*
+ * other functions besides p_fopen, p_popen may create p_file* objects
+ */
+typedef struct p_file_ops p_file_ops;
+struct p_file_ops {
+  unsigned long (*v_fsize)(p_file *file);
+  unsigned long (*v_ftell)(p_file *file);
+  int (*v_fseek)(p_file *file, unsigned long addr);
+ 
+  char *(*v_fgets)(p_file *file, char *buf, int buflen);
+  int (*v_fputs)(p_file *file, const char *buf);
+  unsigned long (*v_fread)(p_file *file,
+                           void *buf, unsigned long nbytes);
+  unsigned long (*v_fwrite)(p_file *file,
+                            const void *buf, unsigned long nbytes);
+ 
+  int (*v_feof)(p_file *file);
+  int (*v_ferror)(p_file *file);
+  int (*v_fflush)(p_file *file);
+  int (*v_fclose)(p_file *file);
+};
 
 PLUG_API p_file *p_fopen(const char *unix_name, const char *mode);
 PLUG_API p_file *p_popen(const char *command, const char *mode);
