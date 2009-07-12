@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.15 2009-04-16 03:03:02 dhmunro Exp $
+ * $Id: yapi.c,v 1.16 2009-07-12 04:16:14 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1206,6 +1206,7 @@ union y_uo_body_t {
   void (*f)(void);
 };
 
+/* if this struct or above union changes, must also change fwrap.c */
 typedef struct y_uo_t y_uo_t;
 struct y_uo_t {
   int references;      /* reference counter */
@@ -1291,12 +1292,16 @@ y_uo_eval(Operand *op)
   if (uo->uo_type->uo_ops != uo->ops)
     y_error("(BUG) corrupted user object in y_uo_eval");
   if (uo->uo_type->on_eval) {
-    Symbol *stack, *owner = op->owner;
+    Symbol *stack;
+    long owner = op->owner - spBottom;
     uo->uo_type->on_eval(uo->body.c, op->references); /*argc in references*/
-    PopTo(owner);
-    while (sp - owner > 0) {
-      stack = sp--; /* sp decremented BEFORE stack element is deleted */
-      if (stack->ops == &dataBlockSym) Unref(stack->value.db);
+    if (sp > spBottom+owner) {
+      Symbol *s = spBottom + owner;
+      PopTo(s);
+      while (sp - s > 0) {
+        stack = sp--; /* sp decremented BEFORE stack element is deleted */
+        if (stack->ops == &dataBlockSym) Unref(stack->value.db);
+      }
     }
   } else {
     y_error("user object has no on_eval method");
@@ -1310,8 +1315,9 @@ y_uo_extract(Operand *op, char *name)
   if (uo->uo_type->uo_ops != uo->ops)
     y_error("(BUG) corrupted user object in y_uo_extract");
   if (uo->uo_type->on_extract) {
+    long owner = op->owner - spBottom;
     uo->uo_type->on_extract(uo->body.c, yget_global(name, 0L));
-    PopTo(op->owner);
+    PopTo(spBottom+owner);
   } else {
     y_error("user object has no on_extract method");
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.19 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: std.i,v 1.20 2009-07-12 04:16:14 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -379,6 +379,62 @@ extern eq_nocopy;
      Note that scalar int, long, and double variables are always copied,
      so you cannot count on eq_nocopy setting up an "equivalence"
      between variables.
+ */
+
+extern wrap_args;
+/* DOCUMENT wrap_args, interpreted_function
+     converts INTERPRETED_FUNCTION to a wrapped_func object,
+     which will accept an arbitrary argument list, then invoke
+     INTERPRETED_FUNCTION with a single wrapped_args object as
+     its argument.  The INTERPRETED_FUNCTION must be declared as:
+
+     func INTERPRETED_FUNCTION(args)
+     {
+       ...use args object to retrieve actual arguments...
+     }
+     wrap_args, INTEPRETED_FUNCTION;
+
+     After wrapping, you invoke the function as usual:
+
+     result = INTERPRETED_FUNCTION(arg1, key1=ka1, arg2, ...);
+
+     Unlike an ordinary interpreted function, a wrapped function
+     will accept any number of arguments, and keyword arguments
+     of any name.  Furthermore, unlike an ordinary function, you
+     can determine the number of arguments passed to the function,
+     the names of any simple variable references passed to the
+     function, and other useful information about the arguments.
+     You can set the external value of any simple variable passed
+     as an argument, as if it had been declared func f(..., &x, ...).
+
+     A wrapped_func function call is less efficient and requires
+     less transparent coding than an ordinary function call; the
+     advantage is that you can write a wrapped function which has
+     non-standard semantics, for example, like the save and restore
+     built-in functions (which use the names of the arguments passed
+     to them), or other special effects, like accepting arbitrary
+     keyword names.
+
+     The ARGS object, the single argument actually passed to
+     your INTEPRETED_FUNCTION, is a wrapped_args object, which has
+     the following Eval methods:
+
+       ARGS(-)   returns [keyname1, keyname2, keyname3, ...]
+                   the actual names of the keyword arguments passed
+                   or nil [] if no keywords were passed
+       ARGS(0)   returns the number of positional arguments passed
+       ARGS(i)   returns the i-th positional argument
+                   i can also be a string to return a keyword argument,
+                     or a negative number to return the -i-th keyword
+       ARGS, i, value
+                 sets the value of argument i, as if it were
+                   an output variable declared as func f(..., &x, ...)
+       ARGS(-,i) returns the name of argument i if it was
+                   passed as a simple variable reference
+       ARGS(0,i) returns a flag describing the argument:
+         0 if argument is a simple variable reference (set value works)
+         1 if argument is an expression (set value will be discarded)
+         2 if argument does not exist (as opposed to simply nil)
  */
 
 /*--------------------------------------------------------------------------*/
@@ -2008,7 +2064,7 @@ extern vopen;
      strings, one per line.  If the file is binary, the array will be an
      array of char.
 
-  SEE ALSO: vclose, open, system
+  SEE ALSO: vsave, vclose, open, system
  */
 
 extern vclose;
@@ -2020,8 +2076,53 @@ extern vclose;
      For a read-write handle, vclose is the only way to get back what
      you have written to the file; if you close such a file using the
      ordinary close function, you will lose what you have written.
-  SEE ALSO: vopen, close
+  SEE ALSO: vsave, vopen, close
  */
+
+func vsave(args)
+/* DOCUMENT c = vsave(var1, var2, ...)
+         or c = vsave(var1, ..., string(namea), vara, ...)
+     save the array variables VAR1, VAR2, ..., in the char array that is
+     returned.  Any of the variables may instead be a string expression
+     NAMEA followed by the value VARA of the variable.  The NAMEA argument
+     is recognized as the name of the following argument by being an
+     expression; arguments that are to be stored in f must be simple
+     variable references.  You can achieve this as shown by placing the
+     argument inside a call to string(), or by adding "", or simply by
+     passing a constant string value like "myvarname".
+
+     You can pass the returned char array to openb, f=openb(c), to get
+     an in-memory file handle f like any other binary file handle,
+     allowing you to use the restore function, or the f.var1 syntax,
+     or the get_member function.
+
+     You can set the internal primitives using the prims= keyword; see
+     createb for details.
+  SEE ALSO: openb, vopen, restore, get_member, wrap_args
+ */
+{
+  local a, name;
+  a = args(-);
+  if (numberof(a)) {
+    if (numberof(a)!=1 || a(1)!="prims")
+      error, "unrecognized keyword argument";
+    eq_nocopy, a, args(-1);
+  }
+  f = createb(char, a);
+  n = args(0);
+  for (i=1 ; i<=n ; ++i) {
+    eq_nocopy, a, args(i);
+    name = args(-,i);
+    if (!name) {
+      eq_nocopy, name, a;
+      eq_nocopy, a, args(++i);
+    }
+    add_variable, f, -1, name, structof(a), dimsof(a);
+    get_member(f, name) = a;
+  }
+  return vclose(f);
+}
+wrap_args, vsave;
 
 extern popen;
 /* DOCUMENT f= popen(command, mode)
@@ -2723,6 +2824,7 @@ func openb(filename, clogfile, update, open102=)
      This feature is intended to enable in-memory files created with
      vopen to be opened:
        file = openb(vopen(char_array,1));
+     FILENAME may also be char_array directly, as returned by vsave.
    SEE ALSO: updateb, createb, open, vopen, cd
              show, jt, jc, restore
              get_vars, get_times, get_ncycs, get_member, has_records
@@ -2730,7 +2832,9 @@ func openb(filename, clogfile, update, open102=)
              openb_hooks, open102, close102, get_addrs
  */
 {
-  f = is_stream(filename)? filename : open(filename, (update? "r+b" : "rb"));
+  if (is_stream(filename)) f = filename;
+  else if (structof(filename)==char) f = vopen(filename, 1);
+  else f = open(filename, (update? "r+b" : "rb"));
   if (!is_void(clogfile)) return read_clog(f, clogfile);
   if (!is_void(open102)) yPDBopen= ((open102&3)|(at_pdb_open&~3));
   else yPDBopen= at_pdb_open;
@@ -2995,7 +3099,7 @@ func createb(filename, primitives, close102=)
      create an in-memory binary file using vopen.  Such a file must be
      closed with vclose or everything written to it will be lost.
 
-  SEE ALSO: openb, updateb, vopen, cd
+  SEE ALSO: openb, updateb, vopen, vsave, cd
             save, add_record, set_filesize, set_blocksize
             close102, close102_default, at_pdb_open, at_pdb_close
  */

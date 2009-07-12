@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.9 2009-04-16 03:03:02 dhmunro Exp $
+ * $Id: yapi.h,v 1.10 2009-07-12 04:16:14 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -282,7 +282,7 @@ and the same return value as yarg_conform(dims, cfmdims, cfmdims)
 if cfmdims was specified.  Note that cfmdims is both an input and
 an output to yarg_dims (unlike yarg_conform, where it is an output).
 
-The yarg_conform routine checks array conformability.  The return
+ The yarg_conform routine checks array conformability.  The return
 argument of yarg_conform is the cfmdims dimension list of the result
 of a binary operation on arrays of dims1 and dims2; its return value
 is -1 if dims1 and dims2 are not conformable, or the union of zero to
