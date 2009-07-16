@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.5 2005-11-25 22:19:05 dhmunro Exp $
+ * $Id: mpy.i,v 1.6 2009-07-16 01:01:31 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -356,13 +356,13 @@ func mp_include(filename)
 {
   mp_start, mp_include;
   if (mp_rank) {
-    filename= mp_bcast(0);
+    filename = mp_recv();
   } else {
     if (structof(filename)!=string || strlen(filename)<1)
       error, "filename must be a non-empty string";
-    mp_bcast, 0, filename;
+    mp_send, indgen(mp_size-1), filename;
   }
-  include, filename;
+  include, filename, 1;
 }
 
 mp_task, mp_include;
@@ -386,12 +386,12 @@ func mp_cd(dirname)
 {
   mp_start, mp_cd;
   if (mp_rank) {
-    dirname= mp_bcast(0);
+    dirname = mp_recv();
   } else {
     if (is_void(dirname)) dirname= get_cwd();
     if (structof(dirname)!=string || strlen(dirname)<1)
       error, "dirname must be a non-empty string";
-    mp_bcast, 0, dirname;
+    mp_send, indgen(mp_size-1), dirname;
   }
   cd, dirname;
 }
@@ -415,10 +415,10 @@ func mp_set_debug(onoff)
 {
   mp_start, mp_set_debug;
   if (mp_rank) {
-    onoff = mp_bcast(0);
+    onoff = mp_recv();
   } else {
     onoff = !(!onoff);
-    mp_bcast, 0, onoff;
+    mp_send, indgen(mp_size-1), onoff;
   }
   extern mp_debug;
   mp_debug = onoff;
@@ -526,7 +526,7 @@ func mp_pool(_p_ntasks, _mp_sow, _mp_work, _mp_reap, _mp_work0)
 
   if (!mp_rank) {                                       /* MASTER */
     /* broadcast _mp_work name to slaves */
-    mp_bcast, 0, nameof(_mp_work);
+    mp_send, indgen(mp_size-1), nameof(_mp_work);
 
     /* initialize free processor list */
     _p_free= [];
@@ -564,7 +564,7 @@ func mp_pool(_p_ntasks, _mp_sow, _mp_work, _mp_reap, _mp_work0)
 
   } else {                                               /* SLAVE */
     /* get _mp_work function in original broadcast */
-    _mp_work= symbol_def(mp_bcast(0));
+    _mp_work= symbol_def(mp_recv());
 
     /* and slavishly do tasks as master dishes them out */
     while (mp_recv()) _mp_work;
