@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.16 2009-07-12 04:16:14 dhmunro Exp $
+ * $Id: yapi.c,v 1.17 2009-07-31 03:21:26 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -724,6 +724,36 @@ yget_dims(long *ntot, long *dims, Member *type)
 static Member y_i_type = { &intStruct, 0, 1L };
 static Member y_l_type = { &longStruct, 0, 1L };
 static Member y_d_type = { &doubleStruct, 0, 1L };
+
+int
+yarg_reform(int iarg, long *dims)
+{
+  if (iarg >= 0) {
+    Operations *ops;
+    Member *type;
+    void *p = ygeta_array(iarg, &ops, &type);
+    int i, rank = dims? dims[0] : 0;
+    long n = 1;
+    if (rank) for (n=dims[1],i=2 ; i<=rank ; i++) n *= dims[i];
+    if (n == type->number) {
+      Dimension *d = type->dims;
+      if (n == 1) {
+        Array *a;
+        if (type==&y_d_type || type==&y_l_type || type==&y_i_type) {
+          if (!rank) return 1;
+          a = (Array *)ForceToDB(sp - iarg);
+          type = &a->type;
+          d = type->dims;
+        }
+      }
+      type->dims = 0;
+      if (d) FreeDimension(d);
+      type->dims = ypush_dims(dims);
+      return 1;
+    }
+  }
+  return 0;
+}
 
 extern void ReadGather(void *dst, void *srcM, long srcD, StructDef *base,
                        long number, const Strider *strider);

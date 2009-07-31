@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.10 2009-07-12 04:16:14 dhmunro Exp $
+ * $Id: yapi.h,v 1.11 2009-07-31 03:21:27 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -185,9 +185,15 @@ PLUG_API void *ygeta_any(int iarg, long *ntot, long *dims, int *the_typeid);
 /*
 The ygeta_coerce function allows you to convert a numeric array to any
 other numeric data type, after you have retrieved it using ygeta_any.
+The arguments except for new_typeid must be returned by a previous
+call to ygeta_any.
+The yarg_reform function permits you to change the dimensionality
+of an array without reallocating it; the new dims must have the
+same total element count as the old dims.
 */
 PLUG_API void *ygeta_coerce(int iarg, void *old_data, long ntot, long *dims,
                             int old_typeid, int new_typeid);
+PLUG_API int yarg_reform(int iarg, long *dims);
 /*
 Finally, the yget_range function returns the mn:mx:step for an index
 range, its return value is the union of a set of flags (or 0 if iarg
