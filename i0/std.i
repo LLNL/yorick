@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.20 2009-07-12 04:16:14 dhmunro Exp $
+ * $Id: std.i,v 1.21 2009-09-11 02:20:03 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -435,6 +435,15 @@ extern wrap_args;
          0 if argument is a simple variable reference (set value works)
          1 if argument is an expression (set value will be discarded)
          2 if argument does not exist (as opposed to simply nil)
+     For obscure situations, there is also:
+       ARGS(i,:) same as ARGS(i), except if the argument is an lvalue,
+                   it is not fetched.
+     This rather arcane feature permits you to pass an argument of the
+     form f.x, where f is a file handle, to functions like dimsof or
+     structof without triggering a read of the file.  Do not assign
+     the result to a variable; use it only as an argument to another
+     function.  The first time you call ARGS(i) for argument i, the
+     lvalue is fetched, and ARGS(i,:) will do nothing special.
  */
 
 /*--------------------------------------------------------------------------*/
@@ -2080,8 +2089,13 @@ extern vclose;
  */
 
 func vsave(args)
-/* DOCUMENT c = vsave(var1, var2, ...)
-         or c = vsave(var1, ..., string(namea), vara, ...)
+/* DOCUMENT c = vsave(var1, var2, ...);
+         or c = vsave(var1, ..., string(namea), vara, ...);
+         or vfile = createb(char);
+            vsave, vfile, var1, var2, ...;
+            vsave, vfile, var3, var4, ...;
+            ...
+            c = vsave(vfile);
      save the array variables VAR1, VAR2, ..., in the char array that is
      returned.  Any of the variables may instead be a string expression
      NAMEA followed by the value VARA of the variable.  The NAMEA argument
@@ -2091,6 +2105,11 @@ func vsave(args)
      argument inside a call to string(), or by adding "", or simply by
      passing a constant string value like "myvarname".
 
+     If you wish to build up a char array over several calls to vsave,
+     pass the first argument VFILE, which you create with createb(char).
+     A final call with no variables returns the char array and closes
+     VFILE.
+
      You can pass the returned char array to openb, f=openb(c), to get
      an in-memory file handle f like any other binary file handle,
      allowing you to use the restore function, or the f.var1 syntax,
@@ -2098,19 +2117,28 @@ func vsave(args)
 
      You can set the internal primitives using the prims= keyword; see
      createb for details.
-  SEE ALSO: openb, vopen, restore, get_member, wrap_args
+  SEE ALSO: openb, vopen, vpack, restore, get_member, wrap_args
  */
 {
   local a, name;
-  a = args(-);
-  if (numberof(a)) {
-    if (numberof(a)!=1 || a(1)!="prims")
+  prims = args(-);
+  if (numberof(prims)) {
+    if (numberof(prims)!=1 || prims(1)!="prims")
       error, "unrecognized keyword argument";
-    eq_nocopy, a, args(-1);
+    eq_nocopy, prims, args(-1);
   }
-  f = createb(char, a);
+  eq_nocopy, a, args(i);
+  handle = is_stream(a);
+  if (handle) f = a;
+  else f = createb(char, prims);
   n = args(0);
-  for (i=1 ; i<=n ; ++i) {
+  if (handle && n==1) {
+    a = vclose(f);
+    args, 1, f;
+    return a;
+  }
+  handle = (handle || is_range(a));
+  for (i=1+handle ; i<=n ; ++i) {
     eq_nocopy, a, args(i);
     name = args(-,i);
     if (!name) {
@@ -2120,9 +2148,206 @@ func vsave(args)
     add_variable, f, -1, name, structof(a), dimsof(a);
     get_member(f, name) = a;
   }
-  return vclose(f);
+  return handle? f : vclose(f);
 }
 wrap_args, vsave;
+
+func vpack(args)
+/* DOCUMENT bytes = vpack(var1, var2, ...);
+         or vfile = vopen(,1);
+            vpack, vfile, var1, var2, ...;
+            vpack, vfile, var3, var4, ...;
+            ...
+            bytes = vpack(vfile);
+     pack variables into a byte stream, preserving data types and dimensions.
+     If the first argument is an in-memory file created by vopen(,1), then
+     vpack appends the variables to the file; to close the file, supply
+     no new variables to pack.  The VARi must be arrays, and may not be
+     pointers or struct instances.  If you want to store pointers or struct
+     instances and preserve variable names, use vsave.
+     The returned byte stream contains the primitive data formats (as
+     returned by get_primitives), so it can be used on a platform other
+     than the one on which vpack was run.
+  SEE ALSO: vunpack, vsave
+ */
+{
+  if (numberof(args(-)))
+    error, "unexpected keyword argument";
+  narg = args(0);
+  iarg = 1;
+  var = args(iarg);
+  if (is_stream(var)) {
+    f = var;
+    if (narg == 1) {
+      var = vclose(f);
+      args, 1, f;
+      return var;
+    }
+    var = args(++iarg);
+    handle = 1;
+  } else if (is_range(var)) {
+    f = vopen(,1);
+    var = args(++iarg);
+    handle = 1;
+  } else {
+    f = vopen(,1);
+  }
+
+  addr = sizeof(f);
+  prims = get_primitives(f);
+  sz = prims(1:22:3);
+  sz(7:8) = [2*sz(6), 1];
+  if (!addr) {
+    p = array(char, 4, 32);
+    for (i=0 ; i<4 ; ++i) p(i+1,) = (prims >> (8*i)) & 0xff;
+    _write, f, 0, p;     /* first 128 bytes are primitive formats */
+    p = array(char, 8);  /* leave 8 bytes of scratch space at byte 128 */
+    _write, f, 128, p;
+    addr = 136;
+    save, f, complex;
+  }
+
+  for (;;) {
+    s = structof(var);
+    d = dimsof(var);
+    if (is_void(s)) s = 0;
+    else if (s == char) s = 1;
+    else if (s == short) s = 2;
+    else if (s == int) s = 3;
+    else if (s == long) s = 4;
+    else if (s == float) s = 5;
+    else if (s == double) s = 6;
+    else if (s == complex) s = 7;
+    else if (s == string) s = 8;
+    else error, "vpack supports only string and numeric arrays";
+
+    _write, f, addr, s+16*numberof(d);
+    addr += sz(4);
+    if (s) {
+      _write, f, addr, d;
+      addr += sz(4)*numberof(d);
+      if (s == 8) {
+        list = where(var == "");
+        if (numberof(list)) {  /* strchar does not handle "" properly */
+          var = grow(array(string, dimsof(var)), var);
+          var(list) = ".";
+        }
+        var = strchar(var);
+        _write, f, addr, numberof(var);
+        addr += sz(4);
+      }
+      _write, f, addr, var;
+      addr += sz(s)*numberof(var);
+    }
+
+    if (iarg >= narg) break;
+    var = args(++iarg);
+  }
+
+  if (handle) return f;
+  return vclose(f);
+}
+wrap_args, vpack;
+
+func vunpack(args)
+/* DOCUMENT eof = vunpack(bytes, var1, var2, ...);
+         or nextvar = vunpack(bytes,-);
+         or vunpack, bytes;
+     unpack variables VAR1, VAR2, ... from a byte stream BYTES created
+     with vpack.  The vunpack call modifies BYTES to save the number of
+     variables which have already been unpacked, so you can perform the
+     unpack operation with multiple calls.  Calling vunpack as a
+     subroutine with no VARi arguments resets this information, restoring
+     BYTES to its original value (that is, as vpack returned it).
+     Called as a function, vunpack returns 1 if more variables remain
+     to be unpacked, or 0 if no more variables remain.
+     For example, if BYTES contains 5 variables:
+       bytes = vpack(var1, var2, var3, var4, var5);
+     You can retrieve the variables by a single call to vunpack:
+       vunpack, bytes, var1, var2, var3, var4, var5;
+     Or by a sequence of calls to vunpack:
+       vunpack, bytes, var1, var2;
+       vunpack, bytes, var3, var4, var5;
+  SEE ALSO: vunpack, vsave
+ */
+{
+  if (numberof(args(-)))
+    error, "unexpected keyword argument";
+  bytes = args(1);
+  if (structof(bytes)!=char || numberof(bytes)<136)
+    error, "first argument must be byte stream from vpack to unpack";
+  n = args(0);
+  p = array(char, 4, 32);
+  p(*) = bytes(1:128);
+  prims = array(0, 32);
+  for (i=3 ; i>=0 ; --i) prims = (prims<<8) | (p(i+1,) & 0xff);
+  if (sizeof(long) > 4) {
+    list = where(prims(3:18:3) & 0x80000000);
+    if (numberof(list)) prims(3*list) |= ~0xffffffff;
+  }
+  sz = prims(1:22:3);
+  sz(7:8) = [2*sz(6), 1];
+  p = bytes(129:136);
+  addr = 0;
+  for (i=7 ; i>=0 ; --i) addr = (addr<<8) | (p(i+1) & 0xff);
+  if (addr == 0) addr = 136;
+  if (n > 1) {
+    f = vopen(bytes, 1);
+    set_primitives, f, prims;
+    save, f, complex;
+    flag = (n==2 && args(0,2)==1);
+  }
+  for (i=2 ; i<=n ; ++i) {
+    var = [];
+    if (addr < sizeof(f)) {
+      s = 0;
+      _read, f, addr, s;
+      addr += sz(4);
+      if (s > 0) {
+        d = array(0, s/16);
+        s = s%16;
+        _read, f, addr, d;
+        addr += sz(4)*numberof(d);
+        if (s == 1) var = array(char, d);
+        else if (s == 2) var = array(short, d);
+        else if (s == 3) var = array(int, d);
+        else if (s == 4) var = array(long, d);
+        else if (s == 5) var = array(float, d);
+        else if (s == 6) var = array(double, d);
+        else if (s == 7) var = array(complex, d);
+        else if (s == 8) {
+          nn = 0;
+          _read, f, addr, nn;
+          addr += sz(4);
+          var = array(char, nn);
+        }
+        _read, f, addr, var;
+        addr += sz(s)*numberof(var);
+        if (s == 8) {
+          eq_nocopy, nn, var;
+          var = array(string, d);
+          nn = strchar(nn);
+          if (numberof(nn) == 2*numberof(var)) {
+            list = where(nn(1:numberof(var)));
+            nn = nn(numberof(var)+1:0);
+            nn(list) = "";
+          }
+          var(*) = nn;
+        }
+      }
+    }
+    if (!flag) args, i, var;
+  }
+  close, f;  /* harmless if f never opened */
+  p = array(char, 8);
+  if (n>1 || !am_subroutine())
+    for (i=0 ; i<sizeof(addr) ; ++i) p(i+1) = (addr >> (8*i)) & 0xff;
+  bytes(129:136) = p;
+  args, 1, bytes;
+  if (flag) return var;
+  else if (!am_subroutine()) return addr >= numberof(bytes);
+}
+wrap_args, vunpack;
 
 extern popen;
 /* DOCUMENT f= popen(command, mode)

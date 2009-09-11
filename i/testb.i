@@ -1,5 +1,5 @@
 /*
- * $Id: testb.i,v 1.1 2005-09-18 22:06:11 dhmunro Exp $
+ * $Id: testb.i,v 1.2 2009-09-11 02:20:03 dhmunro Exp $
  * A comprehensive test of the native-Yorick binary I/O functions.
  *
  * Also, read back PDB files created by Stewart Brown's pdtest program,
@@ -64,6 +64,39 @@ func testb(do_stats)
   remove, "junkd.pdb";  remove, "junkd.pdbL";
   remove, "junkc.pdb";  remove, "junkc.pdbL";
   remove, "junks.pdb";  remove, "junks.pdbL";
+
+  write, "\n  Eighth test is vsave in-memory files:";
+  f = createb(char);
+  write_flat, f, 0;
+  b = vclose(f);
+  read_flat, openb(b), 0;
+  read_flat, openb(b), 1;
+
+  f = createb(char);
+  write_flat, f, 1;
+  b = vclose(f);
+  read_flat, openb(b), 0;
+  read_flat, openb(b), 1;
+
+  f = createb(char);
+  write_ptrs, f, 0;
+  b = vclose(f);
+  read_ptrs, openb(b), 0;
+  read_ptrs, openb(b), 1;
+
+  f = createb(char);
+  write_ptrs, f, 1;
+  b = vclose(f);
+  read_ptrs, openb(b), 0;
+  read_ptrs, openb(b), 1;
+
+  write, "\n  Ninth test is vpack in-memory files:";
+  b = vpack_flat(0);
+  bb = vpack_flat(1);
+  if (numberof(b)!=numberof(bb) || anyof(b!=bb))
+    write, "vpack_flat failed write order test";
+  vunpack_flat, b, 0;
+  vunpack_flat, b, 1;
 }
 
 func rm_hist
@@ -549,6 +582,92 @@ func read_flat(f, how)
                           varSIs=varSIs, varSIa=varSIa))];
   if (anyof(goofs)) {
     "read_flat failed -- goof flags are:";
+    goofs;
+  }
+
+  if (do_stats) "Checked  "+print(yorick_stats())(1);
+}
+
+func vpack_flat(how)
+{
+  extern varCs, varCa, varSs, varSa, varIs, varIa, varLs, varLa;
+  extern varFs, varFa, varDs, varDa, varZs, varZa, varQs, varQa;
+
+  /* invent a bunch of garbage to be written */
+  varCs= 'A';  varSs= -37s;  varIs= 76n;  varLs= 144;
+  varCa= ['Z', '\370', 'a'];
+  varSa= short([[0,0,0],[0,-100,100]]);
+  varIa= int([[[1,2,3,4],[-30,-20,-10,0],[-1,2,-3,4]],
+              [[0,-30,20,-10],[4,3,2,1],[3,-4,1,-2]]]);
+  varLa= [123456789, -987654321];
+  varFs= 1.5f;  varDs= -6.022e23;  varZs= 1-1i;
+  varFa= float([[0,0,0],[0,-100,100]]);
+  varDa= double([[[1,2,3,4],[-30,-20,-10,0],[-1,2,-3,4]],
+                 [[0,-30,20,-10],[4,3,2,1],[3,-4,1,-2]]]);
+  varZa= [123456789-3.5i, -987654321+0i];
+  varQs= "";
+  varQa= [["hello", string(0), "World", "", "!"],
+          ["a", "b", string(0), "", "e"]];
+  null = [];
+
+  if (!how) {
+    b = vpack(varCs, varSs, varIs, varLs, varCa, varSa, varIa, varLa, varQs,
+              varFs, varDs, varZs, varFa, null, varQa, varDa, varZa);
+  } else {
+    f = vopen(,1);
+    vpack, f, varCs, varSs, varIs, varLs, varCa, varSa, varIa;
+    vpack, f, varLa;
+    vpack, f, varQs, varFs, varDs;
+    vpack, f, varZs, varFa, null, varQa, varDa, varZa;
+    b = vpack(f);
+  }
+
+  if (do_stats) "Packed   "+print(yorick_stats())(1);
+  return b;
+}
+
+func vunpack_flat(b, how)
+{
+  local varCs, varCa, varSs, varSa, varIs, varIa, varLs, varLa;
+  local varFs, varFa, varDs, varDa, varZs, varZa, varQs, varQa;
+
+  null = 1;
+  if (!how) {
+    neof =
+      !vunpack(b, varCs, varSs, varIs, varLs, varCa, varSa, varIa, varLa,
+               varQs, varFs, varDs, varZs, varFa, null, varQa, varDa, varZa);
+    neof += 2*(!vunpack(b));
+    vunpack, b;  /* test reset feature */
+    neof += 4*vunpack(b);
+  } else {
+    eof1 = vunpack(b, v1, v2);
+    bad1 = (v1!='A' || v2!=-37s);
+    vunpack, b;  /* test reset feature */
+    eof2 = vunpack(b, varCs, varSs, varIs, varLs, varCa);
+    varSa = vunpack(b, -);
+    eof3 = vunpack(b, varIa, varLa, varQs, varFs, varDs);
+    varZs = vunpack(b, -);
+    eof4 = !vunpack(b, varFa, null, varQa, varDa, varZa);
+    neof = eof1 + 2*eof2 + 4*eof3 + 8*eof4 + 16*bad1;
+  }
+  if (do_stats) "Restored "+print(yorick_stats())(1);
+
+  goofs= [varCs!='A', varSs!=-37s, varIs!=76n, varLs!=144,
+          anyof(varCa!=['Z', '\370', 'a']),
+          anyof(varSa!=short([[0,0,0],[0,-100,100]])),
+          anyof(varIa!=int([[[1,2,3,4],[-30,-20,-10,0],[-1,2,-3,4]],
+                            [[0,-30,20,-10],[4,3,2,1],[3,-4,1,-2]]])),
+          anyof(varLa!=[123456789, -987654321]),
+          varFs!=1.5f, abs(varDs+6.022e23)>6.022e11, varZs!=1-1i,
+          anyof(varFa!=float([[0,0,0],[0,-100,100]])),
+          anyof(varDa!=double([[[1,2,3,4],[-30,-20,-10,0],[-1,2,-3,4]],
+                               [[0,-30,20,-10],[4,3,2,1],[3,-4,1,-2]]])),
+          anyof(varZa!=[123456789-3.5i, -987654321+0i]),
+          varQs!="", anyof(varQa != [["hello", string(0), "World", "", "!"],
+                                     ["a", "b", string(0), "", "e"]]),
+          !is_void(null), neof];
+  if (anyof(goofs)) {
+    "vunpack_flat failed -- goof flags are:";
     goofs;
   }
 

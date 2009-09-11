@@ -1,5 +1,5 @@
 /*
- * $Id: fwrap.c,v 1.1 2009-07-12 04:16:14 dhmunro Exp $
+ * $Id: fwrap.c,v 1.2 2009-09-11 02:20:03 dhmunro Exp $
  * implement function argument wrapping with wrap_args
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -112,44 +112,24 @@ ywrap_a_free(void *obj)
     /* move output argument to globTab, or discard non-output argument */
     for (i=0 ; i<wa->npos+(wa->nkey<<1) ; ++i) {
       if (!args[i].ops) continue;
-      if (args[i].ops==&referenceSym && args[i].value.db) {
-        /* this referenceSym argument has been set with output value
+      if (args[i].index != -1) {
+        /* this referenceSym argument may have been set with output value
          * all symbols have been restored to their external values, so
-         * go ahead and overwrite with output value
+         * can go ahead and overwrite with output value
          */
         glob = globTab + args[i].index;
         if (glob->ops == &dataBlockSym) {
+          /* delete current value */
           glob->ops = &intScalar;
           Unref(glob->value.db);
         }
-        if (args[i].value.db->ops->isArray
-            && !((Array *)args[i].value.db)->type.dims) {
-          if (args[i].value.db->ops->typeID == T_INT) {
-            glob->ops = &intScalar;
-            glob->value.i = ((Array *)args[i].value.db)->value.i[0];
-            Unref(args[i].value.db);
-          } else if (args[i].value.db->ops->typeID == T_LONG) {
-            glob->ops = &longScalar;
-            glob->value.l = ((Array *)args[i].value.db)->value.l[0];
-            Unref(args[i].value.db);
-          } else if (args[i].value.db->ops->typeID == T_DOUBLE) {
-            glob->ops = &doubleScalar;
-            glob->value.d = ((Array *)args[i].value.db)->value.d[0];
-            Unref(args[i].value.db);
-          } else {
-            glob->value.db = args[i].value.db;
-            glob->ops = &dataBlockSym;
-          }
-        } else {
-          glob->value.db = args[i].value.db;
-          glob->ops = &dataBlockSym;
-        }
-        args[i].ops = &intScalar;
+        /* transfer args[i] dataBlockSym use counter value to glob */
+        glob->value = args[i].value;
+        glob->ops = args[i].ops;
       } else if (args[i].ops == &dataBlockSym) {
-        /* not an output argument, just delete now */
-        args[i].ops = &intScalar;
         Unref(args[i].value.db);
       }
+      args[i].ops = &intScalar;  /* dud Symbol just to be safe */
     }
     wa->args = 0;
   }
@@ -181,6 +161,7 @@ ywrap_f_eval(Operand *op)
   y_wrapped_func *wf = (y_wrapped_func *)&uo->body.c;
   y_wrapped_args *wa;
   int npos, nkey, i, j, k;
+  long index;
   /* wf has been called, time to wrap its arguments */
   wa = ypush_obj(&ywrap_a_ops, sizeof(y_wrapped_args));
   wa->npos = wa->nkey = 0;
@@ -193,15 +174,24 @@ ywrap_f_eval(Operand *op)
         continue;
       }
       args[j] = me[1+i];
-      if (args[j].ops == &referenceSym) args[j].value.db = 0;
+      if (args[j].ops == &referenceSym) {
+        ReplaceRef(args+j);  /* crucial: leaves args[].index untouched */
+      } else {
+        args[j].index = -1;  /* mark as not a reference sym */
+      }
       j++;
     }
     if (k) {
       for (i=0 ; k<argc ; k++) {
-        if (me[k].ops || !me[k+1].ops) continue;
+        if (me[k].ops || k+1>=argc) continue;
         args[j+(i++)] = me[k++];
         args[j+i] = me[k];
-        if (args[j+i].ops == &referenceSym) args[j+i].value.db = 0;
+        if (args[j+i].ops == &referenceSym) {
+          /* never actually get here, keywords never reference syms */
+          ReplaceRef(args+j+i);  /* crucial: leaves args[].index untouched */
+        } else {
+          args[j+i].index = -1;  /* mark as not a reference sym */
+        }
         i++;
       }
     } else {
@@ -237,6 +227,8 @@ ywrap_a_eval(void *obj, int argc)
   char *key = 0;
   if (argc!=1 && argc!=2)
     y_error("wrapped arg only accepts one or two arguments");
+  if (!sp->ops)
+    y_error("wrapped arg only accepts no keyword arguments");
   if (!iskey && !isquery) {
     iarg = ygets_l(argc-1);
     if (!iarg) isquery = 2;
@@ -267,7 +259,7 @@ ywrap_a_eval(void *obj, int argc)
       ypush_long(wa->npos);
     } else {             /* ARGS(0,i) */
       if (!arg) ypush_long(2);
-      else if (arg->ops != &referenceSym) ypush_long(1);
+      else if (arg->index == -1) ypush_long(1);
       else ypush_long(0);
     }
   } else if (isquery == 1) {
@@ -285,25 +277,21 @@ ywrap_a_eval(void *obj, int argc)
       }
     } else {             /* ARGS(-,i) */
       q = ypush_q(0);
-      if (arg && arg->ops==&referenceSym) {
+      if (arg && arg->index!=-1) {
         q[0] = p_strcpy(yfind_name(arg->index));
       } else {
         q[0] = 0;
       }
     }
   } else {
-    if (argc == 1) {     /* ARGS(i) */
+    if (argc==2 && yget_range(0, junk)==(Y_MIN_DFLT|Y_MAX_DFLT))
+      argc = 3;
+    if (argc == 1 || argc == 3) {     /* ARGS(i) or ARGS(i,:) */
       if (arg) {
-        if (arg->ops == &referenceSym) {
-          if (arg->value.db) {
-            sp[1].ops = &dataBlockSym;
-            sp[1].value.db = Ref(arg->value.db);
-            sp++;
-            return;
-          }
-          arg = globTab + arg->index;
-        }
         if (arg->ops == &dataBlockSym) {
+          /* fetch lvalues now unless specifically directed not to */
+          if (argc==1 && arg->value.db->ops == &lvalueOps)
+            FetchLValue(arg->value.db, arg);
           sp[1].ops = &dataBlockSym;
           sp[1].value.db = Ref(arg->value.db);
         } else {
@@ -315,11 +303,23 @@ ywrap_a_eval(void *obj, int argc)
         ypush_nil();
       }
     } else {             /* ARGS, i, value */
-      if (arg && arg->ops==&referenceSym) {
-        DataBlock *db = ForceToDB(sp);
-        arg->value.db = Ref(db);
+      long index = arg? arg->index : -1;
+      Symbol *s = (sp->ops == &referenceSym)? globTab+sp->index : sp;
+      if (index != -1) {
+        if (arg->ops == &dataBlockSym) {
+          arg->ops = &intScalar;
+          Unref(arg->value.db);
+        }
+        if (s->ops == &dataBlockSym) {
+          arg->value.db = Ref(s->value.db);
+          if (arg->value.db->ops == &lvalueOps)
+            FetchLValue(arg->value.db, arg);
+        } else {
+          arg->value = s->value;
+        }
+        arg->ops = s->ops;
       }
-      if (yarg_subroutine()) ypush_nil();
+      if (!yarg_subroutine()) ypush_nil();
     }
   }
 }
