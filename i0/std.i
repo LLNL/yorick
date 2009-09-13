@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.21 2009-09-11 02:20:03 dhmunro Exp $
+ * $Id: std.i,v 1.22 2009-09-13 02:01:04 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -339,18 +339,11 @@ extern reshape;
 func reform(x, ..)
 /* DOCUMENT reform(x, dimlist)
  *    returns array X reshaped according to dimension list DIMLIST.
- * SEE ALSO: array, dimsof
+ * SEE ALSO: array, dimsof, accum_dimlist
  */
 {
   dims = [0];
-  while (more_args()) {
-    y = next_arg();
-    if (is_void(y)) continue;
-    if (!dimsof(y)(1)) y = [1, y];
-    n = y(1);
-    grow, dims, y(2:1+n);
-    dims(1) += n;
-  }
+  while (more_args()) accum_dimlist, dims, next_arg();
   if (dims(1)) {
     y = array(structof(x), dims);
     y(*) = x(*);   /* will blow up if lengths differ */
@@ -359,6 +352,35 @@ func reform(x, ..)
     y = x(1);
   }
   return y;
+}
+
+func accum_dimlist(&dims, d)
+/* DOCUMENT accum_dimslist, dims, d
+     accumulate a dimension argument D onto a dimension list DIMS.
+     This can be used to emulate the dimension lists supplied to the
+     array function.  For example:
+       func myfunc(arg1, arg2, ..) {
+         local dims;
+         while (more_args()) accum_dimlist, dims, next_arg();
+         ...
+       }
+   SEE ALSO: array, reform
+ */
+{
+  if (is_void(d)) return;
+  if (is_range(d)) {  /* yuck */
+    mn = mx = 0;
+    if (sread(print(d)(1),format="%ld:%ld",mn,mx) != 2)
+      error, "only min:max ranges allowed in dimension list";
+    d = mx - mn + 1;
+  }
+  if (!dimsof(d)(1)) d = [1, d];
+  if (is_void(dims)) {
+    dims = d;
+  } else {
+    grow, dims, d(2:1+d(1));
+    dims(1) += d(1);
+  }
 }
 
 extern eq_nocopy;
@@ -1053,7 +1075,65 @@ func merge2(t, f, c)
   return merge(tt(where(c)), ff(where(!c)), c);
 }
 
-func mergef(_mrg_x, _mrg_f, _mrg_c, ..)
+func mergei(__x, ..)
+/* DOCUMENT y = mergei(x, f0, x1, f1, x2, ... xN, fN)
+ *   Evaluate F1 where X<X1, F2 where X1<=X<X2, ..., FN where X>=XN,
+ *   and merge all the results back into an array Y with the
+ *   same dimensions as X.
+ *
+ *   During the evaluation of Fi, all of the local variables of
+ *   the caller of mergei are available.  The Fi are called in
+ *   order, skipping any for which no X is in the specified interval.
+ *   Each Fi must return a value with the same dimensions as
+ *   its input.
+ *
+ *   Additional input and output variables can be constructed using
+ *   the mergel index list employed by mergei, and using the mergeg
+ *   function.  For example, let w be an additional input to and z be
+ *   an additional output from the function:
+ *     func myfunc(x, w, &z) {
+ *       z = array(0.0, dimsof(x, w));
+ *       x += z;
+ *       w += z;
+ *       return mergei(x, _myfunc_lo, 1.234, _myfunc_hi);
+ *     }
+ *     func _myfunc_lo(x) {
+ *       wp = w(mergel);  // part of w for this function
+ *       z = mergeg(z, <expression using x and wp>);
+ *       return <expression using x and wp>;
+ *     }
+ *     func _myfunc_hi(x) {
+ *       wp = w(mergel);  // part of w for this function
+ *       z = mergeg(z, <expression using x and wp>);
+ *       return <expression using x and wp>;
+ *     }
+ *
+ * SEE ALSO: mergef, merge
+ */
+{
+  local __r;
+  _1_ = !dimsof(__x)(1);
+  __n = dimsof(__x)(1)? indgen(numberof(__x)) : 1;
+  while (numberof(__x)) {
+    __f = next_arg();
+    __m = next_arg();
+    __m = is_void(__m)? (__n>0) : (__x < __m);
+    __l = where(__m);
+    if (numberof(__l)) {
+      __m = where(!__m);
+      mergel = __n(__l);
+      if (_1_) return __f(__x);
+      __f = __f(__x(__l));
+      if (is_void(__r)) __r = array(structof(__f), dimsof(__x));
+      __r(mergel) = __f;
+      __x = __x(__m);
+      __n = __n(__m);
+    }
+  }
+  return __r;
+}
+
+func mergef(__x, ..)
 /* DOCUMENT y = mergef(x, f1, cond1, f2, cond2, ... felse)
  *   Evaluate F1(X(where(COND1))), F2(X(where(COND2))),
  *   and so on, until FELSE(X(where(!(COND1 | COND2 | ...))))
@@ -1061,63 +1141,70 @@ func mergef(_mrg_x, _mrg_f, _mrg_c, ..)
  *   same dimensions as X.  Each of the CONDi must have the
  *   same dimensions as X, and they must be mutally exclusive.
  *
- *   During the evaluation of Fi, note that all of the local
- *   variables of the caller of mergef are available.  The
- *   Fi are invoked as Fi(X(mergel)) and  the variable mergel
- *   = where(CONDi) is available to the Fi, in case they need
- *   to extract any additional parameters.  If noneof(CONDi)
- *   then Fi will not be called at all, otherwise, the Fi are
- *   invoked in order.  The return value of Fi must have the same
- *   shape as its argument (which will be a 1D array or scalar).
+ *   During the evaluation of Fi, all of the local variables of
+ *   the caller of mergei are available.  The Fi are called in
+ *   order, skipping any for which no X is in the specified interval.
+ *   Each Fi must return a double value with the same dimensions as
+ *   its input.
  *
- *   Use mergeg to construct secondary results the same shape
- *   as X and Y.
+ *   Additional input and output variables can be constructed using
+ *   the mergel index list employed by mergei, and using the mergeg
+ *   function.  For example, let w be an additional input to and z be
+ *   an additional output from the function:
+ *     func myfunc(x, w, &z) {
+ *       z = array(0.0, dimsof(x, w));
+ *       x += z;
+ *       w += z;
+ *       return mergef(x, _myfunc_lo, x<1.234, _myfunc_hi);
+ *     }
+ *     func _myfunc_lo(x) {
+ *       wp = w(mergel);  // part of w for this function
+ *       z = mergeg(z, <expression using x and wp>);
+ *       return <expression using x and wp>;
+ *     }
+ *     func _myfunc_hi(x) {
+ *       wp = w(mergel);  // part of w for this function
+ *       z = mergeg(z, <expression using x and wp>);
+ *       return <expression using x and wp>;
+ *     }
  *
- * SEE ALSO: mergeg, merge
+ * SEE ALSO: mergei, merge
  */
 {
-  _mrg_yy = [];
-  _mrg_cc = (_mrg_x != _mrg_x);
-  for (;;) {
-    if (structof(_mrg_c) != int) _mrg_c = !(!_mrg_c);
-    mergel = where(_mrg_c);
-    if (numberof(mergel)) {
-      _mrg_cc |= _mrg_c;
-      _mrg_c = _mrg_c(where(_mrg_cc));
-      _mrg_yy = merge(_mrg_f(_mrg_x(mergel)), _mrg_yy, _mrg_c);
+  local __r;
+  _1_ = !dimsof(__x)(1);
+  __n = dimsof(__x)(1)? indgen(numberof(__x)) : 1;
+  while (numberof(__x)) {
+    __f = next_arg();
+    __m = next_arg();
+    __m = is_void(__m)? (__n>0) : __m(__n);
+    __l = where(__m);
+    if (numberof(__l)) {
+      __m = where(!__m);
+      mergel = __n(__l);
+      if (_1_) return __f(__x);
+      __f = __f(__x(__l));
+      if (is_void(__r)) __r = array(structof(__f), dimsof(__x));
+      __r(mergel) = __f;
+      __x = __x(__m);
+      __n = __n(__m);
     }
-    _mrg_f = next_arg();
-    _mrg_c = next_arg();
-    if (is_void(_mrg_c)) break;
   }
-  _mrg_cc = !_mrg_cc;
-  mergel = where(_mrg_cc);
-  if (numberof(mergel)) {
-    _mrg_c = _mrg_cc(*);
-    _mrg_c = _mrg_f(_mrg_x(mergel));
-  }
-  return merge(_mrg_c, _mrg_yy, _mrg_cc);
+  return __r;
 }
 
-func mergeg(z, value)
+func mergeg(&z, value)
 /* DOCUMENT z = mergeg(z, value)
  *       or z = mergeg(z)
  *   If secondary results are to be returned from a mergef, besides
- *   its return value, the Fi may construct them using the second
- *   form of mergef:
+ *   its return value, the Fi may construct them using mergeg.
  *     z = mergeg(z, value)
  *   where z is a variable in the original caller of mergef,
- *   and value is its value where(CONDi).  Note that the variable
- *   name of the first parameter must be the same as the variable
- *   name it is assigned to in this construction -- that variable
- *   is being used to hold the state of z as it is built.  After
- *   the outer mergef returns, the caller needs to invoke
- *     z = mergeg(z)
- *   one final time to complete each secondary return value.
+ *   and value is its value.
  *
- *   z = [];
+ *   z = [];    or   z = <something with shape of x>;
  *   y = mergef(x, f1, cond, f2);
- *   z = mergeg(z);
+ *   z = mergeg(z);  // this can now be omitted, but does no harm
  *   ...
  *   func f1(x) { <exprz(x) computes z(x), expry(x) computes y(x)>
  *     z = mergeg(z, exprz(x));
@@ -1131,12 +1218,14 @@ func mergeg(z, value)
  * SEE ALSO: mergef, merge
  */
 {
-  if (is_void(value)) {     /* final call just gives final shape */
-    return merge(*z(1), [], array(1n,*z(2)));
-  } else if (is_void(z)) {  /* first call records final shape */
-    return [&value, &dimsof(_mrg_cc)];
-  } else {                  /* other calls merge new values */
-    return [&merge(value, *z(1), _mrg_c), z(2)];
+  if (is_void(value)) {
+    return z;  /* for backward compatibility */
+  } else {
+    /* void z case for backward compatibility */
+    if (is_void(z)) z = array(structof(value), dimsof(__x));
+    if (_1_) z = value;
+    z(mergel) = value;
+    return z;
   }
 }
 
