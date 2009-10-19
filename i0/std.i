@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.24 2009-10-19 19:50:42 dhmunro Exp $
+ * $Id: std.i,v 1.25 2009-10-19 20:27:54 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2918,7 +2918,7 @@ func istart_places(dir)
   dir = array(sum(parts(1:i)), numberof(parts)-i+1);
   parts = (i<numberof(parts))? parts(i+1:0) : [];
   for (i=1 ; i<=numberof(parts) ; ++i) dir(i+1:0) += parts(i);
-  parts = array("istart", numberof(dir));
+  parts = array("site-i", numberof(dir));
   parts(1) = "i-start";
   return dir(::-1) + parts;
 }
