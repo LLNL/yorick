@@ -1,5 +1,5 @@
 /*
- * $Id: stdx.i,v 1.4 2006-05-20 17:21:30 dhmunro Exp $
+ * $Id: stdx.i,v 1.5 2009-10-19 19:50:42 dhmunro Exp $
  * Perform any post-initialization tasks.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -29,6 +29,4 @@ set_path;   /* set compiled-in default include path */
  * - note that these all come before custom.i
  * - eventually, this mechanism may replace custom.i
  */
-include_all, Y_SITE+"i-start";
-if (Y_HOME!=Y_SITE) include_all, Y_HOME+"i-start";
-if (!batch()) include_all, Y_USER+"i-start";
+istart_include;

@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.23 2009-10-19 04:37:51 dhmunro Exp $
+ * $Id: std.i,v 1.24 2009-10-19 19:50:42 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2866,23 +2866,62 @@ func include_all(dir, ..)
    SEE ALSO: include, include1, autoload
  */
 {
-  local files;
+  if (is_void(dir)) return;
+  dir = array(dir, more_args()+1);
+  for (i=2 ; i<=numberof(dir) ; ++i) dir(i) = next_arg();
   /* provide hook for mpy to prevent all ranks from calling lsdir */
-  if (!_include_all_hook()) {
-    for (i=0 ; !is_void(dir) ; dir=next_arg()) {
-      list = lsdir(dir);
-      if (structof(list) != string) continue;
-      list = list(where((strpart(list,1:1)!=".")&(strpart(list,-1:0)==".i")));
-      if (!numberof(list)) continue;
-      list = list(sort(list));
-      if (strpart(dir,0:0) != "/") dir += "/";
-      grow, files, dir+list;
-    }
-  }
-  _include_all_hook;
+  files = _include_all_hook(dir);
   for (i=1 ; i<=numberof(files) ; ++i) include, files(i), 3;
 }
-func _include_all_hook(void) { return void; }
+func include_all_ls(dir)
+{
+  local files;
+  for (i=1 ; i<=numberof(dir) ; ++i) {
+    list = lsdir(dir(i));
+    if (structof(list) != string) continue;
+    list = list(where((strpart(list,1:1)!=".")&(strpart(list,-1:0)==".i")));
+    if (!numberof(list)) continue;
+    list = list(sort(list));
+    if (strpart(dir(i),0:0) != "/") dir(i) += "/";
+    grow, files, dir(i)+list;
+  }
+  return files;
+}
+_include_all_hook = include_all_ls;
+
+func istart_include
+{
+  dir = istart_places(Y_SITE);
+  if (Y_HOME!=Y_SITE) grow, dir, istart_places(Y_HOME);
+  if (!_istart_hook()) grow, dir, [Y_USER+"i-start"];
+  files = _include_all_hook(dir);
+  for (i=1 ; i<=numberof(files) ; ++i) include, files(i), 3;
+}
+_istart_hook = batch;
+
+func istart_places(dir)
+{
+  i = strfind("/",dir, n=1024);
+  i = i(1 : min(where(i<0))-1);
+  parts = strpart(dir, grow([0],i));
+  if (numberof(parts) < 2) return dir+"i-start";
+  if (parts(0) == "") parts = parts(1:-1);
+  list = where(strmatch(parts,"yorick",1));
+  if (numberof(list)) {
+    i = list(1);
+  } else {
+    list = where((parts=="lib") | (parts=="share"));
+    if (numberof(list)) i = max(list(0)+1,i);
+    else i = numberof(parts);
+  }
+  parts += "/";
+  dir = array(sum(parts(1:i)), numberof(parts)-i+1);
+  parts = (i<numberof(parts))? parts(i+1:0) : [];
+  for (i=1 ; i<=numberof(parts) ; ++i) dir(i+1:0) += parts(i);
+  parts = array("istart", numberof(dir));
+  parts(1) = "i-start";
+  return dir(::-1) + parts;
+}
 
 extern plug_in;
 /* DOCUMENT plug_in, "pkgname"
