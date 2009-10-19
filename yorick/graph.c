@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.7 2007-12-28 20:20:19 thiebaut Exp $
+ * $Id: graph.c,v 1.8 2009-10-19 04:37:51 dhmunro Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -74,7 +74,7 @@ extern BuiltIn Y__pl_init;  /* called at initialization by graph.i */
 
 extern BuiltIn Y_mouse, Y_contour, Y_mesh_loc, Y_pause, Y_current_window;
 extern BuiltIn Y_keybd_focus, Y_rgb_read;
-extern BuiltIn Y_current_mouse;
+extern BuiltIn Y_current_mouse, Y_set_gpath;
 
 /*--------------------------------------------------------------------------*/
 
@@ -3460,6 +3460,18 @@ void
 yg_before_wait(void)
 {
   GhBeforeWait();
+}
+
+void
+Y_set_gpath(int argc)
+{
+  char *p = ((argc==1) && YNotNil(sp))? YGetString(sp) : 0;
+  if (argc > 1) YError("set_gpath accepts only one argument");
+  if (CalledAsSubroutine()) {
+    Array *a = PushDataBlock(NewArray(&stringStruct, (Dimension *)0));
+    a->value.q[0] = p_strcpy(g_set_path((char*)0));
+  }
+  if (p) g_set_path(p);
 }
 
 void Y__pl_init(int nArgs)

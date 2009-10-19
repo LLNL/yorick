@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.11 2008-05-17 04:33:36 dhmunro Exp $
+ * $Id: graph.i,v 1.12 2009-10-19 04:37:51 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1641,6 +1641,12 @@ extern raw_style;
  */
 
 /*--------------------------------------------------------------------------*/
+
+extern set_gpath;
+/* DOCUMENT old = set_gpath(gist_path)
+     set path (colon delimited directories) for Gist graphics package,
+     returning old path.  GIST_PATH nil or string(0) just returns old.
+ */
 
 extern _pl_init;
 /* xxDOCUMENT _pl_init

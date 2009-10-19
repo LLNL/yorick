@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.22 2009-09-13 02:01:04 dhmunro Exp $
+ * $Id: std.i,v 1.23 2009-10-19 04:37:51 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -280,8 +280,36 @@ extern set_path;
 extern get_path;
 /* DOCUMENT get_path()
      returns the current include file search path.
+   SEE ALSO: set_path, get_pkgnames, split_path
+ */
+
+func split_path(path)
+/* DOCUMENT split_path(path)
+     splits PATH, a colon or semi-colon delimited list of directories
+     as returned by get_path, into a string array with one directory
+     per element.
    SEE ALSO: set_path, get_pkgnames
  */
+{
+  if (numberof(path) > 1) path = sum(";"+path);
+  path = strchar(path);
+  list = where(path == ';');
+  if (numberof(list)) path(list) = '\0';
+  list = where(path == ':');
+  if (numberof(list)) {
+    for (i=j=1 ; j<=numberof(list) ; ++j) {
+      for (; i<list(j) ; ++i) if (path(i)) break;
+      if ((i==list(j)-1) && ((c=path(i)|'\x20')>='a') && (c<='z')) {
+        list(j) = 0;
+        if (++j > numberof(list)) break;
+      }
+      i = list(j) + 1;
+    }
+    list = list(where(list));
+    if (numberof(list)) path(list) = '\0';
+  }
+  return strchar(path);
+}
 
 extern get_pkgnames;
 /* DOCUMENT get_pkgnames(all)
@@ -2838,18 +2866,23 @@ func include_all(dir, ..)
    SEE ALSO: include, include1, autoload
  */
 {
-  for (i=0 ; !is_void(dir) ; dir=next_arg()) {
-    list = lsdir(dir);
-    if (structof(list) != string) continue;
-    list = list(where((strpart(list,1:1)!=".") & (strpart(list,-1:0)==".i")));
-    if (!numberof(list)) continue;
-    list = list(sort(list));
-    if (strpart(dir,0:0) != "/") dir += "/";
-    list = dir + list;
-    for (i=1 ; i<=numberof(list) ; ++i) include, list(i), 3;
-    i = 0;
+  local files;
+  /* provide hook for mpy to prevent all ranks from calling lsdir */
+  if (!_include_all_hook()) {
+    for (i=0 ; !is_void(dir) ; dir=next_arg()) {
+      list = lsdir(dir);
+      if (structof(list) != string) continue;
+      list = list(where((strpart(list,1:1)!=".")&(strpart(list,-1:0)==".i")));
+      if (!numberof(list)) continue;
+      list = list(sort(list));
+      if (strpart(dir,0:0) != "/") dir += "/";
+      grow, files, dir+list;
+    }
   }
+  _include_all_hook;
+  for (i=1 ; i<=numberof(files) ; ++i) include, files(i), 3;
 }
+func _include_all_hook(void) { return void; }
 
 extern plug_in;
 /* DOCUMENT plug_in, "pkgname"

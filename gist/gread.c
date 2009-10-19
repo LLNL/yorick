@@ -1,5 +1,5 @@
 /*
- * $Id: gread.c,v 1.1 2005-09-18 22:04:23 dhmunro Exp $
+ * $Id: gread.c,v 1.2 2009-10-19 04:37:51 dhmunro Exp $
  * Define Drauing gread read routine for GIST
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -82,6 +82,19 @@ char *g_argv0 = 0;
 
 static char *scratch = 0;
 static char *gist_path = 0;
+
+char *
+g_set_path(char *gpath)
+{
+  if (gpath) {
+    char *p = gist_path;
+    gist_path = p_strcpy(gpath);
+    if (p) p_free(p);
+  } else {
+    FormGistPath();
+  }
+  return gist_path;
+}
 
 static char *FormGistPath(void)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: yio.h,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: yio.h,v 1.3 2009-10-19 04:37:51 dhmunro Exp $
  * Declare Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -195,7 +195,8 @@ PLUG_API int nYpPrefixes;
    path (in, say, custom.i).  Alternatively, yLaunchDir can contain a
    special version of stdx.i.  */
 PLUG_API void YpSetPaths(const char *pathlist);    /* also sets yCWD, yHOME */
-PLUG_API char *yLaunchDir, *ySiteDir, *yHomeDir;
+PLUG_API char *yLaunchDir, *ySiteDir, *yHomeDir, *defaultPath;
+PLUG_API char *y_user_dir, *y_gist_dir;
 
 /*--------------------------------------------------------------------------*/
 

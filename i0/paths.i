@@ -1,5 +1,5 @@
 /*
- * $Id: paths.i,v 1.2 2006-05-20 17:21:30 dhmunro Exp $
+ * $Id: paths.i,v 1.3 2009-10-19 04:37:51 dhmunro Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -83,16 +83,11 @@ extern Y_LAUNCH;
 
 /* set_site, "Y_SITE_DIR", "Y_HOME_DIR"; */
 
-{
-  /* locate yorick user directory, match compiled code in yorick/std0.c */
-  Y_USER = "~/.yorick/";
-  if (lsdir("~/yorick") != 0) Y_USER = "~/yorick/";
-  else if (lsdir("~/Yorick") != 0) Y_USER = "~/Yorick/";
-  /* gist user directory is deprecated in favor of Y_USER+"gist" */
-  Y_GISTDIR = "~/.gist";
-  if (lsdir("~/gist") != 0) Y_GISTDIR = "~/gist";
-  else if (lsdir("~/Gist") != 0) Y_GISTDIR = "~/Gist";
-}
+/* Y_USER, Y_GISTDIR now set by set_site
+ * Y_USER is ~/.yorick unless ~/yorick or (obsolete) ~/Yorick exists,
+ *   or ~/Library/Yorick or ~/Application Data/Yorick for Mac or Windows
+ * Y_GISTDIR is Y_USER/gist unless ~/.gist, ~/gist, or ~/Gist exists
+ */
 
 /* ------------------------------------------------------------------------ */
 
@@ -101,7 +96,6 @@ extern Y_LAUNCH;
       libgist.a is incorrect.  */
 /* GISTPATH= "~/Gist:"+"GIST_SITE_DIR"; */
 GISTPATH = Y_GISTDIR+":"+Y_SITE+"g";
-if (lsdir(Y_USER+"gist") != 0) GISTPATH = Y_USER+"gist:"+GISTPATH;
 
 extern GIST_FORMAT, LPR_FORMAT;
 /* DOCUMENT GIST_FORMAT

@@ -1,5 +1,5 @@
 /*
- * $Id: gist.h,v 1.1 2005-09-18 22:04:33 dhmunro Exp $
+ * $Id: gist.h,v 1.2 2009-10-19 04:37:51 dhmunro Exp $
  * Declare GIST interface for C programs
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -66,6 +66,7 @@ PLUG_API void GpKillEngine(Engine *engine);
 
 PLUG_API int gist_input_hint, gist_private_map, gist_rgb_hint;
 PLUG_API void g_initializer(int *pargc, char *argv[]);
+PLUG_API char *g_set_path(char *gpath);
 PLUG_API void (*g_on_keyline)(char *msg);
 PLUG_API void (*g_stdout)(char *output_line);
 

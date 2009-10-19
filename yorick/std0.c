@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.7 2007-03-28 09:10:37 thiebaut Exp $
+ * $Id: std0.c,v 1.8 2009-10-19 04:37:51 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -58,8 +58,8 @@ static void YInit(char *home, char *site, y_pkg_t **pkgs);
 
 extern int YGetLaunchDir(char *argv0);  /* sysdep.c */
 
-char *yLaunchDir=0, *ySiteDir=0, *yHomeDir=0;
-static char *defaultPath = 0;
+char *yLaunchDir=0, *ySiteDir=0, *yHomeDir=0, *defaultPath = 0;
+char *y_user_dir=0, *y_gist_dir=0;
 
 extern int y_on_idle(void);
 extern void y_on_stdin(char *input_line);
@@ -137,18 +137,25 @@ YInit(char *home, char *site, y_pkg_t **pkgs)
      stdx.i, which is included just before custom.i
      -- create the default path here:
         .:~/.yorick:~/yorick:~/Yorick:ySiteDir/i:ySiteDir/contrib  */
-  yLaunchDir = p_strcpy(ym_argc>0? ym_argv[0] : 0);
-  if (yLaunchDir) {
-    int i;
-    for (i=0 ; yLaunchDir[i] ; i++);
-    while (i>0 && yLaunchDir[i]!='/') i--;
-    if (yLaunchDir[i]=='/') yLaunchDir[i+1] = '\0';
+  if (ym_argc<1 || strcmp(ym_argv[0],"--no-paths")) {
+    yLaunchDir = p_strcpy(ym_argc>0? ym_argv[0] : 0);
+    if (yLaunchDir) {
+      int i;
+      for (i=0 ; yLaunchDir[i] ; i++);
+      while (i>0 && yLaunchDir[i]!='/') i--;
+      if (yLaunchDir[i]=='/') yLaunchDir[i+1] = '\0';
+    }
+    ySiteDir = site? p_strcpy(site) : p_strcpy("/");
+    YNameToHead(&ySiteDir);
+    yHomeDir = home? p_strcpy(home) : p_strcpy("/");
+    YNameToHead(&yHomeDir);
+    Y_set_site(-1);
+  } else {
+    /* yLaunchDir, ySiteDir, yHomeDir, defaultPath will be set elsewhere
+     * - also y_user_dir, y_gist_dir
+     */
+    Y_set_site(-2);
   }
-  ySiteDir = site? p_strcpy(site) : p_strcpy("/");
-  YNameToHead(&ySiteDir);
-  yHomeDir = home? p_strcpy(home) : p_strcpy("/");
-  YNameToHead(&yHomeDir);
-  Y_set_site(0);
 
   /* set up to read user customizations
      If the first two arguments are -batch alternate.i, use alternate.i
@@ -222,6 +229,7 @@ Y_get_pkgnames(int nargs)
 }
 
 static char *y_make_ipath(char *ylaunch, char *ysite, char *yhome);
+static void y_set_globvar(const char *globname, const char *value, int tohead);
 
 void
 Y_set_site(int nArgs)
@@ -236,22 +244,18 @@ Y_set_site(int nArgs)
   if (nArgs>2) YError("expecting zero, one, or two arguments");
 
   /* record Y_LAUNCH in global variable */
-  index = Globalize("Y_LAUNCH", 0L);
-  oldDB = globTab[index].ops==&dataBlockSym? globTab[index].value.db : 0;
-  dirName = NewArray(&stringStruct, (Dimension *)0);
-  globTab[index].value.db = (DataBlock *)dirName;
-  globTab[index].ops = &dataBlockSym;
-  Unref(oldDB);
-  dirName->value.q[0] = p_strcpy(yLaunchDir);
+  y_set_globvar("Y_LAUNCH", yLaunchDir, 0);
 
-  if (nArgs>=1) {
+  if (nArgs >= 1) {
+    if (ySiteDir) p_free(ySiteDir);
     ySiteDir = p_strcpy(YGetString(sp-nArgs+1));
     YNameToHead(&ySiteDir);
     if (nArgs==2) {
+      if (yHomeDir) p_free(yHomeDir);
       yHomeDir = p_strcpy(YGetString(sp));
       YNameToHead(&yHomeDir);
     }
-  } else {
+  } else if (nArgs == -1) {
 #ifndef NO_FALLBACK_TEST
     p_file *test = 0;
     if (ySiteDir && ySiteDir[0] && YIsAbsolute(ySiteDir)) {
@@ -287,63 +291,112 @@ Y_set_site(int nArgs)
   }
 
   /* record Y_VERSION in global variable */
-  index = Globalize("Y_VERSION", 0L);
-  oldDB = globTab[index].ops==&dataBlockSym? globTab[index].value.db : 0;
-  dirName = NewArray(&stringStruct, (Dimension *)0);
-  globTab[index].value.db = (DataBlock *)dirName;
-  globTab[index].ops = &dataBlockSym;
-  Unref(oldDB);
-  dirName->value.q[0] = p_strcpy(yVersion);
+  y_set_globvar("Y_VERSION", yVersion, 0);
 
   /* record Y_HOME in global variable */
-  index = Globalize("Y_HOME", 0L);
-  oldDB = globTab[index].ops==&dataBlockSym? globTab[index].value.db : 0;
-  dirName = NewArray(&stringStruct, (Dimension *)0);
+  y_set_globvar("Y_HOME", yHomeDir, 1);
+
+  /* record Y_SITE in global variable */
+  y_set_globvar("Y_SITE", ySiteDir, 1);
+
+  /* note: by default, this is never called from paths.i at all */
+
+  if (nArgs == -1) {
+    /* set the initial include path for paths.i
+     * -- if nArgs>=0, this call is from paths.i, just set defaultPath
+     */
+    path = y_make_ipath(yLaunchDir, ySiteDir, yHomeDir);
+    YpSetPaths(path);
+    p_free(path);
+  }
+
+  if (nArgs > -2) {
+    defaultPath = y_make_ipath(0, ySiteDir, yHomeDir);
+    if (nArgs >= 0) YpSetPaths(defaultPath);  /* from paths.i */
+  }
+  y_set_globvar("Y_USER", y_user_dir, 1);
+  y_set_globvar("Y_GISTDIR", y_gist_dir, 0);  /* used in paths.i */
+}
+
+static void
+y_set_globvar(const char *globname, const char *value, int tohead)
+{
+  /* record Y_HOME in global variable */
+  long index = Globalize(globname, 0L);
+  DataBlock *oldDB =
+    globTab[index].ops==&dataBlockSym? globTab[index].value.db : 0;
+  Array *dirName = NewArray(&stringStruct, (Dimension *)0);
   globTab[index].value.db = (DataBlock *)dirName;
   globTab[index].ops = &dataBlockSym;
   Unref(oldDB);
-  dirName->value.q[0] = p_strcpy(yHomeDir);
-
-  /* record Y_SITE in global variable */
-  index = Globalize("Y_SITE", 0L);
-  oldDB = globTab[index].ops==&dataBlockSym? globTab[index].value.db : 0;
-  dirName = NewArray(&stringStruct, (Dimension *)0);
-  globTab[index].value.db = (DataBlock *)dirName;
-  globTab[index].ops= &dataBlockSym;
-  Unref(oldDB);
-  dirName->value.q[0] = p_strcpy(ySiteDir);
-  YNameToHead(dirName->value.q);
-
-  /* set the initial include path for paths.i */
-  path = y_make_ipath(yLaunchDir, ySiteDir, yHomeDir);
-  YpSetPaths(path);
-  p_free(path);
-
-  defaultPath = y_make_ipath(0, ySiteDir, yHomeDir);
+  dirName->value.q[0] = p_strcpy(value);
+  if (tohead) YNameToHead(dirName->value.q);
 }
 
 static char *
 y_make_ipath(char *ylaunch, char *ysite, char *yhome)
 {
-  /*~/.yorick:~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib*/
+  /*~/.yorick:~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib*/\
   char *path1 = 0, *path2 = 0;
-  char *yuser = "~/.yorick:";
-  p_dir *yudir = p_dopen("~/yorick");
-  if (yudir) yuser = "~/yorick:";
-  else if ((yudir = p_dopen("~/Yorick"))) yuser = "~/Yorick:";
-  if (yudir) p_dclose(yudir);
+  if (!y_user_dir) {
+    char *yuser = "~/.yorick/";      /* preferred user directory */
+    p_dir *yudir = p_dopen("~/.yorick");
+    if (!yudir) {
+      yudir = p_dopen("~/yorick");   /* unhidden user directory */
+      if (yudir) yuser = "~/yorick/";
+      else {
+        yudir = p_dopen("~/Library/Yorick");             /* Mac OS X */
+        if (yudir) yuser = "~/Library/Yorick/";
+        else {
+          yudir = p_dopen("~/Application Data/Yorick");  /* Windows */
+          if (yudir) yuser = "~/Application Data/Yorick/";
+          else {
+            yudir = p_dopen("~/Yorick");  /* obsolete choice */
+            if (yudir) yuser = "~/Yorick/";
+          }
+        }
+      }
+    }
+    if (yudir) p_dclose(yudir);
+    y_user_dir = p_strcpy(yuser);
+  }
+  YNameToHead(&y_user_dir);
+  if (!y_gist_dir) {
+    y_gist_dir = p_strncat(y_user_dir, "gist", 0);
+    p_dir *yudir = p_dopen(y_gist_dir);
+    if (!yudir) {  /* for backwards compatibility */
+      char *yuser = "~/.gist";
+      yudir = p_dopen(yuser);
+      if (!yudir) {
+        yuser = "~/gist";
+        yudir = p_dopen(yuser);
+        if (!yudir) {
+          yuser = "~/Gist";
+          yudir = p_dopen(yuser);
+        }
+      }
+      if (yudir) {
+        p_dclose(yudir);
+        p_free(y_gist_dir);
+        y_gist_dir = p_strcpy(yuser);
+      }
+    }
+  }
   if (ylaunch && ylaunch[0]) {
     /* prepend Y_LAUNCH for paths.i only */
     long len = strlen(ylaunch);
-    path1 = (ylaunch[len-1]=='/')? p_strncat(0, ylaunch, len-1) :
+    path2 = (ylaunch[len-1]=='/')? p_strncat(0, ylaunch, len-1) :
       p_strcpy(ylaunch);
-    path2 = p_strncat(path1, PATH_SEP, 0);
-    p_free(path1);
+    path1 = p_strncat(path2, PATH_SEP, 0);
+    p_free(path2);
   } else {
-    path2 = p_strcpy("." PATH_SEP);
+    path1 = p_strcpy("." PATH_SEP);
   }
-  path1 = p_strncat(path2, yuser, 0);
-  if (path2) p_free(path2);
+  path2 = p_strncat(path1, y_user_dir, 0);
+  if (path1) p_free(path1);
+  if (path2[strlen(path2)-1] == '/') path2[strlen(path2)-1] = '\0';
+  path1 = p_strncat(path2, PATH_SEP, 0);
+  p_free(path2);
   path2 = p_strncat(path1, ysite, 0);
   p_free(path1);
   path1 = p_strncat(path2, "i" PATH_SEP, 0);
