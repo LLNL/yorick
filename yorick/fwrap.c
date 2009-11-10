@@ -1,5 +1,5 @@
 /*
- * $Id: fwrap.c,v 1.2 2009-09-11 02:20:03 dhmunro Exp $
+ * $Id: fwrap.c,v 1.3 2009-11-10 05:23:48 dhmunro Exp $
  * implement function argument wrapping with wrap_args
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -84,7 +84,7 @@ ywrap_a_print(void *obj)
   y_wrapped_args *wa = obj;
   char msg[80];
   sprintf(msg, "wrapped args, %d positionals, %d keywords",
-          &wa->npos, &wa->nkey);
+          wa->npos, wa->nkey);
   y_print(msg, 1);
 }
 
@@ -183,7 +183,7 @@ ywrap_f_eval(Operand *op)
     }
     if (k) {
       for (i=0 ; k<argc ; k++) {
-        if (me[k].ops || k+1>=argc) continue;
+        if (me[k].ops) continue;
         args[j+(i++)] = me[k++];
         args[j+i] = me[k];
         if (args[j+i].ops == &referenceSym) {

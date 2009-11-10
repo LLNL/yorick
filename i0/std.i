@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.25 2009-10-19 20:27:54 dhmunro Exp $
+ * $Id: std.i,v 1.26 2009-11-10 05:23:48 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2244,7 +2244,7 @@ func vsave(args)
       error, "unrecognized keyword argument";
     eq_nocopy, prims, args(-1);
   }
-  eq_nocopy, a, args(i);
+  eq_nocopy, a, args(1);
   handle = is_stream(a);
   if (handle) f = a;
   else f = createb(char, prims);
