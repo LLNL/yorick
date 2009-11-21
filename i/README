@@ -147,6 +147,9 @@
      Functions: calendar, unix_time, julian_day, datestamp, base60, tz_set
    pathfun.i  - functions for manipulating filenames
      Functions: dirname, basename, pathform, pathsplit
+   unsigned.i - suport for unsigned integers
+     Functions: u_gt, u_lt, u_ge, u_le, u_eq, u_ne, u_shr, u_div, u_mod,
+                u_cast, s_char
 
    Demonstration programs:
    -----------------------
