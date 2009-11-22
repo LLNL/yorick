@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.18 2009-11-14 02:17:20 dhmunro Exp $
+ * $Id: yapi.c,v 1.19 2009-11-22 23:47:15 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1091,7 +1091,7 @@ yarg_conform(long *dims1, long *dims2, long *cfmdims)
   } else if (n2 > 0) {
     flags |= Y_1_EXTEND;
     do {
-      len2 = *dims1++;
+      len2 = *dims2++;
       if (len2 != 1) flags |= Y_1_BCAST;
       *cfmdims++ = len2;
     } while (--n2 > 0);
