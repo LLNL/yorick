@@ -1,5 +1,5 @@
 /*
- * $Id: std1.c,v 1.2 2005-12-30 21:50:55 dhmunro Exp $
+ * $Id: std1.c,v 1.3 2009-11-23 21:20:28 dhmunro Exp $
  * More Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -19,7 +19,7 @@
 
 extern BuiltIn Y_indgen, Y_span, Y_digitize, Y_interp, Y_integ, Y_sort,
   Y_transpose, Y_grow, Y__, Y_timestamp, Y_timer,
-  Y_random, Y_random_seed, Y_merge, Y_histogram, Y_poly;
+  Y_random, Y_random_seed, Y_merge, Y_histogram, Y_poly, Y_noop;
 
 /*--------------------------------------------------------------------------*/
 
@@ -1417,6 +1417,15 @@ void Y_poly(int nArgs)
     Multiply();
     Add();
   }
+}
+
+/*--------------------------------------------------------------------------*/
+
+void
+Y_noop(int argc)
+{
+  if (argc && sp->ops==&referenceSym) ReplaceRef(sp);
+  return;
 }
 
 /*--------------------------------------------------------------------------*/

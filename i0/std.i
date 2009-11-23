@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.26 2009-11-10 05:23:48 dhmunro Exp $
+ * $Id: std.i,v 1.27 2009-11-23 21:20:28 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -4588,6 +4588,15 @@ func uncen(ptcen, ireg)
 
 /*--------------------------------------------------------------------------*/
 
+extern noop;
+/* DOCUMENT noop(x)
+     returns X.  Use to make simple variable references into expressions.
+     The noop function is a builtin, which runs much faster than the
+     interpreted "call" function.  Also, if X is an array reference for
+     a file handle, "call" performs the read, while "noop" does not.
+   SEE ALSO: call
+ */
+
 func call(void)
 /* DOCUMENT call, subroutine(arg1, arg2, arg3, arg4, arg5
                              arg6, arg7, arg8);
@@ -4600,6 +4609,7 @@ func call(void)
                      arg6, arg7, arg8);
      will print the return value of subroutine, even if it is nil.
      If invoked as a function, call simply returns its argument.
+   SEE ALSO: noop
  */
 { return void; }
 
