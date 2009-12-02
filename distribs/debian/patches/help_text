@@ -1,0 +1,21 @@
+Author: Thibaut Paumard <paumard@users.sourceforge.net>
+Description: Customize "help" command text for Debian
+ Change text of the "help" command to take the yorick-doc package
+ into account.
+Forwarded: not-needed
+
+diff -urN orig/i0/std.i tp/i0/std.i
+--- orig/i0/std.i	2007-12-11 08:56:59.000000000 +0100
++++ tp/i0/std.i	2007-12-11 08:59:27.000000000 +0100
+@@ -53,8 +53,9 @@
+      You can find out a great deal more about Yorick by browsing
+      through these directories.  Begin with the site directory,
+      and pay careful attention to the subdirectories doc/ (which
+-     contains documentation relating to Yorick), and i/ and
+-     contrib/ (which contain many examples of Yorick programs).
++     contains documentation relating to Yorick if the yorick-doc
++     package is installed) and i/ (which contain many examples of
++     Yorick programs).
+      Look for files called README (or something similar) in any
+      of these directories -- they are intended to assist browsers.
+      The site directory itself contains std.i and graph.i, which

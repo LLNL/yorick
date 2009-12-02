@@ -1,0 +1,152 @@
+Yorick for Debian Packaging Policy
+==================================
+
+This document drafts the best practices/policy for Yorick and add-on
+packages. Concensus on has been easy to reach since there is so far
+mostly one person involved, although at times I have to argue fiercely
+with myself and have been edging on the verge of self-inflicted
+flame-war.
+
+In fact, I am just aiming at documenting hereby how I do things.
+
+Other relevant documents
+------------------------
+
+/usr/share/doc/yorick/README.Debian*, man dh_installyorick, man
+update-yorickdoc, Yorick source README.
+
+
+File layout
+-----------
+
+After discussions with David Munro (primary upstream author of
+Yorick), I have made the Debian packages relocatable and install it under
+Y_SITE=Y_HOME=/usr/lib/yorick. There are mainly two reasons for it: 
+
+ - David plans on deprecating the Y_SITE/Y_HOME dichotomy and on
+   supporting only relocatable builds at some point;
+
+ - this makes is reasonably easy for a sysadmin to save a working
+   version of Yorick to somewhere under /usr/local for instance,
+   before a major, potentially incompatible upgrade (or even after,
+   since they are supposed to back-up their systems!). Installing
+   under something like /usr/lib/yorick/2.1 for instance looked like
+   an unnecessary burden to me.
+
+However, the Debian policy, following the FHS, specifies that
+arch-indep files should be installed under /usr/share. This is the
+case of many files in Yorick and its add-ons: the interpreted
+libraries (.i files), the GIST (graphic) files (.gp and .gs), python
+scripts and glade files for packages which peruse a fancy GUI... So
+indeed those files are installed under /usr/share/yorick and linked to
+from /usr/lib/yorick.
+
+The yorick-dev package provides the command dh_installyorick, which
+any yorick add-on should use. It handles installation of files under
+various subdirectories of /usr/lib/yorick and /usr/share/yorick, so
+add-on package maintainers don't need to deal with the nasty details
+(and should not, as they may change). However, here they are:
+
+  /usr/share/yorick
+    all arch-indep files for yorick and add-ons.
+  /usr/share/yorick/data
+    misc data files for add-ons (no example in mind, this is a
+    provision should a maintainer need it).
+  /usr/share/yorick/include
+    C include files
+  /usr/share/yorick/python
+    Python scripts, usually for software coded in Yorick with a GUI
+    coded in Python+glade.
+  /usr/share/yorick/i
+    Yorick interpreted functions (.i files)
+  /usr/share/yorick/i/debian
+    Debian-specific .i files, used in dh_installyorick for instance.
+  /usr/share/yorick/i-start
+    Initialization .i files for packages, mostly used for autoload
+    statements.
+  /usr/share/yorick/g
+    Gist fils (.gs and .gp)
+  /usr/share/yorick/i0
+    Yorick bindings for compiled code (e.g. .i files containing a
+    plug_in statement).
+  /usr/share/yorick/packages
+    Files for pkg_mngr.i
+  /usr/share/yorick/packages/installed
+    .info files (see below) for packages installed under Y_SITE/Y_HOME.
+  /usr/share/yorick/glade
+    Glade files defining GUIs for Yorick software.
+
+
+  /usr/lib/yorick/
+    Yorick. This is Y_SITE and Y_HOME as perceived from within
+    yorick. All the files and directories directly under
+    /usr/share/yorick/ are linked to from here. Some files under
+    /usr/share/doc/ are also linked to from here.
+  /usr/lib/yorick/bin/
+    Binaries and executable scripts that need to be here (e.g. yorick
+    itself and gist), or that should not be in the path. It is fine to
+    put any executable file here, with or without a link from
+    e.g. /usr/bin. Currently, stand-alone programs coded in Yorick are
+    directly put in /usr/bin, but it could be nice to put them here
+    with a link in /usr/bin.
+  /usr/lib/yorick/lib/
+    .so files, mostly compiled plug-ins. Also object files and
+    libraries (.o, .so and .a files) as well as support executables
+    (codger, shell scripts) used for compiling plug-ins and custom
+    yorick executables.
+
+  /usr/share/yorick-doc/
+    Files used by update-yorickdoc for building the HTML
+    documentation. Each add-on package should put at least a .packinfo
+    file here, and may add .keywords and .aliases files as needed.
+
+  /etc/yorick/
+    Customization files. Some programs which use Yorick have their own
+    file directly under /etc/, but if possible, this should be
+    avoided. However, only packages with a strong dependency on Yorick
+    should put anything under /etc/yorick, since this directory will
+    be forcibly deleted when purging the yorick package. yorick-doc,
+    for instance, must survive a yorick purge, and therefore has its
+    own /etc/yorick-doc.
+
+
+Mandatory files
+---------------
+
+Each add-on package should provide:
+
+  - one or several autoload file(s) named after the package (keep
+    upstream name if it exists already;
+
+  - a .info file, so that pkg_mngr knows what add-ons are installed in
+    Y_SITE; this makes it easier for users to use pkg_mngr to install
+    additional add-ons in their home directories;
+
+  - one or several .packinfo file(s) for update-yorickdoc, possibly
+    accompanied by .keywords and .aliases files.
+
+dh_installyorick should be used to manage installation of these files
+where they belong, refer to its manpage for more details.
+
+Maintainer scripts
+------------------
+
+During Lenny development, the add-on packages used to call
+"update-yorickdoc -a" in their postinst and postrm
+scripts. Regeneration of HTML pages is now automatically triggered
+whenever the content of any of these directories changes during
+package unpack:
+
+ /usr/share/yorick-doc
+ /usr/share/yorick/i
+ /usr/share/yorick/i0
+
+Therefore, the "update-yorickdoc -a" call is not necessary anymore,
+and should be removed as soon as convenient. Since these lines are
+normally added by dh_installyorick, a simple rebuild is sufficient.
+
+However, if a package modifies any of these directories during
+postinst or postrm, it should trigger the regeneration by calling
+explicitely dpkg-trigger on this directory.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Fri, 18 May 2008 08:06:43 +0200

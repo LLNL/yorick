@@ -1,0 +1,16 @@
+This package uses quilt to manage all modifications to the upstream
+source.  Changes are stored in the source package as diffs in
+debian/patches and applied during the build.
+
+See /usr/share/doc/quilt/README.source for usage.
+
+To retrieve the original tarball, the "rules" file provides three
+targets depending on how the last upstream was packaged: get-cvs-date,
+get-cvs-tag, or get-tgz. They always get the last version in the
+changelog. To package a new upstream from CVS, first create a new
+version in the changelog in which the string "+cvsYYYMMDD" appears
+(for instance +cvs20091231), then run "debian/rules get-cvs-date".
+For the sake of reproducibility, its better to use the date of
+yesterday in case other commits are made today.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>, Thu, 26 Nov 2009 15:34:54 +0100

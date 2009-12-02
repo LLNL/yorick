@@ -1,0 +1,66 @@
+Author: Thibaut Paumard <paumard@users.sourceforge.net>
+Description: Customize HTML documentation
+Forwarded: not-needed
+
+--- a/doc/html/template.html
++++ b/doc/html/template.html
+@@ -51,7 +51,6 @@
+ %onlydoc:installwin%<div class="nav2"><a href="./README.html#extend">C Extensions</a></div>
+ <div class="nav1"><a href="%toroot%README.html">Getting Started</a></div>
+ %onlydoc:index%<div class="nav2"><A href="%toroot%manual/yorick.html">BSD License</A></div>
+-%onlydoc:index%<div class="nav2"><A href="%toroot%../README.html">Installation</A></div>
+ <div class="nav1"><A href="%toroot%manual/yorick_1.html">Manual</A></div>
+ %onlydoc:manual%<div class="nav2"><A href="%toroot%manual/yorick_toc.html">Contents</A></div>
+ %onlydoc:manual%<div class="nav2"><A href="%toroot%manual/yorick.html">Copyright</A></div>
+@@ -77,9 +76,9 @@
+ <ol>
+ <li>The terminal window where you type
+ interactive commands is not part of yorick.  Neither is the text
+-editor you use to compose yorick programs.  The
+-<a href="../README.html">installation instructions</a> include
+-recommendations for terminal emulators and text editors.</li>
++editor you use to compose yorick programs.  The two recommended ways
++of starting yorick are either through rlwrap (rlwrap yorick) or within
++the emacs editor (emacs -f yorick).</li>
+ <li>Quickly read the first three chapters of the
+ <a href="./manual/yorick_1.html">user manual</a>.  The first chapter,
+ in particular, is a yorick tutorial.</li>
+@@ -89,22 +88,22 @@
+ familiar with it.</li>
+ <li>Choose one or more of the demonstration programs and work through it.
+ <dl>
+-<dt><a href="../i/demo1.i"><b>demo1.i</b></a></dt>
++<dt><a href="/usr/share/yorick/i/demo1.i"><b>demo1.i</b></a></dt>
+ <dd>a 1D hydro code written in yorick interpreted code</dd>
+-<dt><a href="../i/demo2.i"><b>demo2.i</b></a></dt>
++<dt><a href="/usr/share/yorick/i/demo2.i"><b>demo2.i</b></a></dt>
+ <dd>solving the equations for the motion of a drumhead</dd>
+-<dt><a href="../i/demo3.i"><b>demo3.i</b></a></dt>
++<dt><a href="/usr/share/yorick/i/demo3.i"><b>demo3.i</b></a></dt>
+ <dd>computing the motion of a chaotic pendulum</dd>
+-<dt><a href="../i/demo4.i"><b>demo4.i</b></a></dt>
++<dt><a href="/usr/share/yorick/i/demo4.i"><b>demo4.i</b></a></dt>
+ <dd>plotting the flow past a Jakowski airfoil</dd>
+-<dt><a href="../i/demo5.i"><b>demo5.i</b></a></dt>
++<dt><a href="/usr/share/yorick/i/demo5.i"><b>demo5.i</b></a></dt>
+ <dd>make crude 3D plots (yorick computes the projections)</dd>
+ </dl>
+ </li>
+ <li>Yorick has a <tt>help</tt> command and a <tt>library</tt> command.
+ Learn to use them, and learn to use your text editor to open and read
+-the yorick interpreted code in the <a href="../i"><tt>Y_SITE/i</tt></a>
+-and <a href="../i0"><tt>Y_SITE/i0</tt></a> directories.  Often, the program
++the yorick interpreted code in the <a href="/usr/share/yorick/i"><tt>Y_SITE/i</tt></a>
++and <a href="/usr/share/yorick/i0"><tt>Y_SITE/i0</tt></a> directories.  Often, the program
+ you want to write will be similar to something in those directories.</li>
+ <li>The <a href="http://yorick.sourceforge.net/index.php">
+ yorick homepage</a> has much more information about yorick, including
+@@ -121,7 +120,7 @@
+ <h1 class="settitle">Printable Manual</h1>
+ 
+ <p>A printable version of the manual is
+-<a href="./yorick.pdf">yorick.pdf</a></p>
++<a href="./yorick.pdf.gz">yorick.pdf.gz</a></p>
+ 
+ %content%
+ </div>

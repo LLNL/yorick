@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: update-yorickdoc,v 1.4 2008-03-14 14:07:58 paumard Exp $
+# $Id: update-yorickdoc,v 1.5 2009-12-02 16:01:03 paumard Exp $
 
 set -e
 
@@ -32,6 +32,16 @@ PURGE=0
 for opt; do
     case $opt in
 	--auto|-a)
+	    if [ $ENABLE_AUTO -eq 0 ]; then
+		echo "ENABLE_AUTO set to zero in $CONFFILE or equivalent"
+		echo "Not updating Yorick documentation"
+		exit 0
+	    fi
+            if type dpkg-trigger >/dev/null 2>&1 ; then
+                exit 0
+            fi
+	    ;;
+	--auto-now|-A)
 	    if [ $ENABLE_AUTO -eq 0 ]; then
 		echo "ENABLE_AUTO set to zero in $CONFFILE or equivalent"
 		echo "Not updating Yorick documentation"

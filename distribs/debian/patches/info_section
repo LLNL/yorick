@@ -1,0 +1,16 @@
+Author: Thibaut Paumard <paumard@users.sourceforge.net>
+Description: Change section in yorick.info from Miscellaneous to Math
+Forwarded: not-needed
+
+diff -urN orig/doc/yorick.tex tp/doc/yorick.tex
+--- orig/doc/yorick.tex	2006-05-05 13:51:17.168930800 +0200
++++ tp/doc/yorick.tex	2006-05-05 13:52:39.001490360 +0200
+@@ -2,7 +2,7 @@
+ @comment %**start of header (This is for running Texinfo on a region.)
+ @setfilename yorick.info
+ @settitle Yorick
+-@dircategory Miscellaneous
++@dircategory Math
+ @direntry
+ * Yorick: (yorick).       Yorick interpreted language.
+ @end direntry

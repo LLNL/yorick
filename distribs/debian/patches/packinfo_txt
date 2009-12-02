@@ -1,0 +1,24 @@
+Author: Thibaut Paumard <paumard@users.sourceforge.net>
+Description: Adapt packages index
+Forwarded: not-needed
+
+--- orig/doc/html/packinfo.txt  2007-12-05 09:19:48.000000000 +0100
++++ tp/doc/html/packinfo.txt    2007-12-05 09:21:09.000000000 +0100
+@@ -15,10 +15,6 @@
+ :newsection
+ Compiled (plugin) Yorick Packages
+
+-:yorz
+-read and write png or jpeg grephics files, write mpeg-1 movie files,
+- and interface to zlib (gzip) compression library
+-
+ :drat
+ a 2D transport equation solver for (r,z) meshes
+
+@@ -246,3 +242,6 @@
+
+ :sysafe
+ Replacement for system function (but not $ syntax)
++
++:newsection
++Add-on packages

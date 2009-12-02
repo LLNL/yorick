@@ -1,0 +1,15 @@
+Author: Thibaut Paumard <paumard@users.sourceforge.net>
+Description: Change link to PDF version of refcard.
+Forwarded: not-needed
+
+--- yorick-2.1.04+dfsg+cvs20071118.orig/doc/refs-html/index.html	2007-11-21 17:08:56.000000000 +0100
++++ yorick-2.1.04+dfsg+cvs20071118/doc/refs-html/index.html	2007-11-21 17:12:31.000000000 +0100
+@@ -37,7 +37,7 @@
+ <h1>Yorick Quick Reference Cards</h1>
+ 
+ <p>A set of quick reference cards for yorick fits onto three double
+-sided US letter sheets.  To print them, use <A href="./refs.pdf">refs.pdf</A>.
++sided US letter sheets.  To print them, use <A href="./refs.pdf.gz">refs.pdf.gz</A>.
+ </p>
+ <p>The original constraint to fit onto six sheets makes the
+ organization of this Quick Reference somewhat illogical; in

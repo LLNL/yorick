@@ -1,47 +1,54 @@
-.\" $Id: update-yorickdoc.1,v 1.4 2008-03-14 13:50:36 paumard Exp $
+.\" $Id: update-yorickdoc.1,v 1.5 2009-12-02 16:01:03 paumard Exp $
 .\"
 .IX Title "UPDATE\-YORICKDOC 1"
-.TH UPDATE\-YORICKDOC 1 "2008\-03\-14" "" "Yorick"
+.TH UPDATE\-YORICKDOC 1 "2008\-05\-18" "" "Yorick"
 .SH "NAME"
 update\-yorickdoc \- Build HTML documentation for Yorick
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-\&\fBupdate\-yorickdoc\fR [\fB\-\-conf=\fRfile] [\fB\-\-auto\fR] [\fB\-\-from=\fRdirectory] [\fB\-\-to=\fRdirectory] [\fB\-\-xref\-dir=\fRdirectory] [\fB\-\-src\-dir=\fRdirectory] [\fB\-\-template=\fRfile]
+\&\fBupdate\-yorickdoc\fR [\fB\-\-conf=\fRfile] [\fB\-\-auto\fR] [\fB\-\-auto\-now\fR] [\fB\-\-from=\fRdirectory] [\fB\-\-to=\fRdirectory] [\fB\-\-xref\-dir=\fRdirectory] [\fB\-\-src\-dir=\fRdirectory] [\fB\-\-template=\fRfile]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-update\-yorickdoc is mostly a wrapper around htmldoc.i, a Yorick
-script that extracts DOCUMENT comments from Yorick source files and
-turns them into a set of HTML files. update\-yorickdoc merges files
-from a "source directory" (default: /usr/share/yorick\-doc,
-command\-line option: \-\-src\-dir), deletes the target directory
-(default: /usr/share/doc/yorick\-doc/html_xref), and, if Yorick is
-installed, calls "yorick \-batch htmldoc.i" to compile HTML
-documentation for all currently installed functions (either from the
-main Yorick package or from add\-on packages).
+update\-yorickdoc is a wrapper around htmldoc.i, a Yorick script that
+extracts DOCUMENT comments from Yorick source files and turns them
+into a set of HTML files. update\-yorickdoc merges files from a
+"source directory" (default: /usr/share/yorick\-doc, command\-line
+option: \-\-src\-dir), deletes the target directory (default:
+/usr/share/doc/yorick\-doc/html_xref), and, if Yorick is installed,
+calls "yorick \-batch htmldoc.i" to compile HTML documentation for all
+currently installed functions (either from the main Yorick package or
+from add\-on packages).
 .PP
 update\-yorickdoc is meant to be called automatically whenever a
 Yorick package is installed or removed. It is possible to prevent
 automatic updates by setting "ENABLE_AUTO" to 0 in /etc/yorick\-doc. It
 is also possible to use update\-yorickdoc manually to create
 documentation from custom directories (e.g. a user's own ~/Yorick/
-directory) or to a custom place.
+directory) or to a custom place, for instance.
 .PP
 update\-yorickdoc has a set of default parameters to function
 with. These parameters are overwritten in chronological order by the
 content /etc/yorick\-doc, $HOME/.yorick\-doc, and the command line.
 .PP
 A few files are required for this script to function. Default files
-are provided in the default source directory, and add\-on packages are
-encouraged to provide additional information in the same place. See
-\fBFILES\fR below.
+are provided in the default source directory, and add\-on packages
+should provide additional information in the same place. See
+\fBFILES\fR below as well as
+/usr/share/doc/yorick-dev/yorick-policy.gz.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
 .IP "\fB\-\-auto\fR | \fB\-a" 4
 .IX Item "\-\-auto"
-This flag is used when update\-yorickdoc is being called
-automaticallly from a script, notably during instalation and removal
-of Yorick packages. It is possible to turn update\-yorickdoc into a
-no\-op when this flag is set by setting ENABLE_AUTO to 0 in /etc/yorick\-doc.
+This flag is being deprecated by the advent of triggers in dpkg. On
+systems where dpkg supports triggers, \-a turns update\-yorickdoc into
+a no-op. On older systems, it behaves like \-A below.
+.IP "\fB\-\-auto\-now\fR | \fB\-A" 4
+.IX Item "\-\-auto\-now"
+This flag is meant to be used only in the postinst script of the
+yorick-doc package, which is turn is supposed to be triggered each
+time a yorick add-on package is installed, upgraded, or removed. It is
+possible to turn update\-yorickdoc into a no\-op when this flag is set
+by setting ENABLE_AUTO to 0 in /etc/yorick\-doc.
 .IP "\fB\-\-conf=\fRfile" 4
 .IX Item "\-\-conf=file"
 Read configuration from this file. This file is parsed as the option
@@ -117,7 +124,9 @@ Template file for htmldoc.i.
 the Yorick script which does most of the actual work.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
-\&\fI/usr/share/yorick/i/htmldoc.i\fR
+\&\fI/usr/share/yorick/i/htmldoc.i\fR,
+\&\fI/usr/share/doc/yorick-dev/yorick-policy.gz\fR,
+\&\fIdh_installyorick\fR\|(1)
 .SH "AUTHORS"
 .IX Header "AUTHORS"
 Thibaut Paumard <paumard@users.sourceforge.net>

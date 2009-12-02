@@ -1,3 +1,43 @@
+yorick (2.1.05+dfsg+cvs20091202-1) unstable; urgency=low
+
+  * New upstream from CVS:
+    - initial support for interpreting code stored in a string array
+      (see include())
+    - new set_gpath() function for setting the path for .gs and .gp files
+  * Use 3.0 (quilt) format
+  * Reformat debian/copyright in the DEP-3 spirit
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Sat, 28 Nov 2009 20:44:19 +0100
+
+yorick (2.1.05+dfsg-7) unstable; urgency=low
+
+  * Adapt doc build system to texi2html 1.82 thanks to Lucas Nussbaum
+    (Closes: #552966).
+  * Checked against policy 3.8.3.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Sun, 15 Nov 2009 15:32:31 +0100
+
+yorick (2.1.05+dfsg-6) unstable; urgency=low
+
+  * Bug fix: "yorick-dev: make debug generates 'undefined reference
+    to main' error", thanks to Alan W. Irwin (Closes: #490597).
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Tue, 15 Jul 2008 15:04:56 +0200
+
+yorick (2.1.05+dfsg-5) unstable; urgency=low
+
+  * Add triggers support to yorick-doc:
+    * add triggers control file;
+    * rename --auto option of update-yorickdoc to --auto-now;
+    * add new --auto option which makes update-yorickdoc a no-op on
+      systems where dpkg-trigger exists and else falls back to the same
+      as --auto-now;
+    * change dh_installyorick to not modify maintainer scripts by default,
+      use -m option to force it.
+  * Add a draft policy document in yorick-dev.
+
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Sun, 18 May 2008 23:14:45 +0200
+
 yorick (2.1.05+dfsg-4) unstable; urgency=low
 
   * Bug fix: "update-yorickdoc crashes when parsing UTF-8 files", thanks

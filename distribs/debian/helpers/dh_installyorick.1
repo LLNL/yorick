@@ -1,12 +1,12 @@
-.\" $Id: dh_installyorick.1,v 1.3 2008-01-02 14:19:27 paumard Exp $
+.\" $Id: dh_installyorick.1,v 1.4 2009-12-02 16:01:03 paumard Exp $
 .\"
 .IX Title "DH_INSTALLYORICK 1"
-.TH DH_INSTALLYORICK 1 "2007\-12\-10" "" "Debhelper"
+.TH DH_INSTALLYORICK 1 "2008\-05\-15" "" "Debhelper"
 .SH "NAME"
 dh_installyorick \- install Yorick add\-on packages
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-\&\fBdh_installyorick\fR [\fIdebhelper\ options\fR] [\fB\-n\fR] [\fB\-\-no\-make\-install\fR]
+\&\fBdh_installyorick\fR [\fIdebhelper\ options\fR] [\fB\-m\fR] [\fB\-\-no\-make\-install\fR]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 dh_installyorick is a debhelper program that installs the files of
@@ -21,10 +21,13 @@ Calling "make ... install" can be disabled by using the
 "\-\-no\-make\-install" flag. This is useful in particular for interpreted
 add\-on packages, which do not ship with a standard Yorick Makefile.
 .PP
-Unless the "\-n" flag is used, dh_installyorick will also add lines to
-your package's postinst and postrm scripts to call "update\-yorickdoc
-\-\-auto" if the yorick\-doc package is installed. It is necessary to
-call dh_installdeb after dh_installyorick for this to work.
+If the "\-m" flag is used (but not the "\-n" one), dh_installyorick
+will also add lines to your package's postinst and postrm scripts to
+call "update\-yorickdoc \-\-auto" if the yorick\-doc package is
+installed. It is necessary to call dh_installdeb after
+dh_installyorick for this to work. It is usually not necessary with a
+recent dpkg supporting triggers, so this possibility is kept mostly
+for easing backports and should be deprecated soon.
 .PP
 dh_installyorick will look for a file named
 debian/<package>.ynstall for additional files to install
@@ -42,12 +45,23 @@ as well as files that are pointed at by symbolic link in such a
 directory, are installed with execution permission for everyone.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.IP "\fB\-n\fR\fR" 4
-.IX Item "\-n"
-Do not modify postinst/postrm scripts.
+.IP "\fB\-m\fR\fR" 4
+.IX Item "\-m"
+Modify postinst/postrm scripts to add a call to
+update\-yorickdoc. This is needed only if the target dpkg does not
+support triggers. If both "\-m" and "\-n" are specified, the scripts
+are not modified.
 .IP "\fB\-\-no\-make\-install\fR\fR" 4
 .IX Item "\-\-no\-make\-install"
 Do not call "make DESTDIR=debian/<package> install".
+.IP "\fB\-\-infofile=\fR\fR" 4
+.IX Item "\-\-infofile="
+An additional pkg_mngr .info file to install.
+.PP
+Additionally, dh_installyorick abides by the following standard
+debhelper options: \-a/\-\-arch, \-i/\-\-indep, \-\-mainpackage, \-n,
+\-\-no\-act, \-N/\-\-no\-package, \-p/\-\-package, \-P/\-\-tmpdir,
+\-s/\-\-same\-arch, and \-v/\-\-verbose.
 .SH "YNSTALL FILE"
 .IX Header "YNSTALL FILE"
 Blank lines are ignored, several blank character are counted as one,
@@ -82,7 +96,7 @@ Y_SITE/packages, Y_HOME/bin or Y_HOME/lib.
 .IX Item link
 the full path to a symbolic link that should point to the installed
 file. The same shortcuts apply as for \fIdirectory\fR.
-.SH "SEE ALSOEXAMPLES"
+.SH "EXAMPLES"
 .IX Header "EXAMPLES"
 The four following lines in debian/ynstall would be equivalent:
 .br
@@ -110,7 +124,8 @@ somefile.i i usr/bin/command_name
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIdebhelper\fR\|(7),
-\&\fIupdate\-yorickdoc\fR\|(1)
+\&\fIupdate\-yorickdoc\fR\|(1),
+\&\fIdeb\-triggers\fR\|(5)
 .PP
 This program is a part of yorick\-dev but is made to work with
 debhelper. Note that only compatibilty level 5 has been implemented

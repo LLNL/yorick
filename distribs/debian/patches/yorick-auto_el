@@ -1,0 +1,15 @@
+Author: Thibaut Paumard <paumard@users.sourceforge.net>
+Description: Enables yorick-mode even if yorick is not yet loaded
+Forwarded: yes (by e-mail, 20091202
+
+diff -urN a/emacs/yorick-auto.el b/emacs/yorick-auto.el
+--- a/emacs/yorick-auto.el   2007-08-20 09:13:52.000000000 +0200
++++ b/emacs/yorick-auto.el 2007-08-20 09:15:43.000000000 +0200
+@@ -4,6 +4,7 @@
+ (autoload 'yorick "yorick" "see yorick.el in site-lisp dir" t)
+ (autoload 'ysh "yorick" "see yorick.el in site-lisp dir" t)
+ (autoload 'yssh "yorick" "see yorick.el in site-lisp dir" t)
++(autoload 'yorick-mode "yorick" "see yorick.el in site-lisp dir" t)
+ (autoload 'yutil-setup "yorick" "see yorick.el in site-lisp dir" nil)
+ (if (assoc "\\.i$" auto-mode-alist)
+     ;; this presumes user doesn't want .i files to be in C mode (default)

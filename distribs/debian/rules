@@ -19,9 +19,6 @@ PATH_TO_DEBIAN := $(shell dirname $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LI
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
-QUILT_STAMPFN   = patch-stamp
-include /usr/share/quilt/quilt.make
-
 CFLAGS = -Wall -g
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
@@ -30,8 +27,14 @@ else
 	CFLAGS += -O2
 endif
 
+check:
+	dh_testdir
+ifeq (,$(filter nocheck, $(DEB_BUILD_OPTIONS)))
+	relocate/bin/yorick -batch debian/check.i
+endif
+
 configure: configure-stamp
-configure-stamp: patch-stamp
+configure-stamp:
 	dh_testdir
 	make Y_HOME=relocate ysite
 	chmod a+x debian/helpers/*.i
@@ -60,7 +63,6 @@ build-stamp: configure-stamp
 	cd build/lib/yorick/lib; \
 	   mv codger install.grp install.sh libdep.sh libyor.a main.o \
               $(CURDIR)/build/yorick-dev/lib/yorick/lib
-	strip --remove-section=.comment --remove-section=.note build/yorick-dev/lib/yorick/lib/main.o
 	cp emacs/yorick-auto.el build/50yorick-auto.el
 	convert icons/yicon32.png build/yorick32x32.xpm
 	convert icons/yicon16.png build/yorick16x16.xpm
@@ -70,8 +72,7 @@ build-stamp: configure-stamp
 	cp doc/html/aliases.txt build/00yorick.aliases
 	touch build-stamp
 
-clean: configure-stamp clean-patched unpatch
-clean-patched:
+clean: configure-stamp
 	dh_testdir
 	dh_testroot
 	-rm -Rf build-stamp configure-stamp build relocate
@@ -113,7 +114,7 @@ binary-indep: build-stamp
 	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
 
 # Build architecture dependant packages using the common target.
-binary-arch: build-stamp
+binary-arch: build-stamp check
 	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
 
 ###### Getting the original source:
@@ -143,8 +144,8 @@ get-cvs-date:
 	mv ../orig-sources/yorick ../yorick-$(CVSVERS)
 	rm -Rf ../orig-sources
 	cd ../yorick-$(CVSVERS); rm -Rf $(PRUNEFILES)
-	cd ..; tar cf yorick_$(CVSVERS).orig.tar yorick-$(CVSVERS)
-	gzip -9 ../yorick_$(CVSVERS).orig.tar
+	cd ..; tar cf yorick_$(CVSVERS).tar yorick-$(CVSVERS)
+	gzip -9 ../yorick_$(CVSVERS).tar
 
 # check copyright to see whether was from cvs or from tgz.
 get-cvs-tag:

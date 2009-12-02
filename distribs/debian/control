@@ -2,9 +2,9 @@ Source: yorick
 Section: math
 Priority: optional
 Maintainer: Thibaut Paumard <paumard@users.sourceforge.net>
-Build-Depends: libx11-dev, texinfo, debhelper (>= 5.0.0), quilt (>= 0.40), imagemagick, po-debconf, texi2html
-Standards-Version: 3.7.3.0
-XS-DM-Upload-Allowed: yes
+Build-Depends: libx11-dev, texinfo, debhelper (>= 5.0.0), quilt (>= 0.40), imagemagick, po-debconf, texi2html (>= 1.82)
+Standards-Version: 3.8.3.0
+DM-Upload-Allowed: yes
 Homepage: http://yorick.sourceforge.net
 
 Package: yorick

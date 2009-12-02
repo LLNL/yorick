@@ -1,6 +1,6 @@
 #!/usr/bin/yorick -batch
 /*
-  $Id: pkginst.i,v 1.6 2008-03-14 12:21:34 paumard Exp $
+  $Id: pkginst.i,v 1.7 2009-12-02 16:01:03 paumard Exp $
   To be used in Debian packages for Yorick plug-ins
 
   It is considered obsolete to call this script as documented below.
@@ -188,7 +188,7 @@ for (packn=1;packn<=numberof(packages);packn++) {
     }       
   }
   // add maintainer script snipets
-  if (noneof(options=="-n")) {
+  if (noneof(options=="-n") & anyof(options=="-m")) {
     write_snipet, package, "postinst";
     write_snipet, package, "postrm";
   }

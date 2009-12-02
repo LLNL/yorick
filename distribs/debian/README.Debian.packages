@@ -211,16 +211,5 @@ If yes, then you can have the error disappear by doing the following:
 This issue is being thought in depth by upstream.
 
 
- 4.2) GISPATH
- ------------
-
-As of writing, the path used for style files (.gs) and palette files (.gp)
-files (GISPATH variable) cannot be set from within Yorick. It can be set by
-setting the GISTPATH environment variable prior to starting Yorick,
-though. Functions in the pathfun.i file set the GISTPATH variable to no avail,
-this is a bug.
-
-
-Thibaut Paumard <paumard@users.sourceforge.net>
-Sat, 29 Dec 2007 15:31:24 +0100
+ -- Thibaut Paumard <paumard@users.sourceforge.net>  Sat, 28 Nov 2009 20:44:19 +0100
 
