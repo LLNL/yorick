@@ -1,7 +1,7 @@
 Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file
 Name: Yorick
 Maintainer: David H. Munro <dhmunro at users.sourceforge.net>
-Source: http://yorick.cvs.sourceforge.net/
+Source: http://yorick.sourceforge.net/
 
 Copyright: 1989, 1993-1995, 2005-2009, The Regents of the University of California.
 License: BSD
