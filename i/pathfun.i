@@ -1,6 +1,6 @@
 /*
  * pathfun.i
- * $Id: pathfun.i,v 1.5 2007-12-13 15:34:27 frigaut Exp $
+ * $Id: pathfun.i,v 1.6 2009-12-02 05:20:19 dhmunro Exp $
  * manipulate path names and file names
  */
 /* Copyright (c) 2006, The Regents of the University of California.
@@ -196,8 +196,8 @@ func add_y_home(y_home,y_site) {
     include_all, y_site+"i-start/";
 
   // GISTPATH
-  get_user_sys_path, pathsplit(GISTPATH), user_path, sys_path;
-  GISTPATH = pathform(grow(user_path, y_site+"g/", sys_path));
+  get_user_sys_path, pathsplit(set_gpath()), user_path, sys_path;
+  set_gpath, pathform(grow(user_path, y_site+"g/", sys_path));
 }
 
 func get_user_sys_path(path, &user_path, &sys_path) {

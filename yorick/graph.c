@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.8 2009-10-19 04:37:51 dhmunro Exp $
+ * $Id: graph.c,v 1.9 2009-12-02 05:20:19 dhmunro Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3467,7 +3467,7 @@ Y_set_gpath(int argc)
 {
   char *p = ((argc==1) && YNotNil(sp))? YGetString(sp) : 0;
   if (argc > 1) YError("set_gpath accepts only one argument");
-  if (CalledAsSubroutine()) {
+  if (!CalledAsSubroutine()) {
     Array *a = PushDataBlock(NewArray(&stringStruct, (Dimension *)0));
     a->value.q[0] = p_strcpy(g_set_path((char*)0));
   }
