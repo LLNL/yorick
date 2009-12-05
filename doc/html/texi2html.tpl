@@ -107,18 +107,17 @@ $print_navigation = \&my_print_navigation;
 
 sub my_print_navigation($$$)
 {
-    my $fh = shift;
+#    my $fh = shift;
     my $buttons = shift;
     my $vertical = shift;
     my $spacing = 1;
-    print $fh '<table cellpadding="', $spacing, '" cellspacing="', $spacing,
-      "\" border=\"0\"><tbody>\n";
+    my $result = '<table cellpadding="' . $spacing . '" cellspacing="' . $spacing . "\" border=\"0\"><tbody>\n";
 
-    print $fh "<tr>" unless $vertical;
+    $result .= "<tr>" unless $vertical;
     for my $button (@$buttons)
     {
-        print $fh qq{<tr valign="top" align="left">\n} if $vertical;
-        print $fh qq{<td valign="middle" align="left">};
+        $result .= qq{<tr valign="top" align="left">\n} if $vertical;
+        $result .= qq{<td valign="middle" align="left">};
 
         if (ref($button) eq 'CODE')
         {
@@ -126,7 +125,7 @@ sub my_print_navigation($$$)
         }
         elsif (ref($button) eq 'SCALAR')
         {
-            print $fh "$$button" if defined($$button);
+            $result .= "$$button" if defined($$button);
         }
         elsif (ref($button) eq 'ARRAY')
         {
@@ -138,7 +137,7 @@ sub my_print_navigation($$$)
 		my $btn_hr = $Texi2HTML::HREF{$button_href};
                 if ($btn_hr)
                 {
-                  print $fh "" .
+                  $result .= "" .
                         &$anchor('',
                                     my_strip_href($btn_hr),
                                     $$text
@@ -147,13 +146,13 @@ sub my_print_navigation($$$)
                 }
                 else
                 {
-                  print $fh $$text;
+                  $result .= $$text;
                 }
             }
         }
         elsif ($button eq ' ')
         {                       # handle space button
-            print $fh
+            $result .=
                 $ICONS && $ACTIVE_ICONS{' '} ?
                     &$button_icon_img($button, $ACTIVE_ICONS{' '}) :
                         $NAVIGATION_TEXT{' '};
@@ -166,7 +165,7 @@ sub my_print_navigation($$$)
                 'title="' . ucfirst($BUTTONS_GOTO{$button}) . '"' : '';
             if ($ICONS && $ACTIVE_ICONS{$button})
             {                   # use icon
-                print $fh '' .
+                $result .= '' .
                     &$anchor('',
                         my_strip_href($btn_hr),
                         &$button_icon_img($button,
@@ -178,7 +177,7 @@ sub my_print_navigation($$$)
             }
             else
             {                   # use text
-                print $fh
+                $result .=
                     '[' .
                         &$anchor('',
                                     my_strip_href($btn_hr),
@@ -190,7 +189,7 @@ sub my_print_navigation($$$)
         }
         else
         {                       # button is passive
-            print $fh
+            $result .=
                 $ICONS && $PASSIVE_ICONS{$button} ?
                     &$button_icon_img($button,
                                           $PASSIVE_ICONS{$button},
@@ -199,11 +198,12 @@ sub my_print_navigation($$$)
 
                                               "[" . $NAVIGATION_TEXT{$button} . "]";
         }
-        print $fh "</td>\n";
-        print $fh "</tr>\n" if $vertical;
+        $result .= "</td>\n";
+        $result .= "</tr>\n" if $vertical;
     }
-    print $fh "</tr>" unless $vertical;
-    print $fh "</tbody></table>\n";
+    $result .= "</tr>" unless $vertical;
+    $result .= "</tbody></table>\n";
+    return $result;
 }
 
 1;	# This must be the last non-comment line
