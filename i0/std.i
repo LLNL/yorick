@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.27 2009-11-23 21:20:28 dhmunro Exp $
+ * $Id: std.i,v 1.28 2009-12-12 16:48:03 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -638,8 +638,8 @@ func pr1(x)
 { return print(x)(1); }
 
 extern print_format;
-/* DOCUMENT print_format, line_length, char=, short=, int=, float=,
-                          double=, complex=, pointer=
+/* DOCUMENT print_format, line_length, max_lines, char=, short=, int=,
+                          float=, double=, complex=, pointer=
      sets the format string the print function will use for each of
      the basic data types.  Yorick format strings are the same as the
      format strings for the printf function defined in the ANSI C standard.
@@ -650,7 +650,12 @@ extern print_format;
      Note that char and short values are converted to int before being
      passed to printf, and that float is converted to double.
      If present, an integer positional argument is taken as the line
-     length; <=0 restores the default line length of 80 characters.
+     length; <=0 restores the default line length of 80 characters,
+     while nil [] leaves the line length unchanged.
+     A second positional argument, if present, becomes the maximum number
+     of lines to output; <=0 restores the default of 5000 lines.  A single
+     print command will not produce more than this many lines of output;
+     output simply stops without any additional messages.
   SEE ALSO: print, write, nameof, typeof
  */
 

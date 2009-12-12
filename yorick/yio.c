@@ -1,5 +1,5 @@
 /*
- * $Id: yio.c,v 1.2 2007-04-06 22:04:33 thiebaut Exp $
+ * $Id: yio.c,v 1.3 2009-12-12 16:48:03 dhmunro Exp $
  * Implement Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -311,9 +311,9 @@ static int lenPrintBuf= 0;
 static int printNow, permitNow;
 static long printLines;
 
-void PrintInit(int (*puts)(char *))
+void PrintInit(int (*puts_fun)(char *))
 {
-  RawPrinter= puts;
+  RawPrinter= puts_fun;
   if (lenPrintBuf<printLength || (printLength<=79 && lenPrintBuf>79)) {
     char *p= printBuf;
     printBuf= 0;
@@ -555,7 +555,8 @@ static char **typeFormat[8]= {
 
 void Y_print_format(int nArgs)
 {
-  Symbol *arg= sp-nArgs+1;
+  Symbol *arg = sp-nArgs+1;
+  int npos = 0;
 
   if (typeIndex[0]<0) {
     typeIndex[0]= Globalize("char", 0L);
@@ -574,11 +575,20 @@ void Y_print_format(int nArgs)
     maxPrintLines= 5000;
   } else do {
     if (arg->ops) {
-      long i= YGetInteger(arg++);
-      if (i>256) printLength= 256;
-      else if (i>39) printLength= i;
-      else if (i>0) printLength= 39;
-      else printLength= 79;
+      if (++npos > 2) YError("print_format expects at most two positional arguments");
+      if (YNotNil(arg)) {
+	long i = YGetInteger(arg);
+	if (npos == 1) {
+	  if (i>256) printLength = 256;
+	  else if (i>39) printLength = i;
+	  else if (i>0) printLength = 39;
+	  else printLength = 79;
+	} else {
+	  if (i < 10) maxPrintLines = (i<=0)? 5000 : 10;
+	  else maxPrintLines = i;
+	}
+      }
+      arg++;
     } else {
       long index= (arg++)->index;
       int i;
