@@ -19,6 +19,7 @@ autoload, "gcd.i", gcd, lcm, factorize, is_prime;
 autoload, "idlsave.i", idl_open;
 autoload, "ieee.i", ieee_test, ieee_set, as_chars;
 autoload, "legndr.i", legndr, ylm_coef;
+autoload, "levmar.i", levmar;
 autoload, "make.i", make;
 autoload, "mkdoc.i", mkdoc;
 autoload, "movie.i", movie;

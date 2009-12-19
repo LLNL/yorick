@@ -46,6 +46,8 @@
      Functions: cheby_fit, cheby_eval, cheby_integ, cheby_deriv, cheby_poly
    regress.i  - Linear regression (least squares fitting)
      Functions: regress, regress_cov
+   levmar.i   - Non-linear least squares fitting by Levenberg-Marquardt
+     Functions: levmar
 
    Numerical integration:
    ----------------------
