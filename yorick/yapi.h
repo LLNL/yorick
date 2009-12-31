@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.11 2009-07-31 03:21:27 dhmunro Exp $
+ * $Id: yapi.h,v 1.12 2009-12-31 16:56:04 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -290,7 +290,7 @@ an output to yarg_dims (unlike yarg_conform, where it is an output).
 
  The yarg_conform routine checks array conformability.  The return
 argument of yarg_conform is the cfmdims dimension list of the result
-of a binary operation on arrays of dims1 and dims2; its return value
+of a binary operation on arrays of dims1 and dims2- its return value
 is -1 if dims1 and dims2 are not conformable, or the union of zero to
 three of the flags Y_1_BCAST, Y_2_BCAST, Y_1_EXTEND, or Y_2_EXTEND.
 If the Y_1_BCAST flags is set, it means that one or more of the dims1
@@ -485,11 +485,11 @@ use it to transfer control to a catch or after_error handler.
 */
 PLUG_API void y_error(const char *msg);
 PLUG_API void y_errorn(const char *msg_format, long n);
-PLUG_API void y_errorq(const char *msg_format, char *q);
+PLUG_API void y_errorq(const char *msg_format, const char *q);
 PLUG_API void y_errquiet(void);
 PLUG_API void y_warn(const char *msg);
 PLUG_API void y_warnn(const char *msg_format, long n);
-PLUG_API void y_warnq(const char *msg_format, char *q);
+PLUG_API void y_warnq(const char *msg_format, const char *q);
 
 END_EXTERN_C
 

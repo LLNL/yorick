@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.19 2009-11-22 23:47:15 dhmunro Exp $
+ * $Id: yapi.c,v 1.20 2009-12-31 16:56:04 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1532,7 +1532,7 @@ y_error(const char *msg)
 }
 
 static void y_ew_n(const char *msg_format, long n, int warn);
-static void y_ew_q(const char *msg_format, char *q, int warn);
+static void y_ew_q(const char *msg_format, const char *q, int warn);
 
 void
 y_errorn(const char *msg_format, long n)
@@ -1541,7 +1541,7 @@ y_errorn(const char *msg_format, long n)
 }
 
 void
-y_errorq(const char *msg_format, char *q)
+y_errorq(const char *msg_format, const char *q)
 {
   y_ew_q(msg_format, q, 0);
 }
@@ -1559,7 +1559,7 @@ y_warnn(const char *msg_format, long n)
 }
 
 void
-y_warnq(const char *msg_format, char *q)
+y_warnq(const char *msg_format, const char *q)
 {
   y_ew_q(msg_format, q, 1);
 }
@@ -1596,7 +1596,7 @@ y_ew_n(const char *msg_format, long n, int warn)
 }
 
 static void
-y_ew_q(const char *msg_format, char *q, int warn)
+y_ew_q(const char *msg_format, const char *q, int warn)
 {
   char msg[192];
   long nmax = 130;
