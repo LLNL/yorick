@@ -1,5 +1,5 @@
 /*
- * $Id: yio.h,v 1.3 2009-10-19 04:37:51 dhmunro Exp $
+ * $Id: yio.h,v 1.4 2010-01-01 00:59:21 dhmunro Exp $
  * Declare Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -136,7 +136,7 @@ PLUG_API void y_push_include(p_file *file, const char *filename);
     which is simply p_fopen
   (This is an esoteric function needed by mpy.)
 */
-typedef p_file *yon_include_cb(const char *filename);
+typedef p_file *yon_include_cb(const char *filename, int fullparse);
 PLUG_API yon_include_cb *ycall_on_include(yon_include_cb *on_include);
 
 PLUG_API void ResetStack(int hard);

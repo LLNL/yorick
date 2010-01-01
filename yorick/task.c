@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.8 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: task.c,v 1.9 2010-01-01 00:59:21 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -56,7 +56,7 @@ int yAutoDebug= 0;
 int yDebugLevel= 0;
 
 /* most recent error message was built in yErrorMsg */
-char yErrorMsg[192];
+char yErrorMsg[192+12];
 char yWarningMsg[192];
 
 static int inYError= 0;
@@ -1212,6 +1212,12 @@ void Y_require(int nArgs)
 /*--------------------------------------------------------------------------*/
 
 static int findingFunc= 0;
+/* error handling hacks (for mpy) set up with set_idler
+ * bit
+ *  1  do not print error messages (like .SYNC.)
+ *  2  include [pc] after func name in error messages
+ */
+static int yerror_flags = 0;
 
 Function *FuncContaining(Instruction *pc)
 {
@@ -1241,8 +1247,9 @@ Function *FuncContaining(Instruction *pc)
   if (findingFunc) {
     /* may get here after a disaster causing an interrupt above, as well
        as after scanning from a garbled initial pc */
+    int no_pf = ((yerror_flags&1) != 0);
     findingFunc= 0;
-    YputsErr("(BUG) lost function produced following error:");
+    if (!no_pf) YputsErr("(BUG) lost function produced following error:");
   }
   return func;
 }
@@ -1319,7 +1326,7 @@ YError(const char *msg)
   Instruction *pcUp= yErrorPC;
   int category;
   int no_abort = y_do_not_abort;
-  int no_print = 0;
+  int no_print = 0, no_pf = ((yerror_flags&1) != 0);
   char tmsg[144];
 
   int recursing= inYError;
@@ -1334,7 +1341,7 @@ YError(const char *msg)
   ym_dbenter = 0;
 
   if (recursing>8 || yImpossible>8) {
-    YputsErr("****FATAL**** YError looping -- quitting now");
+    if (!no_pf) YputsErr("****FATAL**** YError looping -- quitting now");
     ym_state|= Y_QUITTING;
     ym_fatal = 3;
     if (!no_abort) p_abort();
@@ -1352,7 +1359,7 @@ YError(const char *msg)
     return;
   } else if (caughtTask) {
     caughtTask= 0;
-    YputsErr("****OOPS**** error on read resume or throw/catch");
+    if (!no_pf) YputsErr("****OOPS**** error on read resume or throw/catch");
   }
 
   if (y_idler_function) {
@@ -1376,7 +1383,7 @@ YError(const char *msg)
   }
 
   /* this is a nasty hack for mpy and after_error */
-  no_print = (msg && !strcmp(msg, ".SYNC."));
+  no_print = no_pf || (msg && !strcmp(msg, ".SYNC."));
 
   func= (((ym_state&Y_RUNNING)||no_abort) && !recursing &&
          pcUp!=&taskCode[2])? FuncContaining(pcDebug) : 0;
@@ -1406,7 +1413,7 @@ YError(const char *msg)
     p_qclear();
     ClearTasks();
   } else if (nTasks) {
-    YputsErr("WARNING unable to free task pointers in YError");
+    if (!no_pf) YputsErr("WARNING unable to free task pointers in YError");
     nTasks = 0;
   }
 
@@ -1420,6 +1427,11 @@ YError(const char *msg)
   else
     strcpy(yErrorMsg, "Up to (");
   strncat(yErrorMsg, name, 40);
+  if (func && (yerror_flags&2)!=0) {
+    char relpc[32];
+    sprintf(relpc, "[%ld]", (long)(pcDebug-func->code));
+    strncat(yErrorMsg, relpc, 12);
+  }
   strcat(yErrorMsg, ") ");
   if (!pcUp || recursing)
     strncat(yErrorMsg, msg, 140);
@@ -1427,15 +1439,17 @@ YError(const char *msg)
 
   if (recursing) {
     func= 0;
-    YputsErr("WARNING aborting on recursive calls to YError");
+    if (!no_pf) YputsErr("WARNING aborting on recursive calls to YError");
   } else if (ym_state&Y_SUSPENDED) {
     func= 0;
     if (y_read_prompt)
-      YputsErr("WARNING aborting on YError during keyboard read()");
+      if (!no_pf) YputsErr("WARNING aborting on YError"
+                           " during keyboard read()");
     else if (ym_suspc)
-      YputsErr("WARNING aborting on YError during suspend");
+      if (!no_pf) YputsErr("WARNING aborting on YError during suspend");
     else
-      YputsErr("WARNING aborting on YError after mouse() pause() or wait=1");
+      if (!no_pf) YputsErr("WARNING aborting on YError"
+                           " after mouse() pause() or wait=1");
   }
   ym_suspc = 0;
   if (yg_blocking==3 || yg_blocking==4) yg_blocking = 0;
@@ -1499,8 +1513,8 @@ YError(const char *msg)
     if (recursing<5) {
       ResetStack(y_read_prompt!=0);
     } else {
-      YputsErr("****SEVERE**** YError unable to reset stack -- "
-               "probably lost variables");
+      if (!no_pf) YputsErr("****SEVERE**** YError unable to reset stack -- "
+                           "probably lost variables");
       sp= spBottom;
     }
     ym_state &= ~Y_SUSPENDED;
@@ -1510,21 +1524,24 @@ YError(const char *msg)
   }
 
   if (ym_state&Y_QUITTING) {
-    YputsErr("****TERMINATING**** on error after main loop exit");
+    if (!no_pf)
+      YputsErr("****TERMINATING**** on error after main loop exit");
     if (!no_abort) p_abort();
     return;
   }
 
   if ((yBatchMode && !y_idler_function) || !strncmp(msg,"(FATAL)",7)) {
-    if (yBatchMode) YputsErr("yorick: quitting on error in batch mode");
-    else YputsErr("yorick: quitting on fatal error");
+    if (!no_pf) {
+      if (yBatchMode) YputsErr("yorick: quitting on error in batch mode");
+      else YputsErr("yorick: quitting on fatal error");
+    }
     ym_fatal = yBatchMode? 1 : 2;
     ResetStack(0);
     ym_state|= Y_QUITTING;
   }
 
   /* set catch_message variable for after_error function */
-  if (y_idler_function) yset_catchmsg(tmsg);
+  if (y_idler_function) yset_catchmsg(yErrorMsg);
 
   /* Go back to the main loop.  */
   inYError= 0;
@@ -1759,13 +1776,16 @@ void Y_catch(int nArgs)
 void Y_set_idler(int nArgs)
 {
   Function *f;
-  if (nArgs>1)
-    YError("set_idler function takes zero or one arguments");
+  if (nArgs>1) {
+    /* second argument is hack to add error handling features */
+    if (nArgs==2 && sp[-1].ops) yerror_flags = YGetInteger(sp);
+    else YError("set_idler function takes zero or one arguments");
+  }
 
   if (nArgs>0 && YNotNil(sp-nArgs+1)) {
     f = (Function *)sp[1-nArgs].value.db;
     if (sp[1-nArgs].ops!=&dataBlockSym || f->ops!=&functionOps)
-      YError("expecting function as argument");
+      YError("set_idler expecting function as argument");
     y_idler_function = Ref(f);
 
   } else if (y_idler_function) {

@@ -1,5 +1,5 @@
 /*
- * $Id: yinput.c,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: yinput.c,v 1.3 2010-01-01 00:59:21 dhmunro Exp $
  * Implement Yorick program text reader.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -158,17 +158,18 @@ static void AddPrefix(char *prefix)
 /* state for YpError initialized in YpPushInclude */
 static long prevErrLine;
 
-static p_file *PushInclude(const char *filename, int clear);
+static p_file *PushInclude(const char *filename, int fullparse);
 
 p_file *YpPushInclude(const char *filename)
 {
   return PushInclude(filename, 1);
 }
 
-static p_file *default_on_include(const char *filename);
+static p_file *default_on_include(const char *filename, int fullparse);
 static yon_include_cb *open_include = &default_on_include;
+/* ARGSUSED */
 static p_file *
-default_on_include(const char *filename)
+default_on_include(const char *filename, int fullparse)
 {
   return p_fopen(filename, "r");
 }
@@ -181,7 +182,7 @@ ycall_on_include(yon_include_cb *on_include)
   return old;
 }
 
-static p_file *PushInclude(const char *filename, int clear)
+static p_file *PushInclude(const char *filename, int fullparse)
 {
   p_file *file= 0;
   char *name= 0;
@@ -189,7 +190,7 @@ static p_file *PushInclude(const char *filename, int clear)
 
   if (YIsAbsolute(filename)) {
     /* absolute pathname doesn't need any prefix */
-    file= open_include(filename);
+    file= open_include(filename, fullparse);
     if (!file) return 0;
     name= p_strcpy(filename);
 
@@ -208,7 +209,7 @@ static p_file *PushInclude(const char *filename, int clear)
         name= YExpandName(filename);
         if (!YIsAbsolute(name)) break;
       }
-      file= open_include(name);
+      file= open_include(name, fullparse);
       if (file) break;
       p_free(name);
     }
@@ -221,7 +222,7 @@ static p_file *PushInclude(const char *filename, int clear)
     maxYpIncludes= newSize;
   }
 
-  if (clear) ClearSourceList(name);
+  if (fullparse) ClearSourceList(name);
 
   ypIncludes[nYpIncludes].file= file;
   ypIncludes[nYpIncludes].filename= name;
