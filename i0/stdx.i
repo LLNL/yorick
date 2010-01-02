@@ -1,5 +1,5 @@
 /*
- * $Id: stdx.i,v 1.5 2009-10-19 19:50:42 dhmunro Exp $
+ * $Id: stdx.i,v 1.6 2010-01-02 21:08:00 dhmunro Exp $
  * Perform any post-initialization tasks.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -26,7 +26,6 @@ set_path;   /* set compiled-in default include path */
  * but other initialization code could appear there as well
  * - optional packages should place autoload files in these directories
  *   (Y_SITE for interpreted only packages, Y_HOME for plugin packages)
- * - note that these all come before custom.i
- * - eventually, this mechanism may replace custom.i
  */
 istart_include;
+customize;       /* default includes custom.i if not batch */

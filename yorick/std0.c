@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.8 2009-10-19 04:37:51 dhmunro Exp $
+ * $Id: std0.c,v 1.9 2010-01-02 21:08:00 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -133,8 +133,7 @@ YInit(char *home, char *site, y_pkg_t **pkgs)
   /* set startup include file search path:
         yLaunchDir:ySiteDir/i0:ySiteDir/contrib
 
-     the switch to the normal include file search path is done in
-     stdx.i, which is included just before custom.i
+     the switch to the normal include file search path is done in stdx.i
      -- create the default path here:
         .:~/.yorick:~/yorick:~/Yorick:ySiteDir/i:ySiteDir/contrib  */
   if (ym_argc<1 || strcmp(ym_argv[0],"--no-paths")) {
@@ -157,12 +156,10 @@ YInit(char *home, char *site, y_pkg_t **pkgs)
     Y_set_site(-2);
   }
 
-  /* set up to read user customizations
+  /* set up to read i-start customizations
      If the first two arguments are -batch alternate.i, use alternate.i
      -- useful for scripts which must NOT risk user customization.  */
-  if (ym_argc<2 || strcmp(ym_argv[1],"-batch")) {
-    YpPush("custom.i");
-  } else {
+  if (ym_argc>1 && !strcmp(ym_argv[1],"-batch")) {
     yBatchMode= 1;  /* data loaded to zero in task.c */
     if (ym_argc==2) {
       ym_argc= 1;

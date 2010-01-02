@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.28 2009-12-12 16:48:03 dhmunro Exp $
+ * $Id: std.i,v 1.29 2010-01-02 21:08:00 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2927,6 +2927,8 @@ func istart_places(dir)
   parts(1) = "i-start";
   return dir(::-1) + parts;
 }
+
+func customize { if (!_istart_hook()) include, "custom.i"; }
 
 extern plug_in;
 /* DOCUMENT plug_in, "pkgname"
