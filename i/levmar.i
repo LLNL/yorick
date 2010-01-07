@@ -1,5 +1,5 @@
 /* levmar.i
- * $Id: levmar.i,v 1.1 2009-12-19 22:16:21 dhmunro Exp $
+ * $Id: levmar.i,v 1.2 2010-01-07 05:51:47 dhmunro Exp $
  * Non-linear least squares fitting by Levenberg-Marquardt algorithm
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -97,6 +97,7 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
   else ff = f;
   _from_levmar = 1;
 
+  a0 = double(a0);
   aa = a0;
   a = a0(fit);  /* possible subset of a0 */
   nfit = numberof(a);
@@ -157,6 +158,7 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
   if (niter >= levmar_itmax)
     write, "WARNING: levmar hit iteration limit "+print(niter)(1);
 
+  levmar_chi20 /= nfree;
   levmar_chi2 /= nfree;
   avar = 0.0*a0;
   acovar = avar(-,) + avar;
