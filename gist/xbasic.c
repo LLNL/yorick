@@ -1,5 +1,5 @@
 /*
- * $Id: xbasic.c,v 1.3 2007-12-28 20:20:18 thiebaut Exp $
+ * $Id: xbasic.c,v 1.4 2010-01-10 05:02:23 dhmunro Exp $
  * Implement the basic X windows engine for GIST.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -630,9 +630,18 @@ ChangeMap(Engine *engine)
       if (y0 < tm) y0 = tm;
       if (y1 > tm+xeng->htop) y1 = tm+xeng->htop;
       xeng->clipping = 1;
+    } else {
+      if (x0 < 0) x0 = 0;
+      if (x1 > xeng->a_width) x1 = xeng->a_width;
+      if (y0 < 0) y0 = 0;
+      if (y1 > xeng->a_height) y1 = xeng->a_height;
+      if (x0==0 && x1==xeng->a_width && y0==0 && y1==xeng->a_height)
+        x0 = x1 = y0 = y1 = 0;
     }
-    if (x1<=x0) x1 = x0+1;
-    if (y1<=y0) y1 = y0+1;
+    if (x0 || x1 || y0 || y1) {
+      if (x1<=x0) x1 = x0+1;
+      if (y1<=y0) y1 = y0+1;
+    }
     p_clip(xeng->w, x0, y0, x1, y1);
   }
 }
@@ -667,7 +676,7 @@ chk_clipping(XEngine *xeng)
     xeng->clipping = 1;
     if (x1<=x0) x1 = x0+1;
     if (y1<=y0) y1 = y0+1;
-    p_clip(xeng->w, x0, y0, x1, y1);
+    p_clip(w, x0, y0, x1, y1);
   }
 }
 
