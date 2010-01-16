@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.9 2010-01-01 00:59:21 dhmunro Exp $
+ * $Id: task.c,v 1.10 2010-01-16 04:39:52 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1039,7 +1039,7 @@ y_pkg_add(y_pkg_t *init)
   if (!y_pkg_list)
     y_pkg_list = p_malloc(sizeof(struct y_package_t)*8);
   else if (!(y_npkg & 7))
-    y_pkg_list = p_malloc(sizeof(struct y_package_t)*(y_npkg+8));
+    y_pkg_list = p_realloc(y_pkg_list, sizeof(struct y_package_t)*(y_npkg+8));
   y_pkg_list[y_npkg].name = pkgname;
   y_pkg_list[y_npkg].init = init;
   y_pkg_list[y_npkg].ifiles = ifiles;
