@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.29 2010-01-02 21:08:00 dhmunro Exp $
+ * $Id: std.i,v 1.30 2010-01-24 22:16:42 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -4180,6 +4180,7 @@ extern batch;
 
 extern set_idler;
 /* DOCUMENT set_idler, idler_function
+         or set_idler, idler_function, errflags
      sets the idler function to IDLER_FUNCTION.  Instead of waiting
      for keyboard input when all its tasks are finished, the interpreter
      will invoke IDLER_FUNCTION with no arguments.  The idler function
@@ -4187,6 +4188,13 @@ extern set_idler;
      after one call to the idler.  Of course, an idler is free to call
      set_idler again before it returns, which will have the effect of
      calling that function in a loop.
+     If present, the ERRFLAGS argument changes the way errors are processed:
+       0  - default processing, add any combination of:
+       1  - suppress printing error messages
+       2  - append [pc] relative program counter to function name in error
+            message (use disassemble to find corresponding instruction)
+       4  - call any after_error function in dbug mode (rather than clearing
+            stack), so it is responsible for calling dbexit
    SEE ALSO: batch, maybe_prompt, after, after_error
  */
 

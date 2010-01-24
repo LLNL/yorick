@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.12 2009-12-31 16:56:04 dhmunro Exp $
+ * $Id: yapi.h,v 1.13 2010-01-24 22:16:42 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -29,7 +29,7 @@ is used) with
 */
 PLUG_API int yarg_subroutine(void);
 /*
-The argc arguments are on the interpreter's stack.  When you return
+The argc arguments are on the interpreter stack.  When you return
 from my_builtin, the top of the stack becomes the return value of your
 function.  This API refers to elements on the stack by an index iarg;
 iarg=0 means the top of the stack, iarg=1 is the second stack element,
@@ -275,7 +275,7 @@ Two simple stack manipulation functions, yarg_drop discarding the top
 n stack elements, and yarg_swap for interchanging stack elements
 (generally to set up for yarg_drop).  As long as you make sure your
 return value is at the top of the stack when you return from
-my_builtin, you probably won't need these.
+my_builtin, you probably will not need these.
 */
 PLUG_API void yarg_drop(int n);
 PLUG_API void yarg_swap(int iarg1, int iarg2);
@@ -449,7 +449,7 @@ your use.  After calling ypush_use, you must zero all your copies of
 the opaque handle.  You can use the ygeta_* or yget_obj functions to
 get the pointers to the actual data.  As a side effect, yget_use converts
 a scalar double, long, or int stack element into a rank 0 array, since
-you can't own a use of the scalars.  This invalidates any existing pointer
+you cannot own a use of the scalars.  This invalidates any existing pointer
 you may have retrieved using ygeta_*, so call yget_use first.
 */
 PLUG_API void *yget_use(int iarg);
@@ -490,6 +490,15 @@ PLUG_API void y_errquiet(void);
 PLUG_API void y_warn(const char *msg);
 PLUG_API void y_warnn(const char *msg_format, long n);
 PLUG_API void y_warnq(const char *msg_format, const char *q);
+
+/* hook function called inside y_error
+ * return value bits:
+ *   1  - suppress printing error message or entering dbug mode
+ *        (one time override of set_idler flag)
+ *   2  - use output after as index into global symbol table of
+ *        alternate after_error function
+ */
+PLUG_API int (*y_errhook)(const char *fullmsg, long *after);
 
 END_EXTERN_C
 

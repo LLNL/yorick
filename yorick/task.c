@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.10 2010-01-16 04:39:52 dhmunro Exp $
+ * $Id: task.c,v 1.11 2010-01-24 22:16:42 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -34,7 +34,7 @@ extern int YpParse(void *func);  /* argument non-zero for YpReparse */
 
 extern BuiltIn Y_quit, Y_include, Y_require, Y_help, Y_exit, Y_error, Y_batch;
 extern BuiltIn Y_plug_in, Y_plug_dir, Y_maybe_prompt, Y_suspend, Y_resume;
-extern BuiltIn Y_after;
+extern BuiltIn Y_after, Y_include1, Y_vopen, Y_vclose;
 
 extern void YRun(void);
 extern void YHalt(void);
@@ -879,7 +879,7 @@ static unsigned long
 yv_fread(p_file *file, void *buf, unsigned long nbytes)
 {
   int strng = (((y_vopen_t *)file)->array->ops->typeID == T_STRING);
-  char *cbuf=buf, *txt, c;
+  char *cbuf=buf, *txt;
   unsigned long j, jeof;
   if (!strng) {
     txt = ((y_vopen_t *)file)->array->value.c + ((y_vopen_t *)file)->addr;
@@ -1216,6 +1216,9 @@ static int findingFunc= 0;
  * bit
  *  1  do not print error messages (like .SYNC.)
  *  2  include [pc] after func name in error messages
+ *  4  call after_error in dbug mode (rather than full stack reset)
+ *     - after_error responsible for calling dbexit
+ *  8  reserved for use by y_errhook
  */
 static int yerror_flags = 0;
 
@@ -1314,6 +1317,9 @@ Instruction *yErrorPC= 0;   /* for dbup function in debug.c */
 static void yset_catchmsg(char *tmsg);
 static long after_index = -1;
 
+PLUG_API int (*y_errhook)(const char *msg, long *after);
+int (*y_errhook)(const char *msg, long *after) = 0;
+
 void
 YError(const char *msg)
 {
@@ -1327,7 +1333,6 @@ YError(const char *msg)
   int category;
   int no_abort = y_do_not_abort;
   int no_print = 0, no_pf = ((yerror_flags&1) != 0);
-  char tmsg[144];
 
   int recursing= inYError;
   inYError++;
@@ -1375,11 +1380,8 @@ YError(const char *msg)
     /* if after_error function present, make it the idler */
     y_idler_function = (Function *)Ref(globTab[after_index].value.db);
     y_idler_fault = 1;
-    if (msg) strncpy(tmsg, msg, 140), tmsg[140] = '\0';
-    else tmsg[0] = '\0';
   } else {
     y_idler_fault = 0;
-    tmsg[0] = '\0';
   }
 
   /* this is a nasty hack for mpy and after_error */
@@ -1435,21 +1437,34 @@ YError(const char *msg)
   strcat(yErrorMsg, ") ");
   if (!pcUp || recursing)
     strncat(yErrorMsg, msg, 140);
+  if (y_errhook) {
+    long index;
+    int hook = y_errhook(yErrorMsg, &index);
+    if (no_print != no_pf) no_pf = (hook & 1);
+    else no_print = no_pf = (hook & 1);
+    if ((hook & 2)
+        && globTab[index].ops == &dataBlockSym
+        && globTab[index].value.db->ops == &functionOps) {
+      /* if alternate after_error function present, make it the idler */
+      y_idler_function = (Function *)Ref(globTab[index].value.db);
+    }
+  }
   if (!no_print) YputsErr(yErrorMsg);
 
   if (recursing) {
     func= 0;
-    if (!no_pf) YputsErr("WARNING aborting on recursive calls to YError");
+    if (!no_print) YputsErr("WARNING aborting on recursive calls to YError");
   } else if (ym_state&Y_SUSPENDED) {
     func= 0;
-    if (y_read_prompt)
-      if (!no_pf) YputsErr("WARNING aborting on YError"
-                           " during keyboard read()");
-    else if (ym_suspc)
-      if (!no_pf) YputsErr("WARNING aborting on YError during suspend");
-    else
-      if (!no_pf) YputsErr("WARNING aborting on YError"
-                           " after mouse() pause() or wait=1");
+    if (y_read_prompt) {
+      if (!no_print) YputsErr("WARNING aborting on YError"
+                              " during keyboard read()");
+    } else if (ym_suspc) {
+      if (!no_print) YputsErr("WARNING aborting on YError during suspend");
+    } else {
+      if (!no_print) YputsErr("WARNING aborting on YError"
+                              " after mouse() pause() or wait=1");
+    }
   }
   ym_suspc = 0;
   if (yg_blocking==3 || yg_blocking==4) yg_blocking = 0;
@@ -1493,8 +1508,12 @@ YError(const char *msg)
 
     if (y_idler_function) {
       /* special after_error function will get control */
-      ResetStack(1);
-      yr_reset();
+      if ((yerror_flags&4) && yDebugLevel<=2 && !y_read_prompt) {
+        if (yDebugLevel>1) ResetStack(0);
+      } else {
+        ResetStack(1);
+        yr_reset();
+      }
       yg_got_expose();
       p_clr_alarm(0, 0);
     } else if (!yBatchMode && !pcUp && (!yAutoDebug || yDebugLevel>1)) {
