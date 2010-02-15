@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.14 2010-02-15 05:17:57 dhmunro Exp $
+ * $Id: yapi.h,v 1.15 2010-02-15 06:06:57 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -85,6 +85,7 @@ returns the typeid as listed above, or some other value for internal
 objects.  The scratch test returns 1 if iarg is an array which will be
 destroyed when this stack element is dropped (such an array can be
 reused as a return value).  The list test is the same as is_list.
+The yarg_true function returns 1 whenever if(x) would be true.
 */
 PLUG_API int yarg_nil(int iarg);
 PLUG_API int yarg_rank(int iarg);
@@ -94,6 +95,7 @@ PLUG_API int yarg_func(int iarg);
 PLUG_API int yarg_typeid(int iarg);
 PLUG_API int yarg_scratch(int iarg);
 PLUG_API int yarg_list(int iarg);
+PLUG_API int yarg_true(int iarg);
 /*
 There are ten possible array data types, internally identified by the
 typeid value 0-9.  The char, short, int, long, float, complex, string,

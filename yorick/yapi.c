@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.21 2010-02-15 05:17:57 dhmunro Exp $
+ * $Id: yapi.c,v 1.22 2010-02-15 06:06:57 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -170,6 +170,24 @@ yarg_typeid(int iarg)
     return T_OPAQUE;
   }
   return T_OPAQUE + 100;
+}
+
+int
+yarg_true(int iarg)
+{
+  OpTable *ops = (iarg>=0)? sp[-iarg].ops : 0;
+  int x = 0;
+  if (!ops) return x;
+  CheckStack(1);
+  sp[1].ops = &intScalar;
+  if (ops != &dataBlockSym) sp[1].value = sp[-iarg].value;
+  else sp[1].value.db = Ref(sp[-iarg].value.db);
+  sp++;
+  sp->ops = ops;
+  ops->True();
+  x = (int)ygets_l(iarg+1);
+  yarg_drop(1);
+  return x;
 }
 
 int
