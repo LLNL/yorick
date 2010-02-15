@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.20 2009-12-31 16:56:04 dhmunro Exp $
+ * $Id: yapi.c,v 1.21 2010-02-15 05:17:57 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -731,9 +731,9 @@ yarg_reform(int iarg, long *dims)
   if (iarg >= 0) {
     Operations *ops;
     Member *type;
-    void *p = ygeta_array(iarg, &ops, &type);
     int i, rank = dims? dims[0] : 0;
     long n = 1;
+    ygeta_array(iarg, &ops, &type);
     if (rank) for (n=dims[1],i=2 ; i<=rank ; i++) n *= dims[i];
     if (n == type->number) {
       Dimension *d = type->dims;

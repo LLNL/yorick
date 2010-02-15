@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.9 2009-12-02 05:20:19 dhmunro Exp $
+ * $Id: graph.c,v 1.10 2010-02-15 05:17:57 dhmunro Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3987,7 +3987,6 @@ Y_current_mouse(argc)
   int sys, win, target_win;
   Array *array;
   double *result;
-  Engine *engine;
 
   if (argc != 1) {
     YError("current_mouse takes exactly one, possibly nil, argument");

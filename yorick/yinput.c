@@ -1,5 +1,5 @@
 /*
- * $Id: yinput.c,v 1.3 2010-01-01 00:59:21 dhmunro Exp $
+ * $Id: yinput.c,v 1.4 2010-02-15 05:17:57 dhmunro Exp $
  * Implement Yorick program text reader.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -654,6 +654,7 @@ char *MakeErrorLine(long lineNumber, const char *filename)
 }
 
 extern int yBatchMode;  /* may be set with -batch, see std0.c */
+PLUG_API int yerror_flags;  /* see task.c */
 
 void YpError(char *msg)
 {
@@ -661,19 +662,22 @@ void YpError(char *msg)
   ypErrors++;
   strcpy(pErrorMsg, "SYNTAX: ");
   strncat(pErrorMsg, msg, 110);
-  YputsErr(pErrorMsg);
-  if (nYpIncludes) {
-    long lineNumber= ypIncludes[nYpIncludes-1].lastLineRead;
-    if (lineNumber!=prevErrLine) {
-      char *filename= ypIncludes[nYpIncludes-1].filename;
-      YputsErr(MakeErrorLine(lineNumber, filename));
-      prevErrLine= lineNumber;
+  if (!(yerror_flags&1)) {
+    YputsErr(pErrorMsg);
+    if (nYpIncludes) {
+      long lineNumber= ypIncludes[nYpIncludes-1].lastLineRead;
+      if (lineNumber!=prevErrLine) {
+        char *filename= ypIncludes[nYpIncludes-1].filename;
+        YputsErr(MakeErrorLine(lineNumber, filename));
+        prevErrLine= lineNumber;
+      }
     }
   }
-  if (yBatchMode || ypErrors>=ypMaxErrors) {
+  if (yBatchMode || ypErrors>=ypMaxErrors || (yerror_flags&1)) {
     ypErrors= 0;
     if (ypMaxErrors<1) ypMaxErrors= 1;
-    YError("****ABORTING PARSE**** too many errors");
+    if (yerror_flags&1) YError(pErrorMsg);
+    else YError("****ABORTING PARSE**** too many errors");
   }
 }
 

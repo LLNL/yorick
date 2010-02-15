@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.11 2010-01-24 22:16:42 dhmunro Exp $
+ * $Id: task.c,v 1.12 2010-02-15 05:17:57 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1220,7 +1220,8 @@ static int findingFunc= 0;
  *     - after_error responsible for calling dbexit
  *  8  reserved for use by y_errhook
  */
-static int yerror_flags = 0;
+PLUG_API int yerror_flags;
+int yerror_flags = 0;
 
 Function *FuncContaining(Instruction *pc)
 {
@@ -1333,6 +1334,7 @@ YError(const char *msg)
   int category;
   int no_abort = y_do_not_abort;
   int no_print = 0, no_pf = ((yerror_flags&1) != 0);
+  int no_reset = ((yerror_flags&4) != 0);
 
   int recursing= inYError;
   inYError++;
@@ -1447,6 +1449,7 @@ YError(const char *msg)
         && globTab[index].value.db->ops == &functionOps) {
       /* if alternate after_error function present, make it the idler */
       y_idler_function = (Function *)Ref(globTab[index].value.db);
+      no_reset = ((hook & 4) != 0);
     }
   }
   if (!no_print) YputsErr(yErrorMsg);
@@ -1508,7 +1511,7 @@ YError(const char *msg)
 
     if (y_idler_function) {
       /* special after_error function will get control */
-      if ((yerror_flags&4) && yDebugLevel<=2 && !y_read_prompt) {
+      if (no_reset && yDebugLevel<=2 && !y_read_prompt) {
         if (yDebugLevel>1) ResetStack(0);
       } else {
         ResetStack(1);

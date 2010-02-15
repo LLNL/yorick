@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.30 2010-01-24 22:16:42 dhmunro Exp $
+ * $Id: std.i,v 1.31 2010-02-15 05:17:57 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3068,12 +3068,19 @@ extern lsdir;
          or files = lsdir(directory_name, subdirs)
      List DIRECTORY_NAME.  The return value FILES is an array of
      strings or nil; the order of the filenames is unspecified;
-     it does not contain "." or ".."; it does not contain the
-     names of subdirectories.  If SUBDIRS is given and is a simple
-     variable name, it is set to a list of subdirectory names (or
-     nil if there are no subdirectories).
-     If DIRECTORY_NAME does not exist, the return value is the
-     integer 0 rather than nil.
+     it does not contain "." or "..".  If present, SUBDIRS must be
+     a simple variable reference, and is set to a list of subdirectory
+     names (or nil if none).  If SUBDIRS is not present (first form),
+     the return value of lsdir includes both files and subdirectories.
+     If DIRECTORY_NAME does not exist or is not a directory, the return
+     value is the integer 0 rather than nil.  Hence:
+       files = lsdir(dirname, subdirs);
+       if (structof(files) == long) {
+         directory does not exist
+       } else {
+         for (i=1 ; i<=numberof(files) ; ++i) {...use files(i)...}
+         for (i=1 ; i<=numberof(subdirs) ; ++i) {...use subdirs(i)...}
+       }
    SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home
  */
 
@@ -3195,7 +3202,7 @@ func process_argv(msg)
 
 /*--------------------------------------------------------------------------*/
 
-func openb(filename, clogfile, update, open102=)
+func openb(filename, clogfile, update, open102=, one=)
 /* DOCUMENT file = openb(filename)
          or file = openb(filename, clogfile)
      open the existing file FILENAME for read-only binary I/O.
@@ -3213,6 +3220,10 @@ func openb(filename, clogfile, update, open102=)
      The restore function may be used to make memory copies of data
      in the file; this will be faster than a large number of
      references to "file.var".
+     The openb function will recognize families of PDB or netCDF files
+     by their sequential names and open all files subsequent to FILENAME
+     in such a family as well as FILENAME itself.  You can use the one=1
+     keyword to suppress this behavior and open only FILENAME.
      FILENAME may be a file handle to skip the initial open operation.
      This feature is intended to enable in-memory files created with
      vopen to be opened:
@@ -3231,6 +3242,7 @@ func openb(filename, clogfile, update, open102=)
   if (!is_void(clogfile)) return read_clog(f, clogfile);
   if (!is_void(open102)) yPDBopen= ((open102&3)|(at_pdb_open&~3));
   else yPDBopen= at_pdb_open;
+  _openb_one = (one || (structof(filename)!=string));
   for (hooks=openb_hooks ; hooks ; hooks=_cdr(hooks)) {
     if (_car(hooks)(f)) continue;
     if (has_records(f)) edit_times, f;  /* force increasing times */
@@ -3411,7 +3423,7 @@ local at_pdb_open, at_pdb_close;
 at_pdb_open= 010;
 at_pdb_close= 007;
 
-func _not_pdbf(f) { return _not_pdb(f, 1); }
+func _not_pdbf(f) { return _not_pdb(f, !_openb_one); }
 
 extern _init_pdb;
 extern _set_pdb;
@@ -3446,6 +3458,7 @@ func _not_cdf(file)
   _read, file, 0, i;
   if (string(&i)!="CDF\001") return 1;  /* test magic number */
   require, "netcdf.i";
+  if (_openb_one) _nc_open_filename = [filename];
   return raw_not_cdf(file);
 }
 

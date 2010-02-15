@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.13 2010-01-24 22:16:42 dhmunro Exp $
+ * $Id: yapi.h,v 1.14 2010-02-15 05:17:57 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -497,6 +497,7 @@ PLUG_API void y_warnq(const char *msg_format, const char *q);
  *        (one time override of set_idler flag)
  *   2  - use output after as index into global symbol table of
  *        alternate after_error function
+ *   4  - if bit 2 set, after_error left in dbug mode iff bit 4 set
  */
 PLUG_API int (*y_errhook)(const char *fullmsg, long *after);
 
