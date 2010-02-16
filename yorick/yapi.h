@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.15 2010-02-15 06:06:57 dhmunro Exp $
+ * $Id: yapi.h,v 1.16 2010-02-16 17:15:33 paumard Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -124,6 +124,7 @@ a Y_STREAM is a binary file, not a text file.
 #define Y_BUILTIN 14
 #define Y_STRUCTDEF 15
 #define Y_STREAM 16
+#define Y_OPAQUE 17
 /*
 Arrays can have from 0 (scalar) to Y_DIMSIZE-1 dimensions, except for
 complex and struct arrays, which are limited to Y_DIMSIZE-2
