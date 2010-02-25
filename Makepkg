@@ -1,4 +1,4 @@
-# $Id: Makepkg,v 1.2 2006-06-13 18:37:37 paumard Exp $
+# $Id: Makepkg,v 1.3 2010-02-25 03:53:28 dhmunro Exp $
 # standard parts of yorick package Makefile
 SHELL=/bin/sh
 MAKE=make
@@ -165,6 +165,7 @@ install:: install-$(TGT)
 	$(YNSTALL) $(PKG_I_DEPS) $(DEST_Y_SITE)/i0
 	if test -n "$(PKG_I_START)"; then $(YNSTALL) $(PKG_I_START) $(DEST_Y_HOME)/i-start; fi
 	if test -n "$(PKG_I_EXTRA)"; then $(YNSTALL) $(PKG_I_EXTRA) $(DEST_Y_SITE)/i; fi
+	if test -f "$(PKG_NAME).cfg"; then $(YNSTALL) $(PKG_NAME).cfg $(DEST_Y_SITE)/lib; fi
 install-exe: $(PKG_EXE)
 	$(YNSTALL) $(PKG_EXE) $(DEST_Y_BINDIR)
 	$(YNSTALL) $(PKG_LIB) $(DEST_Y_HOME)/lib
@@ -192,3 +193,18 @@ distmake:
 	s/^Y_EXE_PKGS=.*/Y_EXE_PKGS=/;s/^Y_EXE_SITE=.*/Y_EXE_SITE=/;\
 	s/^Y_EXE_HOME=.*/Y_EXE_HOME=/";\
 	sed -e "$$S" Makefile >Make.tmp; then mv Make.tmp Makefile; fi
+
+dumpconfig:
+	@rm -f $(PKG_NAME).cfg
+	@echo "$(PKG_NAME).cfg built by Make on `date`" >> $(PKG_NAME).cfg
+	@echo "HOST=`uname -a`" >>$(PKG_NAME).cfg
+	@echo 'PKG_CFLAGS=$(PKG_CFLAGS)' >> $(PKG_NAME).cfg
+	@echo 'PKG_LDFLAGS=$(PKG_LDFLAGS)' >> $(PKG_NAME).cfg
+	@echo 'PKG_DEPLIBS=$(PKG_DEPLIBS)' >> $(PKG_NAME).cfg
+	@echo 'CC_FULL=$(CC)' >> $(PKG_NAME).cfg
+# grab the executable name from the $CC
+	@echo "CC_PATH=`which \`echo $(CC) | awk 'BEGIN { FS=\" \" };{print $$1}'\``" >> $(PKG_NAME).cfg
+# grab the arguments (everyhing after the excutable) from CC
+	@echo "CC_OPT=`echo $(CC) | awk 'BEGIN { FS=\" \" };{{ for (f=2; f <= NF; f++) { if (f != 1 && f != 9) printf(\"%s \", $$f);}}}'`" >>$(PKG_NAME).cfg
+	@echo "LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)" >>$(PKG_NAME).cfg
+	@echo "PATH=$(PATH)" >>$(PKG_NAME).cfg

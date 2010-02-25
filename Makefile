@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+# $Id: Makefile,v 1.3 2010-02-25 03:53:28 dhmunro Exp $
 # see README for usage
 
 SHELL=/bin/sh
@@ -14,7 +14,7 @@ yorexe: libyor
 gistexe: libgist
 	@cd gist; $(MAKE) gist
 
-docs:
+docs: yorexe
 	@cd doc; $(MAKE) docs
 
 # libraries are built in a fixed order:
@@ -119,6 +119,9 @@ relocatable: siteclean
 	W=`pwd`;N=`basename "$$W"`;R=`tail -n 1 VERSION`;\
 	mv relocate $$N-$$R;tar cvf - $$N-$$R|gzip - >$$N-$$R.tgz;\
 	rm -rf $$N-$$R
+
+dumpconfig:
+	@cd yorick; $(MAKE) dumpconfig
 
 # targets for ./configure
 echocc:
