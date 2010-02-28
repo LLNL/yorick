@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2007-02-22 22:05:48 dhmunro Exp $
+# $Id: Makefile,v 1.3 2010-02-28 21:32:23 dhmunro Exp $
 SHELL=/bin/sh
 MAKE=make
 include ../../Make.cfg
@@ -57,7 +57,7 @@ uinbg.o: config.h playu.h uinbg.c $(PLUGEXT)
 usernm.o: config.h ../play.h usernm.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USERNM) -c usernm.c
 umain.o: config.h ../play.h playu.h ../pstdlib.h $(PLUGEXT)
-uspawn.o: config.h ../pstdio.h ../pstdlib.h playu.h uspawn.c $(PLUGEXT)
+uspawn.o: config.h ../pstdio.h ../pstdlib.h ../play.h playu.h uspawn.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_PROCS) -c uspawn.c
 
 # this is the DL config test used in config.sh

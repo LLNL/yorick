@@ -1,5 +1,5 @@
 /*
- * $Id: yio.c,v 1.3 2009-12-12 16:48:03 dhmunro Exp $
+ * $Id: yio.c,v 1.4 2010-02-28 21:32:23 dhmunro Exp $
  * Implement Yorick I/O functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -212,7 +212,7 @@ extern UnaryOp PrintC, PrintS, PrintI, PrintL, PrintF, PrintD, PrintZ,
 int printLength= 79;   /* maximum number of characters to put on a line */
 long maxPrintLines= 5000;
 
-static char nBuffer[80];   /* buffer to hold numbers from sprintf */
+static char nBuffer[120];   /* buffer to hold numbers from sprintf */
 
 static int (*RawPrinter)(char *s);
 extern int PutsAsArray(char *s);

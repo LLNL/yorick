@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2010-02-25 03:53:28 dhmunro Exp $
+# $Id: Makefile,v 1.4 2010-02-28 21:32:23 dhmunro Exp $
 # see README for usage
 
 SHELL=/bin/sh
@@ -74,7 +74,7 @@ distclean::
 
 siteclean: distclean
 	@rm -f ysite.grp
-	@$(MAKE) prefix=. Y_PLATFORM=. Y_SITE=. Y_HOME=. ysite
+	@$(MAKE) prefix=. Y_PLATFORM=. Y_SITE=. Y_HOME=relocate ysite
 
 
 check:

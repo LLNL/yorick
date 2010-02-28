@@ -1,5 +1,5 @@
 /*
- *$Id: uspawn.c,v 1.2 2006-03-29 17:14:03 dhmunro Exp $
+ *$Id: uspawn.c,v 1.3 2010-02-28 21:32:23 dhmunro Exp $
  * play spawn process command
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -12,6 +12,7 @@
 #include "pstdlib.h"
 #include "pstdio.h"
 #include "playu.h"
+#include "play.h"
 
 #include <sys/types.h>
 #ifndef NO_PROCS
@@ -23,7 +24,6 @@
 #endif
 
 /* opaque, instance returned by spawn, freed by spawf */
-typedef struct p_spawn_t p_spawn_t;
 struct p_spawn_t {
   pid_t pid;
   int fdin, fdout, fderr, ready;
@@ -151,7 +151,7 @@ p_spawn(char *name, char **argv, void (*callback)(void *ctx, int err),
   return 0;
 }
 
-extern void
+void
 p_spawf(p_spawn_t *proc, int nocallback)
 {
 #ifndef NO_PROCS
