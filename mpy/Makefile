@@ -1,11 +1,19 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.1 2005-09-18 22:04:57 dhmunro Exp $
+# $Id: Makefile,v 1.2 2010-02-28 21:49:21 dhmunro Exp $
 
-Y_MAKEDIR=..
-Y_EXE=../yorick/yorick
+Y_MAKEDIR=/home/dave/sf/yorick-2.1/mpy/../relocate
+Y_EXE=/home/dave/sf/yorick-2.1/mpy/../relocate/bin/yorick
 Y_EXE_PKGS=
-Y_EXE_HOME=
-Y_EXE_SITE=
+Y_EXE_HOME=/home/dave/sf/yorick-2.1/mpy/../relocate
+Y_EXE_SITE=/home/dave/sf/yorick-2.1/mpy/../relocate
+
+# note: to be fully scalable, mpy cannot use dll packages; all
+# packages should be statically linked via Y_EXE_PKGS or EXTRA_PKGS
+
+# mpy needs custom main.c, assume this directory is a
+# sibling of the play/ directory in the distribution
+Y_MAIN_SRC=../play/$(Y_MAIN_C)
+Y_MAIN_SRC=$(Y_EXE_HOME)/../play/$(Y_MAIN_C)
 
 #Y_MAKEMPY=$(Y_MAKEDIR)/Makempy
 Y_MAKEMPY=./Makempy
@@ -21,7 +29,7 @@ TGT=exe
 PKG_NAME=mpy
 PKG_I=mpy.i
 
-OBJS=mpy.o
+OBJS=mpy.o mpyfile.o
 
 PKG_EXENAME=mpy
 
@@ -29,14 +37,14 @@ PKG_EXENAME=mpy
 PKG_DEPLIBS=
 # set compiler flags specific to this package
 PKG_CFLAGS=$(MPI_CFLAGS)
-PKG_LDFLAGS=
+PKG_LDFLAGS=$(MPI_LDFLAGS)
 
 EXTRA_PKGS=$(Y_EXE_PKGS)
 
 PKG_CLEAN=
 
 PKG_I_START=
-PKG_I_EXTRA=testmp.i
+PKG_I_EXTRA=custommp.i testmp.i mpy1.i
 
 # -------------------------------- standard targets and rules (in Makepkg)
 
@@ -45,12 +53,14 @@ PKG_I_EXTRA=testmp.i
 # are any additional targets (defined below) prerequisite to
 # the plugin library, archive library, and executable, respectively
 PKG_I_DEPS=$(PKG_I)
+EXE_TARGETS=mpymain.o paths.i
 
 include $(Y_MAKEDIR)/Make.cfg
 include $(Y_MAKEDIR)/Makepkg
-include $(Y_MAKEDIR)/Make$(TGT)
+include $(Y_MAKEDIR)/Makeexe
 
 # override macros Makepkg sets for rules and other macros
+Y_MAIN_O=mpymain.o
 
 # this overrides CC and FC macros, provides MPI_CFLAGS
 include $(Y_MAKEMPY)
@@ -58,14 +68,39 @@ include $(Y_MAKEMPY)
 # Y_HOME and Y_SITE in Make.cfg may not be correct (e.g.- relocatable)
 #Y_HOME=$(Y_EXE_HOME)
 #Y_SITE=$(Y_EXE_SITE)
+# above appropriate for TGT=dll, below because this is TGT=exe
+Y_BINDIR=$(Y_EXE_HOME)/bin
+Y_LIBEXE=$(Y_EXE_HOME)/lib
+Y_INCLUDE=$(Y_EXE_HOME)/include
+DEST_Y_SITE=$(DESTDIR)$(Y_EXE_SITE)
+DEST_Y_HOME=$(DESTDIR)$(Y_EXE_HOME)
+
+# reduce chance of yorick-1.5 corrupting this Makefile
+MAKE_TEMPLATE = /usr/lib/yorick/1.5/protect-against-1.5
 
 # ------------------------------------- targets and rules for this package
 
+# override on_launch callback with scalable MPI version
+D_ON_LAUNCH=-Don_launch=mpy_on_launch
+# always compile main.c with -g so new packages can be debugged
+mpymain.o: mpymain.c
+	$(CC) $(CPPFLAGS) $(D_ON_LAUNCH) -g $(Y_IDIR) -o $@ -c mpymain.c
+mpymain.c: $(Y_MAIN_SRC)
+	cp $(Y_MAIN_SRC) mpymain.c
+
+# need paths.i to be able to run TGT=exe in this directory
+# after install it is not needed
+paths.i:
+	echo >paths.i 'set_site,"$(Y_EXE_SITE)","$(Y_EXE_HOME)";include,"$(Y_EXE_SITE)/i0/paths.i",1;'
+
 install:: Makempy
-	$(YNSTALL) Makempy "$(Y_HOME)"
+	$(YNSTALL) Makempy "$(Y_EXE_HOME)"
 
 uninstall::
-	rm -f "$(Y_HOME)/Makempy"
+	rm -f "$(Y_EXE_HOME)/Makempy"
+
+clean::
+	rm -f mpymain.* paths.i
 
 distclean::
 	rm -f Makempy

@@ -1,42 +1,155 @@
 #!/bin/sh
-# $Id: configure,v 1.1 2005-09-18 22:04:58 dhmunro Exp $
-#
-# skeleton configure script for MPY (Message Passing Yorick)
-# assumes top level configuration of distribution yorick already done
-#
-# You need to do the work here yourself:
-#
-#     MPI implementations typically come with a substitute for the
-#     cc and f77 compilers.  These invoke the underlying cc and f77
-#     compilers with the appropriate -I, -L, and -l options so the
-#     MPI headers and libraries can be found.  If your MPI does not
-#     come with these substitutes, you will need to write scripts
-#     to do it yourself.  The mpicc-sh script in this directory
-#     is an example for the LAM implementation of MPI (LAM's hcc
-#     script supplies the necessary -I options, but not the -L or
-#     -l options).
-#     You don't need to set MPI_F77 correctly unless you plan to use
-#     Fortran in your own codes; MPY itself doesn't use any.  Be sure
-#     that you've set up the FC line in ../Yorick/Maketmpl correctly
-#     if you do care about MPI_F77.
-#     MPI_CFLAGS is for any additional CFLAGS (-D or -I options)
-#     required to build mpy.c
+# $Id: configure,v 1.2 2010-02-28 21:49:21 dhmunro Exp $
+# configure script for mpy
 
-# Now type this:
-#     ./configure mpi-cc-command
-# or, if the command is mpicc, simply
-#     ./configure
-# If mpicc requires compiler flags beyond those in Make.cfg Y_CFLAGS:
-#     env 'MPI_CFLAGS=-additional -c-flags' ./configure mpi-cc-command
-# Similarly, if you wish to set an mpi Fortran compiler, set the
-# MPI_F77 environment variable while running ./configure
+curdate=`date`
+cursystem=`uname -a`
+fatality=0
 
-# The ./configure script will build Makempy.  Type:
-#     make
-# to build MPY itself.  See the README for more details.
+if test -x "../relocate/bin/yorick"; then
+  yorick_exe="../relocate/bin/yorick"
+else
+  yorick_exe="yorick"
+fi
+mpicc_exe="mpicc"
+mpifc_exe=""
+mpi_cflags=""
+mpi_ldflags=""
+debug="no"
+for opt do
+  case "$opt" in
+  --debug) debug="yes"
+  ;;
+  --yorick=*) yorick_exe=`echo $opt | sed -e s/--yorick=//`
+  ;;
+  --mpicc=*) mpicc_exe=`echo $opt | sed -e s/--mpicc=//`
+  ;;
+  --mpifc=*) mpifc_exe=`echo $opt | sed -e s/--mpifc=//`
+  ;;
+  --cflags=*) mpi_cflags=`echo $opt | sed -e s/--cflags=//`
+  ;;
+  --ldflags=*) mpi_ldflags=`echo $opt | sed -e s/--ldflags=//`
+  ;;
+  *) cat <<EOF
+Usage:   ./configure [options]
+Options are one or more of:
+  --yorick=/path/to/yorick
+      set path to yorick executable (if not on your PATH)
+  --mpicc=/path/to/mpicc
+      set path to mpicc executable (if not on your PATH or not called mpicc)
+  --cflags='cflags'
+      any CFLAGS needed to compile with with mpicc
+  --ldflags='ldflags'
+      any LDFLAGS needed to load with with mpicc
+EOF
+  exit 1
+  ;;
+  esac
+done
+
+if test "$mpicc" = mpicc; then
+  mpicc_dflt="yes"
+else
+  mpicc_dflt="no"
+fi
+
+rm -f cfg.* ycode.* yinit.* ywrap.*
+rm -f core a.out *.o *.a *.so *.sl *.dylib *.dll *~ '#'*
+rm -f mpy Makempy paths.i cfg*
+
+mpicc_dir=""
+case "$mpicc_exe" in
+  */*)
+    if test -x "$mpicc_exe" -a ! -d "$mpicc_exe"; then
+      mpicc_dir=`dirname "$mpicc_exe"`
+    fi
+  ;;
+  *)
+    save_IFS=$IFS
+    IFS=:
+    for d in `echo "$PATH" | sed -e 's/^:/.:/' -e 's/::/:.:/g' -e 's/:$/:./'`
+    do
+      if test -x "$d/$mpicc_exe" -a ! -d "$d/$mpicc_exe"; then
+        mpicc_dir="$d"
+        mpicc_exe="$d/$mpicc_exe"
+        break;
+      fi
+    done
+    IFS=$save_IFS
+  ;;
+esac
+
+found="no"
+case "$yorick_exe" in
+  */*)
+    if test -x "$yorick_exe" -a ! -d "$yorick_exe"; then
+      Y_BINDIR=`dirname "$yorick_exe"`
+      found="yes"
+    fi
+  ;;
+  *)
+    save_IFS=$IFS
+    IFS=:
+    for d in `echo "$PATH" | sed -e 's/^:/.:/' -e 's/::/:.:/g' -e 's/:$/:./'`
+    do
+      if test -x "$d/$yorick_exe" -a ! -d "$d/$yorick_exe"; then
+        Y_BINDIR="$d"
+        yorick_exe="$d/$yorick_exe"
+        found="yes"
+        break;
+      fi
+    done
+    IFS=$save_IFS
+  ;;
+esac
+
+if test $found = no; then
+  echo --yorick=$yorick_exe not found
+  echo rerun ./configure with --yorick option or ./configure --help
+  exit 1
+fi
+
+"$yorick_exe" -batch make.i
+
+Y_HOME=`grep '^Y_MAKEDIR=' ./Makefile | sed -e 's/^Y_MAKEDIR=//'`
+# try to handle escaped blanks in Y_MAKEDIR
+Y_HOME=`echo $Y_HOME | sed -e 's/\\\\ / /g'`
+
+CC=`grep '^CC=' "${Y_HOME}/Make.cfg" | sed -e 's/^CC=//'`
+CFLAGS=`grep '^Y_CFLAGS=' "${Y_HOME}/Make.cfg" | sed -e 's/^Y_CFLAGS=//'`
+LDFLAGS=`grep '^Y_LDFLAGS=' "${Y_HOME}/Make.cfg" | sed -e 's/^Y_LDFLAGS=//'`
+
+echo Using ${Y_HOME}/Make.cfg
+echo "  CFLAGS=$CFLAGS"
+echo "  LDFLAGS=$LDFLAGS"
+if test $mpicc_dflt = yes; then
+  if test -n "$mpi_cflags"; then
+    mpi_cflags="$CFLAGS"
+  fi
+  if test -n "$mpi_cflags"; then
+    mpi_ldflags="$LDFLAGS"
+  fi
+fi
+
+if test -z "$mpicc_dir"; then
+  echo --mpicc=$mpicc_exe not found
+  echo rerun ./configure with --mpicc option or ./configure --help
+  exit 1
+else
+  echo Using --mpicc=$mpicc_exe
+  echo "  MPI_CFLAGS=$mpi_cflags"
+  echo "  MPI_LDFLAGS=$mpi_ldflags"
+fi
 
 cat >Makempy <<EOF
-CC=${1:-mpicc}
-FC=${MPI_F77:-mpif77}
-MPI_CFLAGS=$MPI_CFLAGS
+# Makempy configure results for mpy
+# generated by mpy configure script on $curdate
+# $cursystem
+
+CC=$mpicc_exe
+FC=$mpifc_exe
+MPI_CFLAGS=$mpi_cflags
+MPI_LDFLAGS=$mpi_ldflags
 EOF
+
+exit 0
