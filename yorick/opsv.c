@@ -1,5 +1,5 @@
 /*
- * $Id: opsv.c,v 1.3 2007-04-06 22:04:33 thiebaut Exp $
+ * $Id: opsv.c,v 1.4 2010-02-28 21:52:29 dhmunro Exp $
  *
  * Load up virtual functions for the various DataBlock and Symbol types.
  */
@@ -671,7 +671,7 @@ static void GlobInstall(const char *name, StructDef *base)
   if (globTab[index].ops==&dataBlockSym &&
       globTab[index].value.db==&nilDB) {
     globTab[index].value.db= (DataBlock *)Ref(base);
-    Unref(&nilDB);
+    UnrefNC(&nilDB);
   }
 }
 

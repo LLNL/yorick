@@ -1,5 +1,5 @@
 /*
- * $Id: binio.c,v 1.3 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: binio.c,v 1.4 2010-02-28 21:52:28 dhmunro Exp $
  * Define Yorick functions for dealing with binary I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -946,7 +946,7 @@ void FreeIOStream(void *ios)
         deadFile.blockSize= 0x3fff;  /* why? */
         deadFile.structAlign= 1;     /* why? */
       }
-      base->file= Ref(&deadFile);
+      base->file= RefNC(&deadFile);
     }
     Unref(base);
   }

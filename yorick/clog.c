@@ -1,5 +1,5 @@
 /*
- * $Id: clog.c,v 1.3 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: clog.c,v 1.4 2010-02-28 21:52:29 dhmunro Exp $
  * Define routines to handle Contents Log (CLOG) language
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -985,7 +985,7 @@ static int CLdefine(CLbuffer *clBuffer, IOStream *file)
   base->order= order;
   if (seqFlag) base->addressType= 2;
   if (seqFlag==2) {
-    base->model= Ref(&pointerStruct);
+    base->model= RefNC(&pointerStruct);
     base->Convert= &PDBconvert;
   }
   if (flag) base->fpLayout= MakeFPLayout(&fpLayout, size);

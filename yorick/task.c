@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.12 2010-02-15 05:17:57 dhmunro Exp $
+ * $Id: task.c,v 1.13 2010-02-28 21:52:29 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -879,8 +879,8 @@ static unsigned long
 yv_fread(p_file *file, void *buf, unsigned long nbytes)
 {
   int strng = (((y_vopen_t *)file)->array->ops->typeID == T_STRING);
-  char *cbuf=buf, *txt;
-  unsigned long j, jeof;
+  char *cbuf=buf, *txt=0;
+  unsigned long j, jeof=0;
   if (!strng) {
     txt = ((y_vopen_t *)file)->array->value.c + ((y_vopen_t *)file)->addr;
     jeof = ((y_vopen_t *)file)->array->type.number - ((y_vopen_t *)file)->addr;

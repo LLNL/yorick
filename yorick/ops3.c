@@ -1,5 +1,5 @@
 /*
- * $Id: ops3.c,v 1.1 2005-09-18 22:04:10 dhmunro Exp $
+ * $Id: ops3.c,v 1.2 2010-02-28 21:52:29 dhmunro Exp $
  * Implement assignment operations:
  *
  *  Assign =   Increment += (and ++)   Decrement -= (and --)
@@ -386,7 +386,7 @@ void Address(void)
      EXCEPT for nil, which loses a reference... */
   pointer->value.p[0]= value;
   sp->value.db= (DataBlock *)pointer;
-  if (!value) Unref(&nilDB);  /* ...since sp->value.db was &nilDB */
+  if (!value) UnrefNC(&nilDB);  /* ...since sp->value.db was &nilDB */
 }
 
 void Deref(void)

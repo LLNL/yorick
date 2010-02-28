@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.9 2010-01-02 21:08:00 dhmunro Exp $
+ * $Id: std0.c,v 1.10 2010-02-28 21:52:29 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -232,11 +232,7 @@ void
 Y_set_site(int nArgs)
 {
   /* This function should ONLY be called from paths.i, or by YInit  */
-
   char *path;
-  Array *dirName;
-  DataBlock *oldDB;
-  long index;
 
   if (nArgs>2) YError("expecting zero, one, or two arguments");
 
@@ -359,8 +355,9 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
   }
   YNameToHead(&y_user_dir);
   if (!y_gist_dir) {
+    p_dir *yudir;
     y_gist_dir = p_strncat(y_user_dir, "gist", 0);
-    p_dir *yudir = p_dopen(y_gist_dir);
+    yudir = p_dopen(y_gist_dir);
     if (!yudir) {  /* for backwards compatibility */
       char *yuser = "~/.gist";
       yudir = p_dopen(yuser);

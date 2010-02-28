@@ -1,5 +1,5 @@
 /*
- * $Id: fwrap.c,v 1.3 2009-11-10 05:23:48 dhmunro Exp $
+ * $Id: fwrap.c,v 1.4 2010-02-28 21:52:29 dhmunro Exp $
  * implement function argument wrapping with wrap_args
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -12,6 +12,7 @@
 #include "ydata.h"
 #include "pstdlib.h"
 #include <stdio.h>
+#include <string.h>
 
 /* interpreted interface consists of wrap_args function and
  * wrapped_func and wrapped_args objects
@@ -160,8 +161,7 @@ ywrap_f_eval(Operand *op)
   } *uo = op->value;
   y_wrapped_func *wf = (y_wrapped_func *)&uo->body.c;
   y_wrapped_args *wa;
-  int npos, nkey, i, j, k;
-  long index;
+  int i, j, k;
   /* wf has been called, time to wrap its arguments */
   wa = ypush_obj(&ywrap_a_ops, sizeof(y_wrapped_args));
   wa->npos = wa->nkey = 0;
@@ -202,6 +202,7 @@ ywrap_f_eval(Operand *op)
     sp = me + 1;
     me[1].ops = &dataBlockSym;
   } else {
+    i = j = 0;
     wa->args = 0;
   }
   wa->npos = j;

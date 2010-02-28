@@ -1,5 +1,5 @@
 /*
- * $Id: ops1.c,v 1.1 2005-09-18 22:04:09 dhmunro Exp $
+ * $Id: ops1.c,v 1.2 2010-02-28 21:52:29 dhmunro Exp $
  * Implement bitwise binary operations and unary operations:
  *
  *  Or |   And &   Xor ~
@@ -488,7 +488,7 @@ void NotSI(Operand *op)
 }
 
 void NotVD(Operand *op)
-{ Symbol *s= op->owner; s->ops= &intScalar; s->value.i= 1; Unref(&nilDB); }
+{ Symbol *s= op->owner; s->ops=&intScalar;s->value.i=1; UnrefNC(&nilDB); }
 
 void NotX(Operand *op)
 {
@@ -545,7 +545,7 @@ void TrueSI(Operand *op)
 }
 
 void TrueVD(Operand *op)
-{ Symbol *s= op->owner; s->ops= &intScalar; s->value.i= 0; Unref(&nilDB); }
+{ Symbol *s= op->owner; s->ops=&intScalar;s->value.i=0; UnrefNC(&nilDB); }
 
 void TrueX(Operand *op)
 {

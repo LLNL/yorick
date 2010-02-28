@@ -1,5 +1,5 @@
 /*
- * $Id: autold.c,v 1.4 2007-04-06 22:04:33 thiebaut Exp $
+ * $Id: autold.c,v 1.5 2010-02-28 21:52:28 dhmunro Exp $
  * autoload Yorick .i files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -215,7 +215,7 @@ Y_autoload(int nArgs)
   for (i=1 ; i<nArgs ; i++) {
     isymbol = YGet_Ref(s+i);
     globTab[isymbol].value.db = (DataBlock *)new_auto(file, isymbol);
-    Unref(&nilDB);
+    UnrefNC(&nilDB);
   }
   /* no symbols means to cancel autoload */
   if (nArgs<2 && HashFind(&auto_table, file, 0L))

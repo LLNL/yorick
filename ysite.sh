@@ -2,15 +2,21 @@
 prefix="."
 Y_PLATFORM="."
 Y_SITE="."
-Y_HOME="."
+Y_HOME="relocate"
 
 # -------------- DO NOT CHANGE THIS LINE OR BELOW -----------------------
-# ysite.sh -- $Id: ysite.sh,v 1.3 2007-03-21 19:29:18 dhmunro Exp $
+# ysite.sh -- $Id: ysite.sh,v 1.4 2010-02-28 21:52:28 dhmunro Exp $
 # the install.sh script sources this script in order to set the
 # Y_SITE and Y_HOME variables that determine where the architecture
 # independent and dependent parts of yorick will be installed
 
 # you can:
+
+# (0) set Y_HOME to an absolute or relative pathname, Y_SITE="."
+#     to get
+#       Y_SITE=$Y_HOME
+#     The recommended value is Y_HOME="relocate" which makes a
+#     relocatable version of yorick.
 
 # (1) set Y_SITE, Y_HOME, and Y_PLATFORM to ".",
 #     and prefix to an absolute pathname (usually /usr or /usr/local)
@@ -36,7 +42,7 @@ Y_HOME="."
 # an "absolute pathname" begins with / and does NOT include a trailing /
 
 # the remainder of this script sets the values of Y_SITE and Y_HOME
-# according to (1-5) above so it can be sourced by install.sh
+# according to (0-4) above so it can be sourced by install.sh
 
 if test "$Y_SITE" = "."; then
   if test "$Y_HOME" = "."; then

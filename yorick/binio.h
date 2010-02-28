@@ -1,5 +1,5 @@
 /*
- * $Id: binio.h,v 1.2 2009-05-22 04:02:26 dhmunro Exp $
+ * $Id: binio.h,v 1.3 2010-02-28 21:52:28 dhmunro Exp $
  * Declare structures and functions for arrays of data that have
  * meaningful interpretations on disk.
  *
@@ -505,6 +505,7 @@ struct Operations {
 #define Ref(db) ((db)?++(db)->references:0 , (db))
 #define RefNC(db) (++(db)->references , (db))
 #define Unref(db) {if ((db) && --(db)->references<0) (db)->ops->Free(db);}
+#define UnrefNC(db) {if (--(db)->references<0) (db)->ops->Free(db);}
 
 PLUG_API long TotalNumber(const Dimension *dims);
 PLUG_API int CountDims(const Dimension *dims);
