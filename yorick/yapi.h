@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.16 2010-02-16 17:15:33 paumard Exp $
+ * $Id: yapi.h,v 1.17 2010-03-02 04:36:07 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -431,7 +431,24 @@ yarg_kw_init function (with kiargs=0) to retrieve name indices.
 An object created by ypush_obj can be retrieved by yget_obj.  Passing
 uo_type=0 to yget_obj returns the type_name for the object at iarg;
 otherwise it returns the pointer to the object itself, as created by
-ypush_obj.
+ypush_obj.  For example,
+y_userobj_t examp1_ops = { "example1 user object",
+  &examp1_free, &examp1_print, &examp1_eval, &examp1_extract, 0 };
+y_userobj_t examp2_ops = { "example2 user object",
+  &examp2_free, &examp2_print, &examp2_eval, &examp2_extract, 0 };
+A function which expects an example1 object at iarg=0 would simply
+call yget_obj(iarg, &examp1_ops).  However, if either an example1 or
+an example2 object were an acceptable iarg=0 argument, you would call
+name=yget_obj(iarg,0), then check whether name==examp1_ops.type_name or
+name==examp2_ops.type_name.  Note that the string itself is irrelevant --
+checking the string value is not only a waste of time, but also there is no
+guarantee the value is unique.  Instead, you want to check that the
+address examp1_ops.type_name (or examp2_ops.type_name) is returned.  Note
+that you can easily write your own yarg_examp1(iarg) or yarg_examp2(iarg)
+function that retrieves specific object types with whatever semantics
+you like if the actual argument is not the correct type.  Similarly, you
+can write ypush_examp1 or ypush_examp2, with whatever constructor arguments
+make sense.
 
 The y_print function must be used by the on_print callback to produce
 output.  Do not attempt to use y_print except in a on_print callback.
