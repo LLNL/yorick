@@ -1,5 +1,5 @@
 /*
- * $Id: mpy1.i,v 1.2 2010-03-05 04:10:31 dhmunro Exp $
+ * $Id: mpy1.i,v 1.3 2010-03-05 18:26:52 dhmunro Exp $
  * compatibility functions for obsolete mpy version 1
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -50,7 +50,6 @@ func mp_task(task)
             "__a__,1,__1__;__a__,2,__2__;__a__,3,__3__;__a__,4,__4__;",
             "__a__,5,__5__;__a__,6,__6__;__a__,7,__7__;__a__,8,__8__;}",
             "wrap_args,"+name];
-  write,"mp_task defined",name;
 }
 
 func _mpy1_start(__f__,__0__,
