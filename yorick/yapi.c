@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.23 2010-02-18 05:24:52 dhmunro Exp $
+ * $Id: yapi.c,v 1.24 2010-03-05 04:10:32 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -769,6 +769,7 @@ yarg_reform(int iarg, long *dims)
       type->dims = 0;
       if (d) FreeDimension(d);
       type->dims = ypush_dims(dims);
+      if (type->dims) type->dims->references++;
       return 1;
     }
   }
