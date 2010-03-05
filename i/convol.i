@@ -1,5 +1,5 @@
 /*
- * $Id: convol.i,v 1.2 2008-08-31 15:57:11 dhmunro Exp $
+ * $Id: convol.i,v 1.3 2010-03-05 04:13:56 dhmunro Exp $
  * convolution of two vectors using fft
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -235,6 +235,7 @@ func boxcar(a, n)
   if (rank > 6) error, "only first six dimensions can be smoothed";
   n = min(na(1:rank)/2, n);
 
+  local n0, n1;
   i = 0;
   if (rank > i++) {
     x = a(cum,..);
