@@ -13,6 +13,10 @@ This is version 2 of mpy (released in 2010); it is incompatible with
 version 1 of mpy (released in the mid 1990s), because version 1 had
 numerous design flaws making it very difficult to write programs free
 of race conditions, and impossible to scale to millions of processors.
+However, you can run most version 1 mpy programs under version 2 by
+doing mp_include,"mpy1.i" before you mp_include any file defining an
+mpy1 parallel task (that is before any file containg a call to
+mp_task.)
 
 There are two major open source MPI implementations:
   MPICH:    http://www.mcs.anl.gov/research/projects/mpich2/
