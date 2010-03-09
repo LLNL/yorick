@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.4 2010-02-28 21:49:21 dhmunro Exp $
+ * $Id: mpy.c,v 1.5 2010-03-09 21:08:27 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2010, David H. Munro
@@ -234,7 +234,7 @@ mpy_get_next(int block)
 {
   MPI_Status status;
   int/*sic*/ n;
-  int type, ready, final=0;
+  int type, ready;
   long dims[2];
   void *buf;
   /* block=0  do not block
@@ -258,11 +258,10 @@ mpy_get_next(int block)
         != MPI_SUCCESS)
       mperr_fatal("MPI_Iprobe failed in mpy_get_next");
     if (!ready) {
-      if (final || !(block&3) || (mpy_queue_n && block<2)) return 0;
+      if (!(block&3) || (mpy_queue_n && block<2)) return 0;
       if (MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, mpy_world, &status)
           != MPI_SUCCESS)
         mperr_fatal("MPI_Probe failed in mpy_get_next");
-      if (block < 3) final = 1;
     }
     type = status.MPI_TAG;
     if (type == MPY_CONTROL) {
@@ -299,6 +298,7 @@ mpy_get_next(int block)
       buf = ygeta_any(0, (long*)0, (long*)0, (int*)0);
       if (type == MPY_STRING) buf = ((char **)buf)[0] = p_malloc((long)n);
     }
+    block &= ~3;
 
     if (MPI_Recv(buf, n, mpi_types[type], MPI_ANY_SOURCE, MPI_ANY_TAG,
                  mpy_world, &status) != MPI_SUCCESS)
