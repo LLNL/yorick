@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.5 2010-03-09 21:08:27 dhmunro Exp $
+ * $Id: mpy.c,v 1.6 2010-03-10 05:05:15 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2010, David H. Munro
@@ -297,8 +297,8 @@ mpy_get_next(int block)
       mpy_queue[mpy_queue_n++].data = yget_use(0);
       buf = ygeta_any(0, (long*)0, (long*)0, (int*)0);
       if (type == MPY_STRING) buf = ((char **)buf)[0] = p_malloc((long)n);
+      block = 0;
     }
-    block &= ~3;
 
     if (MPI_Recv(buf, n, mpi_types[type], MPI_ANY_SOURCE, MPI_ANY_TAG,
                  mpy_world, &status) != MPI_SUCCESS)
