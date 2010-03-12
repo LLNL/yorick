@@ -1,5 +1,5 @@
 /* testmp.i
- * $Id: testmp.i,v 1.3 2010-02-28 21:49:21 dhmunro Exp $
+ * $Id: testmp.i,v 1.4 2010-03-12 04:37:55 dhmunro Exp $
  * small test suite for mpy
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -79,7 +79,7 @@ func testmp2(n)
   f = (mp_rank - n + mp_size)%mp_size; /* recv from */
 
   oops = 0;
-  
+
   for (ii=1 ; ii<=14 ; ++ii) {
     /* deadlock would be possible if everyone were to send, no one recv */
     if (flag) {  /* this rank does recv then send */
@@ -92,6 +92,27 @@ func testmp2(n)
       else got = mp_recv(f);
     }
     oops |= (!testmess(ii, got)) << ii;
+  }
+  /* test dimension arguments to mp_recv */
+  z = random(4,3,5,7);
+  if (flag) {  /* this rank does recv then send */
+    got = mp_recv(f, 4,3);
+    dims = dimsof(got);
+    oops |= (dims(1)!=3 || anyof(dims!=[3,4,3,35]));
+    mp_send, t, z;
+    mp_recv, f, [4,4,3,5,7] ,got;
+    dims = dimsof(got);
+    oops |= (dims(1)!=4 || anyof(dims!=[4,4,3,5,7]));
+    mp_send, t, z;
+  } else {     /* this rank does send then recv */
+    mp_send, t, z;
+    mp_recv, f, [3,4,3,5], got;
+    dims = dimsof(got);
+    oops |= (dims(1)!=4 || anyof(dims!=[4,4,3,5,7]));
+    mp_send, t, z;
+    got = mp_recv(f, 4,[2,3,5],7);
+    dims = dimsof(got);
+    oops |= (dims(1)!=4 || anyof(dims!=[4,4,3,5,7]));
   }
   z = mp_handin(long(oops != 0));
   if (!mp_rank) {

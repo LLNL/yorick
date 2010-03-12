@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.6 2010-03-10 05:05:15 dhmunro Exp $
+ * $Id: mpy.c,v 1.7 2010-03-12 04:37:55 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2010, David H. Munro
@@ -490,10 +490,8 @@ mpy_recv(int amsub, int argc, int from)
       dest = yget_ref(--argc);
       if (dest < 0) {
         if (argc) {
-          if (yarg_nil(argc)) {
-            argc--;
-          } else {
-            pdims = ygeta_l(argc--, (long *)0, dims);
+          if (!yarg_nil(argc)) {
+            pdims = ygeta_l(argc, (long *)0, dims);
             if (!dims[0]) dims[0] = dims[1] = 1;
             if (dims[0]==1 && dims[1]>pdims[0] && pdims[0]>=0
                 && pdims[0]<Y_DIMSIZE-1) {
