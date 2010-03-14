@@ -1,5 +1,5 @@
 /* testmp.i
- * $Id: testmp.i,v 1.4 2010-03-12 04:37:55 dhmunro Exp $
+ * $Id: testmp.i,v 1.5 2010-03-14 18:30:44 dhmunro Exp $
  * small test suite for mpy
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -8,11 +8,23 @@
  * Read the accompanying LICENSE file for details.
  */
 
+func testmp
+/* DOCUMENT testmp
+ *   runs testmp2, testmp3, and testmpool
+ * SEE ALSO: testmp1, testmp2, testmp3, testmp4, testmpool
+ */
+{
+  testmp2;
+  testmp3;
+  mp_require, "mpool.i";
+  testmpool;
+}
+
 func testmp1(n)
 /* DOCUMENT testmp1, n
  *   test mp_send and mp_recv between rank 0 and rank N.
  *   Other ranks will be inactive during this exchange.
- * SEE ALSO:
+ * SEE ALSO: testmp, testmp2, testmp3, testmp4, testmpool
  */
 {
   if (mp_exec()) {
@@ -51,7 +63,7 @@ func testmp2(n)
  *   every rank sends to rank+N.  N defaults to 1.
  *   One message of each type handled by mp_send and mp_recv is
  *   sent and received for each distance.
- * SEE ALSO:
+ * SEE ALSO: testmp1, testmp, testmp3, testmp4, testmpool
  */
 {
   if (mp_exec()) {
@@ -80,15 +92,15 @@ func testmp2(n)
 
   oops = 0;
 
-  for (ii=1 ; ii<=14 ; ++ii) {
+  for (ii=0 ; ii<=14 ; ++ii) {
     /* deadlock would be possible if everyone were to send, no one recv */
     if (flag) {  /* this rank does recv then send */
-      if (ii%1) got = mp_recv(f);
+      if (ii&1) got = mp_recv(f);
       else mp_recv, f, got;
       mp_send, t, testmess(ii);
     } else {     /* this rank does send then recv */
       mp_send, t, testmess(ii);
-      if (ii%1) mp_recv, f, got;
+      if (ii&1) mp_recv, f, got;
       else got = mp_recv(f);
     }
     oops |= (!testmess(ii, got)) << ii;
@@ -129,7 +141,7 @@ func testmp2(n)
 func testmp3
 /* DOCUMENT testmp3
  *   test mp_handout and mp_handin for a variety of message types.
- * SEE ALSO:
+ * SEE ALSO: testmp1, testmp2, testmp, testmp4, testmpool
  */
 {
   if (mp_exec()) {
@@ -210,7 +222,7 @@ func testmp4(n)
  *   one line to print N, all ranks will get syntax errors.)
  *   The testmp4 function has a local variable x, non-nil
  *   on the ranks which faulted.
- * SEE ALSO:
+ * SEE ALSO: testmp1, testmp2, testmp3, testmp, testmpool
  */
 {
   if (mp_exec()) {
@@ -224,4 +236,90 @@ func testmp4(n)
   }
   /* without this, no calls to mp_send/recv to notice fault */
   mp_handin;
+}
+
+func testmpool(flag)
+/* DOCUMENT testmpool
+ *   test mpool function (and mpool_test with non-nil non-zero arg).
+ * SEE ALSO: testmp1, testmp2, testmp3, testmp, testmpool
+ */
+{
+  if (is_void(mp_size)) require, "mpool.i";
+  else mp_require, "mpool.i";
+
+  extern pool;
+  if (is_void(mp_size) || flag) {
+    write, "begin testing mpool_test";
+    njobs = 10;
+    use_vsave = 0;
+    nbad = [0, 0];
+    pool = mpool_test(fsow, fwork, freap);
+    write, format="mpool_test finished (vpack) nerrors=%ld\n", sum(nbad);
+    use_vsave = 1;
+    nbad = [0, 0];
+    pool = mpool_test(fsow, fwork, freap, use_vsave=1);
+    write, format="mpool_test finished (vsave) nerrors=%ld\n", sum(nbad);
+  }
+  if (is_void(mp_size)) return;
+
+  write, "begin testing mpool";
+  njobs = 3 * min(mp_size, mpool_nmax0);
+  use_vsave = 0;
+  nbad = [0, 0];
+  pool = mpool(fsow, fwork, freap);
+  write, format="mpool finished (vpack) nerrors=%ld\n", sum(nbad);
+  use_vsave = 1;
+  nbad = [0, 0];
+  pool = mpool(fsow, fwork, freap, use_vsave=1, self=1);
+  write, format="mpool self=1 finished (vsave) nerrors=%ld\n", sum(nbad);
+
+  mp_exec, "njobs=10;use_vsave=0;nbad=[0,0]";
+  p = mpool(fsow, fwork, freap, list=[mp_size-1,mp_size-2],self=1);
+  mp_exec, "nbad = mp_handin(nbad)";
+  write, format="mpool list= finished (vpack) nerrors=%ld\n", sum(nbad);
+}
+
+func fsow(n, dhand)
+{
+  /* njobs, use_vsave local to testmpool */
+  if (n > njobs) return 0;
+  x = testmess((n-1)%16);
+  /* idiotic in real fsow, which would use either vsave or vpack */
+  if (use_vsave) vsave, dhand, use_vsave, x, njobs;
+  else vpack, dhand, use_vsave, x, njobs;
+  return 1;
+}
+
+func fwork(n, dhand, rhand)
+{
+  /* defining handle stream for vsave, char for vpack
+   * (but result handle is stream for both)
+   * this is idiotic in a real fwork, which would be written to
+   * assume either vsave or vpack usage
+   */
+  v = is_stream(dhand);
+  local use_vsave, x, njobs;
+  if (v) restore, dhand, x, njobs, use_vsave;
+  else vunpack, dhand, use_vsave, x, njobs;
+  ok = testmess((n-1)%16, x);
+  x = testmess(15 - (n-1)%16);
+  if (v) vsave, rhand, x, ok;
+  else vpack, rhand, x, ok;
+  /* do a variable amount of work */
+  for (r=n+(mp_rank?mp_rank:0),i=1 ; i<=8 ; ++i)
+    r = 1664525*r + 1013904223; /* simple LCG from Numerical Recipes */
+  r &= 1048575;  /* 2^20-1 */
+  r += 1000000;    /* amount of work varies about factor of 2 */
+  for (i=1 ; i<=r ; ++i);  /* reasonable fraction of a second */
+}
+
+func freap(n, rhand)
+{
+  local x, ok;
+  /* idiotic in real freap -- would pick either vunpack or restore */
+  v = is_stream(rhand);  
+  if (v) restore, rhand, x, ok;
+  else vunpack, rhand, x, ok;
+  /* nbad local to testmpool */
+  nbad += long([!ok, !testmess(15 - (n-1)%16, x)]);
 }

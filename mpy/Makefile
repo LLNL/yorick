@@ -1,11 +1,11 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.2 2010-02-28 21:49:21 dhmunro Exp $
+# $Id: Makefile,v 1.3 2010-03-14 18:30:38 dhmunro Exp $
 
-Y_MAKEDIR=/home/dave/sf/yorick-2.1/mpy/../relocate
-Y_EXE=/home/dave/sf/yorick-2.1/mpy/../relocate/bin/yorick
+Y_MAKEDIR=
+Y_EXE=
 Y_EXE_PKGS=
-Y_EXE_HOME=/home/dave/sf/yorick-2.1/mpy/../relocate
-Y_EXE_SITE=/home/dave/sf/yorick-2.1/mpy/../relocate
+Y_EXE_HOME=
+Y_EXE_SITE=
 
 # note: to be fully scalable, mpy cannot use dll packages; all
 # packages should be statically linked via Y_EXE_PKGS or EXTRA_PKGS
@@ -93,11 +93,13 @@ mpymain.c: $(Y_MAIN_SRC)
 paths.i:
 	echo >paths.i 'set_site,"$(Y_EXE_SITE)","$(Y_EXE_HOME)";include,"$(Y_EXE_SITE)/i0/paths.i",1;'
 
-install:: Makempy
-	$(YNSTALL) Makempy "$(Y_EXE_HOME)"
+install:: Makempy mpy.h
+	$(YNSTALL) Makempy "$(DEST_Y_HOME)"
+	$(YNSTALL) mpy.h "$(DEST_Y_HOME)/include"
 
 uninstall::
-	rm -f "$(Y_EXE_HOME)/Makempy"
+	rm -f "$(DEST_Y_HOME)/Makempy"
+	rm -f "$(DEST_Y_HOME)/include/mpy.h"
 
 clean::
 	rm -f mpymain.* paths.i
