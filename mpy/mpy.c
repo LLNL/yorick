@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.7 2010-03-12 04:37:55 dhmunro Exp $
+ * $Id: mpy.c,v 1.8 2010-03-20 16:41:17 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2010, David H. Munro
@@ -9,6 +9,7 @@
  */
 
 #include <mpi.h>
+#define MPY_MPI_H 1
 #include "mpy.h"
 
 #include "yapi.h"
@@ -97,11 +98,11 @@ static void mpy_take_back_signals(void);
 static void mperr_fatal(char *msg);
 static int mpy_recover(const char *msg, long *after);
 
-static int mpy_get_next(int block);
+/* int mpy_get_next(int block) declared in mpy.h */
 static int mpy_push_next(int i);
 static void mpy_recv(int amsub, int argc, int from);
 static void mpy_send(int argc, long *to, long nto);
-static void mpy_errquiet(void);
+/* void mpy_errquiet(void) declared in mpy.h */
 static int mpy_isend_wait(int nreq, int noblock);
 
 static char *mperr_encode(char *text, long n);
@@ -222,14 +223,14 @@ mpy_take_back_signals(void)
 }
 
 static int mperr_quiet = 0;
-static void
+void
 mpy_errquiet(void)
 {
   mperr_quiet = 1;
   y_errquiet();
 }
 
-static int
+int
 mpy_get_next(int block)
 {
   MPI_Status status;
@@ -568,7 +569,7 @@ mpy_send(int argc, long *to, long nto)
   long n=0, m, dims[Y_DIMSIZE];
   int i, ytype, multi, s, dest=0, dest0=0;
   void *arg, **p=0;
-  char *junk = "\x40\x40", *empty = "";
+  char *empty = "";
   mperr_quiet = 0;
 
   /* first pass through arguments checks that all arguments are legal */
@@ -625,10 +626,7 @@ mpy_send(int argc, long *to, long nto)
   }
 
   /* set up the control irecv */
-  if (MPI_Irecv(mperr_msg, MAX_ERR_MSG, MPI_BYTE, MPI_ANY_SOURCE, MPY_CONTROL,
-                mpy_world, mpy_request) != MPI_SUCCESS)
-    mperr_fatal("MPI_Irecv failed in Y_mp_send");
-  mperr_from = -1;  /* status ignored for control irecv */
+  mpy_control_irecv(mpy_request, 0);
   /* will never return or call mpy_errquiet until mpy_request[0] NULL */
 
   /* second pass does the send operations */
@@ -683,26 +681,8 @@ mpy_send(int argc, long *to, long nto)
     if (s < 2) break;
   }
 
-  /* do self-send in order to clear control irecv */
-  if (MPI_Isend(junk, 3, MPI_BYTE, mpy_rank, MPY_CONTROL,
-                mpy_world, mpy_request+1) != MPI_SUCCESS)
-    mperr_fatal("MPI_Isend to self failed in Y_mp_send");
-  while (mpy_request[0] != MPI_REQUEST_NULL) mpy_isend_wait(2, 0);
-  for (s=0 ; s<3 ; s++)
-    if (mperr_msg[s] != junk[s]) {
-      /* control message received was not the self-sent message
-       * create a receive which can only receive that message
-       */
-      char yuck[16];
-      if (MPI_Irecv(yuck, 16, MPI_BYTE, mpy_rank, MPY_CONTROL,
-                    mpy_world, mpy_request) != MPI_SUCCESS)
-        mperr_fatal("MPI_Irecv of self-send failed in Y_mp_send");
-      while (mpy_request[0] != MPI_REQUEST_NULL
-             || mpy_request[1] != MPI_REQUEST_NULL) mpy_isend_wait(2, 0);
-      mpy_errquiet();
-    }
-  while (mpy_request[1] != MPI_REQUEST_NULL) mpy_isend_wait(2, 0);
-  mperr_msg[0] = '\0';
+  /* cancel control irecv */
+  mpy_control_irecv(mpy_request, 1);
 }
 
 static int
@@ -744,6 +724,45 @@ mpy_isend_wait(int nreq, int noblock)
     }
   }
   return ss;
+}
+
+void
+mpy_control_irecv(MPI_Request *request, int cancel)
+{
+  if (!cancel) {
+    /* set up the control irecv */
+    if (MPI_Irecv(mperr_msg, MAX_ERR_MSG, MPI_BYTE, MPI_ANY_SOURCE, MPY_CONTROL,
+                  mpy_world, request) != MPI_SUCCESS)
+      mperr_fatal("MPI_Irecv failed in mpy_control_irecv");
+    mperr_from = -1;  /* status ignored for control irecv */
+
+  } else if (request[0] != MPI_REQUEST_NULL) {
+    /* do self-send in order to cancel control irecv */
+    char *junk = "\x40\x40";
+    int s;
+    mpy_request[0] = request[0];
+    if (MPI_Isend(junk, 3, MPI_BYTE, mpy_rank, MPY_CONTROL,
+                  mpy_world, mpy_request+1) != MPI_SUCCESS)
+      mperr_fatal("MPI_Isend to self failed in mpy_control_irecv");
+    while (mpy_request[0] != MPI_REQUEST_NULL) mpy_isend_wait(2, 0);
+    for (s=0 ; s<3 ; s++)
+      if (mperr_msg[s] != junk[s]) {
+        /* control message received was not the self-sent message
+         * create a receive which can only receive that message
+         */
+        char yuck[16];
+        if (MPI_Irecv(yuck, 16, MPI_BYTE, mpy_rank, MPY_CONTROL,
+                      mpy_world, mpy_request) != MPI_SUCCESS)
+          mperr_fatal("MPI_Irecv of self-send failed in mpy_control_irecv");
+        while (mpy_request[0] != MPI_REQUEST_NULL
+               || mpy_request[1] != MPI_REQUEST_NULL) mpy_isend_wait(2, 0);
+        request[0] = MPI_REQUEST_NULL;
+        mpy_errquiet();
+      }
+    while (mpy_request[1] != MPI_REQUEST_NULL) mpy_isend_wait(2, 0);
+    mperr_msg[0] = '\0';
+    request[0] = MPI_REQUEST_NULL;
+  }
 }
 
 /* control message contents:
