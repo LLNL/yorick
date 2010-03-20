@@ -1,5 +1,5 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.3 2010-03-14 18:30:38 dhmunro Exp $
+# $Id: Makefile,v 1.4 2010-03-20 16:59:15 dhmunro Exp $
 
 Y_MAKEDIR=
 Y_EXE=
@@ -93,13 +93,15 @@ mpymain.c: $(Y_MAIN_SRC)
 paths.i:
 	echo >paths.i 'set_site,"$(Y_EXE_SITE)","$(Y_EXE_HOME)";include,"$(Y_EXE_SITE)/i0/paths.i",1;'
 
-install:: Makempy mpy.h
+install:: Makempy mpy.h mpymain.o
 	$(YNSTALL) Makempy "$(DEST_Y_HOME)"
 	$(YNSTALL) mpy.h "$(DEST_Y_HOME)/include"
+	$(YNSTALL) mpymain.o "$(DEST_Y_HOME)/lib"
 
 uninstall::
 	rm -f "$(DEST_Y_HOME)/Makempy"
 	rm -f "$(DEST_Y_HOME)/include/mpy.h"
+	rm -f "$(DEST_Y_HOME)/lib/mpymain.o"
 
 clean::
 	rm -f mpymain.* paths.i
