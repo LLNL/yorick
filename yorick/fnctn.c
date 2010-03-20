@@ -1,5 +1,5 @@
 /*
- * $Id: fnctn.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: fnctn.c,v 1.3 2010-03-20 15:14:21 dhmunro Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -464,7 +464,7 @@ void Return(void)
   SymbolValue valueX;
 
   /* Pop off any pending catch calls.  */
-  if ((sp-spBottom)<=ispCatch) YCatchDrop(sp-spBottom);
+  if ((sp-1-spBottom)<=ispCatch) YCatchDrop(sp-1-spBottom);
 
   /* Set pc to caller.  Must do this BEFORE the return PC stack element
      is stripped away-- otherwise, there is no way to get back to the
