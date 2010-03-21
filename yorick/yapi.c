@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.24 2010-03-05 04:10:32 dhmunro Exp $
+ * $Id: yapi.c,v 1.25 2010-03-21 18:40:16 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -1369,7 +1369,7 @@ y_uo_extract(Operand *op, char *name)
     y_error("(BUG) corrupted user object in y_uo_extract");
   if (uo->uo_type->on_extract) {
     long owner = op->owner - spBottom;
-    uo->uo_type->on_extract(uo->body.c, yget_global(name, 0L));
+    uo->uo_type->on_extract(uo->body.c, name);
     PopTo(spBottom+owner);
   } else {
     y_error("user object has no on_extract method");

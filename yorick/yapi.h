@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.17 2010-03-02 04:36:07 dhmunro Exp $
+ * $Id: yapi.h,v 1.18 2010-03-21 18:40:16 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -392,7 +392,7 @@ struct y_userobj_t {
   void (*on_free)(void *);
   void (*on_print)(void *);
   void (*on_eval)(void *, int);
-  void (*on_extract)(void *, long);
+  void (*on_extract)(void *, char *);
   void *uo_ops;
 };
 PLUG_API void *ypush_obj(y_userobj_t *uo_type, unsigned long size);
@@ -420,13 +420,11 @@ the top of the stack, and treat this like any other my_builtin.  The
 member on_extract is called as a result of interpreted code
   object.member_name
 producing the compiled call
-  on_extract(object, index)
-where index is the index in the global symbol table corresponding to
-the variable named member_name (the value of that variable is
-irrelevant).  Again, you should leave the result on the top of the
-stack.  If on_eval or on_extract is zero, that operation will cause a
-runtime error (the default behavior).  Note that you can use the
-yarg_kw_init function (with kiargs=0) to retrieve name indices.
+  on_extract(object, member_name)
+Again, you should leave the result on the top of the stack.  If
+on_eval or on_extract is zero, that operation will cause a runtime
+error (the default behavior).  Note that you can use the yarg_kw_init
+function (with kiargs=0) to retrieve name indices.
 
 An object created by ypush_obj can be retrieved by yget_obj.  Passing
 uo_type=0 to yget_obj returns the type_name for the object at iarg;
