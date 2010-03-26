@@ -1,0 +1,256 @@
+.TH MPY 1 "2010 MARCH 21"
+.UC 4
+.SH NAME
+mpy \- Message Passing Yorick
+.SH SYNOPSIS
+mpirun \-np mp_size
+.B mpy
+[ \-j
+.I pfile1.i
+[ \-j
+.I pfile2.i
+[ ... ]]]
+[ \-i
+.I file1.i
+[ \-i
+.I file2.i
+[ ... ]]]
+.br
+mpirun \-np mp_size
+.B mpy
+\-batch
+.I file.i
+.br
+.SH DESCRIPTION
+.I Yorick
+is an interpreted language like Basic or Lisp, but far faster. See 
+.I yorick
+(1) to learn more about it.
+.br
+.I Mpy
+is a parallel version of
+.I Yorick
+based on the Message Passing Interface (MPI). The exact syntax for launching a parallel job depends on your MPI environment. It may be necessary to launch a special daemon before calling
+.I mirun
+or an equivalent command.
+.SS Explanations
+
+The mpy package interfaces yorick to the MPI parallel programming
+library.  MPI stands for Message Passing Interface; the idea is to
+connect multiple instances of yorick that communicate among themselves
+via messages.  Mpy can either perform simple, highly parallel tasks as
+pure interpreted programs, or it can start and steer arbitrarily
+complex compiled packages which are free to use the compiled MPI API.
+The interpreted API is not intended to be an MPI wrapper; instead it
+is stripped to the bare minimum.
+
+This is version 2 of mpy (released in 2010); it is incompatible with
+version 1 of mpy (released in the mid 1990s), because version 1 had
+numerous design flaws making it very difficult to write programs free
+of race conditions, and impossible to scale to millions of processors.
+However, you can run most version 1 mpy programs under version 2 by
+doing mp_include,"mpy1.i" before you mp_include any file defining an
+mpy1 parallel task (that is before any file containg a call to
+mp_task.)
+.SS Usage notes
+The MPI environment is not really specified by the standard; existing
+environments are very crude, and strongly favor non-interactive batch
+jobs.  The number of processes is fixed before MPI begins; each
+process has a rank, a number from 0 to one less than the number of
+processes.  You use the rank as an address to send messages, and the
+process receiving the message can probe to see which ranks have sent
+messages to it, and of course receive those messages.
+
+A major problem in writing a message passing program is handling
+events or messages arriving in an unplanned order.  MPI guarantees
+only that a sequence of messages send by rank A to rank B will arrive
+in the order sent.  There is no guarantee about the order of arrival
+of those messages relative to messages sent to B from a third rank C.
+In particular, suppose A sends a message to B, then A sends a message
+to C (or even exchanges several messages with C) which results in C
+sending a message to B.  The message from C may arrive at B before the
+message from A.  An MPI program which does not allow for this
+possibility has a bug called a "race condition".  Race conditions may
+be extremely subtle, especially when the number of processes is large.
+
+The basic mpy interpreted interface consists of two variables:
+  mp_size   = number of proccesses
+  mp_rank   = rank of this process
+and four functions:
+  mp_send, to, msg;         // send msg to rank "to"
+  msg = mp_recv(from);      // receive msg from rank "from"
+  ranks = mp_probe(block);  // query senders of pending messages
+  mp_exec, string;          // parse and execute string on every rank
+
+You call mp_exec on rank 0 to start a parallel task.  When the main
+program thus created finishes, all ranks other than rank 0 return to
+an idle loop, waiting for the next mp_exec.  Rank 0 picks up the next
+input line from stdin (that is, waits for input at its prompt in an
+interactive session), or terminates all processes if no more input is
+available in a batch session.
+
+The mpy package modifies how yorick handles the #include parser
+directive, and the include and require functions.  Namely, if a
+parallel task is running (that is, a function started by mp_exec),
+these all become collective operations.  That is, rank 0 reads the
+entire file contents, and sends the contents to the other processes as
+an MPI message (like mp_exec of the file contents).  Every process
+other than rank 0 is only running during parallel tasks; outside a
+parallel task when only rank 0 is running (and all other ranks are
+waiting for the next mp_exec), the #include directive and the include
+and require functions return to their usual serial operation,
+affecting only rank 0.
+
+When mpy starts, it is in parallel mode, so that all the files yorick
+includes when it starts (the files in Y_SITE/i0) are included as
+collective operations.  Without this feature, every yorick process
+would attempt to open and read the startup include files, overloading
+the file system before mpy ever gets started.  Passing the contents of
+these files as MPI messages is the only way to ensure there is enough
+bandwidth for every process to read the contents of a single file.
+
+The last file included at startup is either the file specified in the
+\-batch option, or the custom.i file.  To avoid problems with code in
+custom.i which may not be safe for parallel execution, mpy does not
+look for custom.i, but for custommp.i instead.  The instructions in
+the \-batch file or in custommp.i are executed in serial mode on rank 0
+only.  Similarly, mpy overrides the usual process_argv function, so
+that \-i and other command line options are processed only on rank 0 in
+serial mode.  The intent in all these cases is to make the \-batch or
+custommp.i or \-i include files execute only on rank 0, as if you had
+typed them there interactively.  You are free to call mp_exec from any
+of these files to start parallel tasks, but the file itself is serial.
+
+An additional command line option is added to the usual set:
+  mpy \-j somefile.i
+.br
+includes somefile.i in parallel mode on all ranks (again, \-i other.i
+includes other.i only on rank 0 in serial mode).  If there are
+multiple \-j options, the parallel includes happen in command line
+order.  If \-j and \-i options are mixed, however, all \-j includes
+happen before any \-i includes.
+
+As a side effect of the complexity of include functions in mpy, the
+autoload feature is disabled; if your code actually triggers an
+include by calling an autoloaded function, mpy will halt with an
+error.  You must explicitly load any functions necessary for a
+parallel tasks using require function calls themselves inside a
+parallel task.
+
+The mp_send function can send any numeric yorick array (types char,
+short, int, long, float, double, or complex), or a scalar string
+value.  The process of sending the message via MPI preserves only the
+number of elements, so mp_recv produces only a scalar value or a 1D
+array of values, no matter what dimensionality was passed to mp_send.
+
+The mp_recv function requires you to specify the sender of the message
+you mean to receive.  It blocks until a message actually arrives from
+that sender, queuing up any messages from other senders that may
+arrive beforehand.  The queued messages will be retrieved it the order
+received when you call mp_recv for the matching sender.  The queuing
+feature makes it dramatically easier to avoid the simplest types of
+race condition when you are write interpreted parallel programs.
+
+The mp_probe function returns the list of all the senders of queued
+messages (or nil if the queue is empty).  Call mp_probe(0) to return
+immediately, even if the queue is empty.  Call mp_probe(1) to block if
+the queue is empty, returning only when at least one message is
+available for mp_recv.  Call mp_probe(2) to block until a new message
+arrives, even if some messages are currently available.
+
+The mp_exec function uses a logarithmic fanout - rank 0 sends to F
+processes, each of which sends to F more, and so on, until all
+processes have the message.  Once a process completes all its send
+operations, it parses and executes the contents of the message.  The
+fanout algorithm reaches N processes in log to the base F of N steps.
+The F processes rank 0 sends to are ranks 1, 2, 3, ..., F.  In
+general, the process with rank r sends to ranks r*F+1, r*F+2, ...,
+r*F+F (when these are less than N-1 for N processes).  This set is
+called the "staff" of rank r.  Ranks with r>0 receive the message from
+rank (r\-1)/F, which is called the "boss" of r.  The mp_exec call
+interoperates with the mp_recv queue; in other words, messages from
+a rank other than the boss during an mp_exec fanout will be queued for
+later retrieval by mp_recv.  (Without this feature, any parallel task
+which used a message pattern other than logarithmic fanout would be
+susceptible to race conditions.)
+
+The logarithmic fanout and its inward equivalent are so useful that
+mpy provides a couple of higher level functions that use the same
+fanout pattern as mp_exec:
+  mp_handout, msg;
+  total = mp_handin(value);
+.br
+To use mp_handout, rank 0 computes a msg, then all ranks call
+mp_handout, which sends msg (an output on all ranks other than 0)
+everywhere by the same fanout as mp_exec.  To use mp_handin, every
+process computes value, then calls mp_handin, which returns the sum of
+their own value and all their staff, so that on rank 0 mp_handin
+returns the sum of the values from every process.
+
+You can call mp_handin as a function with no arguments to act as a
+synchronization; when rank 0 continues after such a call, you know
+that every other rank has reached that point.  All parallel tasks
+(anything started with mp_exec) must finish with a call to mp_handin,
+or an equivalent guarantee that all processes have returned to an idle
+state when the task finishes on rank 0.
+
+You can retrieve or change the fanout parameter F using the mp_nfan
+function.  The default value is 16, which should be reasonable even
+for very large numbers of processes.
+
+One special parallel task is called mp_connect, which you can use to
+feed interpreted command lines to any single non-0 rank, while all
+other ranks sit idle.  Rank 0 sits in a loop reading the keyboard and
+sending the lines to the "connected" rank, which executes them, and
+sends an acknowledgment back to rank 0.  You run the mp_disconnect
+function to complete the parallel task and drop back to rank 0.
+
+Finally, a note about error recovery.  In the event of an error during
+a parallel task, mpy attempts to gracefully exit the mp_exec, so that
+when rank 0 returns, all other ranks are known to be idle, ready for
+the next mp_exec.  This procedure will hang forever if any one of the
+processes is in an infinite loop, or otherwise in a state where it
+will never call mp_send, mp_recv, or mp_probe, because MPI provides no
+means to send a signal that interrupts all processes.  (This is one of
+the ways in which the MPI environment is "crude".)  The rank 0 process
+is left with the rank of the first process that reported a fault, plus
+a count of the number of processes that faulted for a reason other
+than being sent a message that another rank had faulted.  The first
+faulting process can enter dbug mode via mp_connect; use mp_disconnect
+or dbexit to drop back to serial mode on rank 0.
+.SS Options
+.TP 20
+.RI \-j \0file.i
+includes the Yorick source file
+.I file.i
+as mpy starts in parallel mode on all ranks.  This is equivalent to
+the mp_include function after mpy has started.
+.TP
+.RI \-i \0file.i
+includes the Yorick source file
+.I file.i
+as mpy starts, in serial mode.  This is equivalent to the #include
+directive after mpy has started.
+.TP
+.RI \-batch \0file.i
+includes the Yorick source file
+.I file.i
+as mpy starts, in serial mode.  Your customization file custommp.i, if any, is
+.I not
+read,
+and mpy is placed in batch mode.  Use the help command on the batch
+function (help, batch) to find out more about batch mode.  In batch
+mode, all errors are fatal; normally, mpy will halt execution and
+wait for more input after an error.
+.PP
+.SH AUTHOR
+.PP
+David H. Munro, Lawrence Livermore National Laboratory
+.PP
+.SH FILES
+.PP
+Mpy uses the same files as yorick, except that custom.i is replaced by
+custommp.i (located in /etc/yorick/mpy/ on Debian based systems) and
+the Y_SITE/i\-start/ directory is ignored.
+.SH SEE ALSO
+yorick(1)

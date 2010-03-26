@@ -1,5 +1,5 @@
 /*
- * $Id: mpy1.i,v 1.3 2010-03-05 18:26:52 dhmunro Exp $
+ * $Id: mpy1.i,v 1.4 2010-03-26 02:37:24 dhmunro Exp $
  * compatibility functions for obsolete mpy version 1
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -9,7 +9,9 @@
  */
 
 func mp_recv1(..)
-/* DOCUMENT mp_recv1 ***implements obsolete mpy1 mp_recv API*** */
+/* DOCUMENT mp_recv1
+   ***implements obsolete mpy1 mp_recv API***
+ */
 {
   local dims;
   while (more_args()) accum_dimlist, dims, next_arg();
@@ -18,7 +20,9 @@ func mp_recv1(..)
 if (is_void(mp_recv2)) mp_recv2 = mp_recv;
 
 func mp_from(flag)
-/* DOCUMENT mp_from ***obsolete mpy1 function*** (see mp_probe) */
+/* DOCUMENT mp_from
+   ***obsolete mpy1 function*** (see mp_probe)
+ */
 {
   if (!flag) return mp_probe(-1);  /* undocumented mp_probe feature */
   f = mp_probe(flag != 1);
@@ -26,7 +30,9 @@ func mp_from(flag)
 }
 
 func mp_task(task)
-/* DOCUMENT mp_task ***obsolete mpy1 function*** */
+/* DOCUMENT mp_task
+   ***obsolete mpy1 function***
+ */
 {
   name = nameof(task);
   if (!is_func(task)) error, "cannot register non-function: "+name;
@@ -85,11 +91,15 @@ func _mpy1_start(__f__,__0__,
 }
 
 local mp_start;
-/* DOCUMENT mp_start ***obsolete mpy1 function*** */
+/* DOCUMENT mp_start
+   ***obsolete mpy1 function***
+ */
 mp_start = call;  /* work already done by _mpy1_starter */
 
 func mp_bcast(origin, msg, .., nfan=)
-/* DOCUMENT mp_bcast ***obsolete mpy1 function*** (see mp_handout) */
+/* DOCUMENT mp_bcast
+   ***obsolete mpy1 function*** (see mp_handout)
+ */
 {
   me = (mp_rank - origin + mp_size)%mp_size;
   if (is_void(nfan)) nfan = 2;
