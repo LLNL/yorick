@@ -1,5 +1,5 @@
 /*
- * $Id: tick.c,v 1.1 2005-09-18 22:04:34 dhmunro Exp $
+ * $Id: tick.c,v 1.2 2010-04-01 03:36:20 dhmunro Exp $
  * Implement ticks and labels for GIST coordinate systems
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1228,8 +1228,8 @@ int GaAltTick(GaTickStyle *ticks, int xIsLog, int yIsLog,
   }
 
   if (ticks->vert.flags & TICK_ANY) {
-    altticks= (ticks->horiz.flags & ALT_TICK)? ytick : 0;
-    altlabel= (ticks->horiz.flags & ALT_LABEL)? ylabel : 0;
+    altticks= (ticks->vert.flags & ALT_TICK)? ytick : 0;
+    altlabel= (ticks->vert.flags & ALT_LABEL)? ylabel : 0;
     FindTicks(wymin, wymax, &ticks->vert, yIsLog);
 
     if (ticks->vert.flags & TICK_C) {

@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.10 2010-02-15 05:17:57 dhmunro Exp $
+ * $Id: graph.c,v 1.11 2010-04-01 03:36:20 dhmunro Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3340,6 +3340,7 @@ void Y_gridxy(int nArgs)
   int xgrid= 0;
   int ygrid= 0;
   int iPass= 0;
+  int ticks = 0;
 
   while (stack<=sp) {
     if (!stack->ops) { stack+= 2; continue; }
@@ -3370,40 +3371,33 @@ void Y_gridxy(int nArgs)
   if (YNotNil(keySymbols[2]))
     gistD.ticks.horiz.gridStyle.width=
       gistD.ticks.vert.gridStyle.width= YGetReal(keySymbols[2]);
-  if (YNotNil(keySymbols[3])) {
-    int value= YGetInteger(keySymbols[3]);
-    if (value&1) {
-      GdAltTick(&Base60Ticks,0,0,0);
-      gistD.ticks.horiz.flags|= ALT_TICK;
-      gistD.ticks.horiz.flags&= ~ALT_LABEL;
+  if (YNotNil(keySymbols[3]))
+    ticks |= 1 | ((YGetInteger(keySymbols[3]) & 3) << 1);
+  if (YNotNil(keySymbols[4]))
+    ticks |= 1 | ((YGetInteger(keySymbols[4]) & 3) << 3);
+  if (YNotNil(keySymbols[5]))
+    ticks |= 1 | ((YGetInteger(keySymbols[5]) & 3) << 5);
+  if (ticks&1) {
+    if (ticks&0x2a) {
+      if (ticks&0x2) GdAltTick(&Base60Ticks,0,0,0);
+      else if (ticks&0x8) GdAltTick(&Base60Ticks,&DegreeLabels,0,0);
+      else GdAltTick(&Base60Ticks,&HourLabels,0,0);
+      gistD.ticks.horiz.flags |= ALT_TICK;
+      if (ticks&0x2) gistD.ticks.horiz.flags &= ~ALT_LABEL;
+      else gistD.ticks.horiz.flags |= ALT_LABEL;
     } else {
-      gistD.ticks.horiz.flags&= ~(ALT_TICK|ALT_LABEL);
+      gistD.ticks.horiz.flags &= ~(ALT_TICK|ALT_LABEL);
     }
-    if (value&2) {
-      GdAltTick(0,0,&Base60Ticks,0);
-      gistD.ticks.vert.flags|= ALT_TICK;
-      gistD.ticks.vert.flags&= ~ALT_LABEL;
+    if (ticks&0x54) {
+      if (ticks&0x4) GdAltTick(0,0,&Base60Ticks,0);
+      else if (ticks&0x10) GdAltTick(0,0,&Base60Ticks,&DegreeLabels);
+      else GdAltTick(0,0,&Base60Ticks,&HourLabels);
+      gistD.ticks.vert.flags |= ALT_TICK;
+      if (ticks&0x4) gistD.ticks.vert.flags &= ~ALT_LABEL;
+      else gistD.ticks.vert.flags |= ALT_LABEL;
     } else {
-      gistD.ticks.vert.flags&= ~(ALT_TICK|ALT_LABEL);
+      gistD.ticks.vert.flags &= ~(ALT_TICK|ALT_LABEL);
     }
-  }
-  if (YNotNil(keySymbols[4])) {
-    int value= YGetInteger(keySymbols[4]);
-    if (value&1) GdAltTick(&Base60Ticks,&DegreeLabels,0,0);
-    if (value&2) GdAltTick(0,0,&Base60Ticks,&DegreeLabels);
-    if (value&1) gistD.ticks.horiz.flags|= (ALT_TICK|ALT_LABEL);
-    else gistD.ticks.horiz.flags&= ~(ALT_TICK|ALT_LABEL);
-    if (value&2) gistD.ticks.vert.flags|= (ALT_TICK|ALT_LABEL);
-    else gistD.ticks.vert.flags&= ~(ALT_TICK|ALT_LABEL);
-  }
-  if (YNotNil(keySymbols[5])) {
-    int value= YGetInteger(keySymbols[5]);
-    if (value&1) GdAltTick(&Base60Ticks,&HourLabels,0,0);
-    if (value&2) GdAltTick(0,0,&Base60Ticks,&HourLabels);
-    if (value&1) gistD.ticks.horiz.flags|= (ALT_TICK|ALT_LABEL);
-    else gistD.ticks.horiz.flags&= ~(ALT_TICK|ALT_LABEL);
-    if (value&2) gistD.ticks.vert.flags|= (ALT_TICK|ALT_LABEL);
-    else gistD.ticks.vert.flags&= ~(ALT_TICK|ALT_LABEL);
   }
 
   if (iPass>0) {
