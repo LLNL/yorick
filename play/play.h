@@ -1,5 +1,5 @@
 /*
- * $Id: play.h,v 1.3 2007-06-24 20:32:49 dhmunro Exp $
+ * $Id: play.h,v 1.4 2010-04-08 10:53:49 thiebaut Exp $
  * portability layer programming model declarations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -7,6 +7,9 @@
  * This file is part of yorick (http://yorick.sourceforge.net).
  * Read the accompanying LICENSE file for details.
  */
+
+#ifndef _PLAY_H
+#define _PLAY_H 1
 
 #include "plugin.h"
 
@@ -295,3 +298,5 @@ END_EXTERN_C
 #define P_F10     0x020a
 #define P_F11     0x020b
 #define P_F12     0x020c
+
+#endif /* _PLAY_H */
