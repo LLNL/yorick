@@ -1,109 +1,76 @@
 /*
- * $Id: string.i,v 1.1 2005-09-18 22:06:00 dhmunro Exp $
+ * $Id: string.i,v 1.2 2010-04-13 11:38:18 thiebaut Exp $
  * String and related convenience functions.
- * (Based on routines contributed by Eric Theibaut.)
- */
-
-/*---------------------------------------------------------------------------
- * string.i: string manipulation and miscellaneous functions for Yorick
- *           by Eric THIEBAUT.
- *----------------------------------------------------------------------------
- * History:
- *      01/23/05 by David Munro, reworked for yorick-1.6
- *      02/11/95 by Eric THIEBAUT: added definitions of `scalar()' and
- *              `is_vector()'.
  */
 
 /* ------------------------------------------------------------------------ */
 
 func gettime(&time)
-/* DOCUMENT gettime -- get current time in the form "HH:MM:SS"
- *
- * SYNOPSIS: time= gettime();
- *           gettime, time;
- *
- * HISTORY: October 30, 1995 by Eric THIEBAUT.
- *
- * SEE ALSO: getdate, parsedate, timestamp.
+/* DOCUMENT time = gettime();
+         or gettime, time;
+     Get current time in the form "HH:MM:SS".
+
+   SEE ALSO: getdate, parsedate, timestamp.
  */
-{ return (time= strpart(timestamp(), 12:19)); }
+{ return (time = strpart(timestamp(), 12:19)); }
 
 func getdate(&date)
-/* DOCUMENT getdate -- get date of the day in the form "DD/MM/YY"
- *
- * SYNOPSIS: date= getdate();
- *           getdate, date;
- *
- * HISTORY: October 30, 1995 by Eric THIEBAUT.
- *
- * SEE ALSO: gettime, parsedate, timestamp.
+/* DOCUMENT date = getdate();
+         or getdate, date;
+     Get date of the day in the form "DD/MM/YY".
+
+   SEE ALSO: gettime, parsedate, timestamp.
  */
 {
   local day, month, year;
   parsedate, timestamp(), day, month, year;
-  year-= (year>=2000)? 2000 : 1900; 
+  year -= (year >= 2000) ? 2000 : 1900;
   return (date= swrite(format="%02d/%02d/%02d", day, month, year));
 }
 
-func parsedate(timestamp, &day, &month, &year, &hour, &minute, &second)
-/* DOCUMENT parsedate -- get numerical version of a timestamp
- *
- * SYNOPSIS: parsedate, timestamp, day,month,year, hour,minute,second;
- *           parsedate(timestamp)
- *
- * HISTORY: October 30, 1995 by Eric THIEBAUT.
- *   DHM modified for yorick-1.6 23/Jan/05
- *
- * SEE ALSO: gettime, getdate, timestamp.
+local _parsedate_month_names;
+func parsedate(ts, &day, &month, &year, &hour, &minute, &second)
+/* DOCUMENT parsedate, timestamp, day,month,year, hour,minute,second;
+         or parsedate(timestamp);
+     Get numerical version of time as specified by TIMESTAMP.  When called
+     as a function, the result is [DAY, MONTH, YEAR, HOUR, MINUTE, SECOND].
+
+   SEE ALSO: gettime, getdate, timestamp.
  */
 {
-  dayName= "";
-  monthName= "";
-  day= year= hour= minute= second= 0;
-  sread, timestamp, format="%s%s%d%d:%d:%d%d", dayName, monthName,
-    day, hour, minute, second, year;
-  month= where(monthName == ["Jan", "Feb", "Mar", "Apr",
-                             "May", "Jun", "Jul", "Aug",
-                             "Sep", "Oct", "Nov", "Dec"]);
-  month= numberof(month)? month(1) : 13;
+  day_name = month_name = string();
+  day = year = hour = minute = second = 0;
+  if (sread(ts, format="%s%s%d%d:%d:%d%d", day_name, month_name,
+            day, hour, minute, second, year) != 7) {
+    error, "invalid time-stamp string";
+  }
+  month = where(month_name == _parsedate_month_names);
+  month = (is_array(month) ? month(1) : 13);
   return [day, month, year, hour, minute, second];
 }
+_parsedate_month_names = ["Jan", "Feb", "Mar", "Apr",
+                          "May", "Jun", "Jul", "Aug",
+                          "Sep", "Oct", "Nov", "Dec"];
 
 /* ------------------------------------------------------------------------ */
 
-func strtoupper(s)
+func strtoupper(s) { return strcase(1, s); }
 /* DOCUMENT strtoupper -- convert a string to upper case letters
- *
- * SYNOPSIS: s2 = strtoupper(s)
- *
- * HISTORY: October 10, 1995 by Eric THIEBAUT.
- *   DHM modified for yorick-1.6 23/Jan/05
  *
  * ********** DEPRECATED **************
  *   new code should use strcase directly
  *
  * SEE ALSO: strtolower
  */
-{
-  return strcase(1, s);
-}
 
-func strtolower(s)
+func strtolower(s) { return strcase(0, s); }
 /* DOCUMENT strtolower -- convert a string to lower case letters
- *
- * SYNOPSIS: s2 = strtolower(s)
- *
- * HISTORY: October 10, 1995 by Eric THIEBAUT.
- *   DHM modified for yorick-1.6 23/Jan/05
  *
  * ********** DEPRECATED **************
  *   new code should use strcase directly
  *
  * SEE ALSO: strtoupper
  */
-{
-  return strcase(0, s);
-}
 
 /* DHM removed strtrim, now in i0/ystr.i */
 
@@ -127,23 +94,6 @@ func strchr(s, c, last=)
   if (is_void(last)) last = 0;
   return max(strfind(string(&char(c)), s, back=last)(2,..), 0);
 }
-
-/* ------------------------------------------------------------------------ */
-
-func is_scalar(x)
-/* DOCUMENT is_scalar(object)
- *    returns 1 if OBJECT is a scalar, else 0.
- * SEE ALSO: is_array, is_func, is_void, is_range, is_struct, is_stream
- */
-{ return is_array(x) && !dimsof(x)(1); }
-
-func is_vector(x)
-/* DOCUMENT is_vector(object)
- *    returns 1 if OBJECT is a vector (i.e., OBJECT has a single
- *    dimension), else 0.
- * SEE ALSO: is_array, is_func, is_void, is_range, is_struct, is_stream
- */
-{ return is_array(x) && dimsof(x)(1)==1; }
 
 /* ------------------------------------------------------------------------ */
 
