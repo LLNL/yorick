@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.12 2010-04-13 21:39:24 thiebaut Exp $
+ * $Id: std0.c,v 1.13 2010-04-13 21:50:44 thiebaut Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -1467,11 +1467,11 @@ void Y_round(int nArgs)
 {
   Operand op;
   long number, i;
-  double *x, *y;
-  int promoteID, inPlace;
+  const double *src;
+  double *dst;
+  int promoteID, inPlace, errCode;
 
   if (nArgs != 1) YError("round takes exactly one argument");
-  if (! sp->ops) YError("unexpected keyword");
   sp->ops->FormOperand(sp, &op);
   if ((promoteID = op.ops->promoteID) > T_DOUBLE)
     YError("expecting non-complex numeric argument");
@@ -1482,26 +1482,29 @@ void Y_round(int nArgs)
       return;
     }
     inPlace = 1;
-    y = op.value;
+    dst = op.value;
   } else {
     inPlace = 0;
-    y = BuildResultU(&op, &doubleStruct);
+    dst = BuildResultU(&op, &doubleStruct);
   }
-  x = op.value;
+  src = op.value;
   number = op.type.number;
+  errno = 0;
   for (i = 0; i < number; ++i) {
 #ifdef HAVE_ROUND
-    y[i] = round(x[i]);
+    dst[i] = round(src[i]);
 #else
-    y[i] = floor(x[i] + 0.5);
+    dst[i] = floor(src[i] + 0.5);
 #endif
   }
+  errCode = errno;
   if (inPlace) {
     PopToD(sp - 1);
   } else {
     PopToD(sp - 2);
     Drop(1);
   }
+  if (errCode != 0) YError("mathlib function signals error");
 }
 
 /* ----- lround ----- */
@@ -1515,8 +1518,6 @@ void Y_lround(int nArgs)
   int promoteID, errCode;
 
   if (nArgs != 1) YError("lround takes exactly one argument");
-  /* The following is not needed because a keywork makes 2 arguments. */
-  /* if (sp->ops == NULL) YError("unexpected keyword"); */
   sp->ops->FormOperand(sp, &op);
   if ((promoteID = op.ops->promoteID) > T_DOUBLE)
     YError("expecting non-complex numeric argument");
