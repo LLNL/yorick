@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.11 2010-04-13 11:36:37 thiebaut Exp $
+ * $Id: std0.c,v 1.12 2010-04-13 21:39:24 thiebaut Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -1510,11 +1510,13 @@ void Y_lround(int nArgs)
 {
   Operand op;
   long number, i;
-  double *x, *y;
-  int promoteID;
+  const double *src;
+  long *dst;
+  int promoteID, errCode;
 
   if (nArgs != 1) YError("lround takes exactly one argument");
-  if (! sp->ops) YError("unexpected keyword");
+  /* The following is not needed because a keywork makes 2 arguments. */
+  /* if (sp->ops == NULL) YError("unexpected keyword"); */
   sp->ops->FormOperand(sp, &op);
   if ((promoteID = op.ops->promoteID) > T_DOUBLE)
     YError("expecting non-complex numeric argument");
@@ -1529,22 +1531,25 @@ void Y_lround(int nArgs)
     /* FIXME: we could use lroundf and/or roundf */
     op.ops->ToDouble(&op);
   }
-  x = op.value;
-  y = BuildResultU(&op, &longStruct);
+  src = op.value;
+  dst = BuildResultU(&op, &longStruct);
   number = op.type.number;
+  errno = 0;
   for (i = 0; i < number; ++i) {
 #ifdef HAVE_LROUND
-    y[i] = lround(x[i]);
+    dst[i] = lround(src[i]);
 #else
 # ifdef HAVE_ROUND
-    y[i] = (long)round(x[i]);
+    dst[i] = (long)round(src[i]);
 # else
-    y[i] = (long)floor(x[i] + 0.5);
+    dst[i] = (long)floor(src[i] + 0.5);
 # endif
 #endif
   }
-  PopToD(sp - 2);
+  errCode = errno;
+  PopToL(sp - 2);
   Drop(1);
+  if (errCode != 0) YError("mathlib function signals error");
 }
 
 /* ----- abs ----- */
