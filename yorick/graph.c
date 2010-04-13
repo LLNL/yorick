@@ -1,5 +1,5 @@
 /*
- * $Id: graph.c,v 1.11 2010-04-01 03:36:20 dhmunro Exp $
+ * $Id: graph.c,v 1.12 2010-04-13 11:34:30 thiebaut Exp $
  * Define interactive graphics interface using Gist graphics package.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -9,6 +9,7 @@
  */
 
 #include "gist.h"
+#include "xbasic.h"
 #include "hlevel.h"
 
 /* primitive allowance for other non-X windows systems */
@@ -65,6 +66,8 @@ extern BuiltIn Y_limits, Y_logxy, Y_zoom_factor, Y_unzoom;
 /* Note: range function is interpreted shell for limits */
 
 extern BuiltIn Y_window, Y_hcp_file, Y_hcp_finish, Y_plsys, Y_palette;
+extern BuiltIn Y_window_geometry, Y_window_exists, Y_window_select,
+  Y_window_list;
 
 extern BuiltIn Y_fma, Y_redraw, Y_hcp, Y_hcpon, Y_hcpoff, Y_animate;
 
@@ -2176,6 +2179,126 @@ yg_got_expose(void)
   if (yg_blocking==2) p_clr_alarm(yg_alarm, 0);
   yg_blocking = 0;
   if (ipc) ym_resume(ipc);
+}
+
+void Y_window_geometry(int argc)
+{
+  int win;
+  double *geom;
+  Engine *engine;
+  GpXYMap *map;
+  long dims[2];
+
+  GpTransform *transform;
+  double one_pixel, dpi, xbias, ybias, width, height;
+
+  if (argc != 1) {
+    YError("window_geometry takes exactly one, possibly nil, argument");
+  }
+  if (YNotNil(sp)) {
+    win = (int)YGetInteger(sp);
+  } else {
+    win = GhGetPlotter();
+  }
+  if (win < 0 || win >= GH_NDEVS || ! ghDevices[win].display) {
+    PushDataBlock(RefNC(&nilDB));
+    return;
+  }
+
+  /* NDC -> pixel coordinate transform:
+   *   XPIX = (int)(XSCALE*XNDC + XOFFSET)
+   *   YPIX = (int)(YSCALE*YNDC + YOFFSET)
+   * with:
+   *   XSCALE = ENGINE->map.x.scale    XOFFSET = ENGINE->map.x.offset - margin
+   *   YSCALE = ENGINE->map.y.scale    YOFFSET = ENGINE->map.y.offset - margin
+   * assuming:
+   *   (XSCALE*XNDC + XOFFSET) >= 0
+   *   (YSCALE*YNDC + YOFFSET) >= 0
+   * the reverse transform is:
+   *   XPIX <= XSCALE*XNDC + XOFFSET < XPIX + 1
+   *   YPIX <= YSCALE*YNDC + YOFFSET < YPIX + 1
+   * to avoid rounding errors we choose the middle of the interval:
+   *   XNDC  =  (XPIX - XOFFSET + 0.5)/XSCALE  =  XBIAS + XPIX*ONE_PIXEL
+   *   YNDC  =  (YPIX - YOFFSET + 0.5)/YSCALE  =  YBIAS - YPIX*ONE_PIXEL
+   * with:
+   *   ONE_PIXEL = 1.0/XSCALE = -1.0/YSCALE
+   *       XBIAS = (0.5 - XOFFSET)*ONE_PIXEL
+   *       XBIAS = (YOFFSET - 0.5)*ONE_PIXEL
+   */
+
+  engine = ghDevices[win].display;
+  if (engine) {
+    map= &engine->map;
+    transform = &(engine->transform);
+    dpi = ((XEngine *)engine)->dpi;
+    one_pixel = 2.0/(map->x.scale - map->y.scale);
+#define MARGIN(SIDE) (((XEngine *)engine)->SIDE##Margin)
+    xbias = (MARGIN(left) - map->x.offset + 0.5)/map->x.scale;
+    ybias = (MARGIN(top)  - map->y.offset + 0.5)/map->y.scale;
+#undef MARGIN
+    width = ((XEngine *)engine)->wtop;
+    height = ((XEngine *)engine)->htop;
+  } else {
+    dpi = one_pixel = xbias = ybias = width = height = 0.0;
+  }
+
+  /* Build result array: [DPI, ONE_PIXEL, XBIAS, YBIAS, WIDTH, HEIGHT] */
+  dims[0] = 1L;
+  dims[1] = 6L;
+  geom = ypush_d(dims);
+  geom[0] = dpi;
+  geom[1] = one_pixel;
+  geom[2] = xbias;
+  geom[3] = ybias;
+  geom[4] = width;
+  geom[5] = height;
+}
+
+void Y_window_exists(int argc)
+{
+  long n;
+  if (argc != 1) YError("window_exists takes exactly one argument");
+  n = YGetInteger(sp);
+  PushIntValue(((n >= 0 && n < GH_NDEVS && ghDevices[n].display) ? 1 : 0));
+}
+
+void Y_window_select(int argc)
+{
+  int n;
+  if (argc != 1) YError("window_select takes exactly one argument");
+  n = (int)YGetInteger(sp);
+  if (n >= 0 && n < GH_NDEVS && ghDevices[n].display) {
+    GhSetPlotter(n);
+    PushIntValue(1);
+  } else {
+    PushIntValue(0);
+  }
+}
+
+void Y_window_list(int argc)
+{
+  long *p, i, n, dims[2];
+
+  if (argc != 1 || YNotNil(sp)) {
+    YError("window_list takes exactly one nil argument");
+  }
+  for (n=i=0 ; i<GH_NDEVS ; ++i) {
+    if (ghDevices[i].display) {
+      ++n;
+    }
+  }
+  if (n >= 1) {
+    dims[0] = 1;
+    dims[1] = n;
+    p = ypush_l(dims);
+    for (n=i=0 ; i<GH_NDEVS ; ++i) {
+      if (ghDevices[i].display) {
+	p[n++] = i;
+      }
+    }
+  } else {
+    ypush_nil();
+  }
 }
 
 #undef N_KEYWORDS

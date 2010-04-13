@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.12 2009-10-19 04:37:51 dhmunro Exp $
+ * $Id: graph.i,v 1.13 2010-04-13 11:34:30 thiebaut Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -115,6 +115,56 @@ func winkill(n)
 extern current_window;
 /* DOCUMENT n= current_window()
      returns the number of the current graphics window, or -1 if none.
+ */
+
+extern window_geometry;
+/* DOCUMENT window_geometry()
+         or window_geometry(win)
+     Get geometry settings of the  visible region of display window WIN (or
+     current window  if WIN is nil  or not specified).   These settings are
+     subject to change  each time the window get resized.   The result is a
+     vector of 6 doubles:
+       [DPI, ONE_PIXEL, XBIAS, YBIAS, WIDTH, HEIGHT]
+     where:
+       DPI = dot-per-inch of WIN
+       ONE_PIXEL = pixel size in NDC units
+       XBIAS = abscissa offset in NDC units
+       YBIAS = ordinate offset in NDC units
+       WIDTH = width of visible region in pixels
+       HEIGHT = height of visible region in pixels
+     Pixel coordinates (XPIX,YPIX) run  from top-left (0,0) to bottom-right
+     (WIDTH-1,HEIGHT-1).  The conversion to NDC coordinates is:
+       XNDC = XBIAS + XPIX*ONE_PIXEL;
+       YNDC = YBIAS - YPIX*ONE_PIXEL;
+
+     If window WIN does not exists, all output values are zero.
+
+     Notes:
+       (1) The  top/left  margin(s) used  by  Gist window  to display  some
+           message are not considered as part of the "visible" region.
+       (2) An  extra 0.5  pixel offset has  been added to  (XBIAS,YBIAS) to
+           avoid rounding errors.
+
+   SEE ALSO: window, current_window, viewport, limits. */
+
+extern window_select;
+extern window_exists;
+extern window_list;
+/* DOCUMENT window_select(n)
+         or window_exists(n)
+         or window_list()
+
+     The function window_select makes window number N the current one and
+     return 1 (true); unless window number N does not exists, in which case
+     the current window is left unchanged and 0 (false) is returned.
+
+     The function window_exists returns 1 or 0 whether or not window number
+     N exists.
+
+     The function window_list returns the list of existing windows as a
+     vector of longs or nil if no window currently exists.
+
+   SEE ALSO: window, current_window, redraw, fma, limits, window_geometry.
  */
 
 extern current_mouse;
