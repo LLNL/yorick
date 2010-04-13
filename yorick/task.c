@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.13 2010-02-28 21:52:29 dhmunro Exp $
+ * $Id: task.c,v 1.14 2010-04-13 11:36:38 thiebaut Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -33,6 +33,7 @@ extern int YpParse(void *func);  /* argument non-zero for YpReparse */
 /*--------------------------------------------------------------------------*/
 
 extern BuiltIn Y_quit, Y_include, Y_require, Y_help, Y_exit, Y_error, Y_batch;
+extern BuiltIn Y_current_includes, Y_get_includes;
 extern BuiltIn Y_plug_in, Y_plug_dir, Y_maybe_prompt, Y_suspend, Y_resume;
 extern BuiltIn Y_after, Y_include1, Y_vopen, Y_vclose;
 
@@ -1207,6 +1208,36 @@ void Y_require(int nArgs)
   Drop(nArgs);
   if (i>=sourceTab.nItems)
     IncludeNow();   /* parse and maybe execute file to be included */
+}
+
+void Y_current_include(int argc)
+{
+  if (argc != 1 || YNotNil(sp))
+    y_error("current_include takes exactly one nil argument");
+  if (nYpIncludes > 0 && ypIncludes[nYpIncludes-1].filename != NULL) {
+    *ypush_q(NULL) = p_strcpy(ypIncludes[nYpIncludes-1].filename);
+  } else {
+    ypush_nil();
+  }
+}
+
+void Y_get_includes(int argc)
+{
+  if (argc != 1 || YNotNil(sp))
+    YError("get_includes takes exactly one nil argument");
+  if (sourceTab.nItems > 0) {
+    long i, n;
+    long dims[2];
+    char **s;
+    dims[0] = 1L;
+    dims[1] = (n = sourceTab.nItems);
+    s = ypush_q(dims);
+    for (i = 0; i < n; ++i) {
+      s[i] = p_strcpy(sourceTab.names[i]);
+    }
+  } else {
+    ypush_nil();
+  }
 }
 
 /*--------------------------------------------------------------------------*/

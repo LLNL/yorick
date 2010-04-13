@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.31 2010-02-15 05:17:57 dhmunro Exp $
+ * $Id: std.i,v 1.32 2010-04-13 11:36:37 thiebaut Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -69,7 +69,7 @@ extern help;
        quit
      to quit Yorick.
 
-   SEE ALSO: quit, info, print, copyright, warranty, legal
+   SEE ALSO: about, quit, info, print, copyright, warranty, legal
  */
 
 local copyright, warranty;
@@ -195,7 +195,7 @@ func _help_auto
 func info(topic)
 /* DOCUMENT info, expr
      prints the data type and array dimensions of EXPR.
-   SEE ALSO: help, print
+   SEE ALSO: about, help, print
  */
 {
   if (is_array(topic)) {
@@ -216,6 +216,302 @@ func info(topic)
   } else {
     print, topic;
   }
+}
+
+func about(____n____, ____a____)
+/* DOCUMENT about, pattern;
+         or about, pattern, 1;
+     Search and display documentation about functions (or all symbols if
+     second argument is true) matching regular expression PATTERN.  If
+     multiple matches are found, the user is prompted to select a subject.
+     PATTERN may be a string, or a function or structure definition.  If
+     PATTERN is a string with a trailing "/i", the other part of the
+     regular expression is interpreted so as to ignore case.
+
+   SEE ALSO help, info, symbol_def, symbol_names,
+            strgrep, strcase,
+            select_name. */
+{
+  /* Attempt to use _very_ odd names to avoid clash with caller. */
+  ____a____ = symbol_names((____a____ ? -1 : 2096));
+  if (structof(____n____) != string) {
+    ____n____ = nameof(____n____);
+    if (structof(____n____) != string) {
+      error, "expecting a string, a function, or a structure definition";
+    }
+  }
+  if (strpart(____n____, -1:0) == "/i") {
+    /* There is no 'ignore case' flag in strgrep,
+       so we have to emulate this feature... */
+    ____n____ = strgrep(strcase(0, strpart(____n____, 1:-2)),
+                        strcase(0, ____a____));
+  } else {
+    ____n____ = strgrep(____n____, ____a____);
+  }
+  ____n____ = where(____n____(1,..) <= ____n____(2,..));
+  if (! is_array(____n____)) {
+    write, " Sorry no match found.";
+    return;
+  }
+  if (numberof(____n____) == 1) {
+    ____a____ = ____a____(____n____(1));
+  } else {
+    ____a____ = ____a____(____n____);
+    ____a____ = select_name(____a____(sort(____a____)), bol=" ",
+                            prompt=" Choose one subject: ");
+  }
+  if (! is_void(____a____)) {
+    /* Explicitely filter range operators which have a built-in
+       function counterpart to avoid a deadly bug in Yorick. */
+    if (____a____ == "sum") {
+      write, format="%s\n%s\n%s\n%s\n",
+        "/* DOCUMENT sum(x)",
+        "     Returns sum of values in array X.",
+        "     Can also be used as a range operator.",
+        "   SEE ALSO avg, max, min. */";
+    } else if (____a____ == "avg") {
+      write, format="%s\n%s\n%s\n%s\n",
+        "/* DOCUMENT avg(x)",
+        "     Returns average of values in array X.",
+        "     Can also be used as a range operator.",
+        "   SEE ALSO max, min, sum. */";
+    } else if (____a____ == "min") {
+      write, format="%s\n%s\n%s\n%s\n",
+        "/* DOCUMENT min(x)",
+        "     Returns minimum value in array X.",
+        "     Can also be used as a range operator.",
+        "   SEE ALSO avg, max, sum. */";
+    } else if (____a____ == "max") {
+      write, format="%s\n%s\n%s\n%s\n",
+        "/* DOCUMENT max(x)",
+        "     Returns maximum value in array X.",
+        "     Can also be used as a range operator.",
+        "   SEE ALSO avg, min, sum. */";
+    } else {
+      help, symbol_def(____a____);
+    }
+  }
+}
+
+func select_name(list, index=,  prompt=, forever=,
+                 label=, width=, sep=, eol=, bol=, maxcols=)
+/* DOCUMENT select_name(list)
+     Print out array of strings LIST (using print_columns) and
+     interactively ask the user a number/item in the list and return the
+     selected item.  If keyword INDEX is true, the item number is returned
+     rather than its value.  The prompt string can be set with keyword PROMPT
+     (default is " Select one item: ").  If keyword FOREVER is true the user
+     is prompted until a valid choice is made.
+
+     Other keywords are passed to print_columns: LABEL (as
+     LABEL), WIDTH, SEP, EOL, BOL and MAXCOLS.
+
+   SEE ALSO print_columns. */
+{
+  number = numberof(list);
+  print_columns, list, label=(is_void(label) ? " - " : label),
+    width=width, sep=sep, eol=eol, bol=bol, maxcols=maxcols;
+  if (is_void(prompt)) prompt=" Select one item: ";
+  for (;;) {
+    t = string(0);
+    k = 0;
+    s = rdline(prompt=prompt);
+    if (sread(s, format="%d %s", k, t) == 1 && k >= 1 && k <= number) break;
+    if (numberof((k = where(list == s))) == 1) {
+      k = k(1);
+      break;
+    }
+    if (! forever) return;
+  }
+  return (index ? k : list(k));
+}
+
+local __select_file_dir;
+func select_file(dir, prompt=, width=, forever=, all=, pattern=)
+/* DOCUMENT select_file()
+         or select_file(dir)
+     Interactively select name of an existing file starting at current working
+     directory or at last selected directory or at DIR if this argument is
+     specified.  The function returns full path of selected file or nil [] if
+     no valid selection is made.  If keyword FOREVER is true, a file must be
+     selected for the function to return.
+
+     If keyword ALL is true, then all files and directories get displayed --
+     even the "hidden" ones which name start with a dot.  In any cases, the
+     current and parent directories ("." and "..") get displayed to allow the
+     user to re-scan the current directory or to go into the parent directory.
+
+     Keyword PATTERN can be set to a regular expression to select only files
+     that match PATTERN.  For instance, PATTERN="\\.(tgz|tar\\.gz)$" would
+     match any files with suffix ".tgz" or ".tar.gz".
+
+     Keyword WIDTH can be used to specify a different text width than the
+     default of 79 characters.
+
+     Keyword PROMPT can be set to change the default prompt:
+       " Select file/directory: "
+
+   SEE ALSO lsdir, regmatch, print_columns. */
+{
+  /* fool codger */ extern __select_file_dir;
+  local dir_list;
+  if (is_void(width)) width = 79;
+  if (is_void(prompt)) prompt=" Select file/directory: ";
+  if (! is_void(pattern) && ! (is_string(pattern) && is_scalar(pattern))) {
+    error, "value of keyword PATTERN must be nil or a scalar string";
+  }
+  cwd = get_cwd();
+  if (! is_void(dir)) __select_file_dir = dir;
+  if (structof(__select_file_dir) != string) {
+    __select_file_dir = cwd;
+  } else {
+    __select_file_dir = cd(__select_file_dir);
+  }
+
+  hline = "-------------------------------------";
+  for (;;) {
+    file_list = lsdir(__select_file_dir, dir_list);
+    if (! all) {
+      if ((n = numberof(file_list)) > 0) {
+        i = where(strpart(file_list, 1:1) != ".");
+        if (numberof(i) != n) file_list = file_list(i);
+      }
+      if ((n = numberof(dir_list)) > 0) {
+        i = where(strpart(dir_list, 1:1) != ".");
+        if (numberof(i) != n) dir_list = dir_list(i);
+      }
+    }
+    if (pattern && (n = numberof(file_list)) > 0) {
+      i = where(strgrep(pattern, file_list)(2,..) >= 0);
+      if (numberof(i) != n) file_list = file_list(i);
+    }
+    grow, dir_list, ".", ".."; /* use . to allow reading directory again */
+    dir_list = dir_list(sort(dir_list));
+    list = dir_list + "/";
+    if (is_array(file_list)) {
+      grow, list, file_list(sort(file_list));
+      file_list = [];
+    }
+    ndirs = numberof(dir_list);
+    number = numberof(list);
+
+    /* Print out directory list. */
+    text = print_columns(list, label=": ", width=width,
+                         sep=, eol=" ", bol="| ", maxcols=);
+    text_len = strlen(text(1))+1;
+    len = max(width, text_len);
+    while (strlen(hline) < len) hline += hline;
+    head_line = "[" + __select_file_dir + "]";
+    n = (len - strlen(head_line) - 2)/2;
+    if (n > 0) head_line = strpart(hline, 1:n)+head_line;
+    n = len - strlen(head_line) - 2;
+    if (n > 0) head_line += strpart(hline, 1:n);
+    write, format=",%s.\n", head_line;
+    write, format=swrite(format="%%-%ds|\n", len-1), text;
+    write, format="`%s'\n", strpart(hline, 1:len-2);
+    for (;;) {
+      t = string(0);
+      k = 0;
+      s = rdline(prompt=prompt);
+      if (sread(s, format="%d %s", k, t) == 1 && k >= 1 && k <= number) break;
+      if (numberof((k = where(list == s))) == 1) {
+        k = k(1);
+        break;
+      }
+      if (numberof((k = where(dir_list == s))) == 1) {
+        k = k(1);
+        break;
+      }
+      if (! forever) {
+        cd, cwd;
+        return;
+      }
+    }
+    if (k > ndirs) {
+      cd, cwd;
+      return __select_file_dir + list(k);
+    }
+    __select_file_dir = cd(__select_file_dir + dir_list(k));
+  }
+}
+
+func print_columns(list, label=, width=, start=, sep=, eol=, bol=, maxcols=)
+/* DOCUMENT print_columns, list;
+         or print_columns(list);
+     Write array of strings LIST in columns.  In subroutine form, the result
+     is printed to standard output; otherwise, the function returns an array
+     of formatted strings (one per row).
+
+     The maximum width (in number of characters) of each row can be specified
+     with keyword WIDTH (default 79).  But actual width may be larger, since
+     at least one column is produced.
+
+     The maximum number of columns may be limited by using keyword MAXCOLS (by
+     default, there is no limit).
+
+     Keywords BOL, SEP and EOL, can be set to scalar strings to use at begin
+     of line, between each column, at end of line respectively.  SEP can also
+     be the number of spaces to insert between columns.  The default are:
+     BOL="", SEP=5 (five spaces) and EOL=string(0).
+
+     Keyword LABEL can be used to number items. LABEL must be a scalar string.
+     If LABEL contains a "%d", it is used to format the index; otherwise,
+     LABEL is the string to use as separator between indices and items.  For
+     instance:
+       label="[%d] "  yields: "[1] first_item    [2] second_item  ..."
+       label=" - "    yields: "1 - first_item    2 - second_item  ..."
+
+     Keyword START can be used to specify the starting index for numbering
+     items (default START=1).
+
+
+   SEE ALSO swrite, select_name, select_file. */
+{
+  number = numberof(list);
+  if (is_scalar(label) && is_string(label)) {
+    if (is_void(start)) start = 1;
+    index = indgen(start:start+number-1);
+    if (strmatch(label, "%d")) {
+      index = swrite(format=label, index);
+    } else {
+      index = swrite(format="%d", index) + label;
+    }
+    len = strlen(index);
+    if (max(len) != min(len)) {
+      /* Justify index list. */
+      index = swrite(format=swrite(format="%%%ds", max(len)), index);
+    }
+    list = index + list(*);
+  } else if (is_void(label)) {
+    list = list(*);
+  } else {
+    error, "value of keyword LABEL must be nil or a scalar string";
+  }
+
+  if (is_void(bol)) bol = "";
+  if (is_void(eol)) eol = string(0);
+  if (is_void(width)) width = 79;
+  if (structof(sep) != string) {
+    /* Convert margin separator into spaces. */
+    if (is_void(sep)) sep = 5;
+    sep = swrite(format=swrite(format="%%%ds", sep), "");
+  }
+  len = max(strlen(list));
+  slen = strlen(sep);
+  ncols = (width + slen - strlen(bol) - strlen(eol))/(len + slen);
+  if (! is_void(maxcols) && ncols > maxcols) ncols = maxcols;
+  if (ncols < 1) ncols = 1;
+  nrows = (number+ncols-1)/ncols;
+
+  (tmp = array(string, nrows, ncols))(1:number) = unref(list);
+  if (ncols > 1) {
+    fmt = swrite(format="%%-%ds%s", len, sep);
+    for (j=1 ; j<ncols ; ++j) bol += swrite(format=fmt, tmp(,j));
+  }
+  fmt = (eol ? swrite(format="%%-%ds%s", len, eol) : "%s");
+  bol += swrite(format=fmt, tmp(,ncols));
+  if (! am_subroutine()) return bol;
+  write, format="%s\n", bol;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -383,7 +679,7 @@ func reform(x, ..)
 }
 
 func accum_dimlist(&dims, d)
-/* DOCUMENT accum_dimslist, dims, d
+/* DOCUMENT accum_dimlist, dims, d
      accumulate a dimension argument D onto a dimension list DIMS.
      This can be used to emulate the dimension lists supplied to the
      array function.  For example:
@@ -429,6 +725,29 @@ extern eq_nocopy;
      Note that scalar int, long, and double variables are always copied,
      so you cannot count on eq_nocopy setting up an "equivalence"
      between variables.
+
+   SEE ALSO: swap, unref.
+ */
+
+extern swap;
+/* DOCUMENT swap, a, b;
+     Exchanges the contents of variables A and B without requiring any
+     temporary copy.  The result of the call is identical to:
+       tmp = a; a = b; b = tmp;
+     which makes a copy of A and then a copy of B.  Another possibility which
+     avoids any copy of A nor B is:
+       local tmp;
+       eq_nocopy, tmp, a; eq_nocopy, a, b; eq_nocopy, b, tmp;
+
+   SEE ALSO: eq_nocopy, unref.
+ */
+
+extern unref;
+/* DOCUMENT unref(x)
+     Returns X, destroying X in the process if it is an array (useful to
+     deal with temporary big arrays).
+
+   SEE ALSO: eq_nocopy, swap.
  */
 
 extern wrap_args;
@@ -667,7 +986,7 @@ extern is_array;
      structure definition, index range, I/O stream, etc.), else 0.
      An array OBJECT can be written to or read from a binary file;
      non-array Yorick data types cannot.
-  SEE ALSO: is_func, is_void, is_range, is_struct, is_stream
+  SEE ALSO: is_func, is_void, is_range, is_struct, is_stream, is_scalar
  */
 
 extern is_func;
@@ -713,6 +1032,90 @@ extern is_list;
      returns 1 if OBJECT is a list or nil, else 0 (see _lst).
   SEE ALSO: is_array, is_func, is_void, is_range, is_struct, _lst
  */
+
+extern is_scalar;
+extern is_vector;
+extern is_matrix;
+/* DOCUMENT is_scalar(x)
+         or is_vector(x)
+         or is_matrix(x)
+     These functions return true if X is (respectively) a scalar, a vector
+     (i.e., a 1-D array), or a matrix (i.e., a 2-D array).
+
+    SEE ALSO: dimsof,
+              is_array, is_func, is_hash, is_integer, is_list, is_range,
+              is_stream, is_struct, is_void.
+ */
+
+extern is_integer;
+extern is_real;
+extern is_complex;
+extern is_numerical;
+extern is_string;
+extern is_pointer;
+/* DOCUMENT is_integer(x)
+         or is_real(x)
+         or is_complex(x)
+         or is_numerical(x)
+         or is_string(x)
+         or is_pointer(x)
+     These functions  return true if  X is an  array of type:  integer, real
+     (i.e.  double or  float), complex,  numerical (i.e.  integer,  real or
+     complex), string, or pointer.
+
+   SEE ALSO: structof, dimsof,
+             is_array, is_func, is_hash, is_list, is_range, is_scalar,
+             is_stream, is_struct, is_void.
+ */
+
+local Y_CHAR, Y_SHORT, Y_INT, Y_LONG;
+local Y_FLOAT, Y_DOUBLE, Y_COMPLEX;
+local Y_STRING, Y_POINTER, Y_STRUCT;
+local Y_RANGE, Y_LVALUE, Y_VOID;
+local Y_FUNCTION, Y_BUILTIN;
+local Y_STRUCTDEF, Y_STREAM, Y_OPAQUE;
+extern identof;
+/* DOCUMENT identof(object)
+     Returns type identifier of OBJECT as a long integer:
+       0 (Y_CHAR)      for an array of char('s)
+       1 (Y_SHORT)     for an array of short('s)
+       2 (Y_INT)       for an array of int('s)
+       3 (Y_LONG)      for an array of long('s)
+       4 (Y_FLOAT)     for an array of float('s)
+       5 (Y_DOUBLE)    for an array of double('s)
+       6 (Y_COMPLEX)   for an array of complex('s)
+       7 (Y_STRING)    for an array of string('s)
+       8 (Y_POINTER)   for an array of pointer('s)
+       9 (Y_STRUCT)    for a structure object
+      10 (Y_RANGE)     for a range object
+      11 (Y_LVALUE)    for a lvalue
+      12 (Y_VOID)      for a void (undefined) object
+      13 (Y_FUNCTION)  for a function array
+      14 (Y_BUILTIN)   for a builtin array
+      15 (Y_STRUCTDEF) for a data type or structure definition
+      16 (Y_STREAM)    for a file stream
+      17 (Y_OPAQUE)    for an opaque object
+
+  SEE ALSO typeof, structof.
+ */
+Y_CHAR = 0;
+Y_SHORT = 1;
+Y_INT = 2;
+Y_LONG = 3;
+Y_FLOAT = 4;
+Y_DOUBLE = 5;
+Y_COMPLEX = 6;
+Y_STRING = 7;
+Y_POINTER = 8;
+Y_STRUCT = 9;
+Y_RANGE = 10;
+Y_LVALUE = 11;
+Y_VOID = 12;
+Y_FUNCTION = 13;
+Y_BUILTIN = 14;
+Y_STRUCTDEF = 15;
+Y_STREAM = 16;
+Y_OPAQUE = 17;
 
 /*--------------------------------------------------------------------------*/
 
@@ -873,14 +1276,25 @@ extern poly;
 extern ceil;
 /* DOCUMENT ceil(x)
      returns the smallest integer not less than x (no-op on integers).
-  SEE ALSO: floor
+  SEE ALSO: floor, round
  */
 
 extern floor;
 /* DOCUMENT floor(x)
      returns the largest integer not greater than x (no-op on integers).
-  SEE ALSO: ceil
+  SEE ALSO: ceil, round
  */
+
+extern lround;
+extern round;
+/* DOCUMENT round(x);
+            lround(x);
+     These functions return X rounded to the nearest integer.  The result of
+     round(X) is a floating point value, while that of lround(X) is a long
+     integer.  They are respectively equivalent to: floor(X+0.5) and
+     long(floor(X+0.5)).
+   SEE ALSO: floor, ceil
+*/
 
 extern abs;
 /* DOCUMENT abs(x)
@@ -2511,6 +2925,15 @@ extern close;
             rename, remove
  */
 
+extern filepath;
+/* DOCUMENT filepath(file);
+     Return full path name of file(s).  Argument FILE can be either an open
+     binary/text file or an array of file names (in the latter case tilde
+     expansion is performed and the result will have the same shape as the
+     input).
+
+   SEE ALSO open. */
+
 extern rename;
 extern remove;
 /* DOCUMENT rename, old_filename, new_filename
@@ -2856,6 +3279,22 @@ extern include1;
      call to rdline).
 
    SEE ALSO: include, funcdef
+ */
+
+extern current_include;
+/* DOCUMENT current_include()
+     If Yorick is parsing a file, this function returns the absolute path
+     of this file; otherwise, this function returns nil.
+
+   SEE ALSO include, require.
+ */
+
+extern get_includes;
+/* DOCUMENT get_includes()
+     Returns an array of strings with the names of all included files so
+     far.
+
+   SEE ALSO: set_path, current_include, include, require.
  */
 
 func include_all(dir, ..)
@@ -3393,7 +3832,7 @@ local at_pdb_open, at_pdb_close;
 
      at_pdb_open:
      000  Major-Order:  value specified in file is correct
-     001  Major-Order:102 always 
+     001  Major-Order:102 always
      002  Major-Order:  opposite from what file says
      003  Major-Order:101 always
 
@@ -4659,7 +5098,7 @@ extern symbol_def;
      of the Yorick language -- the lack of pointers to functions -- and
      should be used for such purposes as hook lists (see openb).
 
-   SEE ALSO: symbol_set
+   SEE ALSO: symbol_set, symbol_exists
  */
 
 extern symbol_set;
@@ -4672,8 +5111,42 @@ extern symbol_set;
      of the Yorick language -- the lack of pointers to functions, streams,
      bookmarks, and other special non-array data types.
 
-   SEE ALSO: symbol_def
+   SEE ALSO: symbol_def, symbol_exists
  */
+
+extern symbol_exists;
+/* DOCUMENT symbol_exists(name)
+     Check whether variable/function named NAME exists.  This routine can be
+     used prior to symbol_def to check existence of a symbol since symbol_def
+     raise an error for non-existing symbol.
+
+   SEE ALSO symbol_def, symbol_names, symbol_set.*/
+
+extern symbol_names;
+/* DOCUMENT symbol_names()
+         or symbol_names(flags)
+     Return an  array of  strings with  the names of  all symbols  of given
+     type(s) found in  global symbol table.  To select  the type of symbol,
+     FLAGS is be the bitwise-or of one or more of the following bits:
+         1 - basic array symbols
+         2 - structure instance symbols
+         4 - range symbols
+         8 - nil symbols (i.e. symbols undefined at current scope level)
+        16 - interpreted function symbols
+        32 - builtin function symbols
+        64 - structure definition symbols
+       128 - file stream symbols
+       256 - opaque symbols (other than the ones below)
+       512 - list objects
+      1024 - auto-loaded functions
+
+     The special value FLAGS = -1 can be used to get all names found in
+     global symbol table.  The default (if FLAGS is nil or omitted) is to
+     return the names of all symbols but the nil ones.  Beware that lists,
+     hash tables and auto-loaded functions are also opaque symbols (use
+     0xffffff7f to get *all* opaque symbols).
+
+   SEE ALSO symbol_def, symbol_exists, symbol_set.*/
 
 /*--------------------------------------------------------------------------*/
 

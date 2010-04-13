@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.4 2008-12-07 03:17:42 dhmunro Exp $
+ * $Id: ascio.c,v 1.5 2010-04-13 11:36:37 thiebaut Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -19,6 +19,7 @@
 
 extern BuiltIn Y_open, Y_close, Y_read, Y_write, Y_sread, Y_swrite;
 extern BuiltIn Y_rdline, Y_bookmark, Y_backup, Y_popen, Y_fflush;
+extern BuiltIn Y_filepath;
 
 extern char *MakeErrorLine(long lineNumber, const char *filename);
 
@@ -289,6 +290,36 @@ void Y_close(int nArgs)
     if (binary->stream) binary->ioOps->Close(binary);
     binary->stream = 0;
     if (binary->contentsLog) FreeClogFile(binary);
+  }
+}
+
+void Y_filepath(int argc)
+{
+  Dimension *dims;
+  Operand op;
+  char **input, **output;
+  long i, n;
+
+  if (argc != 1) YError("filepath function takes exactly one argument");
+  op.ops= 0;
+  if (sp->ops) sp->ops->FormOperand(sp, &op);
+  if (op.ops == &stringOps) {
+    input = YGet_Q(sp, 0, &dims);
+    n = TotalNumber(dims);
+    output = ((Array *)PushDataBlock(NewArray(&stringStruct, dims)))->value.q;
+    for (i = 0; i < n; ++i) {
+      output[i] = (input[i] ? YExpandName(input[i]) : 0);
+    }
+  } else if (op.ops == &streamOps) {
+    output = ypush_q(NULL);
+    output[0] = p_strcpy(((IOStream *)op.value)->fullname);
+  } else if (op.ops == &textOps) {
+    output = ypush_q(NULL);
+    output[0] = p_strcpy(((TextStream *)op.value)->fullname);
+  } else if (op.ops == &voidOps) {
+    PushDataBlock(RefNC(&nilDB));
+  } else {
+    YError("bad argument: expecting text/binary file or file name(s)");
   }
 }
 

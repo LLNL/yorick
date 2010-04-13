@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.c,v 1.2 2005-11-13 21:01:56 dhmunro Exp $
+ * $Id: ydata.c,v 1.3 2010-04-13 11:36:37 thiebaut Exp $
  * Implement functions for Yorick-specific types of data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -921,5 +921,152 @@ void Y_symbol_set(int nArgs)
   }
   glob->ops= sp->ops;
 }
+
+void Y_symbol_exists(int argc)
+{
+  if (argc != 1) YError("symbol_exists takes exactly one argument");
+  PushIntValue(HashFind(&globalTable, YGetString(sp), 0L));
+}
+
+#define GET_ARRAY       1
+#define GET_STRUCT      2
+#define GET_RANGE       4
+#define GET_VOID        8
+#define GET_FUNCTION   16
+#define GET_BUILTIN    32
+#define GET_STRUCTDEF  64
+#define GET_STREAM    128
+#define GET_OPAQUE    256
+#define GET_LIST      512
+#define GET_AUTOLOAD 1024
+
+void Y_symbol_names(int argc)
+{
+  extern Operations listOps;
+  long i, nitems, number;
+  char **ret;
+  int match[T_OPAQUE+1];
+  int type, flags, pass;
+  int omit_array, omit_list, omit_autoload, omit_opaque;
+  Dimension *dims = tmpDims;
+
+  tmpDims = (Dimension *)0;
+  if (dims != (Dimension *)0) FreeDimension(dims);
+  if (argc != 1) YError("symbol_list takes exactly one argument");
+  if (YNotNil(sp)) {
+    flags = YGetInteger(sp);
+  } else {
+    flags = (GET_ARRAY | GET_STRUCT | GET_RANGE | GET_FUNCTION | GET_BUILTIN |
+             GET_STRUCTDEF | GET_STREAM | GET_OPAQUE);
+  }
+  nitems = globalTable.nItems;
+  if (nitems <= 0) {
+    /* No symbols defined. */
+    PushDataBlock(RefNC(&nilDB));
+    return;
+  }
+  if (flags == -1) {
+    /* Return names of all symbols ever defined. */
+    tmpDims = NewDimension(nitems, 1L, (Dimension *)0);
+    ret = ((Array *)PushDataBlock(NewArray(&stringStruct, tmpDims)))->value.q;
+    for (i = 0; i < nitems; ++i) {
+      ret[i] = p_strcpy(globalTable.names[i]);
+    }
+    return;
+  }
+  omit_array = ((flags & GET_ARRAY) == 0);
+  omit_list = ((flags & GET_LIST) == 0);
+  omit_autoload = ((flags & GET_AUTOLOAD) == 0);
+  omit_opaque = ((flags & GET_OPAQUE) == 0);
+  if ((flags & (GET_LIST | GET_AUTOLOAD)) != 0) {
+    flags |= GET_OPAQUE;
+  }
+  for (i = 0; i <= T_OPAQUE; ++i) {
+    match[i] = 0;
+  }
+  match[T_CHAR]      = ((flags & GET_ARRAY) != 0);
+  match[T_SHORT]     = ((flags & GET_ARRAY) != 0);
+  match[T_INT]       = ((flags & GET_ARRAY) != 0);
+  match[T_LONG]      = ((flags & GET_ARRAY) != 0);
+  match[T_FLOAT]     = ((flags & GET_ARRAY) != 0);
+  match[T_DOUBLE]    = ((flags & GET_ARRAY) != 0);
+  match[T_COMPLEX]   = ((flags & GET_ARRAY) != 0);
+  match[T_STRING]    = ((flags & GET_ARRAY) != 0);
+  match[T_POINTER]   = ((flags & GET_ARRAY) != 0);
+  match[T_STRUCT]    = ((flags & GET_STRUCT) != 0);
+  match[T_RANGE]     = ((flags & GET_RANGE) != 0);
+#ifdef GET_LVALUE
+  match[T_LVALUE]    = ((flags & GET_LVALUE) != 0);
+#endif
+  match[T_VOID]      = ((flags & GET_VOID) != 0);
+  match[T_FUNCTION]  = ((flags & GET_FUNCTION) != 0);
+  match[T_BUILTIN]   = ((flags & GET_BUILTIN) != 0);
+  match[T_STRUCTDEF] = ((flags & GET_STRUCTDEF) != 0);
+  match[T_STREAM]    = ((flags & GET_STREAM) != 0);
+  match[T_OPAQUE]    = ((flags & GET_OPAQUE) != 0);
+
+  /* Counter number of matching symbols. */
+  ret = NULL; /* avoids compiler warning */
+  number = 0;
+  for (pass = 0; pass <= 1; ++pass) {
+    if (pass) {
+      if (number <= 0) {
+	/* No matching symbols found. */
+	PushDataBlock(RefNC(&nilDB));
+	return;
+      }
+      tmpDims = NewDimension(number, 1L, (Dimension *)0);
+      ret = ((Array *)PushDataBlock(NewArray(&stringStruct, tmpDims)))->value.q;
+    }
+    for (i=0 ; i<nitems ; ++i) {
+      OpTable *sym_ops = globTab[i].ops;
+      if (sym_ops == &dataBlockSym) {
+	Operations *ops = globTab[i].value.db->ops;
+	type = ops->typeID;
+	if ((unsigned int)type > T_OPAQUE || ! match[type]) {
+	  continue;
+	}
+	if (type == T_OPAQUE) {
+	  if (ops == &listOps) {
+	    if (omit_list) {
+	      continue;
+	    }
+	  } else if (ops == &auto_ops) {
+	    if (omit_autoload) {
+	      continue;
+	    }
+	  } else {
+	    if (omit_opaque) {
+	      continue;
+	    }
+	  }
+	}
+      } else if (sym_ops == &longScalar ||
+		 sym_ops == &intScalar ||
+		 sym_ops == &doubleScalar) {
+	if (omit_array) {
+	  continue;
+	}
+      }
+      if (pass) {
+	*ret++ = p_strcpy(globalTable.names[i]);
+      } else {
+	++number;
+      }
+    }
+  }
+}
+
+#undef GET_ARRAY
+#undef GET_STRUCT
+#undef GET_RANGE
+#undef GET_VOID
+#undef GET_FUNCTION
+#undef GET_BUILTIN
+#undef GET_STRUCTDEF
+#undef GET_STREAM
+#undef GET_OPAQUE
+#undef GET_LIST
+#undef GET_AUTOLOAD
 
 /*--------------------------------------------------------------------------*/

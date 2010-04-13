@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.10 2010-02-28 21:52:29 dhmunro Exp $
+ * $Id: std0.c,v 1.11 2010-04-13 11:36:37 thiebaut Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -31,8 +31,10 @@ char *yVersion= Y_VERSION;
 #endif
 
 extern BuiltIn Y_yorick_init, Y_set_path, Y_reshape, Y_array, Y_structof,
-  Y_dimsof, Y_orgsof, Y_sizeof, Y_numberof, Y_typeof, Y_nameof, Y_is_array,
-  Y_is_func, Y_is_void, Y_is_range, Y_is_struct, Y_is_stream, Y_am_subroutine,
+  Y_dimsof, Y_orgsof, Y_sizeof, Y_numberof, Y_typeof, Y_nameof, Y_identof,
+  Y_is_array, Y_is_scalar, Y_is_vector, Y_is_matrix, Y_is_func, Y_is_void,
+  Y_is_range, Y_is_struct, Y_is_stream, Y_is_integer, Y_is_real, Y_is_complex, 
+  Y_is_numerical, Y_is_string, Y_is_pointer, Y_am_subroutine, Y_unref, Y_swap,
   Y_sin, Y_cos, Y_tan, Y_asin, Y_acos, Y_atan, Y_sinh, Y_cosh, Y_tanh,
   Y_exp, Y_log, Y_log10, Y_sqrt, Y_ceil, Y_floor, Y_abs, Y_sign, Y_conj,
   Y_min, Y_max, Y_sum, Y_avg, Y_allof, Y_anyof, Y_noneof, Y_nallof, Y_where,
@@ -72,6 +74,10 @@ extern int yBatchMode;  /* may be set with -batch, see std0.c */
 
 static void *y_mmfail(unsigned long n);
 static void y_on_keyline(char *msg);
+
+static int get_type(Symbol *s);
+/* Returns the type identifier (typeID) of stack symbol S, taking care of
+   L-values and of following references.  Keyword symbols yield -1. */
 
 int
 y_launch(int argc, char *argv[],
@@ -822,6 +828,83 @@ void Y_is_array(int nArgs)
   PushIntValue(isArray);
 }
 
+void Y_is_scalar(int nargs)
+{
+  Symbol *s;
+  int result;
+
+  if (nargs != 1) YError("is_scalar takes exactly one argument");
+  s = sp;
+  for (;;) {
+    if (s->ops == &dataBlockSym) {
+      Operand op;
+      Operations *ops =  s->value.db->ops;
+      result = ((ops->isArray || ops == &lvalueOps)
+		&& s->ops->FormOperand(s, &op)->type.dims == (Dimension *)0);
+      break;
+    } else if (s->ops != &referenceSym) {
+      /* Must be one of: intScalar, longScalar, or doubleScalar. */
+      result = 1;
+      break;
+    }
+    s = &globTab[s->index];
+  }
+  PushIntValue(result);
+}
+
+void Y_is_vector(int nargs)
+{
+  Symbol *s;
+  int result;
+
+  if (nargs != 1) YError("is_vector takes exactly one argument");
+  s = sp;
+  for (;;) {
+    if (s->ops == &dataBlockSym) {
+      Operand op;
+      Dimension *dims;
+      Operations *ops =  s->value.db->ops;
+      result = ((ops->isArray || ops == &lvalueOps)
+		&& (dims = s->ops->FormOperand(s, &op)->type.dims) != (Dimension *)0
+		&& dims->next == (Dimension *)0);
+      break;
+    } else if (s->ops != &referenceSym) {
+      /* Must be one of: intScalar, longScalar, or doubleScalar. */
+      result = 0;
+      break;
+    }
+    s = &globTab[s->index];
+  }
+  PushIntValue(result);
+}
+
+void Y_is_matrix(int nargs)
+{
+  Symbol *s;
+  int result;
+
+  if (nargs != 1) YError("is_matrix takes exactly one argument");
+  s = sp;
+  for (;;) {
+    if (s->ops == &dataBlockSym) {
+      Operand op;
+      Dimension *dims;
+      Operations *ops =  s->value.db->ops;
+      result = ((ops->isArray || ops == &lvalueOps)
+		&& (dims = s->ops->FormOperand(s, &op)->type.dims) != (Dimension *)0
+		&& dims->next != (Dimension *)0
+                && dims->next->next == (Dimension *)0);
+      break;
+    } else if (s->ops != &referenceSym) {
+      /* Must be one of: intScalar, longScalar, or doubleScalar. */
+      result = 0;
+      break;
+    }
+    s = &globTab[s->index];
+  }
+  PushIntValue(result);
+}
+
 void Y_is_func(int nArgs)
 {
   Symbol *s= sp;
@@ -930,6 +1013,145 @@ void Y_is_stream(int nArgs)
   PushIntValue(isStream);
 }
 
+void Y_is_integer(int nargs)
+{
+  int type;
+  if (nargs != 1) YError("is_integer takes exactly one argument");
+  type = get_type(sp);
+  PushIntValue(type >= T_CHAR && type <= T_LONG);
+}
+
+void Y_is_real(int nargs)
+{
+  int type;
+  if (nargs != 1) YError("is_real takes exactly one argument");
+  type = get_type(sp);
+  PushIntValue(type == T_DOUBLE || type == T_FLOAT);
+}
+
+void Y_is_complex(int nargs)
+{
+  if (nargs != 1) YError("is_complex takes exactly one argument");
+  PushIntValue(get_type(sp) == T_COMPLEX);
+}
+
+void Y_is_numerical(int nargs)
+{
+  int result;
+  if (nargs != 1) YError("is_numerical takes exactly one argument");
+  switch (get_type(sp)) {
+  case T_CHAR:
+  case T_SHORT:
+  case T_INT:
+  case T_LONG:
+  case T_FLOAT:
+  case T_DOUBLE:
+  case T_COMPLEX:
+    result = 1;
+    break;
+  default:
+    result = 0;
+  }
+  PushIntValue(result);
+}
+
+void Y_is_string(int nargs)
+{
+  if (nargs != 1) YError("is_string takes exactly one argument");
+  PushIntValue(get_type(sp) == T_STRING);
+}
+
+void Y_is_pointer(int nargs)
+{
+  if (nargs != 1) YError("is_pointer takes exactly one argument");
+  PushIntValue(get_type(sp) == T_POINTER);
+}
+
+void Y_identof(int argc)
+{
+  long type;
+  if (argc != 1) YError("identof takes exactly one argument");
+  type = get_type(sp);
+  if (type == -1) YError("unexpected keyword argument");
+  PushLongValue(type);
+}
+
+static int get_type(Symbol *s)
+{
+  for (;;) {
+    if (s->ops == &dataBlockSym) {
+      DataBlock *db = s->value.db;
+      if (db->ops == &lvalueOps) {
+	return ((LValue *)db)->type.base->dataOps->typeID;
+      } else {
+        return db->ops->typeID;
+      }
+    } else if (s->ops == &referenceSym) {
+      s = &globTab[s->index];
+    } else if (s->ops == &doubleScalar) {
+      return T_DOUBLE;
+    } else if (s->ops == &longScalar) {
+      return T_LONG;
+    } else if (s->ops == &intScalar) {
+      return T_INT;
+    } else {
+      /* Must be a keyword. */
+      return -1;
+    }
+  }
+}
+
+/*--------------------------------------------------------------------------*/
+
+void Y_unref(int argc)
+{
+  if (argc != 1) YError("unref takes exactly one argument");
+  if (sp->ops == &referenceSym) {
+    /* Replace reference without augmenting the reference
+       count of the data block object if it is an array. */
+    Symbol *ref = &globTab[sp->index];
+    OpTable *ops = ref->ops;
+    if (ops == &dataBlockSym) {
+      DataBlock *db = ref->value.db;
+      if (db && db->ops->isArray) {
+	/* Replace symbol in global table by nil. */
+	ref->value.db = RefNC(&nilDB);
+	sp->value.db = db; /* no Ref */
+      } else {
+	sp->value.db = Ref(db);
+      }
+    } else {
+      sp->value = ref->value;
+    }
+    sp->ops = ops; /* change ops only AFTER value updated */
+  }
+}
+
+void Y_swap(int argc)
+{
+  SymbolValue a_val, b_val;
+  OpTable *a_ops, *b_ops;
+  volatile Symbol *a_sym, *b_sym;
+  if (argc != 2) YError("swap takes exactly 2 arguments");
+  a_sym = sp;
+  b_sym = sp-1;
+  if (a_sym->ops != &referenceSym || b_sym->ops != &referenceSym)
+    YError("arguments must be simple variable references");
+  a_sym = &globTab[a_sym->index];
+  a_ops = a_sym->ops;
+  a_val = a_sym->value;
+  a_sym->ops = &intScalar;
+  b_sym = &globTab[b_sym->index];
+  b_ops = b_sym->ops;
+  b_val = b_sym->value;
+  b_sym->ops = &intScalar;
+  b_sym->value = a_val;
+  a_sym->value = b_val;
+  Drop(2);
+  b_sym->ops = a_ops;
+  a_sym->ops = b_ops;
+}
+
 /*--------------------------------------------------------------------------*/
 
 extern VMaction DropTop;
@@ -1013,6 +1235,12 @@ extern double log10(double);
 extern double sqrt(double);
 extern double ceil(double);
 extern double floor(double);
+#ifdef HAVE_ROUND
+extern double round(double);
+#endif
+#ifdef HAVE_LROUND
+extern long lround(double);
+#endif
 
 /* function either present in math library or implemented in nonc.c */
 extern double hypot(double, double);
@@ -1232,6 +1460,92 @@ static void floorZLoop(double *dst, double *src, long n)
 { YError("floor(complex) not defined"); }
 
 void Y_floor(int nArgs) { UnaryTemplate(nArgs, &floorLoop, &floorZLoop); }
+
+/* ----- round ----- */
+
+void Y_round(int nArgs)
+{
+  Operand op;
+  long number, i;
+  double *x, *y;
+  int promoteID, inPlace;
+
+  if (nArgs != 1) YError("round takes exactly one argument");
+  if (! sp->ops) YError("unexpected keyword");
+  sp->ops->FormOperand(sp, &op);
+  if ((promoteID = op.ops->promoteID) > T_DOUBLE)
+    YError("expecting non-complex numeric argument");
+  if (promoteID < T_DOUBLE) {
+    op.ops->ToDouble(&op);
+    if (promoteID <= T_LONG) {
+      PopToD(sp - 1);
+      return;
+    }
+    inPlace = 1;
+    y = op.value;
+  } else {
+    inPlace = 0;
+    y = BuildResultU(&op, &doubleStruct);
+  }
+  x = op.value;
+  number = op.type.number;
+  for (i = 0; i < number; ++i) {
+#ifdef HAVE_ROUND
+    y[i] = round(x[i]);
+#else
+    y[i] = floor(x[i] + 0.5);
+#endif
+  }
+  if (inPlace) {
+    PopToD(sp - 1);
+  } else {
+    PopToD(sp - 2);
+    Drop(1);
+  }
+}
+
+/* ----- lround ----- */
+
+void Y_lround(int nArgs)
+{
+  Operand op;
+  long number, i;
+  double *x, *y;
+  int promoteID;
+
+  if (nArgs != 1) YError("lround takes exactly one argument");
+  if (! sp->ops) YError("unexpected keyword");
+  sp->ops->FormOperand(sp, &op);
+  if ((promoteID = op.ops->promoteID) > T_DOUBLE)
+    YError("expecting non-complex numeric argument");
+  if (promoteID <= T_LONG) {
+    if (promoteID < T_LONG) {
+      op.ops->ToLong(&op);
+    }
+    PopToD(sp - 1);
+    return;
+  }
+  if (promoteID < T_DOUBLE) {
+    /* FIXME: we could use lroundf and/or roundf */
+    op.ops->ToDouble(&op);
+  }
+  x = op.value;
+  y = BuildResultU(&op, &longStruct);
+  number = op.type.number;
+  for (i = 0; i < number; ++i) {
+#ifdef HAVE_LROUND
+    y[i] = lround(x[i]);
+#else
+# ifdef HAVE_ROUND
+    y[i] = (long)round(x[i]);
+# else
+    y[i] = (long)floor(x[i] + 0.5);
+# endif
+#endif
+  }
+  PopToD(sp - 2);
+  Drop(1);
+}
 
 /* ----- abs ----- */
 
