@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.32 2010-04-13 11:36:37 thiebaut Exp $
+ * $Id: std.i,v 1.33 2010-04-14 05:55:10 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -946,13 +946,13 @@ extern print;
      printing a function prints its "func" definition; printing files,
      bookmarks, and other objects generally provides some sort of
      useful description of the object.
-  SEE ALSO: pr1, print_format, write, exit, error, nameof, typeof
+  SEE ALSO: totxt, pr1, print_format, write, exit, error, nameof, typeof
  */
 
 func pr1(x)
 /* DOCUMENT pr1(x)
      returns text representing expression X, equivalent to print(X)(1).
-   SEE ALSO: print, swrite
+   SEE ALSO: print, swrite, totxt
  */
 { return print(x)(1); }
 
@@ -965,7 +965,7 @@ extern print_format;
      The default strings may be restored individually by setting the
      associated format string to ""; all defaults are restored if
      print_format is invoked with no arguments.  The default format strings
-     are:  "0x%02x", "%d", "%d", "%ld", "%g", "%g", and "%g%+gi".
+     are:  "0x%02x", "%d", "%d", "%ld", "%g", "%g", and "%g+%gi".
      Note that char and short values are converted to int before being
      passed to printf, and that float is converted to double.
      If present, an integer positional argument is taken as the line
@@ -975,8 +975,46 @@ extern print_format;
      of lines to output; <=0 restores the default of 5000 lines.  A single
      print command will not produce more than this many lines of output;
      output simply stops without any additional messages.
-  SEE ALSO: print, write, nameof, typeof
+  SEE ALSO: print, write, totxt, nameof, typeof
  */
+
+func totxt(x, fmt)
+/* DOCUMENT totxt(x)
+         or totxt(x, fmt)
+     returns text representing expression X.  If X is not numeric,
+     then totxt(x) is the same as print(x).  If X is numeric, then
+     totxt returns an array of strings with the same dimensions as X.
+     Integers get %d format, while reals get %g format, unless you
+     specify FMT.  FMT can be a single numeric format, or just a
+     number with the following interpretation:
+       FMT = integer w  means %wd for integers or %wf for reals
+       FMT = real w.p  means %wd for integers or %w.pf for reals
+     In either case, a negative value -w or -w.p switches to hex
+     format for integers %wx or exponential format %w.pe for reals.
+   SEE ALSO: print, swrite, tonum
+ */
+{
+  i = identof(x);
+  if (i > 6) return print(x);
+  if (is_void(fmt)) {
+    fmt = (i>3)? "%g" : ((i==3)? "%ld" : "%d");
+  } else if (structof(fmt) != string) {
+    a = fmt<0;
+    fmt = abs(fmt);
+    w = long(fmt);
+    p = long(100.*(fmt-w)+1.e-6);
+    if (!(p%10)) p /= 10;
+    w = w? print(w)(1) : "";
+    if ((identof(fmt)>3) && (i>3)) p = "."+print(p)(1);
+    else p = "";
+    if (i > 3) a = a? "e" : "f";
+    else if (i == 3) a = a? "lx" : "ld";
+    else a = a? "x" : "d";
+    fmt = "%"+w+p+a;
+  }
+  if (i < 6) return swrite(format=fmt, x);
+  return swrite(format=fmt, x.re)+"+"+swrite(format=fmt, x.im)+"i";
+}
 
 /*--------------------------------------------------------------------------*/
 
@@ -3045,7 +3083,7 @@ extern sread;
            fscanf and Yorick's read in how whitespace extending across
            newlines is handled.
    SEE ALSO: rdline, write, open, close, bookmark, backup, save, restore,
-             read_n
+             read_n, tonum
  */
 
 extern rdline;
@@ -3091,6 +3129,39 @@ local read_n;
      The Ns can be arrays, provided all have the same dimensions.
    SEE ALSO: read, rdline
  */
+
+func tonum(s, &mask, nan=)
+/* DOCUMENT tonum(s)
+         or tonum(s, mask)
+     returns array of numbers corresponding to given array of strings S.
+     For each element of S which consists of a single number (either a
+     decimal integer or floating point number), tonum returns the numeric
+     value.  The return value is type double and the same dimensions as S.
+     Any elements of S which cannot be interpreted as single numeric
+     values will have the value -1.0e99 in the result array.  You can
+     specify a different value for "not a number" with the nan= keyword.
+     The optional MASK is an output of type int of the same dimensions
+     as S, which is 1 where S is a floating point number (with decimal
+     point and/or exponent), 3 where S is an integer, and 0 where S is
+     not a number.
+   SEE ALSO: sread, totxt, strgrep
+ */
+{
+  if (is_void(nan)) nan = -1.e99;
+  x = array(nan, dimsof(s));
+  i = strgrep("^( \t)*[+-]?[0-9]+( \t)*$", s);
+  r = "[+-]?(\.[0-9]+|[0-9]+\.[0-9]*)([dDeE][+-]?[0-9]+)?";
+  r = strgrep("^( \t)*"+r+"( \t)*$", s);
+  mask = (r(2,..)>0) | ((i(2,..)>0)<<1);
+  list = where(mask);
+  n = numberof(list);
+  if (n) {
+    y = array(0., n);
+    if (sread(s(list)+" ",y) != n) error, "(BUG) number not a number??";
+    x(list) = y;
+  }
+  return x;
+}
 
 extern write;
 extern swrite;
