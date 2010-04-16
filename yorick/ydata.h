@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.7 2007-04-06 22:04:33 thiebaut Exp $
+ * $Id: ydata.h,v 1.8 2010-04-16 05:23:43 dhmunro Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -182,12 +182,13 @@ struct Function {
   int references;     /* reference counter */
   Operations *ops;    /* pointer to virtual functions */
   Symbol *constantTable;  /* constants used by this function */
-  long nConstants;        /* length of coonstantTable */
+  long nConstants;        /* length of constantTable */
   int nReq;               /* worst case number of stack elements required */
   int nPos, nKey, nLocal; /* number of positionals, keywords, and locals */
   long hasPosList;        /* bit 0- 0 unless declared with .. parameter
                              bits 1-30 set if that positional parameter
                              marked as an output */
+  int errup;              /* to mark func to enter caller for dbug */
   Instruction code[1];    /* virtual machine instructions begin here */
   /* First 1+nPos+hasPosList+nKey+nLocal instructions are code[i].index
      for function name (in definition), positional parameters,

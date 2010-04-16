@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.33 2010-04-14 05:55:10 dhmunro Exp $
+ * $Id: std.i,v 1.34 2010-04-16 05:23:43 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -813,6 +813,22 @@ extern wrap_args;
      the result to a variable; use it only as an argument to another
      function.  The first time you call ARGS(i) for argument i, the
      lvalue is fetched, and ARGS(i,:) will do nothing special.
+  SEE ALSO: errs2caller
+ */
+
+extern errs2caller;
+/* DOCUMENT errs2caller, f1, f2, ...
+     makes function F1 (and optionally F2, ...) pass control for dbug
+     mode to its caller if a fault occurs inside F1.  This makes F1
+     behave more like a compiled function for its caller.  For example,
+     if you are writing a mathematical function, you can raise an
+     error in its caller rather than in the function itself -- which
+     is appropriate if the only errors your function raises are, for
+     example, domain errors.  Your function will then respond to a
+     domain error in the same way as, for example, asin(1.5).
+     If you want to wrap arguments of such a function, you need to call
+     errs2caller before wrap_args.
+  SEE ALSO: wrap_args
  */
 
 /*--------------------------------------------------------------------------*/

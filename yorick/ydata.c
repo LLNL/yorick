@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.c,v 1.3 2010-04-13 11:36:37 thiebaut Exp $
+ * $Id: ydata.c,v 1.4 2010-04-16 05:23:43 dhmunro Exp $
  * Implement functions for Yorick-specific types of data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -19,6 +19,7 @@
 extern Array *GrowArray(Array *array, long extra);
 
 extern BuiltIn Y_yorick_stats, Y_symbol_def, Y_symbol_set;
+extern BuiltIn Y_symbol_names, Y_symbol_exists, Y_errs2caller;
 
 /* Required for FetchLValue, StoreLValue */
 extern void ReadGather(void *dst, void *srcM, long srcD, StructDef *base,
@@ -71,6 +72,7 @@ Function *NewFunction(Symbol *consts, long nConsts, int nPos, int nKey,
   func->nKey= nKey;
   func->nLocal= nLocal;
   func->hasPosList= hasPL;
+  func->errup = 0;
   codeSize-= frameSize-1;
   /* YpFunc puts the frame variables (parameters and locals) at the end
      of the code, switch them to the beginning now.  */
@@ -94,6 +96,20 @@ void FreeFunction(void *v)  /* ******* Use Unref(func) ******* */
     p_free(func->constantTable);
   }
   p_free(func);
+}
+
+void
+Y_errs2caller(int argc)
+{
+  Function *f;
+  int i;
+  for (i=argc-1 ; i>=0 ; i--) {
+    if (sp[-i].ops == &referenceSym) ReplaceRef(sp-i);
+    if (sp[-i].ops!=&dataBlockSym || sp[-i].value.db->ops!=&functionOps)
+      YError("errs2caller accepts only function arguments");
+    f = (Function *)sp[-i].value.db;
+    f->errup = 1;
+  }
 }
 
 /* Set up a block allocator which grabs space for 64 range objects

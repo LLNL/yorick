@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.14 2010-04-13 11:36:38 thiebaut Exp $
+ * $Id: task.c,v 1.15 2010-04-16 05:23:43 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -33,7 +33,7 @@ extern int YpParse(void *func);  /* argument non-zero for YpReparse */
 /*--------------------------------------------------------------------------*/
 
 extern BuiltIn Y_quit, Y_include, Y_require, Y_help, Y_exit, Y_error, Y_batch;
-extern BuiltIn Y_current_includes, Y_get_includes;
+extern BuiltIn Y_current_include, Y_get_includes;
 extern BuiltIn Y_plug_in, Y_plug_dir, Y_maybe_prompt, Y_suspend, Y_resume;
 extern BuiltIn Y_after, Y_include1, Y_vopen, Y_vclose;
 
@@ -1361,7 +1361,7 @@ YError(const char *msg)
   Function *func;
   char *name;
   DebugBlk *dbg;
-  Instruction *pcUp= yErrorPC;
+  Instruction *pcUp=yErrorPC, *pcue;
   int category;
   int no_abort = y_do_not_abort;
   int no_print = 0, no_pf = ((yerror_flags&1) != 0);
@@ -1420,9 +1420,17 @@ YError(const char *msg)
   /* this is a nasty hack for mpy and after_error */
   no_print = no_pf || (msg && !strcmp(msg, ".SYNC."));
 
-  func= (((ym_state&Y_RUNNING)||no_abort) && !recursing &&
-         pcUp!=&taskCode[2])? FuncContaining(pcDebug) : 0;
-  name= func? globalTable.names[func->code[0].index] : "VM idle or lost";
+  for (;;) {
+    func = (((ym_state&Y_RUNNING)||no_abort) && !recursing &&
+            pcUp!=&taskCode[2])? FuncContaining(pcDebug) : 0;
+    if (!func || !func->errup) break;
+    ClearStack();
+    pcue = AbortReturn();
+    if (!pcue || pcue==&taskCode[2]) break;
+    pcDebug = pc = pcue;
+    func = 0;
+  }
+  name = func? globalTable.names[func->code[0].index] : "VM idle or lost";
 
   /* Clear out include stack, but remember current include file name.
      If the error happened while executing a main program which came from

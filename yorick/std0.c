@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.13 2010-04-13 21:50:44 thiebaut Exp $
+ * $Id: std0.c,v 1.14 2010-04-16 05:23:43 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -41,6 +41,7 @@ extern BuiltIn Y_yorick_init, Y_set_path, Y_reshape, Y_array, Y_structof,
   Y_get_cwd, Y_get_home, Y_cd, Y_get_env, Y_get_argv, Y_use_origins;
 
 extern BuiltIn Y_set_site, Y_timer, Y_get_path, Y_get_pkgnames;
+extern BuiltIn Y_round, Y_lround;
 
 /*--------------------------------------------------------------------------*/
 
