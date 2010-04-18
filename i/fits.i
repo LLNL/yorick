@@ -17,10 +17,11 @@
  *
  *-----------------------------------------------------------------------------
  *
- * $Id: fits.i,v 1.28 2010-04-18 08:22:33 thiebaut Exp $
+ * $Id: fits.i,v 1.30 2010-04-18 09:07:30 thiebaut Exp $
  * $Log: fits.i,v $
- * Revision 1.28  2010-04-18 08:22:33  thiebaut
- * support variable length arrays in BINTABLE
+ * Revision 1.30  2010-04-18 09:07:30  thiebaut
+ *  - Fix documentation for nice HTML output.
+ *  - Attempt to synchronize revison numbers.
  *
  * Revision 1.29  2009/04/22 07:17:11  eric
  *  - Heavy work on fits_read_bintable to support variable length arrays.
@@ -166,54 +167,52 @@
  */
 
 local fits;
-fits = "$Revision: 1.28 $";
+fits = "$Revision: 1.30 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
-     The  routines  provided by  this  (standalone)  package  are aimed  at
-     reading/writing  FITS (Flexible Image Transport  System) files from/to
-     Yorick.  These  routines attempt to follow the  FITS standard (version
-     1.1)  as defined in  NOST report  [1].  Nevertheless  the user  may be
-     aware of some  limitations (some of which are  unavoidable with such a
-     "flexible" format as FITS):
+     The  routines  provided  by   this  (standalone)  package  are  aimed  at
+     reading/writing  FITS  (Flexible Image  Transport  System) files  from/to
+     Yorick.  These routines attempt to follow the FITS standard (version 1.1)
+     as defined  in NOST report  [1].  Nevertheless the  user may be  aware of
+     some limitations  (some of which  are unavoidable with such  a "flexible"
+     format as FITS):
 
-      - It  is still possible to  produce a non-standard  FITS file because
-        (for obvious  efficiency reasons)  routines in this  package cannot
-        check  everything.  At  least, FITS  routines check  that compliant
-        FITS keywords  are used and that  mandatory cards (SIMPLE/XTENSION,
-        BITPIX,  NAXIS, ...)   get written  in the  correct order  and with
-        correct value types (see  fits_set).  Nevertheless, the user has to
-        know only  very little  about FITS standard  to be able  to produce
-        valid FITS files.
+      - It is still possible to  produce a non-standard FITS file because (for
+        obvious  efficiency reasons)  routines  in this  package cannot  check
+        everything.   At  least,  FITS  routines  check  that  compliant  FITS
+        keywords are  used and that mandatory  cards (SIMPLE/XTENSION, BITPIX,
+        NAXIS, ...)  get  written in the correct order  and with correct value
+        types (see  fits_set).  Nevertheless, the  user has to know  only very
+        little about FITS standard to be able to produce valid FITS files.
 
-      - In this version  of the package, headers of  any FITS extension can
-        be read/produced but  you can only read/write Yorick  array data or
-        binary tables, i.e.  corresponding to primary data and FITS "IMAGE"
-        or  "BINTABLE" extensions  (see  fits_read_array, fits_write_array,
-        fits_read_bintable, and fits_write_bintable).  Support for standard
-        extensions (such  as ASCII  table "TABLE") is  planned but  not yet
-        done.
+      - In this version  of the package, headers of any  FITS extension can be
+        read/produced but you can only  read/write Yorick array data or binary
+        tables,  i.e.   corresponding to  primary  data  and  FITS "IMAGE"  or
+        "BINTABLE"   extensions    (see   fits_read_array,   fits_write_array,
+        fits_read_bintable,  and fits_write_bintable).   Support  for standard
+        extensions (such as ASCII table "TABLE") is planned but not yet done.
 
-      - There  is   no  special   handling  of  IEEE  special  values  NaN,
-        +/-Infinity (using such values is  likely to raise a floating point
-        error catched by Yorick).
+      - There is no  special handling of IEEE special  values NaN, +/-Infinity
+        (using such values  is likely to raise a  floating point error catched
+        by Yorick).
 
-      - You  cannot read/write  compressed  FITS  files.   You'll  have  to
-        pre-decompress or post-compress files  (you can use Yorick "system"
+      - You  cannot   read/write  compressed  FITS  files.    You'll  have  to
+        pre-decompress  or post-compress  files (you  can use  Yorick "system"
         function to that end).
 
-      - It is (not yet) possible to re-open an existing FITS file to modify
-        it.  But it would be very easy to allow for appending extensions to
-        an existing file (should be provided very soon).
+      - It is  (not yet) possible to  re-open an existing FITS  file to modify
+        it.  But it would be very easy to allow for appending extensions to an
+        existing file (should be provided very soon).
 
-     Some simple driver routines  are provided to allow for reading/writing
-     Yorick arrays from/to FITS file  and may be sufficient for basic usage
+     Some  simple driver routines  are provided  to allow  for reading/writing
+     Yorick arrays  from/to FITS  file and may  be sufficient for  basic usage
      (see fits_read and fits_write).
 
 
-   READING AN EXISTING FITS FILE
+   READING AN EXISTING FITS FILE:
 
-     There is a simplified driver fits_read  (which see) to read data in an
-     existing FITS file.  The following example demontrates how to read the
+     There is  a simplified driver  fits_read (which see)  to read data  in an
+     existing FITS  file.  The following  example demontrates how to  read the
      contents of a FITS file with the basic routines:
 
      fh = fits_open(name);                 // open existing file and read
@@ -228,9 +227,9 @@ fits = "$Revision: 1.28 $";
 
    CREATING A NEW FITS FILE:
 
-     There is a (very) simplified driver fits_write (which see) to create a
-     new  FITS  file to  store  a  Yorick  array.  The  following  examples
-     demontrates how to write a moderately complex FITS file with the basic
+     There is  a (very) simplified driver  fits_write (which see)  to create a
+     new  FITS  file  to  store   a  Yorick  array.   The  following  examples
+     demontrates how  to write a moderately  complex FITS file  with the basic
      routines (assuming DATA1 is a 2-dimensional array):
 
        fh = fits_open(name, 'w');      // create new file
@@ -255,14 +254,14 @@ fits = "$Revision: 1.28 $";
        fits_close, fh;                   // close stream of FITS handle, the
                                          // header can still be examined
 
-     Note  that the cards  with the  dimensions of  the data  array (NAXIS,
-     NAXIS1, ...)  which  are explicitly set with fits_set  for the primary
-     header can  also be instanciated  in a more  simple way thanks  to the
-     function fits_set_dims as shown for the second HDU.
+     Note that the cards with the dimensions of the data array (NAXIS, NAXIS1,
+     ...)  which are  explicitly set with fits_set for  the primary header can
+     also  be  instanciated  in a  more  simple  way  thanks to  the  function
+     fits_set_dims as shown for the second HDU.
 
-     Alternatively, The function fits_create can be used to open a new file
-     and setup  a basic primary header.   In this case, the  first lines of
-     the above examples become:
+     Alternatively, The  function fits_create can be  used to open  a new file
+     and setup a  basic primary header.  In this case, the  first lines of the
+     above examples become:
 
        fh = fits_create(name, extend=1,
                         bitpix=fits_bitpix_of(data1),
@@ -272,16 +271,16 @@ fits = "$Revision: 1.28 $";
        fits_write_header, fh;          // write header part of current HDU
        fits_write_array, fh, data1;    // write data part of current HDU
 
-     If you intend to write more than one HDU, do not forget to set card
-     EXTEND to true in the primary header (this is done in the two examples
+     If you  intend to  write more  than one HDU,  do not  forget to  set card
+     EXTEND to  true in the primary header  (this is done in  the two examples
      above with fits_open and with fits_create).
 
 
-   LIST OF ROUTINES
+   LIST OF ROUTINES:
 
-     By convention, in this Yorick package, all public symbols (routines or
-     variables)  are prefixed  with  "fits_" and  all  private symbols  are
-     prefixed with "_fits_".  The following (public) routines are provided:
+     By convention,  in this Yorick  package, all public symbols  (routines or
+     variables) are prefixed with "fits_" and all private symbols are prefixed
+     with "_fits_".  The following (public) routines are provided:
 
      File routines:
        fits_check_file     - check whether a file may be a FITS file
@@ -373,17 +372,17 @@ fits = "$Revision: 1.28 $";
        fits_copy_hdu       - copy current HDU;
 
 
-   CHANGES WITH RESPECT TO "OLD" FITS PACKAGES
+   CHANGES WITH RESPECT TO "OLD" FITS PACKAGES:
 
-     This  package is  intended to  be used  in place  of the  old "fits.i"
-     (written by me  and distributed along with Yorick)  which had too many
-     limitations and restrictions to allow for further extensions.  However
-     the API provided by this novel package is quite different from the old
-     one (in particular  the FITS header is no longer  stored into a Yorick
-     structure but in some "opaque"  object: a FITS handle).  Hopefully the
-     new package provides all the  routines needed to deal with this opaque
-     handle but  the name of the  routines (all prefixed  with "fits_") and
-     their calling sequences have changed.
+     This package is intended to be used in place of the old "fits.i" (written
+     by me and  distributed along with Yorick) which  had too many limitations
+     and  restrictions  to allow  for  further  extensions.   However the  API
+     provided by  this novel package is  quite different from the  old one (in
+     particular the  FITS header is no  longer stored into  a Yorick structure
+     but in some  "opaque" object: a FITS handle).   Hopefully the new package
+     provides all the routines needed to  deal with this opaque handle but the
+     name  of the  routines  (all  prefixed with  "fits_")  and their  calling
+     sequences have changed.
 
      The new FITS interface was written with the aim of being:
        (1) conformable with FITS standards (although try to be not too strict
@@ -393,11 +392,12 @@ fits = "$Revision: 1.28 $";
            with 200 cards on an PIII @ 1GHz)
 
 
-   FITS HANDLE
+   FITS HANDLE:
 
-     In this package, a FITS handle  (denoted FH in the documentation) to a
-     FITS file  is intended to  be an "opaque"  object.  Actually, it  is a
-     list of 4 items organized as follow:
+     In this  package, a FITS  handle (denoted FH  in the documentation)  to a
+     FITS file is  intended to be an "opaque" object.  Actually,  it is a list
+     of 4 items organized as follow:
+
         _lst(cards, ids, descr, stream)
         cards  = vector of strings which are the header cards of the
                  current HDU;
@@ -409,39 +409,24 @@ fits = "$Revision: 1.28 $";
                    DESCR(3)= file address of the data part for the current HDU;
                    DESCR(4)= file address of the next HDU in read mode,
                              total number of written bytes in write mode;
-                   DESCR(5)= file mode: 'r' (read), or 'w' (write), or 'a' (append).
+                   DESCR(5)= file mode: 'r' (read), or 'w' (write), or 'a'
+                             (append).
         stream = void (no associated file) or stream for input or output;
 
-     Of course the  end-user should never directly access  the items of the
-     FITS handle  but rather  use the provided  FITS routines (so  that, in
-     order  to  warant portability  of  the user  level  code,  it will  be
-     sufficient  to  only modify  routines  in  this  package whenever  the
-     internals of the FITS handle change).
+     Of course the end-user should never directly access the items of the FITS
+     handle but  rather use the provided  FITS routines (so that,  in order to
+     warant portability of the user level  code, it will be sufficient to only
+     modify routines in this package whenever the internals of the FITS handle
+     change).
 
 
-   WISH LIST
-
-     The following is a list of missing features or things I would like to
-     test:
-
-       1. Implement  support  for  "random groups"  records  (FITS keywords
-          GROUPS, PCOUNT  and GCOUNT) and other  "standard" FITS extensions
-          (only "IMAGE" and "BINTABLE" are implemented): ASCII table, ...
-       2. Extensively test the package (this is mainly because I lack
-          of sample FITS files written by other software).
-       3. Deal with compressed FITS files; this will be possible thanks to
-          the "channel" interface in Yeti (my own extension of Yorick).
-       4. Enhance  the consistency  checks  (for instance,  in the  current
-          version, you can read/write an "image" into a "table" extension).
-
-
-   GLOSSARY
+   GLOSSARY:
 
      HDU - Header and Data Unit
      Indexed Keyword -
 
 
-   REFERENCES
+   REFERENCES:
 
      [1] "Definition of Flexible Image Transport System (FITS)", NASA/Science
          Office of Standards and Technology, report NOST 100-1.1, September 29,
@@ -449,15 +434,6 @@ fits = "$Revision: 1.28 $";
 
      [2] "A User's Guide for the Flexible Image Transport System (FITS)"
          http://archive.stsci.edu/fits/users_guide/
-
-*/
-
-/* TO DO LIST:
-    - support for strings in fits_write_bintable
-    - complex integer
-    - ASCII tables
-    - free format for real numbers
-    - in fits_init: _fits_digitize -> double ?
 */
 
 /*---------------------------------------------------------------------------*/
@@ -465,12 +441,12 @@ fits = "$Revision: 1.28 $";
 
 func fits_info(fh, hdu)
 /* DOCUMENT fits_info, fh;
-       -or- fits_info, fh, hdu
-       -or- fits_info, filename;
-       -or- fits_info, filename, hdu;
-     Prints header contents of current HDU in FITS handle FH or all HDU's
-     in FITS file FILENAME.  If argument HDU is given, only this header unit
-     get printed out (HDU may be an array).
+         or fits_info, fh, hdu
+         or fits_info, filename;
+         or fits_info, filename, hdu;
+     Prints header contents  of current HDU in FITS handle FH  or all HDU's in
+     FITS file FILENAME.  If argument HDU  is given, only this header unit get
+     printed out (HDU may be an array).
 
    SEE ALSO: fits, fits_open. */
 {
@@ -518,28 +494,28 @@ func _fits_info_worker(fh)
 func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
                pack=, select=)
 /* DOCUMENT           a = fits_read(filename)
-       -or- local fh; a = fits_read(filename, fh)
+         or local fh; a = fits_read(filename, fh)
 
-     Open  FITS file  FILENAME and  read data.   FH is  an  optional output
-     symbol where  the FITS handle  will be stored  for future use  such as
-     moving  to  a  FITS  extension  in  the  same  file  and  reading  its
-     header/data.  (Note:  a FITS handle is  a Yorick list  that contains a
-     file  handle and  all header  information from  the current  HDU.)  By
-     default, the data get read from  the first HDU but this can be changed
-     with the HDU keyword (default  HDU=1, i.e., primary HDU).  If data get
-     read  from the  primary  HDU or  a  FITS image  extension, the  result
-     returned  by  the  function  fits_read()  is a  numerical  array  (see
-     fits_read_array); if the data get  read from a binary table extension,
-     the result is a vector of pointers (see fits_read_bintable).
+     Open FITS file  FILENAME and read data.  FH is  an optional output symbol
+     where the FITS handle  will be stored for future use such  as moving to a
+     FITS extension  in the same file  and reading its  header/data.  (Note: a
+     FITS handle is  a Yorick list that contains a file  handle and all header
+     information from  the current HDU.)  By  default, the data  get read from
+     the  first HDU  but this  can be  changed with  the HDU  keyword (default
+     HDU=1, i.e.,  primary HDU).  If data get  read from the primary  HDU or a
+     FITS image extension, the result  returned by the function fits_read() is
+     a  numerical array (see  fits_read_array); if  the data  get read  from a
+     binary  table  extension,  the  result  is  a  vector  of  pointers  (see
+     fits_read_bintable).
 
      Keyword ENCODING has the same meaning as in fits_open (which see).
 
-     Keywords WHICH and RESCALE have the same meaning as in fits_read_array
-     (which see).  These keywords are ignored if HDU to read is not primary
+     Keywords WHICH  and RESCALE have  the same meaning as  in fits_read_array
+     (which see).   These keywords are ignored  if HDU to read  is not primary
      HDU nor an "image" extension.
 
-     Keywords   PACK   and   SELECT   have   the   same   meaning   as   in
-     fits_read_bintable (which see).
+     Keywords PACK and  SELECT have the same meaning  as in fits_read_bintable
+     (which see).
 
 
    SEE ALSO: fits, fits_write, fits_open,
@@ -561,21 +537,20 @@ func fits_write(filename, data, encoding=, overwrite=,
                 bitpix=, extend=, bscale=, bzero=,
                 template=, history=, comment=)
 /* DOCUMENT fits_write, filename, data;
-       -or- fits_write(filename, data)
-     Creates a new FITS file FILENAME  and write array DATA in primary HDU.
-     When called  as a function,  the result is  a FITS handle that  can be
-     used to append extensions to the file.
+         or fits_write(filename, data)
+     Creates a  new FITS file  FILENAME and write  array DATA in  primary HDU.
+     When called as a  function, the result is a FITS handle  that can be used
+     to append extensions to the file.
 
-     FITS "bits-per-pixel"  can be specified by  keyword BITPIX; otherwise,
-     BITPIX   is   automatically   guessed   from  the   data   type   (see
-     fits_bitpix_of).
+     FITS  "bits-per-pixel" can  be  specified by  keyword BITPIX;  otherwise,
+     BITPIX is automatically guessed from the data type (see fits_bitpix_of).
 
-     Keywords  EXTEND, TEMPLATE, HISTORY  COMMENT, BSCALE,  BZERO, ENCODING
-     and OVERWRITE have the same meaning as in fits_create (to see).
+     Keywords EXTEND,  TEMPLATE, HISTORY COMMENT, BSCALE,  BZERO, ENCODING and
+     OVERWRITE have the same meaning as in fits_create (to see).
 
-     If BITPIX is explicitely specified  and corresponds to an integer file
-     type (8, 16 or 32) and neither BSCALE nor BZERO are specified, optimal
-     BSCALE  and BZERO  values  will be  automatically  computed thanks  to
+     If BITPIX  is explicitely  specified and corresponds  to an  integer file
+     type (8,  16 or 32) and  neither BSCALE nor BZERO  are specified, optimal
+     BSCALE  and  BZERO  values  will  be  automatically  computed  thanks  to
      fits_best_scale (which see).
 
 
@@ -606,12 +581,12 @@ func fits_write(filename, data, encoding=, overwrite=,
 
 func fits_best_scale(bitpix, cmin, cmax, debug=)
 /* DOCUMENT fits_best_scale(bitpix, data)
-       -or- fits_best_scale(bitpix, cmin, cmax)
-     Returns [BSCALE,BZERO]  where BSCALE and BZERO are  optimal values for
-     rescaling to BITPIX  file type.  BITPIX must correspond  to an integer
-     type (BITPIX = 8, 16 or 32).  The array DATA contains all the physical
-     values  to save to  the file;  alternatively, CMIN  and CMAX  give the
-     minimal and maximal values in physical data.
+         or fits_best_scale(bitpix, cmin, cmax)
+     Returns  [BSCALE,BZERO] where  BSCALE and  BZERO are  optimal  values for
+     rescaling to BITPIX file type.  BITPIX must correspond to an integer type
+     (BITPIX = 8, 16 or 32).   The array DATA contains all the physical values
+     to save  to the file; alternatively,  CMIN and CMAX give  the minimal and
+     maximal values in physical data.
 
    SEE ALSO: fits, fits_write. */
 {
@@ -650,10 +625,9 @@ func fits_best_scale(bitpix, cmin, cmax, debug=)
 
 func fits_open(filename, filemode, encoding=, overwrite=)
 /* DOCUMENT fits_open(filename)
-       -or- fits_open(filename, filemode)
-     Opens  the FITS  file FILENAME  according to  FILEMODE.   The returned
-     value is a FITS handle used  in most other FITS routines.  FILEMODE is
-     one of:
+         or fits_open(filename, filemode)
+     Opens the FITS  file FILENAME according to FILEMODE.   The returned value
+     is a FITS handle used in most other FITS routines.  FILEMODE is one of:
        "r" or 'r' - read mode,  the header of the primary  HDU get read and
                     is parsed.
        "w" or 'w' - write   mode,  new  file  is  created  (unless  keyword
@@ -662,19 +636,19 @@ func fits_open(filename, filemode, encoding=, overwrite=)
                     header of the last HDU get read and parsed.
      The default FILEMODE is "r" -- open an existing FITS file for reading.
 
-     Keyword ENCODING can  be used to change the data  encoding of the FITS
-     file which is  "xdr" for a regular FITS file  (XDR means eXternal Data
-     Representation,  which is  natively  used by  all  IEEE compliant  big
-     endian machine).  The value of the keyword is a string like:
+     Keyword ENCODING can be used to change the data encoding of the FITS file
+     which  is  "xdr"  for  a  regular  FITS file  (XDR  means  eXternal  Data
+     Representation, which is  natively used by all IEEE  compliant big endian
+     machine).  The value of the keyword is a string like:
        "xdr", "sun"    - eXternal Data Representation (the default)
        "native"        - native data representation (i.e. no conversion)
        "i86", "pc"     - IEEE little endian machines
        ...
-     see documentation for "__sun" for  a list of supported encodings. Note
-     that  using  an encoding  different  from  IEEE  big endian  (or  XDR)
-     violates FITS standard.
+     see documentation  for "__sun"  for a list  of supported  encodings. Note
+     that using an  encoding different from IEEE big  endian (or XDR) violates
+     FITS standard.
 
-     Keyword OVERWRITE can be used to force overwriting of an existing file
+     Keyword OVERWRITE  can be used to  force overwriting of  an existing file
      (otherwise it is an error to create a file that already exists).
 
 
@@ -716,11 +690,10 @@ func fits_open(filename, filemode, encoding=, overwrite=)
 
 func fits_close(fh)
 /* DOCUMENT fits_close(fh)
-     Closes stream in FITS handle  FH.  The header information stored in FH
-     remain unchanged  (e.g. you can keep  editing the header  in FH).  The
-     returned  value is FH.   Note that  if you  destroy all  references to
-     handle FH, the  associated file (if any) gets  automatically closed by
-     Yorick.
+     Closes stream  in FITS  handle FH.  The  header information stored  in FH
+     remain  unchanged (e.g.  you can  keep editing  the header  in  FH).  The
+     returned value is FH.  Note that  if you destroy all references to handle
+     FH, the associated file (if any) gets automatically closed by Yorick.
 
    SEE ALSO: fits, fits_pad_hdu, fits_open, close. */
 {
@@ -741,35 +714,35 @@ func fits_close(fh)
 func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
                  template=, history=, comment=, bzero=, bscale=)
 /* DOCUMENT fits_create(filename)
-     Creates  a new  FITS  file FILENAME  and  returns a  FITS handle  with
-     mandatory cards (i.e. SIMPLE, BITPIX, NAXIS, NAXISn) and some optional
-     cards (i.e. EXTEND, BSCALE and BZERO) already initialized.
+     Creates a new FITS file FILENAME and returns a FITS handle with mandatory
+     cards  (i.e.  SIMPLE, BITPIX,  NAXIS,  NAXISn)  and  some optional  cards
+     (i.e. EXTEND, BSCALE and BZERO) already initialized.
 
-     Keyword  BITPIX can  be  used to  set  FITS "bits-per-pixel"  (default
-     is BITPIX=8, i.e. byte data).
+     Keyword  BITPIX can  be used  to  set FITS  "bits-per-pixel" (default  is
+     BITPIX=8, i.e. byte data).
 
-     Keyword DIMLIST  should be used to  specify the dimension  list of the
-     array data that  is intended to be written in  primary HDU.  The value
-     of DIMLIST is similar to the result returned by dimsof.
+     Keyword DIMLIST should be used to specify the dimension list of the array
+     data that is intended to be written in primary HDU.  The value of DIMLIST
+     is similar to the result returned by dimsof.
 
-     Keyword EXTEND can  be used to indicate whether  the file may contains
-     FITS extensions.  It is probably a good idea to always use EXTEND=1.
+     Keyword EXTEND can be used to indicate whether the file may contains FITS
+     extensions.  It is probably a good idea to always use EXTEND=1.
 
-     Keyword TEMPLATE can be set with  an existing FITS handle to copy some
-     FITS cards  of the template into  the new header.  The  FITS card that
-     are  _never_  copied  are:  "SIMPLE", "XTENSION",  "BITPIX",  "NAXIS",
-     "NAXIS#" (with  # an integer),  "BSCALE" and "BZERO"; the  other cards
-     get copied.  See keywords BSCALE and BZERO if you specifically want to
-     set these values.
+     Keyword TEMPLATE  can be set  with an existing  FITS handle to  copy some
+     FITS cards of  the template into the new header.  The  FITS card that are
+     _never_  copied are:  "SIMPLE", "XTENSION",  "BITPIX",  "NAXIS", "NAXIS#"
+     (with #  an integer), "BSCALE" and  "BZERO"; the other  cards get copied.
+     See  keywords BSCALE  and BZERO  if you  specifically want  to  set these
+     values.
 
-     Keywords BSCALE and BZERO can  be used to specify physical value scale
-     and offset.   See fits_write_array to figure out  how keywords BITPIX,
-     BSCALE and BZERO are used to convert data values into file values.
+     Keywords BSCALE and BZERO can be used to specify physical value scale and
+     offset.  See  fits_write_array to figure out how  keywords BITPIX, BSCALE
+     and BZERO are used to convert data values into file values.
 
-     Keywords HISTORY  and COMMENT can be  set to add some  comments in the
-     new handle.  The values of these keywords may be array of strings.
+     Keywords HISTORY and  COMMENT can be set to add some  comments in the new
+     handle.  The values of these keywords may be array of strings.
 
-     Keywords ENCODING and OVERWRITE have the same meaning as in fits_open
+     Keywords ENCODING  and OVERWRITE  have the same  meaning as  in fits_open
      routine (to see).
 
 
@@ -839,12 +812,12 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
 
 func fits_check_file(filename, errmode)
 /* DOCUMENT fits_check_file(filename)
-       -or- fits_check_file(filename, errmode)
-     Returns 1/0  depending whether FILENAME is  a valid FITS  file or not.
-     If ERRMODE is true (non-nil  and non-zero), unreadable file results in
-     false result otherwise it is  a runtime error.  Note that the checking
-     is very simple: it is sufficient that the first FITS card in the first
-     2880 bytes has keyword "SIMPLE" with logical value 'T' (true).
+         or fits_check_file(filename, errmode)
+     Returns 1/0 depending  whether FILENAME is a valid FITS  file or not.  If
+     ERRMODE is true (non-nil and  non-zero), unreadable file results in false
+     result otherwise it  is a runtime error.  Note that  the checking is very
+     simple: it is sufficient that the first FITS card in the first 2880 bytes
+     has keyword "SIMPLE" with logical value 'T' (true).
 
   SEE ALSO: fits, open. */
 {
@@ -863,10 +836,10 @@ func fits_check_file(filename, errmode)
 
 func fits_read_header(fh)
 /* DOCUMENT fits_read_header(fh)
-     (Re)read  and parse  header of  current  HDU of  FITS handle  FH.
-     Contents of FH is updated with  header part of new HDU.  To allow
-     for linked calls,  the returned value is FH.   If the current HDU
-     is empty (i.e. last HDU in the file), the header will be empty.
+     (Re)read and parse header of current  HDU of FITS handle FH.  Contents of
+     FH is  updated with header part of  new HDU.  To allow  for linked calls,
+     the returned value is FH.  If the  current HDU is empty (i.e. last HDU in
+     the file), the header will be empty.
 
    SEE ALSO: fits, fits_open, fits_read_array, fits_next_hdu. */
 {
@@ -975,10 +948,10 @@ func fits_read_header(fh)
 
 func fits_goto_hdu(fh, hdu)
 /* DOCUMENT fits_goto_hdu(fh, hdu)
-     Move FITS handle FH to Header  Data Unit number HDU (starting at 1 for
-     the primary HDU) and parse the  header part of the new unit.  Contents
-     of FH  is updated with  header part of  new HDU.  To allow  for linked
-     calls, the returned value is FH.
+     Move FITS handle FH to Header Data Unit number HDU (starting at 1 for the
+     primary HDU) and  parse the header part of the new  unit.  Contents of FH
+     is updated with  header part of new HDU.  To allow  for linked calls, the
+     returned value is FH.
 
    SEE ALSO: fits, fits_next_hdu, fits_read_header, fits_rewind. */
 {
@@ -998,9 +971,9 @@ func fits_goto_hdu(fh, hdu)
 
 func fits_next_hdu(fh)
 /* DOCUMENT fits_next_hdu(fh)
-     Move FITS handle FH to next Header Data Unit and parse the header part
-     of the  new unit.  Contents of FH  is updated with header  part of new
-     HDU.  To allow for linked calls, the returned value is FH.
+     Move FITS handle FH to next Header Data Unit and parse the header part of
+     the new unit.  Contents of FH is updated with header part of new HDU.  To
+     allow for linked calls, the returned value is FH.
 
    SEE ALSO: fits, fits_goto_hdu, fits_read_header, fits_rewind. */
 {
@@ -1029,7 +1002,6 @@ func fits_rewind(fh)
 func fits_eof(fh)
 /* DOCUMENT fits_eof(fh)
      Returns non-zero if FITS handle FH is at end of file.
-
    SEE ALSO: fits, fits_open, fits_next_hdu. */
 {
   if (_car(fh,3)(5) != 'r') error, "FITS file not open for reading";
@@ -1039,18 +1011,16 @@ func fits_eof(fh)
 func fits_current_hdu(fh) { return _car(fh,3)(1); }
 /* DOCUMENT fits_current_hdu(fh);
      Return number of current Header Data Unit in FITS handle FH.
-
    SEE ALSO: fits, fits_read_header, fits_rewind, fits_next_hdu. */
 
 func fits_list(fh, key)
 /* DOCUMENT fits_list, fh;
-       -or- fits_list(fh)
-     Get the names of  the FITS extensions in FH.  FH can  be the name of a
-     FITS file  or a FITS handle  FH (the input handle  is left unchanged).
-     When called  as a  subroutine, the list  is printed to  terminal; when
-     called as  a function, the returned  value is a string  array with the
-     names of the FITS extensions in FH.
-
+         or fits_list(fh)
+     Get the names of the FITS extensions in FH.  FH can be the name of a FITS
+     file or  a FITS  handle FH  (the input handle  is left  unchanged).  When
+     called as a subroutine, the list is printed to terminal; when called as a
+     function, the returned value is a string array with the names of the FITS
+     extensions in FH.
    SEE ALSO: fits, fits_read_header, fits_next_hdu. */
 {
   /* Get header of primary HDU. */
@@ -1100,9 +1070,8 @@ func _fits_warn(msg) { write, format="FITS - WARNING: %s\n", msg; }
 
 func fits_nth(n)
 /* DOCUMENT fits_nth(n)
-     Returns a string in the form "1st", "2nd", "3rd" or "#th" where # is
-     the human readable value of integer N.
-
+     Returns a string in the form "1st", "2nd", "3rd" or "#th" where # is the
+     human readable value of integer N.
    SEE ALSO: fits, fits_set_dims. */
 {
   return (n == 1 ? "1st" :
@@ -1114,16 +1083,14 @@ func fits_nth(n)
 func fits_date(nil) { return rdline(popen("date -u +%D",0)); }
 /* DOCUMENT fits_date()
      Returns current Universal Time date as a string conforming to FITS
-     standard: "DD/MM/YY"
-
+     standard: "DD/MM/YY".
    SEE ALSO: fits, rdline, popen. */
 
 func fits_get_bitpix(fh, fix)
 /* DOCUMENT fits_get_bitpix(fh)
-       -or- fits_get_bitpix(fh, fix)
-     Get  BITPIX   value  from  current   HDU  in  FITS  handle   FH.   See
+         or fits_get_bitpix(fh, fix)
+     Get BITPIX value from current HDU in FITS handle FH.  See
      fits_get_special for the meaning of FIX.
-
    SEE ALSO: fits, fits_check_bitpix, fits_get_special,
             fits_get_naxis, fits_get_dims. */
 {
@@ -1135,10 +1102,9 @@ func fits_get_bitpix(fh, fix)
 
 func fits_get_naxis(fh, fix)
 /* DOCUMENT fits_get_naxis(fh)
-       -or- fits_get_naxis(fh, fix)
-     Get  NAXIS   value  from   current  HDU  in   FITS  handle   FH.   See
-     fits_get_special for the meaning of FIX.
-
+         or fits_get_naxis(fh, fix)
+     Get NAXIS value from current HDU in FITS handle FH.  See fits_get_special
+     for the meaning of FIX.
    SEE ALSO: fits, fits_get_special, fits_get_bitpix, fits_get_dims. */
 {
   naxis = fits_get_special(fh, "NAXIS", _fits_id_naxis, 3, fix);
@@ -1148,13 +1114,12 @@ func fits_get_naxis(fh, fix)
 
 func fits_get_dims(fh, fix)
 /* DOCUMENT fits_get_dims(fh)
-       -or- fits_get_dims(fh, fix)
-     Get all  NAXIS* values from current  HDU in FITS handle  FH and return
-     vector  [NAXIS, NAXIS1,  NAXIS2, ...].   If the  value of  any  of the
-     "NAXIS#" card is  zero, then there is no data in  the current unit and
-     fits_get_dims returns [] (nil) in this case.  See fits_get_special for
-     the meaning of FIX.
-
+         or fits_get_dims(fh, fix)
+     Get  all NAXIS*  values from  current HDU  in FITS  handle FH  and return
+     vector [NAXIS, NAXIS1, NAXIS2, ...].  If the value of any of the "NAXIS#"
+     card is zero, then there is no data in the current unit and fits_get_dims
+     returns [] (nil)  in this case.  See fits_get_special  for the meaning of
+     FIX.
    SEE ALSO: fits, fits_get_special, fits_get_bitpix, fits_get_naxis. */
 {
   naxis = fits_get_naxis(fh, fix);
@@ -1174,11 +1139,10 @@ func fits_get_dims(fh, fix)
 
 func fits_get_xtension(fh)
 /* DOCUMENT fits_get_xtension(fh)
-     Get XTENSION value from current HDU in FITS handle FH.  The returned
-     value is a scalar string in upper case letters with the name of the
-     extension (without trailing spaces); "IMAGE" is returned for the
-     primary HDU.
-
+     Get  XTENSION value from  current HDU  in FITS  handle FH.   The returned
+     value  is a scalar  string in  upper case  letters with  the name  of the
+     extension (without trailing spaces);  "IMAGE" is returned for the primary
+     HDU.
    SEE ALSO: fits, fits_get, fits_parse. */
 {
   location = 1;
@@ -1201,12 +1165,10 @@ func fits_get_xtension(fh)
 
 func fits_get_special(fh, key, id, location, fix)
 /* DOCUMENT fits_get_special(fh, key, id, location, fix)
-     Get  value of  a special  FITS card  given its  key  string, numerical
-     identifier and absolute  LOCATION (1 for first FITS  card).  If FIX is
-     true,  various further  verifications  are made  and,  if FITS  strict
-     checking mode is  off, the header may be fixed  in case of unambiguous
-     error.
-
+     Get  value  of  a special  FITS  card  given  its key  string,  numerical
+     identifier  and absolute LOCATION  (1 for  first FITS  card).  If  FIX is
+     true, various further verifications are made and, if FITS strict checking
+     mode is off, the header may be fixed in case of unambiguous error.
    SEE ALSO: fits, fits_get_bitpix, fits_get_naxis, fits_get_dims
              fits_parse. */
 {
@@ -1230,9 +1192,8 @@ func fits_get_special(fh, key, id, location, fix)
 local fits_coordinate;
 func fits_get_coordinate(fh, axis, span=)
 /* DOCUMENT fits_get_coordinate(fh, axis)
-     Gets AXIS-th coordinate information for current HDU in FITS handle FH.
-     By  default, the  result  is a  fits_coordinate  structure defined  as
-     follows:
+     Gets AXIS-th  coordinate information for  current HDU in FITS  handle FH.
+     By default, the result is a fits_coordinate structure defined as follows:
        struct fits_coordinate {
          long axis;    // axis number
          long length;  // number of elements along this axis
@@ -1249,8 +1210,7 @@ func fits_get_coordinate(fh, axis, span=)
                        // to a different coordinate system in which the
                        // values in the array are actually expressed
        }
-
-     If keyword  SPAN is true, then the  result is a vector  that gives the
+     If  keyword SPAN is  true, then  the result  is a  vector that  gives the
      coordinate of each element along given axis:
         CDELT*(indgen(LENGTH) - CRPIX) + CRVAL
      Note that, if the axis length is zero, a nil value is returned.
@@ -1286,12 +1246,11 @@ struct fits_coordinate {
 
 func fits_get_keywords(fh, ordered)
 /* DOCUMENT fits_get_keywords(fh)
-       -or- fits_get_keywords(fh, ordered)
-     Get list  of FITS keywords defined  in current HDU of  FITS handle HF.
-     The returned value is an array of strings. If ORDERED is true (non-nil
-     and non-zero),  the keywords get  sorted.  Note: the "END"  keyword is
-     always missing in a (non-corrupted) FITS handle.
-
+         or fits_get_keywords(fh, ordered)
+     Get list of FITS keywords defined  in current HDU of FITS handle HF.  The
+     returned value  is an array of  strings. If ORDERED is  true (non-nil and
+     non-zero), the  keywords get sorted.   Note: the "END" keyword  is always
+     missing in a (non-corrupted) FITS handle.
    SEE ALSO: fits, sort, strtok. */
 {
   local cards; eq_nocopy, cards, _car(fh,1);
@@ -1305,9 +1264,8 @@ func fits_get_keywords(fh, ordered)
 
 func fits_move_card(fh, from, to)
 /* DOCUMENT fits_move_card(fh, from, to);
-     Change location of FROM-th card to  index TO into FITS handle FH.  The
+     Change location of FROM-th card to index TO into FITS handle FH.  The
      operation is made in place.
-
    SEE ALSO: fits, fits_move. */
 {
   fits_move, _car(fh,1), from, to;
@@ -1316,9 +1274,8 @@ func fits_move_card(fh, from, to)
 
 func fits_move(a, i, j)
 /* DOCUMENT fits_move, a, i, j;
-     Move I-th element of array A  in place of J-th element.  The operation
-     is done in-place.
-
+     Move I-th element of array A in place of J-th element.  The operation is
+     done in-place.
    SEE ALSO: fits, fits_move_card. */
 {
 #if 0
@@ -1339,12 +1296,11 @@ func fits_move(a, i, j)
 
 func fits_write_header(fh)
 /* DOCUMENT fits_write_header(fh)
-     Write  header  information of  FITS  handle  FH  into current  HDU  of
-     associated file.   It is possible to  re-write header as  long as this
-     would not overwrite existing written data if any (i.e. the new header,
-     rounded up  to a multiple of 2880  bytes, must not be  longer than the
-     old one or there must be no data written.
-
+     Write header information of FITS handle FH into current HDU of associated
+     file.   It is  possible to  re-write  header as  long as  this would  not
+     overwrite existing written  data if any (i.e. the  new header, rounded up
+     to a multiple of 2880 bytes, must not be longer than the old one or there
+     must be no data written.
    SEE ALSO: fits, fits_open, fits_write, fits_write_array. */
 {
   local cards, ids; _fits_get_cards, fh, cards, ids;
@@ -1401,12 +1357,11 @@ func fits_write_header(fh)
 
 func fits_get_data_size(fh, fix)
 /* DOCUMENT fits_get_data_size(fh)
-       -or- fits_get_data_size(fh, fix)
-     Computes  the number  of bytes  in data  part of  current HDU  of FITS
-     handle FH.  This value is computed  according to the header part of FH
-     and may be different from the  number of bytes actually written in the
-     data part of the current HDU.
-
+         or fits_get_data_size(fh, fix)
+     Computes the number  of bytes in data part of current  HDU of FITS handle
+     FH.  This value is computed according to the header part of FH and may be
+     different from the  number of bytes actually written in  the data part of
+     the current HDU.
    SEE ALSO: fits, fits_read_header. */
 {
   bitpix = fits_get_bitpix(fh, fix);
@@ -1451,11 +1406,9 @@ func fits_get_data_size(fh, fix)
  */
 func fits_pad_hdu(fh)
 /* DOCUMENT fits_pad_hdu(fh)
-
-     Fix file size in handle FH to a multiple of FITS blocking factor (2880
-     bytes) by writting null or space characters at the end of the file and
+     Fix file  size in handle FH to  a multiple of FITS  blocking factor (2880
+     bytes) by  writting null or space characters  at the end of  the file and
      update FH offsets accordingly.  FH must be open for writing.
-
    SEE ALSO: fits, fits_close, fits_new_hdu. */
 {
   /* Check offsets and sizes of header and data parts. */
@@ -1486,18 +1439,19 @@ func fits_pad_hdu(fh)
 
 func fits_new_hdu(fh, xtension, comment)
 /* DOCUMENT fits_new_hdu(fh, xtension)
-       -or- fits_new_hdu(fh, xtension, comment)
-     Starts a new extension in FITS  file open for writing.  FH is the FITS
-     handle, XTENSION is  the name of the FITS extension  and COMMENT is an
-     optional string comment.  After calling fits_new_hdu, there is no need
-     to call:
+         or fits_new_hdu(fh, xtension, comment)
+
+     Starts a  new extension in  FITS file open  for writing.  FH is  the FITS
+     handle, XTENSION  is the  name of  the FITS extension  and COMMENT  is an
+     optional string comment.  After calling fits_new_hdu, there is no need to
+     call:
 
        fits_set, FH, "XTENSION", XTENSION, COMMENT;
 
-     since this is already done by this routine.  However, beware that FITS
-     standard requires that, if any  extension is present in the file, that
-     the keyword "EXTEND" with logical  value 'T' (true) must appear in the
-     primary header.
+     since this  is already done by  this routine.  However,  beware that FITS
+     standard requires that, if any extension is present in the file, that the
+     keyword "EXTEND" with logical value 'T' (true) must appear in the primary
+     header.
 
 
    SEE ALSO: fits, fits_pad_hdu, fits_set,
@@ -1526,26 +1480,26 @@ func fits_new_hdu(fh, xtension, comment)
 
 local fits_copy_header, fits_copy_data, fits_copy_hdu;
 /* DOCUMENT fits_copy_header, dst, src;
-       -or- fits_copy_data, dst, src;
-       -or- fits_copy_hdu, dst, src;
+         or fits_copy_data, dst, src;
+         or fits_copy_hdu, dst, src;
 
-     For all these routines, SRC (the source) and DST (the destination) are
+     For all  these routines, SRC (the  source) and DST  (the destination) are
      FITS handles, DST must be write/append mode.
 
      The routine fits_copy_header copies the header part of the current HDU of
-     SRC into DST.  SRC and DST are both FITS handles.  DST must be in a
-     "fresh" state, that is just after a fits_open, fits_create or
-     fits_new_hdu.  Nothing is actually written to the destination stream,
-     fits_write_header must be used for that.  The idea is that additional
-     keywords can be set in DST (for instance history or comments) prior to
+     SRC into  DST.  SRC  and DST  are both FITS  handles.  DST  must be  in a
+     "fresh"  state,   that  is  just   after  a  fits_open,   fits_create  or
+     fits_new_hdu.   Nothing is  actually written  to the  destination stream,
+     fits_write_header must  be used  for that.  The  idea is  that additional
+     keywords can  be set in DST  (for instance history or  comments) prior to
      actually writing the header.
 
-     The routine fits_copy_data copies (writes) the data part of the current
-     HDU of SRC into DST.  DST must be in the same state as just after a
+     The routine fits_copy_data  copies (writes) the data part  of the current
+     HDU of  SRC into  DST.  DST must  be in  the same state  as just  after a
      fits_write_header.
 
      The routine fits_copy_hdu copies the header and data parts of the current
-     HDU of SRC into DST.  The data is automatically padded with zeroes.  The
+     HDU of SRC into DST.  The  data is automatically padded with zeroes.  The
      call fits_copy_hdu, DST, SRC; is identical to:
 
        fits_copy_header, dst, src;
@@ -1590,7 +1544,7 @@ local fits_copy_header, fits_copy_data, fits_copy_hdu;
    SEE ALSO: fits_open, fits_create, fits_new_hdu, fits_write_header.
  */
 
-func fits_copy_header(dst, src)
+func fits_copy_header(dst, src) /* (documentation is elsewhere) */
 {
   /* Check destination descriptor. */
   local dst_descr;
@@ -1609,7 +1563,7 @@ func fits_copy_header(dst, src)
   return dst;
 }
 
-func fits_copy_data(dst, src)
+func fits_copy_data(dst, src) /* (documentation is elsewhere) */
 {
   /* Notes:
    *   DESCR(1) = current HDU number (1 for primary HDU);
@@ -1663,7 +1617,7 @@ func fits_copy_data(dst, src)
   return dst;
 }
 
-func fits_copy_hdu(dst, src)
+func fits_copy_hdu(dst, src) /* (documentation is elsewhere) */
 {
   fits_copy_header, dst, src;
   fits_write_header, dst;
@@ -1678,21 +1632,20 @@ func fits_copy_hdu(dst, src)
 
 func fits_set(fh, key, value, comment)
 /* DOCUMENT fits_set, fh, key, value;
-       -or- fits_set, fh, key, value, comment;
-     Set (or adds) FITS card in header  of FITS handle FH.  KEY is the card
-     name (FITS keyword)  and must be a scalar string,  VALUE is the scalar
+         or fits_set, fh, key, value, comment;
+     Set (or  adds) FITS card in  header of FITS  handle FH.  KEY is  the card
+     name (FITS  keyword) and  must be  a scalar string,  VALUE is  the scalar
      value of the card and COMMENT is an optional string comment.
 
-     Commentary cards -- for which KEY  is one of "COMMENT, "HISTORY" or ""
-     (blank) -- get appended to the  existing cards in the header of FH (if
-     the VALUE of a commentary card is too long, it may occupy several FITS
-     cards).   For any  other  kind of  cards,  the new  card replaces  the
-     existing one, if any; or  get appended to the existing cards.  Special
-     cards that must appear in a precise order ("SIMPLE", "BITPIX", "NAXIS"
-     and "NAXIS#") must  be added in the correct order  (their value can be
-     modified afterward).  The "END"  card is not  needed since it  will be
-     automatically written when required.
-
+     Commentary cards  -- for which  KEY is one  of "COMMENT, "HISTORY"  or ""
+     (blank) -- get appended to the existing cards in the header of FH (if the
+     VALUE  of a  commentary card  is  too long,  it may  occupy several  FITS
+     cards).  For any other kind of  cards, the new card replaces the existing
+     one, if any;  or get appended to the existing  cards.  Special cards that
+     must appear in a precise order ("SIMPLE", "BITPIX", "NAXIS" and "NAXIS#")
+     must  be  added  in  the  correct  order (their  value  can  be  modified
+     afterward).  The "END" card is  not needed since it will be automatically
+     written when required.
 
    SEE ALSO: fits, fits_open. */
 {
@@ -1810,10 +1763,9 @@ func fits_set(fh, key, value, comment)
 
 func _fits_get_cards(fh, &cards, &ids)
 /* DOCUMENT _fits_get_cards(fh, cards, ids)
-     Stores  in  variables CARDS  and  IDS  the  FITS cards  and  numerical
-     identifiers from header in FITS  handle FH.  The returned value is the
+     Stores in variables CARDS and IDS the FITS cards and numerical
+     identifiers from header in FITS handle FH.  The returned value is the
      number of FITS cards (including empty ones).
-
    SEE ALSO: fits, fits_set. */
 {
   eq_nocopy, cards, _car(fh, 1);
@@ -1851,10 +1803,9 @@ func _fits_get_cards(fh, &cards, &ids)
 
 func _fits_format_logical(key, value, comment)
 /* DOCUMENT _fits_format_logical(key, value)
-       -or- _fits_format_logical(key, value, comment)
-     Private  routine to format  FITS logical  card, return  a 80-character
+         or _fits_format_logical(key, value, comment)
+     Private routine to format FITS logical card.  Returns a 80-character
      string.
-
    SEE ALSO: fits, fits_set. */
 {
   if (value=='T') value= "T";
@@ -1866,10 +1817,9 @@ func _fits_format_logical(key, value, comment)
 
 func _fits_format_integer(key, value, comment)
 /* DOCUMENT _fits_format_integer(key, value)
-       -or- _fits_format_integer(key, value, comment)
-     Private routine to format FITS integer card, return a 80-character
+         or _fits_format_integer(key, value, comment)
+     Private routine to format FITS integer card.  Returns a 80-character
      string.
-
    SEE ALSO: fits, fits_set. */
 {
   return strpart(swrite(format="%-8s= %20d / %-47s",
@@ -1879,13 +1829,12 @@ func _fits_format_integer(key, value, comment)
 local _fits_format_real_table;
 func _fits_format_real(key, value, comment)
 /* DOCUMENT _fits_format_real(key, value)
-       -or- _fits_format_real(key, value, comment)
-     Private routine to format FITS real card, return a 80-character
-     string.
+         or _fits_format_real(key, value, comment)
+     Private routine to format FITS real card.  Returns a 80-character string.
 
      Note: FITS standard imposes that the ASCII representation of a real
-           number makes 20 characters;  the full precision of 64-bit values
-           can not be represented with this restriction.
+           number makes 20 characters; the full precision of 64-bit values can
+           not be represented with this restriction.
 
    SEE ALSO: fits, fits_set. */
 {
@@ -1902,16 +1851,13 @@ func _fits_format_real(key, value, comment)
   }
   return strpart(swrite(format="%-8s= %20s / %-47s",
                         key, s, (is_void(comment)?"":comment)), 1:80);
-  //return strpart(swrite(format="%-8s= %20.12E / %-47s",
-  //                      key, value, (is_void(comment)?"":comment)), 1:80);
 }
 
 func _fits_format_complex(key, value, comment)
 /* DOCUMENT _fits_format_complex(key, value)
-       -or- _fits_format_complex(key, value, comment)
-     Private routine to format FITS complex card, return a 80-character
+         or _fits_format_complex(key, value, comment)
+     Private routine to format FITS complex card.  Returns a 80-character
      string.
-
    SEE ALSO: fits, fits_set. */
 {
   return strpart(swrite(format="%-8s= %20.12E%20.12E / %-27s",
@@ -1921,15 +1867,15 @@ func _fits_format_complex(key, value, comment)
 
 func _fits_format_string(key, value, comment)
 /* DOCUMENT _fits_format_string(key, value)
-       -or- _fits_format_string(key, value, comment)
-     Private routine to format FITS string card, return a 80-character
+         or _fits_format_string(key, value, comment)
+     Private routine to format FITS string card.  Returns a 80-character
      string.
 
-     Note: enclose input string in quotes, replacing each quote in input
-           string by 2 quotes.  Since opening quote should appear in
-           column 11 and closing quote in columns 20 to 80 of the FITS
-           card, make sure that string is not longer than 68 characters
-           (too long strings get silently truncated).
+     Note:  enclose input  string in  quotes,  replacing each  quote in  input
+           string by 2 quotes.  Since opening quote should appear in column 11
+           and closing quote  in columns 20 to 80 of the  FITS card, make sure
+           that string is not longer  than 68 characters (too long strings get
+           silently truncated).
 
    SEE ALSO: fits, fits_set. */
 {
@@ -1961,11 +1907,10 @@ func _fits_format_string(key, value, comment)
 
 func _fits_format_comment(key, text, unused)
 /* DOCUMENT _fits_format_comment(key)
-       -or- _fits_format_comment(key, text)
-     Private routine  to format  FITS commentary card,  return an  array of
-     80-character string(s).   Text comment, if longer  than 72 characters,
-     will result in more than one comment cards.
-
+         or _fits_format_comment(key, text)
+     Private  routine to  format  FITS  commentary card,  return  an array  of
+     80-character string(s).  Text comment, if longer than 72 characters, will
+     result in more than one comment cards.
    SEE ALSO: fits, fits_set. */
 {
   len = strlen(text);
@@ -1985,25 +1930,25 @@ func _fits_format_comment(key, text, unused)
 
 func fits_read_array(fh, which=, rescale=)
 /* DOCUMENT fits_read_array(fh)
-     Gets "image" (actually a Yorick array) from current HDU of FITS handle
-     FH.  Note that the result may be [] (nil) if the current unit contains
-     no data.
+     Gets "image"  (actually a Yorick array)  from current HDU  of FITS handle
+     FH.  Note that the result may be [] (nil) if the current unit contains no
+     data.
 
-     Keyword  WHICH may  be  used  to indicate  which  sub-array should  be
-     returned.  WHICH always  applies to the last dimension  of the "image"
-     data  stored in current  HDU.  For  instance, if  the array  DATA with
-     dimensions  (235,453,7)  is  stored  in  the  current  FITS  HDU,  the
-     sub-array DATA(,,4) can be obtained by:
+     Keyword WHICH may be used to indicate which sub-array should be returned.
+     WHICH always applies to the last  dimension of the "image" data stored in
+     current HDU.  For instance, if the array DATA with dimensions (235,453,7)
+     is  stored  in the  current  FITS HDU,  the  sub-array  DATA(,,4) can  be
+     obtained by:
 
          fits_read_array(FH, which=4);
 
-     If keyword RESCALE is true,  returned values get rescaled according to
-     FITS keywords BSCALE and BZERO.  If RESCALE=2 and one of BSCALE and/or
-     BZERO exists in  the FITS header and  BITPIX was 8, 16, 32,  or -32, a
-     single precision  array (float)  is returned.  If  RESCALE is  not set
-     (nil), the  default is to  rescale data values  if BSCALE is not  1 or
-     BZERO is not  0 (i.e. the default is RESCALE=1).  In  order to get raw
-     data (i.e. as written in the file), use RESCALE=0.
+     If keyword  RESCALE is  true, returned values  get rescaled  according to
+     FITS keywords  BSCALE and BZERO.  If  RESCALE=2 and one  of BSCALE and/or
+     BZERO exists  in the  FITS header  and BITPIX was  8, 16,  32, or  -32, a
+     single precision array (float) is returned.  If RESCALE is not set (nil),
+     the default is to rescale data values  if BSCALE is not 1 or BZERO is not
+     0 (i.e.  the default is  RESCALE=1).  In order  to get raw data  (i.e. as
+     written in the file), use RESCALE=0.
 
    SEE ALSO: fits, fits_open. */
 {
@@ -2062,30 +2007,33 @@ func fits_read_array(fh, which=, rescale=)
 
 func fits_write_array(fh, data, which=, rescale=)
 /* DOCUMENT fits_write_array, fh, data;
-     Write  array DATA  into  curent HDU  of  FITS handle  FH.   DATA is  a
-     so-called "image"  in FITS jargon but  it can be a  numerical array of
-     any-dimension.   FITS cards BITPIX,  BSCALE and  BZERO are  taken into
-     account to convert data values into file values.  The file values are:
+
+     Write array DATA into curent HDU  of FITS handle FH.  DATA is a so-called
+     "image" in FITS jargon but it  can be a numerical array of any-dimension.
+     FITS cards  BITPIX, BSCALE  and BZERO are  taken into account  to convert
+     data values into file values.  The file values are:
 
          (DATA  - BZERO)/BSCALE
 
-     with BZERO=0 and  BSCALE=1 by default (i.e. if not found  in FH) or if
-     keyword RESCALE  is explicitely set  to zero.  The values  are further
-     subject to rounding  to the nearest integer and  clipping for positive
-     BITPIX.  If  keyword RESCALE is  explicitely set to false  (zero), the
-     file values get written without BSCALE/BZERO scale conversion.
+     with BZERO=0  and BSCALE=1  by default (i.e.  if not  found in FH)  or if
+     keyword  RESCALE is  explicitely set  to  zero.  The  values are  further
+     subject  to rounding  to the  nearest integer  and clipping  for positive
+     BITPIX.  If keyword RESCALE is  explicitely set to false (zero), the file
+     values get written without BSCALE/BZERO scale conversion.
 
-     The N dimensions of DATA must  match the values of the NAXIS1, NAXIS2,
-     ..., NAXISn  cards of  the FITS  file (it is  assumed that  the header
-     information  stored in  FH  are synchronized  to  the header  actually
-     written) extra dimensions in the  FITS file are considered as possible
-     data slices.  By  default, the first data slice  get written.  Keyword
-     WHICH may be used to write a given slice of data.  The value WHICH may
-     be less or equal zero to choose  a slice with respect to the last one.
+     The N  dimensions of DATA  must match the  values of the  NAXIS1, NAXIS2,
+     ...,  NAXISn cards  of  the FITS  file  (it is  assumed  that the  header
+     information stored in FH are synchronized to the header actually written)
+     extra dimensions in the FITS file are considered as possible data slices.
+     By default, the first data slice  get written.  Keyword WHICH may be used
+     to write  a given slice of  data.  The value  WHICH may be less  or equal
+     zero to choose a slice with respect to the last one.
 
-  EXAMPLE:
-     The following  example creates a FITS file  with a 100-by-45-by-4-by-7
-     "image" data made of random  values computed and written one 100-by-45
+
+   EXAMPLE:
+
+     The  following example  creates a  FITS file  with  a 100-by-45-by-4-by-7
+     "image" data  made of  random values computed  and written  one 100-by-45
      slice at a time:
 
        fh = fits_create("newfile.fits", bitpix=16, dimlist=[4,100,45,4,7],
@@ -2198,9 +2146,8 @@ func fits_write_array(fh, data, which=, rescale=)
 
 func fits_set_dims(fh, dimlist)
 /* DOCUMENT fits_set_dims(fh, dimlist)
-      Set NAXIS  and NAXIS1,  NAXIS2, ... values  into current HDU  of FITS
-      handle FH according to dimension list DIMLIST.  DIMLIST may be empty.
-
+      Set NAXIS and NAXIS1, NAXIS2, ... values into current HDU of FITS handle
+      FH according to dimension list DIMLIST.  DIMLIST may be empty.
    SEE ALSO: fits, fits_get_dims. */
 {
   if (is_void(dimlist)) {
@@ -2228,13 +2175,13 @@ func fits_set_dims(fh, dimlist)
 
 func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
 /* DOCUMENT fits_new_image(fh, data)
-       -or- fits_new_image(fh, bitpix=..., dimlist=...)
-     Starts a new image (array) FITS extension in handle FH and returns FH.
-     This routine starts a new FITS extension with name "IMAGE" and pre-set
-     FITS cards  needed to describe  the array data according  to keywords:
-     BITPIX, DIMLIST, BZERO, and BSCALE.   If argument DATA is given, it is
-     used  to guess  the  bits per  pixel  and the  dimension  list if  not
-     specified by the keywords BITPIX and DIMSLIST respectively.
+         or fits_new_image(fh, bitpix=..., dimlist=...)
+     Starts a  new image (array) FITS  extension in handle FH  and returns FH.
+     This routine  starts a new FITS  extension with name  "IMAGE" and pre-set
+     FITS  cards needed  to describe  the  array data  according to  keywords:
+     BITPIX, DIMLIST,  BZERO, and  BSCALE.  If argument  DATA is given,  it is
+     used to guess the bits per  pixel and the dimension list if not specified
+     by the keywords BITPIX and DIMSLIST respectively.
 
    SEE ALSO: fits, fits_write_array. */
 {
@@ -2257,15 +2204,14 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
 
 func fits_new_bintable(fh, comment)
 /* DOCUMENT fits_new_bintable(fh)
-       -or- fits_new_bintable(fh, comment)
-
-     Starts a new  binary table FITS extension.  This  routine starts a new
-     FITS extension with  name "BINTABLE" and pre-set FITS  cards needed to
-     describe the  table with fake values  (the correct values  will be set
-     when  fits_write_bintable  is called  to  actually  write the  table).
-     After calling this  routine, the user can add new  FITS cards (but not
-     XTENSION,  BITPIX,   NAXIS,  NAXIS1,  NAXIS2,   GCOUNT,  nor  PCOUNT).
-     Optional argument COMMENT is the comment string for the XTENSION card.
+         or fits_new_bintable(fh, comment)
+     Starts a new binary table FITS extension.  This routine starts a new FITS
+     extension with name "BINTABLE" and  pre-set FITS cards needed to describe
+     the  table  with  fake  values  (the  correct values  will  be  set  when
+     fits_write_bintable  is  called  to  actually write  the  table).   After
+     calling this routine, the user can  add new FITS cards (but not XTENSION,
+     BITPIX, NAXIS,  NAXIS1, NAXIS2,  GCOUNT, nor PCOUNT).   Optional argument
+     COMMENT is the comment string for the XTENSION card.
 
      The returned value is FH.
 
@@ -2280,50 +2226,51 @@ func fits_new_bintable(fh, comment)
 
 func fits_write_bintable(fh, ptr, logical=, fixdims=)
 /* DOCUMENT fits_write_bintable(fh, ptr)
-     Writes contents  of pointer PTR in  a binary table in  FITS handle FH.
-     Arrays pointed  by PTR  become the  fields of the  table (in  the same
-     order as  in PTR) and must  all have 1  or 2 dimensions with  the same
-     first  dimension  (i.e. the  number  of  rows  in the  table),  second
-     dimensions can have any values and may all be different: they count as
-     the number of 'columns' of the field.  In other words:
 
-       *PTR(i) = i-th  field  in the table,  is an  NROWS-by-NCOLS(i) array
-                 where  NROWS  is the  number  of  rows  in the  table  and
-                 NCOLS(i) is  the repeat  count of the  i-th field;  it can
-                 also be simply a NROWS element vector if NCOLS(i) = 1.
+     Writes  contents of  pointer PTR  in a  binary table  in FITS  handle FH.
+     Arrays pointed by  PTR become the fields of the table  (in the same order
+     as  in PTR)  and must  all have  1 or  2 dimensions  with the  same first
+     dimension (i.e. the  number of rows in the  table), second dimensions can
+     have any  values and may  all be different:  they count as the  number of
+     'columns' of the field.  In other words:
 
-     In the current  version of the routine, only  arrays of numbers (char,
-     short, int,  long, float,  double or complex)  and vectors  of strings
-     (you  can  use several  vectors  to  circumvent  this limitation)  are
-     supported.  Before writing  the data part of a  binary table, you must
-     creates proper header:
+       *PTR(i) = i-th field in  the table, is an NROWS-by-NCOLS(i) array where
+                 NROWS is the number of rows  in the table and NCOLS(i) is the
+                 repeat count of the i-th field; it can also be simply a NROWS
+                 element vector if NCOLS(i) = 1.
+
+     In  the current version  of the  routine, only  arrays of  numbers (char,
+     short, int, long,  float, double or complex) and  vectors of strings (you
+     can  use several vectors  to circumvent  this limitation)  are supported.
+     Before writing the  data part of a binary table,  you must creates proper
+     header:
 
         fits_new_bintable, fh;        // starts a new binary table
         fits_set, fh, "...", ...;     // (optional) set more info. in header
         fits_set, ...;
         fits_write_bintable, fh, ptr; // write binary table
 
-     If  FITS cards "TFORM#"  (with #  equal to  the field  number) already
-     exists   in  the  current   header,  fits_write_bintable   checks  the
-     consistency of the  corresponding data field in PTR  (and performs any
-     required conversion);  otherwise, the format  is automatically guessed
-     and set accordingly in the header of the binary table.
+     If FITS cards "TFORM#" (with #  equal to the field number) already exists
+     in the current header,  fits_write_bintable checks the consistency of the
+     corresponding data  field in PTR (and performs  any required conversion);
+     otherwise, the format is automatically guessed and set accordingly in the
+     header of the binary table.
 
-     If keyword LOGICAL is true (non nil and non-zero) then arrays of int's
-     in  PTR  are considered  as  logical arrays  and  saved  as arrays  of
-     characters: 'F' for false, 'T' for true or '\0' for bad/invalid value.
-     Following Yorick's convention, a "false"  value is integer zero in the
-     arrays of  int's and  a "true" is  any non-zero integer.   However, if
-     LOGICAL has the  special value 2, then strictly  positive integers are
-     treated as "true" values and strictly negative integers are treated as
-     invlaid  values.  Note  that this  only  affect arrays  of int's  (not
-     long's  nor short's nor  char's).  The  default is  to save  arrays of
-     int's as array of 32 bits integers.
+     If keyword LOGICAL is true (non nil and non-zero) then arrays of int's in
+     PTR are considered  as logical arrays and saved  as arrays of characters:
+     'F' for  false, 'T'  for true or  '\0' for bad/invalid  value.  Following
+     Yorick's convention,  a "false"  value is integer  zero in the  arrays of
+     int's and a "true" is any  non-zero integer.  However, if LOGICAL has the
+     special value  2, then strictly  positive integers are treated  as "true"
+     values  and strictly  negative integers  are treated  as  invlaid values.
+     Note that  this only affect arrays  of int's (not long's  nor short's nor
+     char's).  The  default is  to save arrays  of int's  as array of  32 bits
+     integers.
 
-     If  keyword FIXDIMS is  true (non  nil and  non-zero) then  the repeat
-     count in  "TFORMn" cards and the  dimension list in  the "TDIMn" cards
-     already  present in the  header of  the current  HDU are  corrected to
-     match the actual dimensions of the n-th columnin PTR.
+     If keyword FIXDIMS  is true (non nil and non-zero)  then the repeat count
+     in "TFORMn"  cards and  the dimension list  in the "TDIMn"  cards already
+     present  in the  header of  the current  HDU are  corrected to  match the
+     actual dimensions of the n-th columnin PTR.
 
      The returned value is FH.
 
@@ -2749,7 +2696,7 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
 
   /* Extract formats for all fields (this is needed to know their size in the
      file). */
-  cell_dims = array(pointer, tfields); /* to store the dimension list of single cell */
+  cell_dims = array(pointer, tfields); /* for dimension list of single cell */
   field_type = array(long, tfields); /* type identifier of fields */
   array_type = array(long, tfields); /* idem for variable length arrays */
   size = array(long, tfields); /* number of bytes per column per row */
@@ -2809,7 +2756,8 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
           failure = FALSE;
           if (job(i)) {
             type = _FITS_TFORM_IDENTOF(strchar(t)(1) + 1L);
-            if (type == 0 || type == _FITS_TFORM_BIT || type == _FITS_TFORM_POINTER) {
+            if (type == 0 || type == _FITS_TFORM_BIT ||
+                type == _FITS_TFORM_POINTER) {
               job(i) = 0; /* skip this field */
               if (warn_P) {
                 _fits_warn, swrite(format="variable length arrays of type \"%s\" not yet implemented", t);
@@ -2957,7 +2905,8 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
     if (is_void(bad)) bad = -1;
 
     /* Fix single precision complex arrays. */
-    if ((n = numberof((subindex = where(field_type == _FITS_TFORM_FLOAT_COMPLEX)))) > 0) {
+    if ((n = numberof((subindex = where(field_type ==
+                                        _FITS_TFORM_FLOAT_COMPLEX)))) > 0) {
       subindex = index(subindex);
       for (k = 1; k <= n; ++k) {
         j = subindex(k);
@@ -3058,15 +3007,15 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
 
 func fits_pack_bintable(ptr, list)
 /* DOCUMENT fits_pack_bintable(ptr)
-       -or- fits_pack_bintable(ptr, list)
-     Packs binary  table PTR  into a  single array; PTR  must be  a pointer
-     array  (e.g. as  the one  returned by  fits_read_bintable  which see).
-     Second  argument LIST  can be  specified  to select  or re-order  some
-     fields: LIST is a vector of indices of selected and re-ordered fields,
-     the result will be as if  PTR(LIST) was given as unique argument.  The
-     returned array is NROWS-by-NCOLS where NROWS is the first dimension of
-     all fields (which must be the same) and NCOLS is the sum of the second
-     dimension of all fields.
+         or fits_pack_bintable(ptr, list)
+     Packs binary table  PTR into a single array; PTR must  be a pointer array
+     (e.g.  as the  one  returned by  fits_read_bintable  which see).   Second
+     argument LIST can be specified to select or re-order some fields: LIST is
+     a vector of indices of selected and re-ordered fields, the result will be
+     as  if PTR(LIST) was  given as  unique argument.   The returned  array is
+     NROWS-by-NCOLS where  NROWS is the  first dimension of all  fields (which
+     must be  the same) and NCOLS  is the sum  of the second dimension  of all
+     fields.
 
    SEE ALSO: fits_read_bintable. */
 {
@@ -3124,14 +3073,14 @@ func fits_pack_bintable(ptr, list)
 
 func _fits_bintable_header(fh, nbytes, nrows, tfields)
 /* DOCUMENT _fits_bintable_header(fh, nbytes, nrows, tfields)
-     Set/update header  information in  FITS handle FH  for a  binary table
-     extension.  NBYTES is the number of  bytes per row of the table, NROWS
-     is  the number  of table  rows  and TFIELDS  is the  number of  fields
-     (columns in  the table).  FITS  card "XTENSION" with  value "BINTABLE"
-     must already exists  in the header (this is  not checked).  FITS cards
-     "BITPIX",  "NAXIS",   "NAXIS1",  "NAXIS2",  "PCOUNT",   "GCOUNT",  and
-     "TFIELDS" get created/updated by this routine.  The value of PCOUNT is
-     computed by the routine and returned to the caller.
+     Set/update  header information  in  FITS  handle FH  for  a binary  table
+     extension.  NBYTES is the number of  bytes per row of the table, NROWS is
+     the number of table rows and  TFIELDS is the number of fields (columns in
+     the  table).  FITS  card "XTENSION"  with value  "BINTABLE"  must already
+     exists  in  the header  (this  is  not  checked).  FITS  cards  "BITPIX",
+     "NAXIS",  "NAXIS1",  "NAXIS2",  "PCOUNT",  "GCOUNT",  and  "TFIELDS"  get
+     created/updated by this routine.  The  value of PCOUNT is computed by the
+     routine and returned to the caller.
 
    SEE ALSO: fits, fits_new_bintable, fits_write_bintable. */
 {
@@ -3151,25 +3100,25 @@ func _fits_bintable_header(fh, nbytes, nrows, tfields)
 func fits_read_bintable_as_hashtable(fh, h, format=,
                                      select=, raw_string=, raw_logical=, bad=)
 /* DOCUMENT fits_read_bintable_as_hashtable(fh)
-       -or- fits_read_bintable_as_hashtable(fh, h)
+         or fits_read_bintable_as_hashtable(fh, h)
 
-     Read  binary table  in current  HDU (see  fits_read_bintable)  of FITS
-     handle FH  and make it into a  hash table.  If optional  argument H is
-     given, it  must be  an existing  hash table to  be augmented  with the
-     contents of the binary table.  The (augmented) hash table is returned.
-     This function can only be used with the hash table extension.
+     Read binary table in current  HDU (see fits_read_bintable) of FITS handle
+     FH and make  it into a hash  table.  If optional argument H  is given, it
+     must be an  existing hash table to be augmented with  the contents of the
+     binary table.  The (augmented) hash table is returned.  This function can
+     only be used with the hash table extension.
 
-     The  members of  the  hash table  get  named after  the  value of  the
-     'TTYPEn' card  converted to lowercase  (where n is the  field number).
-     For missing  'TTYPEn' cards,  the value of  keyword FORMAT is  used to
-     define the member name  as swrite(format=FORMAT,n).  The default value
-     for FORMAT is "_%d".  If  FORMAT is specified, it must contain exactly
-     one directive to write an  integer and no other format directives.  If
-     a card 'TUNITn' exists, its  value is stored into member with "_units"
-     appended to the corresponding field name.
+     The members of  the hash table get named after the  value of the 'TTYPEn'
+     card converted to  lowercase (where n is the  field number).  For missing
+     'TTYPEn' cards, the value of keyword  FORMAT is used to define the member
+     name as swrite(format=FORMAT,n).  The  default value for FORMAT is "_%d".
+     If FORMAT is specified, it must contain exactly one directive to write an
+     integer and no  other format directives.  If a  card 'TUNITn' exists, its
+     value is stored  into member with "_units" appended  to the corresponding
+     field name.
 
-     Keywords SELECT, RAW_STRING, RAW_LOGICAL and BAD have the same meaning
-     as in fits_read_bintable.
+     Keywords SELECT, RAW_STRING, RAW_LOGICAL and BAD have the same meaning as
+     in fits_read_bintable.
 
    SEE ALSO: fits_read_bintable, swrite, h_new. */
 {
@@ -3218,10 +3167,9 @@ func fits_read_bintable_as_hashtable(fh, h, format=,
 
 func fits_index_of_table_field(fh, name)
 /* DOCUMENT fits_index_of_table_field(fh, name)
-     Returns index(es) of FITS table columns with their TTYPE# value
-     matching array of string(s) NAME.  The table header is read from
-     current HDU of FITS handle FH.
-
+     Returns index(es) of FITS table  columns with their TTYPE# value matching
+     array of  string(s) NAME.  The table  header is read from  current HDU of
+     FITS handle FH.
    SEE ALSO: fits, fits_read_bintable. */
 {
   if (structof(name) != string) error, "expecting table column name(s)";
@@ -3338,7 +3286,7 @@ _fits_bintable_setup = []; /* destroy the helper function */
 
 local fits_toupper, fits_tolower;
 /* DOCUMENT fits_tolower(s)
-       -or- fits_toupper(s)
+         or fits_toupper(s)
      Converts a string or an array of strings S to lower/upper case letters.
 
    SEE ALSO: fits, fits_trimright, fits_strchar. */
@@ -3386,10 +3334,8 @@ func _fits_toupper_1(s)
 local _fits_blank;
 func fits_trimright(s)
 /* DOCUMENT fits_trimright(s)
-     Removes trailing ordinary spaces (character 0x20) from (array of)
-     string(s) S.  Note that trailing spaces are usually not significant
-     in FITS.
-
+     Removes trailing  ordinary spaces (character  0x20) from string  array S.
+     Note that trailing spaces are usually not significant in FITS.
    SEE ALSO: fits, fits_tolower, fits_toupper, fits_strchar,
              strpart, strword.
  */
@@ -3400,10 +3346,9 @@ _fits_blank = [string(0), " "];
 
 local fits_strcmp;
 /* DOCUMENT fits_strcmp(a, b)
-     Returns non-zero where (array of) strings A and B are the same in FITS
-     sense, i.e., ignore case and trailing ordinary spaces (code 0x20). For
+     Returns non-zero  where (array of) strings A  and B are the  same in FITS
+     sense, i.e.,  ignore case and  trailing ordinary spaces (code  0x20). For
      instance, "Hello" and "HELLO " are the same strings.
-
    SEE ALSO: fits, fits_toupper. */
 
 func _fits_strcmp_0(a,b) /* code for Yorick versions older than 1.6 */
@@ -3444,7 +3389,6 @@ _fits_strcmp_0 = _fits_strcmp_1 = [];
 func fits_strchar(s)
 /* DOCUMENT fits_strchar(s)
      Converts string array S into a vector of characters.
-
    SEE ALSO: fits, fits_toupper, fits_trimright. */
 {
   k = strlen(s);
@@ -3517,16 +3461,17 @@ func fits_is_string_scalar(x)
 
 func fits_filename(stream)
 /* DOCUMENT fits_filename(fh)
-     Return path name  of file associated with FITS handle  FH (in fact the
+     Return path  name of  file associated  with FITS handle  FH (in  fact the
      argument may also be any Yorick open stream).
-
-   SEE ALSO: fits. */
+   SEE ALSO: fits, filepath. */
 {
   /* Get stream from FITS handle. */
   if ((id = typeof(stream)) == "list") {
     if (_len(stream) != 4) error, "bad FITS handle";
     id = typeof((stream = _car(stream, 4)));
   }
+
+  // FIXME: use filepath
 
   /* Check input and get description of stream by the print() command. */
   if ((id = typeof(stream)) == "stream") { id = 1; s = print(stream); }
@@ -3581,17 +3526,15 @@ func fits_filename(stream)
 func fits_check_bitpix(bitpix)
 /* DOCUMENT fits_check_bitpix(bitpix)
      Test if FITS bits-per-pixel value BITPIX is valid.
-
    SEE ALSO: fits, fits_bitpix_of, fits_bitpix_type, fits_bitpix_info. */
 {
-  return ((bitpix>0 && (bitpix==8 || bitpix==16 || bitpix==32)) ||
-          bitpix==-32 || bitpix==-64);
+  return ((bitpix > 0 && (bitpix == 8 || bitpix == 16 || bitpix == 32)) ||
+          bitpix == -32 || bitpix == -64);
 }
 
 func fits_bitpix_info(bitpix)
 /* DOCUMENT fits_bitpix_info(bitpix)
      Return string information about FITS bits-per-pixel value.
-
    SEE ALSO: fits, fits_bitpix_of, fits_bitpix_type, fits_check_bitpix. */
 {
   if (bitpix ==   8) return "8-bit twos complement binary unsigned integer";
@@ -3604,10 +3547,9 @@ func fits_bitpix_info(bitpix)
 
 func fits_bitpix_type(bitpix, native=)
 /* DOCUMENT fits_bitpix_type(bitpix)
-       -or- fits_bitpix_type(bitpix, native=1)
-     Returns Yorick data type given by FITS bits-per-pixel value BITPIX.
-     If keyword NATIVE is true, return the native data type matching BITPIX.
-
+         or fits_bitpix_type(bitpix, native=1)
+     Returns Yorick data  type given by FITS bits-per-pixel  value BITPIX.  If
+     keyword NATIVE is true, return the native data type matching BITPIX.
    SEE ALSO: fits, fits_bitpix_of, fits_bitpix_info, fits_check_bitpix. */
 {
   if (native) {
@@ -3634,13 +3576,13 @@ func fits_bitpix_type(bitpix, native=)
 
 func fits_bitpix_of(x, native=)
 /* DOCUMENT fits_bitpix_of(x)
-       -or- fits_bitpix_of(x, native=1)
-     Return FITS bits-per-pixel value BITPIX for binary data X which can be
-     an array or a data  type (structure definition).  If keyword NATIVE is
-     true, the routine assumes that  binary data will be read/write to/from
-     FITS file using native machine data representation.  The default is to
-     conform to FITS standard and to  assume that XDR binary format will be
-     used in FITS file.
+         or fits_bitpix_of(x, native=1)
+     Return FITS bits-per-pixel value BITPIX for binary data X which can be an
+     array or a data type  (structure definition).  If keyword NATIVE is true,
+     the routine assumes that binary data will be read/write to/from FITS file
+     using native machine  data representation.  The default is  to conform to
+     FITS standard and  to assume that XDR binary format will  be used in FITS
+     file.
 
    SEE ALSO: fits, fits_bitpix_type, fits_check_bitpix. */
 {
@@ -3676,28 +3618,28 @@ func fits_bitpix_of(x, native=)
 local _fits_parse_comment;
 func fits_parse(card, id, safe=)
 /* DOCUMENT fits_parse(card);
-       -or- fits_parse(card, id);
-     Return value  of a single  FITS card (CARD  is a scalar  string).  The
-     type of the scalar result is as follow:
+         or fits_parse(card, id);
+     Return value of  a single FITS card (CARD is a  scalar string).  The type
+     of the scalar result is as follow:
         - string for a string or a commentary FITS card
         - char ('T' for true or 'F' for false) for a logical FITS card
         - long for an integer FITS card
         - double for a real FITS card
         - complex for a complex FITS card
 
-     Trailing   spaces   (which    are   irrelevant   according   to   FITS
-     specifications)   get   discarded   from   the  returned   value   for
-     string-valued cards (not commentary cards).
+     Trailing spaces  (which are irrelevant according  to FITS specifications)
+     get  discarded  from the  returned  value  for  string-valued cards  (not
+     commentary cards).
 
-     In order to save a call to  fits_id, if ID is non-nil it is assumed to
-     be the numerical identifier of the card, i.e. fits_id(CARD).
+     In order to save a call to fits_id,  if ID is non-nil it is assumed to be
+     the numerical identifier of the card, i.e. fits_id(CARD).
 
-     The   comment  part   of   CARD  is   stored   into  external   symbol
-     _fits_parse_comment which is a string (possibly nil) for a valued card
+     The   comment   part   of   CARD   is   stored   into   external   symbol
+     _fits_parse_comment which  is a string  (possibly nil) for a  valued card
      and void (i.e. []) for a commentary card.
 
-     If the  SAFE keyword is true,  the routine returns an  empty result in
-     case of error.
+     If the SAFE keyword is true,  the routine returns an empty result in case
+     of error.
 
    SEE ALSO: fits, fits_get, fits_id. */
 {
@@ -3791,33 +3733,35 @@ func fits_parse(card, id, safe=)
 
 func fits_get(fh, pattern, &comment, default=, promote=)
 /* DOCUMENT fits_get(fh, pattern, comment)
-     Get  (array  of)  value(s)   for  FITS  cards  matching  PATTERN  (see
-     fits_match) in current header of FITS handle FH.  If present, argument
-     COMMENT is  an output symbol  where the corresponding comment  part of
-     selected card(s)  will be stored.   In order to avoid  namespace clash
-     due to Yorick's  scoping rules, COMMENT should be  declared as a local
-     symbol in the calling function, e.g.:
+
+     Get (array of) value(s) for  FITS cards matching PATTERN (see fits_match)
+     in current header of FITS handle  FH.  If present, argument COMMENT is an
+     output symbol  where the corresponding  comment part of  selected card(s)
+     will  be stored.   In  order to  avoid  namespace clash  due to  Yorick's
+     scoping  rules, COMMENT  should  be declared  as  a local  symbol in  the
+     calling function, e.g.:
+
        local comment;
        value = fits_get(fh, pattern, comment);
 
-     If no  cards match PATTERN, the  value of keyword  DEFAULT is returned
-     and COMMENT is set to the null string.
+     If no cards  match PATTERN, the value of keyword  DEFAULT is returned and
+     COMMENT is set to the null string.
 
-     The data  type of  the returned value  depends on the  particular card
-     type: a  char ('T' or  'F') is returned  for a logical-valued  card, a
-     long is returned for an  integer-valued card, a double is returned for
-     a real-valued  card, a complex  is returned for a  complex-valued card
-     (either integer  or floating  point), and a  string is returned  for a
-     commentary  or  a  string-valued  card.  Trailing  spaces  (which  are
-     irrelevant  according  to  FITS  specifications)  get  discarded  from
-     the returned value for string-valued cards (not commentary cards).
+     The data type of the returned  value depends on the particular card type:
+     a char  ('T' or  'F') is returned  for a  logical-valued card, a  long is
+     returned  for  an  integer-valued  card,  a  double  is  returned  for  a
+     real-valued card, a complex is returned for a complex-valued card (either
+     integer or floating point), and a  string is returned for a commentary or
+     a string-valued card.  Trailing spaces (which are irrelevant according to
+     FITS  specifications)   get  discarded   from  the  returned   value  for
+     string-valued cards (not commentary cards).
 
-     If multiple cards match PATTERN, their values must be of the same type
-     unless keyword PROMOTE is true, in which case the routine promotes all
+     If multiple  cards match PATTERN, their  values must be of  the same type
+     unless keyword  PROMOTE is true, in  which case the  routine promotes all
      card values to a suitable "highest" type.
 
-     Request fo commentary cards  (i.e. PATTERN is "HISTORY", "COMMENT", or
-     "") may returns several cards.
+     Request fo commentary cards (i.e. PATTERN is "HISTORY", "COMMENT", or "")
+     may returns several cards.
 
    SEE ALSO: fits, fits_match, fits_parse. */
 {
@@ -3866,17 +3810,17 @@ func fits_get(fh, pattern, &comment, default=, promote=)
 local _fits_match_id;
 func fits_match(fh, pattern)
 /* DOCUMENT fits_match(fh, pattern)
-     Return array of int's which are non-zero where FITS card names in FITS
-     handle  FH  match PATTERN.   PATTERN  must be  a  scalar  string or  a
-     numerical identifier.  As a  special case, if  PATTERN is of  the form
-     "KEYWORD#" (i.e.  last character of  PATTERN is a '#'), then any human
-     readable integer will match the '#', e.g. "NAXIS#" will match "NAXIS3"
-     and "NAXIS11" but not "NAXIS" nor "QNAXIS4.
+     Return array  of int's which are  non-zero where FITS card  names in FITS
+     handle FH match PATTERN.  PATTERN must  be a scalar string or a numerical
+     identifier.   As a special  case, if  PATTERN is  of the  form "KEYWORD#"
+     (i.e.   last character  of PATTERN  is a  '#'), then  any  human readable
+     integer  will  match the  '#',  e.g.  "NAXIS#"  will match  "NAXIS3"  and
+     "NAXIS11" but not "NAXIS" nor "QNAXIS4.
 
-     Global/extern  variable  _fits_match_id  is  set  with  the  numerical
+     Global/extern   variable  _fits_match_id  is   set  with   the  numerical
      identifier of PATTERN (without last '#' if any).
 
-     "HIERARCH"  cards are  supported.  The  '#' special  character  is not
+     "HIERARCH"  cards  are  supported.   The  '#' special  character  is  not
      supported on them, though.
 
 
@@ -3924,9 +3868,8 @@ func fits_match(fh, pattern)
 
 func fits_get_cards(fh, pattern)
 /* DOCUMENT fits_get_cards(fh, pattern);
-     Return cards from  FITS handle FH which match  PATTERN (see fits_match
-     for the syntax of PATTERN).
-
+     Return cards from FITS handle  FH which match PATTERN (see fits_match for
+     the syntax of PATTERN).
    SEE ALSO: fits, fits_match. */
 {
   local _fits_match_id;
@@ -3936,9 +3879,8 @@ func fits_get_cards(fh, pattern)
 
 func fits_delete(fh, pattern)
 /* DOCUMENT fits_delete, fh, pattern;
-     Delete all cards  matching PATTERN from current header  of FITS handle
-     FH (see fits_match for the syntax of PATTERN).
-
+     Delete all cards  matching PATTERN from current header  of FITS handle FH
+     (see fits_match for the syntax of PATTERN).
    SEE ALSO: fits, fits_match. */
 {
   local _fits_match_id;
@@ -3952,13 +3894,13 @@ func fits_delete(fh, pattern)
 func fits_ids(cards) { return fits_map(fits_id, cards); }
 func fits_id(card)
 /* DOCUMENT fits_id(card)
-       -or- fits_ids(cards)
-     Convert  FITS  card(s) or  FITS  card  name(s)  into unique  numerical
-     identifier.  CARD is a scalar string and CARDS (with an S) is an array
-     of string(s) (including a  scalar).  Only the keyword part (characters
-     1:8) of CARD(S) is relevant; cards shorter than 8 characters yield the
-     same identifier as if they were padded (right filled) with spaces.  In
-     other words, all the values  returned by the following expressions are
+         or fits_ids(cards)
+     Convert  FITS  card(s)  or   FITS  card  name(s)  into  unique  numerical
+     identifier.  CARD is a scalar string and CARDS (with an S) is an array of
+     string(s) (including  a scalar).  Only the keyword  part (characters 1:8)
+     of CARD(S)  is relevant; cards shorter  than 8 characters  yield the same
+     identifier as if  they were padded (right filled)  with spaces.  In other
+     words,  all  the  values   returned  by  the  following  expressions  are
      identical:
        fits_id("SIMPLE  = T / conforming FITS file");
        fits_id("SIMPLE ");
@@ -3976,9 +3918,8 @@ func fits_id(card)
 
 func _fits_bad_keyword(c)
 /* DOCUMENT _fits_bad_keyword(c)
-     Returns error message due to invalid FITS keyword.  C is an array of
+     Returns error  message due  to invalid  FITS keyword.  C  is an  array of
      characters that compose the bad FITS keyword.
-
    SEE ALSO: fits_id, fits_read_header. */
 {
   if ((n = min(8, numberof(c)))) {
@@ -4000,10 +3941,9 @@ func _fits_bad_keyword(c)
 
 func _fits_id(hdr)
 /* DOCUMENT _fits_id(hdr)
-     Return array  of numerical identifier  for FITS header data  HDR which
-     must be  an array(char, 80,  N).  Any invalid  FITS key will  have its
-     identifier set to -1.
-
+     Return array of numerical identifier  for FITS header data HDR which must
+     be an array(char, 80, N).  Any  invalid FITS key will have its identifier
+     set to -1.
    SEE ALSO: fits, fits_id, fits_key, fits_rehash. */
 {
   digit = _fits_digitize(1 + hdr(1:8,));
@@ -4015,9 +3955,8 @@ func _fits_id(hdr)
 
 func fits_key(id)
 /* DOCUMENT fits_key(id)
-     Convert  (array   of)  FITS   numerical  identifier(s)  ID   into  the
-     corresponding string FITS keyword(s) without trailing spaces.
-
+     Convert (array of) FITS numerical identifier(s) ID into the corresponding
+     string FITS keyword(s) without trailing spaces.
    SEE ALSO: fits, fits_id. */
 {
   extern _fits_max_id;
@@ -4027,10 +3966,9 @@ func fits_key(id)
 }
 
 func _fits_key(id)
-/* DOCUMENT _fits_key(id)
-     Private routine used by fits_key, only  useful if ID is a valid scalar
+/** DOCUMENT _fits_key(id)
+     Private routine used by fits_key, only useful if ID is a valid scalar
      numerical identifier.
-
    SEE ALSO: fits_key. */
 {
   extern _fits_multiplier, _fits_alphabet;
@@ -4063,13 +4001,12 @@ func fits_get_bzero(fh) {
       == double) return value; if (s == long) return double(value);
   _fits_warn, "bad value type for BZERO"; return 0.0; }
 /* DOCUMENT fits_get_bscale(fh)
-       -or- fits_get_bzero(fh)
-     Get BSCALE and BZERO values  for FITS handle FH.  These parameters are
+         or fits_get_bzero(fh)
+     Get BSCALE  and BZERO  values for FITS  handle FH.  These  parameters are
      used to convert file values into physical values according to:
          physical_value = BZERO + BSCALE * file_value
-     if the corresponding card is  missing, BSCALE and BZERO default to 1.0
-     and 0.0 respectively.
-
+     if the corresponding card is missing, BSCALE and BZERO default to 1.0 and
+     0.0 respectively.
    SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
 
 func fits_get_groups(fh) {
@@ -4085,29 +4022,27 @@ func fits_get_pcount(fh) {
       == long) return value;
   _fits_warn, "bad value type for PCOUNT"; return 0; }
 /* DOCUMENT fits_get_groups(fh)
- *     -or- fits_get_gcount(fh)
- *     -or- fits_get_pcount(fh)
- *
- *   Get GROUPS, PCOUNT or GCOUNT values for FITS handle FH.  GROUPS shall
- *   be a logical value: 'T' (true), if the current HDU contains a random
- *   group extension; 'F' (false), otherwise.  The default value for GROUPS
- *   is 'F' (false).  PCOUNT shall be an integer equals to the number of
- *   parameters preceding each group (default value 0).  GCOUNT shall be an
- *   integer equal to the number of random groups present (default value
- *   1).  When GROUPS is false, the total number of bits in the data array
- *   (exclusive of fill that is needed after the data to complete the last
- *   record) is given by the following expression:
- *
- *       NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS1*NAXIS2*...*NAXISm)
- *
- *   where NAXISm is the length of the last axis; for a random group (i.e.
- *   when GROUPS is true), NAXIS1=0 and the total number of bits is:
- *
- *       NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS2*...*NAXISm)
- *
- *
- * SEE ALSO: fits, fits_get, fits_get_bitpix,
- *           fits_read_array, fits_write_array.
+         or fits_get_gcount(fh)
+         or fits_get_pcount(fh)
+     Get GROUPS, PCOUNT or GCOUNT values  for FITS handle FH.  GROUPS shall be
+     a logical value:  'T' (true), if the current HDU  contains a random group
+     extension; 'F' (false),  otherwise.  The default value for  GROUPS is 'F'
+     (false).  PCOUNT shall  be an integer equals to  the number of parameters
+     preceding each group (default value 0).  GCOUNT shall be an integer equal
+     to the number of random groups present (default value 1).  When GROUPS is
+     false, the total number of bits in the data array (exclusive of fill that
+     is needed  after the data  to complete the  last record) is given  by the
+     following expression:
+
+         NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS1*NAXIS2*...*NAXISm)
+
+     where NAXISm  is the length  of the last  axis; for a random  group (i.e.
+     when GROUPS is true), NAXIS1=0 and the total number of bits is:
+
+         NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS2*...*NAXISm)
+
+   SEE ALSO: fits, fits_get, fits_get_bitpix,
+             fits_read_array, fits_write_array.
  */
 
 func fits_get_history(fh) {
@@ -4119,24 +4054,20 @@ func fits_get_comment(fh) {
       || is_void(value)) return value;
   error, "bad value type for COMMENT"; }
 /* DOCUMENT fits_get_history(fh)
-       -or- fits_get_comment(fh)
-     Get COMMENT and  HISTORY values for FITS handle FH.   The result is an
-     array of string(s) or nil if no such cards exists in the header of the
+         or fits_get_comment(fh)
+     Get COMMENT  and HISTORY  values for  FITS handle FH.   The result  is an
+     array of string(s)  or nil if no  such cards exists in the  header of the
      current unit.
-
    SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
 
 
 func fits_get_list(fh, key)
 /* DOCUMENT fits_get_list(fh, key)
       Get value of FITS card KEY in FH and returns it as a vector of integers.
-      This function is intended to parse, e.g. the TDIM# cards in BINTABLE
+      This function  is intended  to parse, e.g.  the TDIM# cards  in BINTABLE
       extensions.  The syntax of the card must be a string of the form:
-
         '(ARG1,ARG2,...)'
-
       where ARG1, etc are human readable integer values.
-
    SEE ALSO: fits_get.
  */
 {
@@ -4174,42 +4105,38 @@ _fits_true = 'T';
 _fits_false = 'F';
 
 local _fits_digitize, _fits_multiplier, _fits_alphabet, _fits_max_id;
-/* DOCUMENT _fits_digitize   - char -> number conversion array;
-            _fits_multiplier - multiplier;
-            _fits_alphabet   - allowed characters in FITS keys;
-            _fits_max_id     - maximum possible ID value.
-     Private  arrays  used  to   convert  FITS  keyword  to/from  numerical
-     identifiers.  If you experiment  a strange behaviour of FITS routines,
-     it may  be because one  of these arrays  get corrupted; in  that case,
-     just  run subroutine fits_init  to reinitialize  things (you  may also
-     have to rehash your FITS handles: see fits_rehash).
-
+/** DOCUMENT _fits_digitize   - char -> number conversion array;
+             _fits_multiplier - multiplier;
+             _fits_alphabet   - allowed characters in FITS keys;
+             _fits_max_id     - maximum possible ID value.
+     Private arrays used to convert FITS keyword to/from numerical
+     identifiers.  If you experiment a strange behaviour of FITS routines, it
+     may be because one of these arrays get corrupted; in that case, just run
+     subroutine fits_init to reinitialize things (you may also have to rehash
+     your FITS handles: see fits_rehash).
    SEE ALSO: fits, fits_init, fits_rehash, fits_id, fits_key. */
 
 local _fits_id_simple, _fits_id_bitpix, _fits_id_naxis, _fits_id_end;
 local _fits_id_comment, _fits_id_history, _fits_id_xtension, _fits_id_bscale;
 local _fits_id_bzero, _fits_id_gcount, _fits_id_pcount, _fits_id_hierarch;
-/* DOCUMENT _fits_id_simple    _fits_id_bitpix   _fits_id_naxis
-            _fits_id_end       _fits_id_comment  _fits_id_history
-            _fits_id_xtension  _fits_id_bscale   _fits_id_bzero
-            _fits_id_gcount    _fits_id_pcount   _fits_id_hierarch
-     Numerical  identifers of  common FITS  keywords. If  you  experiment a
-     strange behaviour  of FITS  routines, it may  be because one  of these
-     values get corrupted;  in that case, just run  subroutine fits_init to
-     reinitialize things.
-
+/** DOCUMENT _fits_id_simple    _fits_id_bitpix   _fits_id_naxis
+             _fits_id_end       _fits_id_comment  _fits_id_history
+             _fits_id_xtension  _fits_id_bscale   _fits_id_bzero
+             _fits_id_gcount    _fits_id_pcount   _fits_id_hierarch
+     Numerical identifers of common FITS keywords. If you experiment a strange
+     behaviour of FITS routines, it may be because one of these values get
+     corrupted; in that case, just run subroutine fits_init to reinitialize
+     things.
    SEE ALSO: fits, fits_init. */
 
 local _fits_id_special;
-/* DOCUMENT _fits_id_special
-     Private  array  of  all  numerical  identifers of  common  FITS  keys:
-     "SIMPLE",  "BITPIX",  "NAXIS", "END",  "",  "COMMENT", "HISTORY",  and
-     "XTENSION".
-
+/** DOCUMENT _fits_id_special
+     Private array of all numerical identifers of common FITS keys: "SIMPLE",
+     "BITPIX", "NAXIS", "END", "", "COMMENT", "HISTORY", and "XTENSION".
    SEE ALSO: fits, fits_init. */
 
 local _fits_strict;
-/* DOCUMENT _fits_strict
+/** DOCUMENT _fits_strict
      Private flag: apply strict FITS compliance?  Never change this flag
      directly but rather call `fits_init'.
 
@@ -4218,37 +4145,40 @@ local _fits_strict;
 
 func fits_init(sloopy=, allow=, blank=)
 /* DOCUMENT fits_init;
-     (Re)initializes FITS private  data.  Normally you do not  have to call
-     this  routine  because  this  routine  is  automatically  called  when
-     "fits.i" is  parsed by Yorick.   You may however need  to explicitely
-     call  fits_init  if  you  suspect  that some  FITS  private  data  get
-     corrupted or if you want to tune FITS strict/sloopy behaviour.
 
-     If keyword SLOOPY  is true (non-nil and non-zero)  some discrepancy is
-     allowed (for reading FITS file only); otherwise strict FITS compliance
-     is applied.  If SLOOPY is true, lower case Latin letters have the same
-     meaning  as their  upper  case counterparts,  most control  characters
-     become identical to regular spaces.
+     (Re)initializes FITS private data.  Normally you do not have to call this
+     routine  because this routine  is automatically  called when  "fits.i" is
+     parsed by Yorick.  You may  however need to explicitely call fits_init if
+     you suspect that  some FITS private data get corrupted or  if you want to
+     tune FITS strict/sloopy behaviour.
 
-     According to FITS standard, the only characters permitted for keywords
-     are  upper  case  (capital)  Latin alphabetic,  numbers,  hyphen,  and
-     underscore.  Leading and embedded blanks are forbidden.  If you cannot
-     read a FITS file because it does not confrom to this rule, you can use
-     keyword ALLOW (a string or an array of characters) to allow additional
+     If  keyword SLOOPY  is true  (non-nil and  non-zero) some  discrepancy is
+     allowed (for reading FITS file only); otherwise strict FITS compliance is
+     applied.   If SLOOPY  is true,  lower case  Latin letters  have  the same
+     meaning as their upper  case counterparts, most control characters become
+     identical to regular spaces.
+
+     According to  FITS standard, the  only characters permitted  for keywords
+     are  upper   case  (capital)  Latin  alphabetic,   numbers,  hyphen,  and
+     underscore.  Leading  and embedded blanks  are forbidden.  If  you cannot
+     read a FITS  file because it does  not confrom to this rule,  you can use
+     keyword ALLOW  (a string or an  array of characters)  to allow additional
      characters for FITS keywords.  For instance:
-       fits_init, allow="/."; // fix for invalid headers made by IRAF
-     make characters '/'  and '.'  acceptable in FITS  keywords.  Note that
-     you  must apply fits_rehash  (to see)  to _every_  FITS handle  in use
-     whenever you change  the set of allowed characters  (because this will
-     probably corrupt the values of numerical identifiers of FITS card) ...
-     It is  therefore a good idea  to change the set  of allowed characters
-     before using any FITS routines.
 
-     Keyword  BLANK can  be  used to  add  more characters  that should  be
-     considered as blanks (spaces)  when parsing FITS header/keywords.  The
-     value  of BLANK  must  be a  string  or an  array  of characters,  for
-     instance: BLANK="\t\r\v\n".  Note that this break strict compliance to
-     FITS standard.
+       fits_init, allow="/."; // fix for invalid headers made by IRAF
+
+     make characters '/' and '.'   acceptable in FITS keywords.  Note that you
+     must apply  fits_rehash (to see) to  _every_ FITS handle  in use whenever
+     you  change the  set of  allowed characters  (because this  will probably
+     corrupt  the values of  numerical identifiers  of FITS  card) ...   It is
+     therefore  a good idea  to change  the set  of allowed  characters before
+     using any FITS routines.
+
+     Keyword  BLANK  can  be  used  to  add more  characters  that  should  be
+     considered  as blanks  (spaces) when  parsing FITS  header/keywords.  The
+     value of BLANK must be a  string or an array of characters, for instance:
+     BLANK="\t\r\v\n".   Note  that  this  break  strict  compliance  to  FITS
+     standard.
 
    SEE ALSO: fits, fits_rehash. */
 {
@@ -4378,28 +4308,26 @@ fitsHeader = fitsFixHeader = fitsAddComment = fitsAddHistory =
 fitsRescale = fitsWrite = fitsRead = fitsObsolete;
 
 func fitsRead(name, &header, which=, pack=, rescale=)
-/* DOCUMENT a= fitsRead(filename, header)
+/* DOCUMENT a = fitsRead(filename, header)
 
      *** WARNING: Obsolete fits routine (see fits_read) ***
 
-     Returns the data of the  FITS file FILENAME.  If present, the optional
-     argument HEADER will be used to  store the contents of the FITS header
+     Returns the  data of  the FITS file  FILENAME.  If present,  the optional
+     argument HEADER  will be used  to store the  contents of the  FITS header
      file (a FitsHeader structure).
 
-     Keyword  WHICH may  be  used  to indicate  which  sub-array should  be
-     returned.  For instance, if the array DATA with dimensions (235,453,7)
-     is stored in the FITS file "data.fits", the sub-array DATA(,,4) can be
-     read by:
-               SUB_DATA= fitsRead("data.fits", which= 4);
+     Keyword WHICH may be used to indicate which sub-array should be returned.
+     For instance, if the array  DATA with dimensions (235,453,7) is stored in
+     the  FITS file  "data.fits",  the  sub-array DATA(,,4)  can  be read  by:
+     SUB_DATA= fitsRead("data.fits", which= 4);
 
-     Keyword PACK, if non-nil and  non-zero, indicates that axis whith unit
-     dimension  should be  ignored.  The  default  is to  ignore only  zero
-     length axis.
+     Keyword PACK,  if non-nil  and non-zero, indicates  that axis  whith unit
+     dimension should be  ignored.  The default is to  ignore only zero length
+     axis.
 
-     Keyword RESCALE, if non-nil and  zero, indicates that read data values
-     should not  be rescaled according  to FITS keywords BSCALE  and BZERO.
-     The default is to rescale data values  if BSCALE is not 1. or BZERO is
-     not 0.
+     Keyword RESCALE,  if non-nil  and zero, indicates  that read  data values
+     should not be rescaled according  to FITS keywords BSCALE and BZERO.  The
+     default is to rescale data values if BSCALE is not 1. or BZERO is not 0.
 
   SEE ALSO: fits, fits_read, fitsObsolete. */
 {
