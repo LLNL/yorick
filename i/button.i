@@ -1,5 +1,5 @@
 /*
- * $Id: button.i,v 1.1 2005-09-18 22:05:54 dhmunro Exp $
+ * $Id: button.i,v 1.2 2010-04-18 10:33:38 thiebaut Exp $
  * Implement buttons in Yorick graphics window.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -21,7 +21,7 @@ struct Button {
 
 func button_build(button, which)
 /* DOCUMENT button_build(button)
-       -or- button_build(button, which)
+         or button_build(button, which)
      Returns a Button structure instance, modified interactively to be at
      the correct position and to have the correct box half widths, e.g.:
 

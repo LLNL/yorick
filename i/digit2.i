@@ -1,5 +1,5 @@
 /*
- * $Id: digit2.i,v 1.1 2005-09-18 22:05:55 dhmunro Exp $
+ * $Id: digit2.i,v 1.2 2010-04-18 10:33:38 thiebaut Exp $
  * 2D versions of digitize and interp functions (based on mesh_loc)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -10,7 +10,7 @@
 
 func digit2(y0,x0, y,x,reg, pt=)
 /* DOCUMENT digit2(y0,x0, y,x)
-       -or- digit2(y0,x0, y,x,reg)
+         or digit2(y0,x0, y,x,reg)
 
      return the index of the zone of the point or points (X0,Y0)
      in the quadrilateral mesh (X,Y) with the optional region
@@ -36,7 +36,7 @@ func digit2(y0,x0, y,x,reg, pt=)
 
 func interp2(y0,x0, z,y,x,reg, outside=)
 /* DOCUMENT z0= interp2(y0,x0, z,y,x)
-       -or- z0= interp2(y0,x0, z,y,x,reg)
+         or z0= interp2(y0,x0, z,y,x,reg)
 
      return the bilinear interpolate of the function Z(X,Y) at the
      points (X0,Y0).  The X, Y, and optional REG arrays specify a

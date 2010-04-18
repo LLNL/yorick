@@ -1,5 +1,5 @@
 /*
- * $Id: rezone.i,v 1.1 2005-09-18 22:06:07 dhmunro Exp $
+ * $Id: rezone.i,v 1.2 2010-04-18 10:33:38 thiebaut Exp $
  * Point and click rezoner, written in interpreted Yorick.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -294,7 +294,7 @@ _rez_dyvp= (0.895-0.455)*0.5;
 
 func rezone(filename, all=, quiet=)
 /* DOCUMENT rezone, filename
-       -or- rezone
+         or rezone
 
      Invoke the mouse-driven rezoner.  Input is taken from variables
      rt, zt, and ireg in the file FILENAME (which is prompted for if
@@ -1373,8 +1373,8 @@ rez_qireg= "ireg";
 
 func rez_mesh(rt, zt, ireg, all=, quiet=)
 /* DOCUMENT rez_mesh, rt, zt, ireg
-       -or- rez_mesh, rt, zt
-       -or- rez_mesh, zfile
+         or rez_mesh, rt, zt
+         or rez_mesh, zfile
      set mesh for rez_... commands.  If ZFILE is specified, it must be a
      binary file containing variables RT, ZT, and (optionally) IREG.
    SEE ALSO: rez_all, rez_adjust_mesh

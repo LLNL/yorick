@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.34 2010-04-16 05:23:43 dhmunro Exp $
+ * $Id: std.i,v 1.35 2010-04-18 10:33:38 thiebaut Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -228,9 +228,9 @@ func about(____n____, ____a____)
      PATTERN is a string with a trailing "/i", the other part of the
      regular expression is interpreted so as to ignore case.
 
-   SEE ALSO help, info, symbol_def, symbol_names,
-            strgrep, strcase,
-            select_name. */
+   SEE ALSO: help, info, symbol_def, symbol_names,
+             strgrep, strcase, select_name.
+*/
 {
   /* Attempt to use _very_ odd names to avoid clash with caller. */
   ____a____ = symbol_names((____a____ ? -1 : 2096));
@@ -268,25 +268,25 @@ func about(____n____, ____a____)
         "/* DOCUMENT sum(x)",
         "     Returns sum of values in array X.",
         "     Can also be used as a range operator.",
-        "   SEE ALSO avg, max, min. */";
+        "   SEE ALSO: avg, max, min. */";
     } else if (____a____ == "avg") {
       write, format="%s\n%s\n%s\n%s\n",
         "/* DOCUMENT avg(x)",
         "     Returns average of values in array X.",
         "     Can also be used as a range operator.",
-        "   SEE ALSO max, min, sum. */";
+        "   SEE ALSO: max, min, sum. */";
     } else if (____a____ == "min") {
       write, format="%s\n%s\n%s\n%s\n",
         "/* DOCUMENT min(x)",
         "     Returns minimum value in array X.",
         "     Can also be used as a range operator.",
-        "   SEE ALSO avg, max, sum. */";
+        "   SEE ALSO: avg, max, sum. */";
     } else if (____a____ == "max") {
       write, format="%s\n%s\n%s\n%s\n",
         "/* DOCUMENT max(x)",
         "     Returns maximum value in array X.",
         "     Can also be used as a range operator.",
-        "   SEE ALSO avg, min, sum. */";
+        "   SEE ALSO: avg, min, sum. */";
     } else {
       help, symbol_def(____a____);
     }
@@ -306,7 +306,7 @@ func select_name(list, index=,  prompt=, forever=,
      Other keywords are passed to print_columns: LABEL (as
      LABEL), WIDTH, SEP, EOL, BOL and MAXCOLS.
 
-   SEE ALSO print_columns. */
+   SEE ALSO: print_columns. */
 {
   number = numberof(list);
   print_columns, list, label=(is_void(label) ? " - " : label),
@@ -351,7 +351,7 @@ func select_file(dir, prompt=, width=, forever=, all=, pattern=)
      Keyword PROMPT can be set to change the default prompt:
        " Select file/directory: "
 
-   SEE ALSO lsdir, regmatch, print_columns. */
+   SEE ALSO: lsdir, regmatch, print_columns. */
 {
   /* fool codger */ extern __select_file_dir;
   local dir_list;
@@ -465,7 +465,7 @@ func print_columns(list, label=, width=, start=, sep=, eol=, bol=, maxcols=)
      items (default START=1).
 
 
-   SEE ALSO swrite, select_name, select_file. */
+   SEE ALSO: swrite, select_name, select_file. */
 {
   number = numberof(list);
   if (is_scalar(label) && is_string(label)) {
@@ -1150,7 +1150,7 @@ extern identof;
       16 (Y_STREAM)    for a file stream
       17 (Y_OPAQUE)    for an opaque object
 
-  SEE ALSO typeof, structof.
+  SEE ALSO: typeof, structof.
  */
 Y_CHAR = 0;
 Y_SHORT = 1;
@@ -2986,7 +2986,7 @@ extern filepath;
      expansion is performed and the result will have the same shape as the
      input).
 
-   SEE ALSO open. */
+   SEE ALSO: open. */
 
 extern rename;
 extern remove;
@@ -3373,7 +3373,7 @@ extern current_include;
      If Yorick is parsing a file, this function returns the absolute path
      of this file; otherwise, this function returns nil.
 
-   SEE ALSO include, require.
+   SEE ALSO: include, require.
  */
 
 extern get_includes;
@@ -3666,7 +3666,7 @@ extern get_argv;
 
 func process_argv(msg)
 /* DOCUMENT remaining= process_argv()
-       -or- remaining= process_argv("your startup message")
+         or remaining= process_argv("your startup message")
      Performs standard command line processing.  This function is
      invoked by the default custom.i file (in $Y_SITE/i); you
      can also invoke it from your personal ~/yorick/custom.i file.
@@ -4819,21 +4819,21 @@ extern funcdef;
 
 func funcset(&v1,x1,&v2,x2,&v3,x3,&v4,x4,&v5,x5,&v6,x6,&v7,x7,&v8,x8)
 /* DOCUMENT funcset var1 val1 var2 val2 ...
- *
- *   Equivalent to
- *     var1=val1; var2=val2; ...
- *
- *   This function it is not useful for yorick programs.  It is intended
- *   to be used to create functions with funcdef that set variable values.
- *
- *   Handles at most 8 var/val pairs.
- *   As a special case, if given an odd number of arguments, funcset
- *   sets the final var to [], e.g.-
- *     funcset var1 12.34 var2
- *   is equivalent to
- *     var1=12.34; var2=[];
- *
- * SEE ALSO: funcdef
+
+     Equivalent to
+       var1=val1; var2=val2; ...
+
+     This function it is not useful for yorick programs.  It is intended
+     to be used to create functions with funcdef that set variable values.
+
+     Handles at most 8 var/val pairs.
+     As a special case, if given an odd number of arguments, funcset
+     sets the final var to [], e.g.-
+       funcset var1 12.34 var2
+     is equivalent to
+       var1=12.34; var2=[];
+
+   SEE ALSO: funcdef
  */
 {
   v1 = x1;
@@ -5207,7 +5207,8 @@ extern symbol_exists;
      used prior to symbol_def to check existence of a symbol since symbol_def
      raise an error for non-existing symbol.
 
-   SEE ALSO symbol_def, symbol_names, symbol_set.*/
+   SEE ALSO: symbol_def, symbol_names, symbol_set.
+*/
 
 extern symbol_names;
 /* DOCUMENT symbol_names()
@@ -5233,7 +5234,8 @@ extern symbol_names;
      hash tables and auto-loaded functions are also opaque symbols (use
      0xffffff7f to get *all* opaque symbols).
 
-   SEE ALSO symbol_def, symbol_exists, symbol_set.*/
+   SEE ALSO: symbol_def, symbol_exists, symbol_set.
+*/
 
 /*--------------------------------------------------------------------------*/
 

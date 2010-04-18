@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.13 2010-04-13 11:34:30 thiebaut Exp $
+ * $Id: graph.i,v 1.14 2010-04-18 10:33:38 thiebaut Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -171,10 +171,10 @@ extern current_mouse;
 local focused_window;
 local has_mouse;
 /* DOCUMENT current_mouse();
-       -or- current_mouse(win);
-       -or- focused_window();
-       -or- has_mouse();
-       -or- has_mouse(win);
+         or current_mouse(win);
+         or focused_window();
+         or has_mouse();
+         or has_mouse(win);
 
      The function current_mouse returns the pointer position in the
      graphics window with pointer focus as an array of double's in the
@@ -196,7 +196,7 @@ local has_mouse;
      from the so-called current window to which graphics commands are
      directed.  The built-in functions `window' and `current_window'
      (which see) can be used to set/query the current window.
- 
+
    SEE ALSO: current_window, mouse, window. */
 
 func focused_window(nil)
@@ -906,7 +906,7 @@ func pltitle(title)
 
 func xytitles(xtitle, ytitle, adjust)
 /* DOCUMENT xytitles, xtitle, ytitle
-       -or- xytitles, xtitle, ytitle, [deltax,deltay]
+         or xytitles, xtitle, ytitle, [deltax,deltay]
      Plot XTITLE horizontally under the viewport and YTITLE vertically
      to the left of the viewport.  If the tick numbers interfere with
      the labels, you can specify the [DELTAX,DELTAY] in NDC units to
@@ -2040,7 +2040,7 @@ func color_bar(levs, colors, vert=, labs=, adjust=, ecolor=)
 }
 
 /* pleb from Regis Lachaume 2003 */
-func pleb (y, x, dx=, dy=, mfill=, color=, width=, marker=, msize=) 
+func pleb(y, x, dx=, dy=, mfill=, color=, width=, marker=, msize=)
 /* DOCUMENT pleb, y, x, dx=dx, dy=dy
      plots Y vs. X with error bars.
 

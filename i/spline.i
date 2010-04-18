@@ -1,5 +1,5 @@
 /*
- * $Id: spline.i,v 1.1 2005-09-18 22:06:09 dhmunro Exp $
+ * $Id: spline.i,v 1.2 2010-04-18 10:33:38 thiebaut Exp $
  * Cubic spline interpolator.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -10,8 +10,8 @@
 
 func spline(dydx, y, x, xp, dydx1=, dydx0=)
 /* DOCUMENT dydx= spline(y, x)
-       -or-   yp= spline(dydx, y, x, xp)
-       -or-   yp= spline(y, x, xp)
+         or   yp= spline(dydx, y, x, xp)
+         or   yp= spline(y, x, xp)
      computes the cubic spline curve passing through the points (X, Y).
 
      With two arguments, Y and X, spline returns the derivatives DYDX at
@@ -122,8 +122,8 @@ func spline(dydx, y, x, xp, dydx1=, dydx0=)
 
 func tspline(tension, d2ydx2, y, x, xp, dydx1=, dydx0=)
 /* DOCUMENT d2ydx2= tspline(tension, y, x)
-       -or-     yp= tspline(tension, d2ydx2, y, x, xp)
-       -or-     yp= tspline(tension, y, x, xp)
+         or     yp= tspline(tension, d2ydx2, y, x, xp)
+         or     yp= tspline(tension, y, x, xp)
      computes a tensioned spline curve passing through the points (X, Y).
 
      The first argument, TENSION, is a positive number which determines

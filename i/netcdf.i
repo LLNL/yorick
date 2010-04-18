@@ -1,5 +1,5 @@
 /*
- * $Id: netcdf.i,v 1.2 2009-03-20 04:22:27 dhmunro Exp $
+ * $Id: netcdf.i,v 1.3 2010-04-18 10:33:38 thiebaut Exp $
  * Yorick procedures to open a netCDF file
  *
  * The definitive reference for netCDF files is:
@@ -254,8 +254,8 @@ func nc_create(filename)
 
 func nc_vardef(ncf, name, type, dims, template=, record=, dimnames=)
 /* DOCUMENT nc_vardef, ncf, name, type, dims, record=0/1
-       -or- nc_vardef, ncf, name, type, record=0/1
-       -or- nc_vardef, ncf, name, template=template, record=0/1
+         or nc_vardef, ncf, name, type, record=0/1
+         or nc_vardef, ncf, name, template=template, record=0/1
      define a variable in the NCF (returned by nc_create) with name
      NAME, type TYPE (as returned by typeof or structof), and dimensions
      DIMS (as returned by dimsof).  The template= keyword may be used
@@ -370,7 +370,7 @@ func nc_vardef(ncf, name, type, dims, template=, record=, dimnames=)
 
 func nc_dimdef(ncf, dimname, size)
 /* DOCUMENT nc_dimdef, ncf, dim_name, size
-       -or- nc_dimdef, ncf, dim_name, "unlimited"
+         or nc_dimdef, ncf, dim_name, "unlimited"
      define a named dimension.  The SIZE parameter is the length of
      the dimension, or the string "unlimited" for the unlimited
      dimension.  (The numerical value 0 is the same as "unlimited".)
@@ -503,7 +503,7 @@ func _dummy_write(f, a, v)
 
 func nc_addrec(f, time)
 /* DOCUMENT nc_addrec, f, time
-       -or- nc_addrec, f
+         or nc_addrec, f
      adds a new record to the netCDF file F at time TIME.
 
    SEE ALSO: nc_create, nc_vardef, nc_enddef

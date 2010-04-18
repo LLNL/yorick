@@ -1,5 +1,5 @@
 /*
- * $Id: fitrat.i,v 1.1 2005-09-18 22:05:56 dhmunro Exp $
+ * $Id: fitrat.i,v 1.2 2010-04-18 10:33:38 thiebaut Exp $
  * Polynomial and rational function interpolators.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -10,7 +10,7 @@
 
 func fitpol(y, x, xp, keep=)
 /* DOCUMENT yp= fitpol(y, x, xp)
-       -or- yp= fitpol(y, x, xp, keep=1)
+         or yp= fitpol(y, x, xp, keep=1)
      is an interpolation routine similar to interp, except that fitpol
      returns the polynomial of degree numberof(X)-1 which passes through
      the given points (X,Y), evaluated at the requested points XP.
@@ -72,7 +72,7 @@ func fitpol(y, x, xp, keep=)
 
 func fitrat(y, x, xp, keep=)
 /* DOCUMENT yp= fitrat(y, x, xp)
-       -or- yp= fitrat(y, x, xp, keep=1)
+         or yp= fitrat(y, x, xp, keep=1)
      is an interpolation routine similar to interp, except that fitpol
      returns the diagonal rational function of degree numberof(X)-1 which
      passes through the given points (X,Y), evaluated at the requested
