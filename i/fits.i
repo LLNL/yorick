@@ -17,9 +17,14 @@
  *
  *-----------------------------------------------------------------------------
  *
- * $Id: fits.i,v 1.30 2010-04-18 09:07:30 thiebaut Exp $
+ * $Id: fits.i,v 1.31 2010-04-18 09:56:38 thiebaut Exp $
  * $Log: fits.i,v $
- * Revision 1.30  2010-04-18 09:07:30  thiebaut
+ * Revision 1.31  2010-04-18 09:56:38  thiebaut
+ *  - Hide documentation of private functions.
+ *  - Use new Yorick functions (is_scalar, identof, filepath, etc.).
+ *  - Obsolete functions (fits_is_scalar, fits_is_integer, fits_is_string) removed.
+ *
+ * Revision 1.30  2010/04/18 09:07:30  thiebaut
  *  - Fix documentation for nice HTML output.
  *  - Attempt to synchronize revison numbers.
  *
@@ -167,7 +172,7 @@
  */
 
 local fits;
-fits = "$Revision: 1.30 $";
+fits = "$Revision: 1.31 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided  by   this  (standalone)  package  are  aimed  at
@@ -353,10 +358,8 @@ fits = "$Revision: 1.30 $";
        fits_bitpix_type    - convert FITS bits-per-pixel value to data type
        fits_check_bitpix   - test if FITS bits-per-pixel value is valid
        fits_date           - get current time as standard FITS date string
-       fits_is_integer     - checks whether argument is integer
        fits_is_integer_scalar - checks whether argument is integer scalar
        fits_is_real_scalar - checks whether argument is real scalar
-       fits_is_scalar      - checks whether argument is scalar or not
        fits_is_string_scalar - checks whether argument is scalar string or not
        fits_map            - map scalar function onto array argument
        fits_move           - move element of an array in-place
@@ -1065,7 +1068,7 @@ func fits_list(fh, key)
 }
 
 func _fits_warn(msg) { write, format="FITS - WARNING: %s\n", msg; }
-/* DOCUMENT _fits_warn, msg;
+/** DOCUMENT _fits_warn, msg;
      Private FITS routine: print out warning message MSG. */
 
 func fits_nth(n)
@@ -1762,7 +1765,7 @@ func fits_set(fh, key, value, comment)
 }
 
 func _fits_get_cards(fh, &cards, &ids)
-/* DOCUMENT _fits_get_cards(fh, cards, ids)
+/** DOCUMENT _fits_get_cards(fh, cards, ids)
      Stores in variables CARDS and IDS the FITS cards and numerical
      identifiers from header in FITS handle FH.  The returned value is the
      number of FITS cards (including empty ones).
@@ -1802,7 +1805,7 @@ func _fits_get_cards(fh, &cards, &ids)
  */
 
 func _fits_format_logical(key, value, comment)
-/* DOCUMENT _fits_format_logical(key, value)
+/** DOCUMENT _fits_format_logical(key, value)
          or _fits_format_logical(key, value, comment)
      Private routine to format FITS logical card.  Returns a 80-character
      string.
@@ -1816,8 +1819,8 @@ func _fits_format_logical(key, value, comment)
 }
 
 func _fits_format_integer(key, value, comment)
-/* DOCUMENT _fits_format_integer(key, value)
-         or _fits_format_integer(key, value, comment)
+/** DOCUMENT _fits_format_integer(key, value)
+          or _fits_format_integer(key, value, comment)
      Private routine to format FITS integer card.  Returns a 80-character
      string.
    SEE ALSO: fits, fits_set. */
@@ -1828,8 +1831,8 @@ func _fits_format_integer(key, value, comment)
 
 local _fits_format_real_table;
 func _fits_format_real(key, value, comment)
-/* DOCUMENT _fits_format_real(key, value)
-         or _fits_format_real(key, value, comment)
+/** DOCUMENT _fits_format_real(key, value)
+          or _fits_format_real(key, value, comment)
      Private routine to format FITS real card.  Returns a 80-character string.
 
      Note: FITS standard imposes that the ASCII representation of a real
@@ -1854,8 +1857,8 @@ func _fits_format_real(key, value, comment)
 }
 
 func _fits_format_complex(key, value, comment)
-/* DOCUMENT _fits_format_complex(key, value)
-         or _fits_format_complex(key, value, comment)
+/** DOCUMENT _fits_format_complex(key, value)
+          or _fits_format_complex(key, value, comment)
      Private routine to format FITS complex card.  Returns a 80-character
      string.
    SEE ALSO: fits, fits_set. */
@@ -1866,8 +1869,8 @@ func _fits_format_complex(key, value, comment)
 }
 
 func _fits_format_string(key, value, comment)
-/* DOCUMENT _fits_format_string(key, value)
-         or _fits_format_string(key, value, comment)
+/** DOCUMENT _fits_format_string(key, value)
+          or _fits_format_string(key, value, comment)
      Private routine to format FITS string card.  Returns a 80-character
      string.
 
@@ -1906,8 +1909,8 @@ func _fits_format_string(key, value, comment)
 }
 
 func _fits_format_comment(key, text, unused)
-/* DOCUMENT _fits_format_comment(key)
-         or _fits_format_comment(key, text)
+/** DOCUMENT _fits_format_comment(key)
+          or _fits_format_comment(key, text)
      Private  routine to  format  FITS  commentary card,  return  an array  of
      80-character string(s).  Text comment, if longer than 72 characters, will
      result in more than one comment cards.
@@ -3072,7 +3075,7 @@ func fits_pack_bintable(ptr, list)
 }
 
 func _fits_bintable_header(fh, nbytes, nrows, tfields)
-/* DOCUMENT _fits_bintable_header(fh, nbytes, nrows, tfields)
+/** DOCUMENT _fits_bintable_header(fh, nbytes, nrows, tfields)
      Set/update  header information  in  FITS  handle FH  for  a binary  table
      extension.  NBYTES is the number of  bytes per row of the table, NROWS is
      the number of table rows and  TFIELDS is the number of fields (columns in
@@ -3273,11 +3276,6 @@ _fits_bintable_setup, 'P', _FITS_TFORM_POINTER, long, 8; /* read as 2 long's */
 _fits_bintable_setup, 'X', _FITS_TFORM_BIT;
 _fits_bintable_setup = []; /* destroy the helper function */
 
-//FIXME: strchar must be available...
-//func _fits_strchar(s) { return *pointer(s); }
-//if (! is_func(strchar)) strchar = _fits_strchar;
-//_fits_strchar = []; /* destroy the substitute function */
-
 /*---------------------------------------------------------------------------*/
 /* MISCELLANEOUS */
 
@@ -3285,125 +3283,33 @@ _fits_bintable_setup = []; /* destroy the helper function */
    faster than their ancestors in "string.i". */
 
 local fits_toupper, fits_tolower;
-/* DOCUMENT fits_tolower(s)
-         or fits_toupper(s)
+/* DOCUMENT fits_tolower(s);
+         or fits_toupper(s);
      Converts a string or an array of strings S to lower/upper case letters.
-
-   SEE ALSO: fits, fits_trimright, fits_strchar. */
-
-local _fits_tolower;
-local _fits_toupper;
-/* DOCUMENT _fits_tolower
-            _fits_toupper
-     Private arrays to convert char to upper/lowercase letters.
-
-   SEE ALSO: fits, fits_tolower, fits_toupper. */
-(_fits_tolower=char(indgen(0:255)))(1+'A':1+'Z')=_fits_tolower(1+'a':1+'z');
-(_fits_toupper=char(indgen(0:255)))(1+'a':1+'z')=_fits_toupper(1+'A':1+'Z');
-
-func _fits_tolower_0(s)
-{
-  extern _fits_tolower;
-  n = numberof((r = array(string, dimsof(s))));
-  for (i=1 ; i<=n ; ++i) {
-    r(i) = string(&_fits_tolower(1 + *pointer(s(i))));
-  }
-  return r;
-}
-
-func _fits_toupper_0(s)
-{
-  extern _fits_toupper;
-  n = numberof((r = array(string, dimsof(s))));
-  for (i=1 ; i<=n ; ++i) {
-    r(i) = string(&_fits_toupper(1 + *pointer(s(i))));
-  }
-  return r;
-}
-
-func _fits_tolower_1(s)
-{
-  return strcase(0, s);
-}
-
-func _fits_toupper_1(s)
-{
-  return strcase(1, s);
-}
+   SEE ALSO: fits, strcase, fits_trimright. */
+func fits_tolower(s) { return strcase(0, s); }
+func fits_toupper(s) { return strcase(1, s); }
 
 local _fits_blank;
 func fits_trimright(s)
 /* DOCUMENT fits_trimright(s)
      Removes trailing  ordinary spaces (character  0x20) from string  array S.
      Note that trailing spaces are usually not significant in FITS.
-   SEE ALSO: fits, fits_tolower, fits_toupper, fits_strchar,
-             strpart, strword.
+   SEE ALSO: fits, fits_tolower, fits_toupper, strpart, strword.
  */
 {
   return strpart(s, strword(s, _fits_blank, 0));
 }
 _fits_blank = [string(0), " "];
 
-local fits_strcmp;
+func fits_strcmp(a, b)
 /* DOCUMENT fits_strcmp(a, b)
      Returns non-zero  where (array of) strings A  and B are the  same in FITS
      sense, i.e.,  ignore case and  trailing ordinary spaces (code  0x20). For
      instance, "Hello" and "HELLO " are the same strings.
-   SEE ALSO: fits, fits_toupper. */
-
-func _fits_strcmp_0(a,b) /* code for Yorick versions older than 1.6 */
+   SEE ALSO: fits, strcase, fits_toupper, fits_trimright. */
 {
-  n = numberof((r = array(int, dimsof(a,b))));
-  for (i=1 ; i<=n ; ++i) {
-    if ((na = numberof((ca = *pointer(a(i))))))
-      while (--na && ca(na) == ' ') ;
-    if ((nb = numberof((cb = *pointer(b(i))))))
-      while (--nb && cb(nb) == ' ') ;
-    if (na == nb)
-      r(i) = (na ? allof(_fits_toupper(1 + ca(1:na)) ==
-                         _fits_toupper(1 + cb(1:nb))) : 1n);
-  }
-  return r;
-}
-
-func _fits_strcmp_1(a,b)
-{
-  blank=" "; /* only trim ordinary spaces */
   return (strcase(1, fits_trimright(a)) == strcase(1, fits_trimright(b)));
-}
-
-/* Install function code according to Yorick capabilities. */
-if (is_func(strcase) == 2) {
-  fits_toupper = _fits_toupper_1;
-  fits_tolower = _fits_tolower_1;
-  fits_strcmp = _fits_strcmp_1;
-} else {
-  fits_toupper = _fits_toupper_0;
-  fits_tolower = _fits_tolower_0;
-  fits_strcmp = _fits_strcmp_0;
-}
-_fits_toupper_0 = _fits_toupper_1 = [];
-_fits_tolower_0 = _fits_tolower_1 = [];
-_fits_strcmp_0 = _fits_strcmp_1 = [];
-
-func fits_strchar(s)
-/* DOCUMENT fits_strchar(s)
-     Converts string array S into a vector of characters.
-   SEE ALSO: fits, fits_toupper, fits_trimright. */
-{
-  k = strlen(s);
-  w = where(k);
-  k = (k + 1)(cum);
-  c = array(char, k(0));
-  n = numberof(w);
-  for (i = 1; i <= n; ++i) {
-    j = w(i);
-    c(k(j) + 1 : k(j + 1)) = *pointer(s(j));
-  }
-  return c;
-}
-if (is_func(strchar) != 2) {
-  strchar = fits_strchar;
 }
 
 func fits_map(op, src)
@@ -3421,43 +3327,16 @@ func fits_map(op, src)
   return dst;
 }
 
-func fits_is_scalar(x) { return (is_array(x) && ! dimsof(x)(1)); }
-/* DOCUMENT fits_is_scalar(x)
-     Returns true if X is a scalar.
+/* DOCUMENT fits_is_integer_scalar(x);
+         or fits_is_real_scalar(x);
+         or fits_is_string_scalar(x);
+     Check whether X is a scalar of integer/real/string type.
 
-   SEE ALSO: fits_is_integer_scalar, fits_is_real_scalar,
-             fits_is_string_scalar. */
-
-func fits_is_integer(x)
-/* DOCUMENT fits_is_integer(x)
-     Returns true if array X is of integer type.
-
-   SEE ALSO: fits_is_scalar. */
-{ return ((s=structof(x)) == long || s == int || s == char || s == short); }
-
-func fits_is_integer_scalar(x)
-/* DOCUMENT fits_is_integer_scalar(x)
-     Returns true if array X is a scalar of integer type.
-
-   SEE ALSO: fits_is_real_scalar, fits_is_scalar, fits_is_string_scalar. */
-{
-  return (((s=structof(x)) == long || s == int || s == char || s == short) &&
-          ! dimsof(x)(1));
-}
-
-func fits_is_real_scalar(x)
-/* DOCUMENT fits_is_real_scalar(x)
-     Returns true if array X if of real type (i.e. double or float).
-
-   SEE ALSO: fits_is_integer_scalar, fits_is_scalar, fits_is_string_scalar. */
-{ return (((s=structof(x)) == double || s == float) && ! dimsof(x)(1)); }
-
-func fits_is_string_scalar(x)
-/* DOCUMENT fits_is_string_scalar(x)
-     Returns true if array X is a scalar of string type.
-
-   SEE ALSO: fits_is_integer_scalar, fits_is_real_scalar, fits_is_scalar. */
-{ return (structof(x) == string && ! dimsof(x)(1)); }
+   SEE ALSO: is_scalar, is_integer, is_real, is_string.
+*/
+func fits_is_integer_scalar(x) { return (is_integer(x) && is_scalar(x)); }
+func fits_is_real_scalar(x)    { return (is_real(x)    && is_scalar(x)); }
+func fits_is_string_scalar(x)  { return (is_string(x)  && is_scalar(x)); }
 
 func fits_filename(stream)
 /* DOCUMENT fits_filename(fh)
@@ -3466,61 +3345,14 @@ func fits_filename(stream)
    SEE ALSO: fits, filepath. */
 {
   /* Get stream from FITS handle. */
-  if ((id = typeof(stream)) == "list") {
-    if (_len(stream) != 4) error, "bad FITS handle";
-    id = typeof((stream = _car(stream, 4)));
-  }
-
-  // FIXME: use filepath
-
-  /* Check input and get description of stream by the print() command. */
-  if ((id = typeof(stream)) == "stream") { id = 1; s = print(stream); }
-  else if (id == "text_stream")          { id = 2; s = print(stream)(2:); }
-  else error, "unexpected non-stream argument";
-
-  /* Join backslash terminated lines from print() result (another
-     possibility would be to change the line length with `print_format' but
-     there is no way to restore the previous line_lenght unles we building
-     a wrapper around original `print_format' routine and make a
-     substitution). */
-  join = (strpart(s, 0:0) == "\\");
-  if (anyof(join)) {
-    r = array(string, (ns= numberof(s)) - sum(join) + join(0));
-    i = j= 0;
-    while (i<ns) {
-      w = s(++i);
-      while (join(i)) {
-        w = strpart(w, :-1);
-        if (++i>ns) break;
-        w += s(i);
-      }
-      r(++j) = w;
+  if (identof(stream) == Y_OPAQUE) {
+    if (is_list(stream)) {
+      if (_len(stream) != 4) error, "bad FITS handle";
+      stream = _car(stream, 4);
     }
-    s = r;
-    w = r = [];
+    return filepath(stream);
   }
-
-  /* Recover the full path of the stream file from the joined lines. */
-  if (id == 1) {
-    /* Binary stream. */
-    if (numberof(s)==2) {
-      w1= w2= string(0);
-      if (sread(s(1), format="%[^:]", w1)==1 &&
-          sread(s(2), format="%[^/]", w2)==1) {
-        return strpart(s(2), strlen(w2)+1:0) + strpart(s(1), strlen(w1)+3:0);
-      }
-    }
-    error, "unexpected binary stream descriptor";
-  } else {
-    /* Text stream. */
-    if (numberof(s) == 1) {
-      w = string(0);
-      if (sread(s(1), format="%[^/]", w)==1) {
-        return strpart(s(1), strlen(w)+1:0);
-      }
-    }
-    error, "unexpected text stream descriptor";
-  }
+  error, "unexpected argument";
 }
 
 func fits_check_bitpix(bitpix)
@@ -3917,7 +3749,7 @@ func fits_id(card)
 }
 
 func _fits_bad_keyword(c)
-/* DOCUMENT _fits_bad_keyword(c)
+/** DOCUMENT _fits_bad_keyword(c)
      Returns error  message due  to invalid  FITS keyword.  C  is an  array of
      characters that compose the bad FITS keyword.
    SEE ALSO: fits_id, fits_read_header. */
@@ -3940,7 +3772,7 @@ func _fits_bad_keyword(c)
 }
 
 func _fits_id(hdr)
-/* DOCUMENT _fits_id(hdr)
+/** DOCUMENT _fits_id(hdr)
      Return array of numerical identifier  for FITS header data HDR which must
      be an array(char, 80, N).  Any  invalid FITS key will have its identifier
      set to -1.
@@ -4098,8 +3930,8 @@ func fits_get_list(fh, key)
 /* INITIALIZATION OF PRIVATE DATA */
 
 local _fits_true, _fits_false;
-/* DOCUMENT _fits_true
-            _fits_false
+/** DOCUMENT _fits_true
+          or _fits_false
      True/false FITS values ('T' and 'F' respectively). */
 _fits_true = 'T';
 _fits_false = 'F';
