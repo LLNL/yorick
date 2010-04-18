@@ -1,171 +1,172 @@
 /*
  * fits.i -
  *
- *	Implement FITS files input/output and editing in Yorick.
+ * Implement FITS files input/output and editing in Yorick.
  *
  *-----------------------------------------------------------------------------
  *
- *      Copyright (C) 2000-2008, Eric Thiébaut <thiebaut@obs.univ-lyon1.fr>
+ * Copyright (C) 2000-2010, Eric Thiébaut <thiebaut@obs.univ-lyon1.fr>
  *
- *	This file is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License version 2 as
- *	published by the Free Software Foundation.
+ * This file is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License version 2 as published by the
+ * Free Software Foundation.
  *
- *	This file is distributed in the hope that it will be useful, but
- *	WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- *-----------------------------------------------------------------------------
- *
- *	$Id: fits.i,v 1.27 2008-09-30 14:04:18 thiebaut Exp $
- *	$Log: fits.i,v $
- *	Revision 1.27  2008-09-30 14:04:18  thiebaut
- *	Preliminary support for HIERARCH.  New fits_copy_* functions for editing FITS files.
- *
- *	Revision 1.28  2008/09/30 13:56:41  eric
- *	 - Formatting of real values changed to improve readability of
- *	   values, e.g. 0.0 instead of 0.0000000000000E+00.
- *	 - New functions fits_copy_header, fits_copy_data and
- *	   fits_copy_hdu which can be used to edit FITS files.
- *
- *	Revision 1.27  2008/07/12 05:19:11  eric
- *	 - Very basic handling of HIERARCH keywords (thanks to Thibaut
- *	   Paumard).
- *
- *	Revision 1.26  2008/02/11 07:41:31  eric
- *	 - Recoding of the reading/writing of binary tables.
- *	 - Various fixes to handle multidimensional columns in
- *	   binary tables (keyword automatically checked for
- *	   consistency if it exists or created if not).
- *
- *	Revision 1.25  2006/11/03 12:09:18  eric
- *	 - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for
- *	   discovering this bug).
- *	 - Slightly change the calling sequence of fits_pack_bintable
- *	   (no side effects w.r.t. previous version).
- *
- *	Revision 1.24  2006/10/17 12:11:07  eric
- *	 - Fixed fits_write function to properly pad FITS file with
- *	   zeroes (thanks to Christophe Pichon for discovering this
- *	   bug).
- *
- *	Revision 1.23  2006/09/07 07:20:31  eric
- *	 - Fixed documentation (thanks to Ariane Lançon).
- *
- *	Revision 1.22  2006/09/02 12:39:04  eric
- *	 - Minor changes to make the code portable with different versions
- *	   of Yorick.
- *
- *	Revision 1.21  2006/05/03 15:50:58  eric
- *	 - Handle TDIM keyword in BINTABLE.
- *	 - New function: fits_get_list.
- *	 - Fix some documentation.
- *	 - Minor speedup.
- *
- *	Revision 1.20  2006/02/07 12:09:46  eric
- *	 - be more tolerant for non-compliant FITS file: completely
- *	   ignore header bytes after the "END" card;
- *
- *	Revision 1.19  2006/01/26 08:06:07  eric
- *	 - fixed "errmode" argument in fits_check_file;
- *	 - improved documentation of fits_read function.
- *
- *	Revision 1.18  2005/03/29 13:57:54  eric
- *	 - fix guessing of column type when TFORM# keyword is already defined
- *	 - fix fits_is_... routines
- *
- *	Revision 1.17  2004/10/22 15:19:29  eric
- *	 - fits_write_bintable takes into account existing "TFORM#" FITS
- *	   cards to format the columns (thanks to Clémentine Béchet).
- *	 - New function: fits_strcmp.
- *
- *	Revision 1.16  2004/09/03 09:13:27  eric
- *	 - New function fits_pad_hdu to round up file size to a multiple
- *	   of FITS blocking factor.
- *	 - fits_new_hdu: fix offset of data part by calling fits_pad_hdu
- *	   (thanks to Antoine Mérand for pointing this bug).
- *	 - fits_close: call fits_pad_hdu to finalize stream open for
- *	   writing.
- *	 - fits_new_image: bitpix and dimension list can be guessed from
- *	   suplementary argument.
- *
- *	Revision 1.15  2004/09/02 12:51:59  eric
- *	 **************** POTENTIAL INCOMPATIBILITY ******************
- *	 ***                                                       ***
- *	 ***  fits_read_bintable and fits_write_bintable modified  ***
- *	 ***  so that field dimensions are more consistent with    ***
- *	 ***  usual definition: the 'rows' of the table now run    ***
- *	 ***  along the first dimension of the fields and fields   ***
- *	 ***  with a repeat count of 1 can be simple vectors.      ***
- *	 ***                                                       ***
- *	 *************************************************************
- *
- *	 - fits_read_bintable: keyword SELECT has a different meaning
- *	 - fits_read_bintable: new keyword TRIM
- *	 - new function fits_pack_bintable, old version fits_pack_table
- *	   removed (it was broken and of little interest)
- *
- *	Revision 1.14  2004/07/09 18:05:34  eric
- *	 - Fix setting of BSCALE/BZERO in fits_create.
- *
- *	Revision 1.13  2004/07/09 12:45:58  eric
- *	 - New function fits_best_scale to compute optimal BSCALE and BZERO
- *	   for real to integer conversion.
- *	 - Function fits_write modified to use fits_best_scale by default.
- *	 - New keyword NATIVE for fits_bitpix_type function.
- *
- *	Revision 1.12  2004/07/09 09:30:37  eric
- *	 - Fixed bug in fits_move and typo in error message for fits_create
- *	   (thanks to Clémentine Béchet).
- *
- *	Revision 1.11  2004/06/22 16:22:49  eric
- *	 - Fix a bug in fits_write_bintable which prevents writing strings in
- *	   a binary table (thanks to Clémentine Béchet).
- *
- *	Revision 1.10  2004/03/19 18:28:45  eric
- *	 - New functions: fits_current_hdu, fits_info, fits_eof, fits_list.
- *	 - Fix bug in fits_goto_hdu when arriving at the end of the file
- *	   (thanks to Bastien Aracil).
- *
- *	Revision 1.9  2003/12/04 15:57:23  eric
- *	 - Fixed a bug in column order for BINTABLE.
- *
- *	Revision 1.8  2003/11/16 13:57:02  eric
- *	 - fits_read_bintable: new keywords RAW_STRING and RAW_LOGICAL;
- *	 - fits_set: fix for commentary card;
- *	 - fits_read_bintable_as_hashtable: new function to read a BINTABLE
- *	   and return it as a hash table (requires Yeti extension);
- *
- *	Revision 1.7  2003/05/23 14:12:43  eric
- *	 - New function fits_pack_table, resulting in new keywords PACK
- *	   and SELECT in fits_read and fits_read_bintable.
- *
- *	Revision 1.6  2003/03/28 14:48:54  eric
- *	 *** POSSIBLE INCOMPATIBILITY ***
- *	 Fields of a BINTABLE are now NCOLS(i)xNROWS arrays
- *	 (instead of NROWS or NROWSxNCOLS(i) arrays).
- *
- *	Revision 1.5  2003/03/28 14:01:17  eric
- *	 - fits_new_bintable: add optional comment.
- *
- *	Revision 1.4  2003/03/25 13:10:55  eric
- *	 - Keyword LOGICAL removed in fits_read.
- *
- *	Revision 1.3  2003/03/17 16:51:54  eric
- *	 - New keywords in fits_write, fits_create: template, history
- *	   and comment.
- *
- *	Revision 1.2  2003/01/31 15:10:07  eric
- *	 - Added support for obsolete FITS API.
- *
- *	Revision 1.1  2003/01/07 17:10:59  eric
- *	Initial revision
+ * This file is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  *
  *-----------------------------------------------------------------------------
+ *
+ * $Id: fits.i,v 1.28 2010-04-18 08:22:33 thiebaut Exp $
+ * $Log: fits.i,v $
+ * Revision 1.28  2010-04-18 08:22:33  thiebaut
+ * support variable length arrays in BINTABLE
+ *
+ * Revision 1.29  2009/04/22 07:17:11  eric
+ *  - Heavy work on fits_read_bintable to support variable length arrays.
+ *    Thanks to Jay Salmonson for starting this.
+ *  - Some bug fixes in fits_read_bintable for single precision complexes and
+ *    cases when the table can be read in one call to _read.
+ *  - Documentation of fits_read_bintable updated.
+ *
+ * Revision 1.28  2008/09/30 13:56:41  eric
+ *  - Formatting of real values changed to improve readability of values,
+ *    e.g. 0.0 instead of 0.0000000000000E+00.
+ *  - New functions fits_copy_header, fits_copy_data and fits_copy_hdu which
+ *    can be used to edit FITS files.
+ *
+ * Revision 1.27  2008/07/12 05:19:11  eric
+ *  - Very basic handling of HIERARCH keywords (thanks to Thibaut Paumard).
+ *
+ * Revision 1.26  2008/02/11 07:41:31  eric
+ *  - Recoding of the reading/writing of binary tables.
+ *  - Various fixes to handle multidimensional columns in binary tables
+ *    (keyword automatically checked for consistency if it exists or created
+ *    if not).
+ *
+ * Revision 1.25  2006/11/03 12:09:18  eric
+ *  - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for discovering
+ *    this bug).
+ *  - Slightly change the calling sequence of fits_pack_bintable (no side
+ *    effects w.r.t. previous version).
+ *
+ * Revision 1.24  2006/10/17 12:11:07  eric
+ *  - Fixed fits_write function to properly pad FITS file with zeroes (thanks
+ *    to Christophe Pichon for discovering this bug).
+ *
+ * Revision 1.23  2006/09/07 07:20:31  eric
+ *  - Fixed documentation (thanks to Ariane Lançon).
+ *
+ * Revision 1.22  2006/09/02 12:39:04  eric
+ *  - Minor changes to make the code portable with different versions of
+ *    Yorick.
+ *
+ * Revision 1.21  2006/05/03 15:50:58  eric
+ *  - Handle TDIM keyword in BINTABLE.
+ *  - New function: fits_get_list.
+ *  - Fix some documentation.
+ *  - Minor speedup.
+ *
+ * Revision 1.20  2006/02/07 12:09:46  eric
+ *  - be more tolerant for non-compliant FITS file: completely ignore header
+ *    bytes after the "END" card;
+ *
+ * Revision 1.19  2006/01/26 08:06:07  eric
+ *  - fixed "errmode" argument in fits_check_file;
+ *  - improved documentation of fits_read function.
+ *
+ * Revision 1.18  2005/03/29 13:57:54  eric
+ *  - fix guessing of column type when TFORM# keyword is already defined
+ *  - fix fits_is_... routines
+ *
+ * Revision 1.17  2004/10/22 15:19:29  eric
+ *  - fits_write_bintable takes into account existing "TFORM#" FITS cards to
+ *    format the columns (thanks to Clémentine Béchet).
+ *  - New function: fits_strcmp.
+ *
+ * Revision 1.16  2004/09/03 09:13:27  eric
+ *  - New function fits_pad_hdu to round up file size to a multiple
+ *    of FITS blocking factor.
+ *  - fits_new_hdu: fix offset of data part by calling fits_pad_hdu
+ *    (thanks to Antoine Mérand for pointing this bug).
+ *  - fits_close: call fits_pad_hdu to finalize stream open for
+ *    writing.
+ *  - fits_new_image: bitpix and dimension list can be guessed from
+ *    suplementary argument.
+ *
+ * Revision 1.15  2004/09/02 12:51:59  eric
+ *  **************** POTENTIAL INCOMPATIBILITY ******************
+ *  ***							      ***
+ *  ***	 fits_read_bintable and fits_write_bintable modified  ***
+ *  ***	 so that field dimensions are more consistent with    ***
+ *  ***	 usual definition: the 'rows' of the table now run    ***
+ *  ***	 along the first dimension of the fields and fields   ***
+ *  ***	 with a repeat count of 1 can be simple vectors.      ***
+ *  ***							      ***
+ *  *************************************************************
+ *  - fits_read_bintable: keyword SELECT has a different meaning
+ *  - fits_read_bintable: new keyword TRIM
+ *  - new function fits_pack_bintable, old version fits_pack_table removed
+ *    (it was broken and of little interest)
+ *
+ * Revision 1.14  2004/07/09 18:05:34  eric
+ *  - Fix setting of BSCALE/BZERO in fits_create.
+ *
+ * Revision 1.13  2004/07/09 12:45:58  eric
+ *  - New function fits_best_scale to compute optimal BSCALE and BZERO for
+ *    real to integer conversion.
+ *  - Function fits_write modified to use fits_best_scale by default.
+ *  - New keyword NATIVE for fits_bitpix_type function.
+ *
+ * Revision 1.12  2004/07/09 09:30:37  eric
+ *  - Fixed bug in fits_move and typo in error message for fits_create (thanks
+ *    to Clémentine Béchet).
+ *
+ * Revision 1.11  2004/06/22 16:22:49  eric
+ *  - Fix a bug in fits_write_bintable which prevents writing strings in a
+ *    binary table (thanks to Clémentine Béchet).
+ *
+ * Revision 1.10  2004/03/19 18:28:45  eric
+ *  - New functions: fits_current_hdu, fits_info, fits_eof, fits_list.
+ *  - Fix bug in fits_goto_hdu when arriving at the end of the file (thanks to
+ *    Bastien Aracil).
+ *
+ * Revision 1.9	 2003/12/04 15:57:23  eric
+ *  - Fixed a bug in column order for BINTABLE.
+ *
+ * Revision 1.8	 2003/11/16 13:57:02  eric
+ *  - fits_read_bintable: new keywords RAW_STRING and RAW_LOGICAL;
+ *  - fits_set: fix for commentary card;
+ *  - fits_read_bintable_as_hashtable: new function to read a BINTABLE and
+ *    return it as a hash table (requires Yeti extension);
+ *
+ * Revision 1.7	 2003/05/23 14:12:43  eric
+ *  - New function fits_pack_table, resulting in new keywords PACK and SELECT
+ *    in fits_read and fits_read_bintable.
+ *
+ * Revision 1.6	 2003/03/28 14:48:54  eric
+ *  *** POSSIBLE INCOMPATIBILITY ***
+ *  Fields of a BINTABLE are now NCOLS(i)xNROWS arrays (instead of NROWS or
+ *  NROWSxNCOLS(i) arrays).
+ *
+ * Revision 1.5	 2003/03/28 14:01:17  eric
+ *  - fits_new_bintable: add optional comment.
+ *
+ * Revision 1.4	 2003/03/25 13:10:55  eric
+ *  - Keyword LOGICAL removed in fits_read.
+ *
+ * Revision 1.3	 2003/03/17 16:51:54  eric
+ *  - New keywords in fits_write, fits_create: template, history and comment.
+ *
+ * Revision 1.2	 2003/01/31 15:10:07  eric
+ *  - Added support for obsolete FITS API.
+ *
+ * Revision 1.1	 2003/01/07 17:10:59  eric
+ * Initial revision
  */
 
 local fits;
-fits = "$Revision: 1.27 $";
+fits = "$Revision: 1.28 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided by  this  (standalone)  package  are aimed  at
@@ -1565,7 +1566,7 @@ local fits_copy_header, fits_copy_data, fits_copy_hdu;
 
      To sequentially copy several HDU's, call fits_new_hdu with a NULL or
      empty extension name:
-     
+
        // Open input and output FITS files:
        src = fits_open("input.fits");
        dst = fits_open("output.fits", 'w');
@@ -2668,38 +2669,44 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
 func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
                         bad=, trim=)
 /* DOCUMENT fits_read_bintable(fh)
-     Reads a binary table in current  HDU of FITS handle FH and returns the
-     fields of  the table as  a pointer array  (i-th field of the  table is
-     pointed  by  i-th  pointer  element).   Empty fields  and  fields  for
-     unsupported data  types (bit array  and array descriptor) result  in a
-     null pointer (&[]).  The geometry  of the arrays pointed by the result
-     will be  NROWS-by-NCOLS(i) where  NROWS is the  number of rows  in the
-     table and NCOLS(i) is the repeat  count of the i-th field in the table
-     (see fits_write_bintable).  If NCOLS(i)  = 1, the i-th pointer element
-     is the address of a NROWS vector, i.e. not a NROWS-by-1 array.
 
-     Keyword SELECT can be used to retain only some fields of the table (or
-     re-order them).  For instance,  use SELECT=[2,5,3] to return only 2nd,
-     5th and 3rd fields (in that  order) of the table.  The fields can also
-     be selected by their names, e.g. SELECT=["flux","distance"] (note that
-     trailing spaces and case is not significant for the field names).
+     Reads a  binary table in  current HDU of  FITS handle FH and  returns the
+     fields  of the  table as  a pointer  array (n-th  field of  the  table is
+     pointed  by   n-th  pointer  element).   Empty  fields   and  fields  for
+     unsupported data types (bit array)  yield a null pointer value (&[]).  If
+     TDIMn  keyword  is  present,  then  the  dimensions  of  n-th  field  are
+     (NROWS,i,j,k,...)   where ROWS is  the number  of rows  in the  table and
+     '(i,j,k,...)' is  the value  of the TDIMn  keyword.  Otherwise,  the n-th
+     field is a NROWS-by-NCOLS(n) array  where NCOLS(n) is the repeat count of
+     the n-th  field in  the table (see  fits_write_bintable).  If  the repeat
+     count is 1 and  TDIMn is not set, the n-th field  is a NROWS vector; that
+     is, not a NROWS-by-1 array.
 
-     If keyword  PACK is  true, fits_pack_bintable (which  see) is  used to
-     pack the  columns of  the binary table  into a single  array (possibly
-     after selection/re-ordering by SELECT).
+     An empty table  (number of rows or number of fileds  less than one) yield
+     an empty result.
 
-     If keyword TRIM is true,  then trailing spaces get removed from string
+     Keyword SELECT  can be used to retain  only some fields of  the table (or
+     re-order them).  For instance, use SELECT=[2,5,3] to return only 2nd, 5th
+     and 3rd  fields (in  that order) of  the table.   The fields can  also be
+     selected by  their names, for  instance: SELECT=["flux","distance"] (note
+     that trailing spaces and case is not significant for the field names).
+
+     If keyword PACK  is true, fits_pack_bintable (which see)  is used to pack
+     the  columns of  the binary  table into  a single  array  (possibly after
+     selection/re-ordering by SELECT).
+
+     If keyword  TRIM is  true, then trailing  spaces get removed  from string
      fields (this has no effect if RAW_STRING is true).
 
-     If keyword RAW_STRING is true,  fields made of char's ('A' format) are
-     returned as  arrays of char's.  The  default is to  convert 'A' format
-     fields into 1-by-NROWS array of strings.
+     If keyword  RAW_STRING is  true, fields made  of char's ('A'  format) are
+     returned  as arrays  of char's.   The default  is to  convert  'A' format
+     fields into NROWS vector of strings.
 
-     If  keyword  RAW_LOGICAL is  true,  logical  fields  ('L' format)  are
-     returned as  arrays of char's.  The  default is to  convert 'L' format
-     fields  into array of  int's as  follows: 'T'  -> 1  (true), 'F'  -> 0
-     (false), and any other character ->  -1 (bad).  The 'bad' value can be
-     set by keyword BAD (default is -1).
+     If keyword RAW_LOGICAL is true,  logical fields ('L' format) are returned
+     as arrays  of char's.  The default  is to convert 'L'  format fields into
+     array of  int's as follows: 'T'  -> 1 (true),  'F' -> 0 (false),  and any
+     other character  -> -1 (bad).   The bad value  can be set by  keyword BAD
+     (default is -1).
 
    SEE ALSO: fits, fits_write_bintable, fits_pack_bintable. */
 {
@@ -2707,215 +2714,339 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
   if (fits_get_xtension(fh) != "BINTABLE" || fits_get_naxis(fh) != 2) {
     error, "current HDU is not a valid FITS BINTABLE";
   }
-  nbytes = fits_get(fh, "NAXIS1");
+  pitch = fits_get(fh, "NAXIS1"); /* bytes per row */
   nrows = fits_get(fh, "NAXIS2");
   tfields = fits_get(fh, "TFIELDS");
-  if (nbytes <= 0 || nrows <= 0) return;
+  if (pitch <= 0 || nrows <= 0 || tfields <= 0) return;
 
-  /* May-be we just want some fields given their names. */
-  if (structof(select) == string) {
-    select = fits_index_of_table_field(fh, select);
-    keep = array(0n, tfields);
-    keep(select) = 1n;
+  /* Some constants to clarify the code. */
+  TRUE = 1n;
+  FALSE = 0n;
+  NULL = [];
+
+  /* May-be we just want some fields given their names or their number.  The
+     JOB array is filled with values: 0 to skip that field, N > 0 to read this
+     field by multiple of N elements (used for single precision complexes and
+     variable length array descriptors).  For now, we only have N = 1 since we
+     don't know yet the field types. */
+  if (is_void(select)) {
+    /* Select all fields. */
+    job = array(1L, tfields);
   } else {
-    keep = array(1n, tfields);
+    job = array(long, tfields);
+    if ((s = structof(select)) == string) {
+      select = fits_index_of_table_field(fh, select);
+      if (is_void(select)) return; /* nothing to read */
+    } else if (s != long) {
+      if (s == int || s == short || s == char) {
+        select = long(select);
+      } else {
+        error, "bad data type for keyword SELECT";
+      }
+    }
+    job(select) = 1L;
   }
 
-  /* Extract formats. */
-  ptr = array(pointer, tfields);
-  if (nrows > 1) row = array(pointer, tfields);
-  is_string = array(int, tfields);
-  is_logical = array(int, tfields);
-  is_complex = array(int, tfields);
-  is_not_byte = array(int, tfields);
+  /* Extract formats for all fields (this is needed to know their size in the
+     file). */
+  cell_dims = array(pointer, tfields); /* to store the dimension list of single cell */
+  field_type = array(long, tfields); /* type identifier of fields */
+  array_type = array(long, tfields); /* idem for variable length arrays */
   size = array(long, tfields); /* number of bytes per column per row */
-  mult = array(long, tfields);
-  s = nil = string(0);
+  repeat = array(long, tfields); /* number of cells per column per row */
+  s = t = empty = string(0);
+  maxelem = 0;
   m = 0;
-  warn_X = warn_P = 1;
-  tform3 = "%d%1[LXBIJAEDCMP]%s";
-  tform2 =   "%1[LXBIJAEDCMP]%s";
-  for (i=1 ; i<=tfields ; ++i) {
+  warn_X = warn_P = TRUE;
+  for (i = 1; i <= tfields; ++i) {
+    /* Get the value of the TFORM keyword, then parse it. */
     tform = fits_get(fh, (key = swrite(format="TFORM%d", i)));
     if (structof(tform) != string) {
       error, ((is_void(tform) ? "missing" : "unexpected data type for")
               + " FITS card \"" + key + "\"");
     }
-    if (sread(format=tform2, tform, s, nil) == 1) {
-      m = 1;
-    } else if (sread(format=tform3, tform, m, s, nil) != 2 || m < 0) {
-      error, ("bad format specification in FITS card \"" + key + "\"");
+    /* Get repeat count (M) and field type (S) in the TFORM value.*/
+    if (sread(format="%d%[^\a]s", tform, m, s) < 1) {
+      m = 1; /* repeat count is 1 */
+      s = tform;
     }
-    c = (*pointer(s))(1);
-    if (c == 'L') {
-      type = char;
-      size(i) = (mult(i) = m);
-      is_logical(i) = 1n;
-    } else if (c == 'B') {
-      type = char;
-      size(i) = (mult(i) = m);
-    } else if (c == 'I') {
-      type = short;
-      size(i) = 2*(mult(i) = m);
-    } else if (c == 'J') {
-      type = long;
-      size(i) = 4*(mult(i) = m);
-    } else if (c == 'E') {
-      type = float;
-      size(i) = 4*(mult(i) = m);
-    } else if (c == 'D') {
-      type = double;
-      size(i) = 8*(mult(i) = m);
-    } else if (c == 'C') {
-      type = float;
-      size(i) = 4*(mult(i) = 2*m);
-      is_complex(i) = 1n;
-    } else if (c == 'M') {
-      type = complex;
-      size(i) = 16*(mult(i) = m);
-    } else if (c == 'A') {
-      type = char;
-      size(i) = (mult(i) = m);
-      is_string(i) = 1n;
-    } else if (c == 'X') {
-      /* bit array */
-      size(i) = (m + 7)/8; /* round up to a number of 8-bit bytes */
-      mult(i) = 0;  /* skip this field */
-      if (warn_X) {
-        _fits_warn, "bit array in FITS binary table not yet implemented";
-        warn_X = 0;
+    repeat(i) = m;
+    /* Get the size of the field in a single row. */
+    failure = TRUE; /* assume format is wrong for now */
+    if ((ident = _FITS_TFORM_IDENTOF(strchar(s)(1) + 1L)) != 0) {
+      field_type(i) = ident;
+      length = strlen(s);
+      if (ident == _FITS_TFORM_POINTER) {
+        /* Special data type: variable length array (pointer). */
+        if (m != 0 && m != 1) {
+          /* According to the FITS standard, the optional repeat count should
+             be 0 or 1 for variable length arrays.  I don't know how to
+             compute the size of the field data for other repeat counts, hence
+             we must stick to the standard.  */
+          error, "repeat count should be 0 or 1 for variable length array in FITS table";
+        }
+        /* Array descriptor is two 32-bit integers.  */
+        size(i) = 8*m; /* size of two 32-bit integers */
+        if (length == 1) {
+          /* The array descriptor is two 32-bit integers. In this case, I only
+             know the amount of data to skip... */
+          failure = FALSE;
+          if (job(i)) {
+            job(i) = 0; /* skip this field */
+            if (warn_P) {
+              _fits_warn, "anonymous pointers in FITS binary table not yet implemented";
+              warn_P = FALSE;
+            }
+          }
+        } else if (sread(format="P%1s(%d)%s", s, t, maxelem, empty) == 2 ||
+                   sread(format="P%1s%s", s, t, empty) == 1) {
+          /* Array descriptor is two 32-bit integers.  The expected TFORM
+             value is 'rPx(maxelem)' where r is the optional repeat count,
+             letter x is the data type of the variable length array and
+             maxelem is the maximum number of elements of the arrays.  In this
+             version, variable length arrays of type X and P are not
+             supported. */
+          failure = FALSE;
+          if (job(i)) {
+            type = _FITS_TFORM_IDENTOF(strchar(t)(1) + 1L);
+            if (type == 0 || type == _FITS_TFORM_BIT || type == _FITS_TFORM_POINTER) {
+              job(i) = 0; /* skip this field */
+              if (warn_P) {
+                _fits_warn, swrite(format="variable length arrays of type \"%s\" not yet implemented", t);
+                warn_P = FALSE;
+              }
+            } else {
+              job(i) = 2; /* read two values at a time */
+              array_type(i) = type;
+            }
+          }
+        }
+      } else if (ident == _FITS_TFORM_BIT) {
+        /* Special data type: bit array. */
+        if (length == 1) {
+          failure = FALSE;
+          size(i) = (m + 7)/8; /* round up to a number of 8-bit bytes */
+          if (job(i)) {
+            job(i) = 0; /* skip this field */
+            if (warn_X) {
+              _fits_warn, "bit array in FITS binary table not yet implemented";
+              warn_X = FALSE;
+            }
+          }
+        }
+      } else if (length == 1) {
+        failure = FALSE;
+        size(i) = m*_FITS_TFORM_SIZEOF(ident);
+        if (job(i) && ident == _FITS_TFORM_FLOAT_COMPLEX) {
+          job(i) = 2; /* read two values at a time */
+        }
       }
-    } else if (c == 'P') {
-      /* array descriptor */
-      size(i) = 8*m;
-      mult(i) = 0;  /* skip this field */
-      if (warn_P) {
-        _fits_warn, "pointer array in FITS binary table not yet implemented";
-        warn_P = 0;
-      }
-    } else {
-      error, "unknown format \""+tform+"\" in FITS binary table";
     }
-    if (mult(i) && keep(i)) {
-      ncells = mult(i);
+    if (failure) {
+      error, ("unknown/invalid format \"" + tform + "\" in FITS binary table");
+    }
+    if (job(i)) {
+      /* Build up the dimension list of a single cell. */
+      nelem = repeat(i);
       key = swrite(format="TDIM%d", i);
       tdim = fits_get_list(fh, key);
+      if ((multi = job(i)) <= 1) multi = 0;
       if (is_void(tdim)) {
-        if (ncells > 1) {
-          dimlist = ncells;
+        if (nelem > 1) {
+          dimlist = (multi ? [2, multi, nelem] : nelem);
         } else {
-          dimlist = [];
+          dimlist = (multi ? multi : NULL);
         }
       } else {
+        if (! raw_string && field_type(i) == _FITS_TFORM_STRING) {
+          error, ("multi-dimensional string array not supported "
+                  + "(unless keyword RAW_STRING is set)");
+        }
         if (min(tdim) <= 0) {
           error, "bad dimension list for FITS card \"" + key + "\"";
         }
         number = 1L;
         ndims = numberof(tdim);
-        for (j = ndims ; j >= 1 ; --j) {
+        for (j = ndims; j >= 1; --j) {
           number *= tdim(j);
         }
-        if (number != ncells) {
+        if (number != nelem) {
           error, "incompatible dimension list in FITS card \"" + key + "\"";
         }
-        dimlist = array(long, ndims + 1);
-        dimlist(1) = ndims;
-        if (ndims >= 1) {
-          dimlist(2:0) = tdim;
+        if (multi) {
+          dimlist = array(long, ndims + 2);
+          dimlist(1) = ndims + 1;
+          dimlist(2) = multi;
+        } else {
+          dimlist = array(long, ndims + 1);
+          dimlist(1) = ndims;
         }
+        dimlist(1 - ndims:0) = tdim; /* note: NDIMS >= 1 */
       }
-      ptr(i) = &array(type, nrows, dimlist);
-      if (nrows > 1) row(i) = &array(type, dimlist);
-      is_not_byte(i) = (type != char);
+      cell_dims(i) = &dimlist;
+    }
+  }
+
+  /* Read data.  A fast read is possible if fields are stored in continuous
+     locations. */
+  ptr = array(pointer, tfields);
+  index = where(job);
+  nread = numberof(index);
+  if (nread >= 1) {
+    address = _car(fh, 3)(3); /* base address of data in file */
+    stream = _car(fh, 4);
+    offset = size(cum); /* data offset of fields w.r.t. row position */
+    if ((row_pad = (pitch - offset(0))) < 0)
+      error, "inconsistent NAXIS1 in FITS binary table";
+    if (nrows == 1) {
+      /* The table has a single row, fast read is possible with no needs to
+         transpose. */
+      for (i = 1; i <= nread; ++i) {
+        j = index(i);
+        type = structof(*_FITS_TFORM_TYPEOF(field_type(j)));
+        a = array(type, 1, *cell_dims(j));
+        if (type != char) {
+          _read, stream, address + offset(j), a;
+        } else if (_read(stream, address + offset(j), a) != numberof(a)) {
+          error, "short file";
+        }
+        ptr(j) = &a;
+      }
+    } else if (row_pad == 0 && tfields == 1) {
+      /* Single field and no padding bytes: read the data in one call and
+         transpose to have the last dimension (the row index) the first
+         one. */
+      j = index(1);
+      type = structof(*_FITS_TFORM_TYPEOF(field_type(j)));
+      a = array(type, *cell_dims(j), nrows);
+      if (type != char) {
+        _read, stream, address + offset(j), a;
+      } else if (_read(stream, address + offset(j), a) != numberof(a)) {
+        error, "short file";
+      }
+      ptr(j) = &transpose(a, 2);
     } else {
-      keep(i) = 0n; /* will not read this column */
-    }
-  }
-
-  /* Read data. */
-  local a, offset;
-  eq_nocopy, offset, _car(fh, 3);
-  address = offset(3);
-  stream = _car(fh, 4);
-  if ((row_pad = (nbytes - sum(size))) < 0)
-    error, "inconsistent NAXIS1 in FITS binary table";
-  if (nrows == 1 || (row_pad == 0 && tfields == 1)) {
-    /* Faster read: avoid unnecessary copies if NROWS=1, or read the whole
-       table can in a single call to _read if TFIELDS=1 and there are no
-       padding bytes. */
-    for (i=1 ; i<=tfields ; ++i) {
-      if (keep(i)) {
-        eq_nocopy, a, *ptr(i);
-        if (is_not_byte(i)) _read, stream, address, a;
-        else if (_read(stream, address, a) != size(i)) error, "short file";
+      /* Data is stored in discontinuous locations: must read one row at a
+         time, one field at a time. */
+      row = array(pointer, nread); /* a single row */
+      not_byte = array(int, nread); /* boolean: this field is not read as bytes? */
+      for (i = 1; i <= nread; ++i) {
+        j = index(i);
+        type = structof(*_FITS_TFORM_TYPEOF(field_type(j)));
+        ptr(j) = &array(type, nrows, *cell_dims(j));
+        row(i) = &array(type, *cell_dims(j));
+        not_byte(i) = (type != char);
       }
-      address += size(i);
-    }
-  } else {
-    /* Multiple rows _and_ multiple fields: must read one row at a time,
-       one field at a time. */
-    for (k=1 ; k<=nrows ; ++k) {
-      for (i=1 ; i<=tfields ; ++i) {
-        if (keep(i)) {
-          eq_nocopy, a, *row(i);
-          if (is_not_byte(i)) _read, stream, address, a;
-          else if (_read(stream, address, a) != size(i))
+      for (k = 1; k <= nrows; ++k) {
+        row_address = address + (k - 1)*pitch;
+        for (i = 1; i <= nread; ++i) {
+          j = index(i);
+          local a; eq_nocopy, a, *row(i);
+          if (not_byte(i)) {
+            _read, stream, row_address + offset(j), a;
+          } else if (_read(stream, row_address + offset(j), a) != numberof(a)) {
             error, "short file";
-          (*ptr(i))(k,) = a;
+          }
+          (*ptr(j))(k,..) = a;
         }
-        address += size(i);
       }
-      address += row_pad;
     }
-  }
 
-  /* Fix single precision complex array. */
-  if ((n = numberof((i = where(is_complex & keep)))) > 0) {
-    for (k=1 ; k<=n ; ++k) {
-      j = i(k);
-      eq_nocopy, a, *ptr(j);
-      a = a(,1::2) + 1i*a(,2::2);
-      ptr(j) = &(mult(j) == 2 ? a(,1) : a);
-    }
-  }
-
-  /* Fix logical array: 'T' -> 1 (true), 'F' -> 0 (false), and any other
-     character -> -1 (bad). */
-  if (! raw_logical && (n = numberof((i = where(is_logical & keep)))) > 0) {
+    /* Fix special data types. */
+    field_type = field_type(index);
     if (is_void(bad)) bad = -1;
-    for (k=1 ; k<=n ; ++k) {
-      j = i(k);
-      r = (*ptr(j) == 'T');
-      if (is_array((l = where(! ((*ptr(j) == 'F') | r))))) r(l) = bad;
-      ptr(j) = &r;
-    }
-  }
 
-  /* Fix string array. */
-  if (! raw_string && (n = numberof((i = where(is_string & keep)))) > 0) {
-    local a;
-    for (k=1 ; k<=n ; ++k) {
-      j = i(k);
-      eq_nocopy, a, *ptr(j);
-      tmp = array(string, nrows);
-      for (l=1 ; l<=nrows ; ++l) {
-        if ((c = a(l,))(1)) {
-          if (trim) {
-            r = numberof(c);
-            t = 0;
-            while (++t <= r && c(t))
-              ;
-            while (--t && c(t) == ' ')
-              ;
-            if (t >= 1) tmp(l) = string(&c(1:t));
-          } else {
-            tmp(l) = string(&c);
+    /* Fix single precision complex arrays. */
+    if ((n = numberof((subindex = where(field_type == _FITS_TFORM_FLOAT_COMPLEX)))) > 0) {
+      subindex = index(subindex);
+      for (k = 1; k <= n; ++k) {
+        j = subindex(k);
+        local a; eq_nocopy, a, *ptr(j);
+        ptr(j) = &(a(,1,..) + 1i*a(,2,..));
+      }
+    }
+
+    /* Fix logical arrays: 'T' -> 1 (true), 'F' -> 0 (false), and any other
+       character -> -1 (bad). */
+    if (! raw_logical &&
+        (n = numberof((subindex = where(field_type ==
+                                        _FITS_TFORM_LOGICAL)))) > 0) {
+      subindex = index(subindex);
+      for (k = 1; k <= n; ++k) {
+        j = subindex(k);
+        ptr(j) = &_fits_bintable_fix_logical(*ptr(j), bad);
+      }
+    }
+
+    /* Fix string arrays. */
+    if (! raw_string &&
+        (n = numberof((subindex = where(field_type ==
+                                        _FITS_TFORM_STRING)))) > 0) {
+      subindex = index(subindex);
+      for (k = 1; k <= n; ++k) {
+        j = subindex(k);
+        ptr(j) = &_fits_bintable_fix_string(*ptr(j), nrows, trim);
+      }
+    }
+
+    /* Read variable length arrays. */
+    if ((n = numberof((subindex = where(field_type ==
+                                        _FITS_TFORM_POINTER)))) > 0) {
+      subindex = index(subindex);
+      theap = fits_get(fh, "THEAP");
+      if (is_void(theap)) {
+        theap = nrows*pitch;
+      } else if (theap < nrows*pitch) {
+        error, "too small THEAP value in FITS binary table";
+      }
+      heap_address = address + theap;
+      for (k = 1; k <= n; ++k) {
+        /* Variable length array descriptor is two 32-bit integers:
+           (number,offset). */
+        j = subindex(k);
+        local descriptor; eq_nocopy, descriptor, *ptr(j);
+        ident = array_type(j);
+        type = structof(*_FITS_TFORM_TYPEOF(ident));
+        ptr(j) = &(parray = array(pointer, nrows));
+        multi = (ident == _FITS_TFORM_FLOAT_COMPLEX ? 2 : NULL);
+        /* Read data in the heap. */
+        for (r = 1; r <= nrows; ++r) {
+          nelem = descriptor(r, 1);
+          if (nelem <= 0) continue;
+          position = heap_address + descriptor(r, 2);
+          parray(r) = &(a = array(type, multi, nelem));
+          if (type != char) {
+            _read, stream, position, a;
+          } else if (_read(stream, position, a) != numberof(a)) {
+            error, "short file";
+          }
+        }
+        /* Fix special data types. */
+        if (ident == _FITS_TFORM_LOGICAL) {
+          for (r = 1; r <= nrows; ++r) {
+            if (parray(r)) {
+              parray(r) = &_fits_bintable_fix_logical(*parray(r), bad);
+            }
+          }
+        } else if (ident == _FITS_TFORM_STRING) {
+          for (r = 1; r <= nrows; ++r) {
+            if (parray(r)) {
+              parray(r) = &_fits_bintable_fix_string(*parray(r),
+                                                     numberof(*parray(r)),
+                                                     trim);
+            }
+          }
+        } else if (ident == _FITS_TFORM_FLOAT_COMPLEX) {
+          for (r = 1; r <= nrows; ++r) {
+            if (parray(r)) {
+              parray(r) = &((*parray(r))(1, ..) + 1i*(*parray(r))(2, ..));
+            }
           }
         }
       }
-      ptr(j) = &tmp;
     }
   }
+
   if (pack) {
     return fits_pack_bintable(ptr, select);
   }
@@ -3114,6 +3245,90 @@ func fits_index_of_table_field(fh, name)
   }
   return index;
 }
+
+func _fits_bintable_fix_logical(a, bad)
+/** DOCUMENT _fits_bintable_fix_logical(a, bad)
+     Fix logical value.
+   SEE ALSO: fits_read_bintable. */
+{
+  r = (a == 'T');
+  if (bad && is_array((j = where(! ((a == 'F') | r))))) r(j) = bad;
+  return r;
+}
+
+func _fits_bintable_fix_string(a, n, trim)
+/** DOCUMENT _fits_bintable_fix_string(a, n, trim)
+     Convert 2D array of characters into a 1D array of strings.  N is the
+     leading dimension of A.
+   SEE ALSO: fits_read_bintable. */
+{
+  result = array(string, n);
+  for (k = 1; k <= n; ++k) {
+    // FIXME: use faster functions (strchar and strtrim)
+    if ((c = a(k,*))(1)) {
+      if (trim) {
+        r = numberof(c);
+        t = 0;
+        while (++t <= r && c(t))
+          ;
+        while (--t && c(t) == ' ')
+          ;
+        if (t >= 1) result(k) = string(&c(1:t));
+      } else {
+        result(k) = string(&c);
+      }
+    }
+  }
+  return result;
+}
+
+func _fits_bintable_setup(letter, ident, type, size)
+/** DOCUMENT _fits_bintable_setup, letter, ident, type, size;
+          or _fits_bintable_setup, letter, ident;
+     Private function to setup parse tables for binary tables.
+   SEE ALSO: fits_read_bintable.
+ */
+{
+  _FITS_TFORM_IDENTOF(1 + letter) = ident;
+  if (is_void(type)) {
+    _FITS_TFORM_TYPEOF(ident) = &[];
+    _FITS_TFORM_SIZEOF(ident) = 0;
+  } else {
+    _FITS_TFORM_TYPEOF(ident) = &type(0);
+    _FITS_TFORM_SIZEOF(ident) = size;
+  }
+}
+_FITS_TFORM_LOGICAL        =  1; /* L: Logical value */
+_FITS_TFORM_BYTE           =  2; /* B: unsigned 8-bit integer */
+_FITS_TFORM_SHORT          =  3; /* I: signed 16-bit integer */
+_FITS_TFORM_LONG           =  4; /* J: signed 32-bit integer */
+_FITS_TFORM_FLOAT          =  5; /* E: 32-bit single precision IEEE floating point */
+_FITS_TFORM_DOUBLE         =  6; /* D: 64-bit double precision IEEE floating point */
+_FITS_TFORM_FLOAT_COMPLEX  =  7; /* C: complex pair of single precision reals */
+_FITS_TFORM_DOUBLE_COMPLEX =  8; /* M: complex pair of double precision reals */
+_FITS_TFORM_STRING         =  9; /* A: Character array */
+_FITS_TFORM_POINTER        = 10; /* P: 64-bit descriptor of variable length array */
+_FITS_TFORM_BIT            = 11; /* X: bit array */
+_FITS_TFORM_IDENTOF = array(long, 256);
+_FITS_TFORM_TYPEOF = array(pointer, 11);
+_FITS_TFORM_SIZEOF = array(long, 11);
+_fits_bintable_setup, 'L', _FITS_TFORM_LOGICAL, char, 1;
+_fits_bintable_setup, 'B', _FITS_TFORM_BYTE, char, 1;
+_fits_bintable_setup, 'I', _FITS_TFORM_SHORT, short, 2;
+_fits_bintable_setup, 'J', _FITS_TFORM_LONG, long, 4;
+_fits_bintable_setup, 'E', _FITS_TFORM_FLOAT, float, 4;
+_fits_bintable_setup, 'D', _FITS_TFORM_DOUBLE, double, 8;
+_fits_bintable_setup, 'C', _FITS_TFORM_FLOAT_COMPLEX, float, 8; /* read as 2 float's */
+_fits_bintable_setup, 'M', _FITS_TFORM_DOUBLE_COMPLEX, complex, 16;
+_fits_bintable_setup, 'A', _FITS_TFORM_STRING, char, 1;
+_fits_bintable_setup, 'P', _FITS_TFORM_POINTER, long, 8; /* read as 2 long's */
+_fits_bintable_setup, 'X', _FITS_TFORM_BIT;
+_fits_bintable_setup = []; /* destroy the helper function */
+
+//FIXME: strchar must be available...
+//func _fits_strchar(s) { return *pointer(s); }
+//if (! is_func(strchar)) strchar = _fits_strchar;
+//_fits_strchar = []; /* destroy the substitute function */
 
 /*---------------------------------------------------------------------------*/
 /* MISCELLANEOUS */
