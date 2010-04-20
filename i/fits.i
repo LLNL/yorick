@@ -17,9 +17,12 @@
  *
  *-----------------------------------------------------------------------------
  *
- * $Id: fits.i,v 1.31 2010-04-18 09:56:38 thiebaut Exp $
+ * $Id: fits.i,v 1.32 2010-04-20 13:04:11 thiebaut Exp $
  * $Log: fits.i,v $
- * Revision 1.31  2010-04-18 09:56:38  thiebaut
+ * Revision 1.32  2010-04-20 13:04:11  thiebaut
+ * hack to prevent HTML doc of private symbols
+ *
+ * Revision 1.31  2010/04/18 09:56:38  thiebaut
  *  - Hide documentation of private functions.
  *  - Use new Yorick functions (is_scalar, identof, filepath, etc.).
  *  - Obsolete functions (fits_is_scalar, fits_is_integer, fits_is_string) removed.
@@ -172,7 +175,7 @@
  */
 
 local fits;
-fits = "$Revision: 1.31 $";
+fits = "$Revision: 1.32 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided  by   this  (standalone)  package  are  aimed  at
@@ -476,7 +479,7 @@ func fits_info(fh, hdu)
   }
 }
 
-func _fits_info_worker(fh)
+/* PRIVATE */ func _fits_info_worker(fh)
 {
   local cards; eq_nocopy, cards, _car(fh,1);
   ncards = numberof(cards);
@@ -1067,8 +1070,8 @@ func fits_list(fh, key)
   write, format=f, indgen(numberof(result)), result;
 }
 
-func _fits_warn(msg) { write, format="FITS - WARNING: %s\n", msg; }
-/** DOCUMENT _fits_warn, msg;
+/* PRIVATE */ func _fits_warn(msg) { write, format="FITS - WARNING: %s\n", msg; }
+/* DOCUMENT _fits_warn, msg;
      Private FITS routine: print out warning message MSG. */
 
 func fits_nth(n)
@@ -1764,8 +1767,8 @@ func fits_set(fh, key, value, comment)
   return fh;
 }
 
-func _fits_get_cards(fh, &cards, &ids)
-/** DOCUMENT _fits_get_cards(fh, cards, ids)
+/* PRIVATE */ func _fits_get_cards(fh, &cards, &ids)
+/* DOCUMENT _fits_get_cards(fh, cards, ids)
      Stores in variables CARDS and IDS the FITS cards and numerical
      identifiers from header in FITS handle FH.  The returned value is the
      number of FITS cards (including empty ones).
@@ -1804,8 +1807,8 @@ func _fits_get_cards(fh, &cards, &ids)
  *          30 = T or F
  */
 
-func _fits_format_logical(key, value, comment)
-/** DOCUMENT _fits_format_logical(key, value)
+/* PRIVATE */ func _fits_format_logical(key, value, comment)
+/* DOCUMENT _fits_format_logical(key, value)
          or _fits_format_logical(key, value, comment)
      Private routine to format FITS logical card.  Returns a 80-character
      string.
@@ -1818,9 +1821,9 @@ func _fits_format_logical(key, value, comment)
                         key, value, (is_void(comment)?"":comment)), 1:80);
 }
 
-func _fits_format_integer(key, value, comment)
-/** DOCUMENT _fits_format_integer(key, value)
-          or _fits_format_integer(key, value, comment)
+/* PRIVATE */ func _fits_format_integer(key, value, comment)
+/* DOCUMENT _fits_format_integer(key, value)
+         or _fits_format_integer(key, value, comment)
      Private routine to format FITS integer card.  Returns a 80-character
      string.
    SEE ALSO: fits, fits_set. */
@@ -1829,10 +1832,10 @@ func _fits_format_integer(key, value, comment)
                         key, value, (is_void(comment)?"":comment)), 1:80);
 }
 
-local _fits_format_real_table;
-func _fits_format_real(key, value, comment)
-/** DOCUMENT _fits_format_real(key, value)
-          or _fits_format_real(key, value, comment)
+/* PRIVATE */ local _fits_format_real_table;
+/* PRIVATE */ func _fits_format_real(key, value, comment)
+/* DOCUMENT _fits_format_real(key, value)
+         or _fits_format_real(key, value, comment)
      Private routine to format FITS real card.  Returns a 80-character string.
 
      Note: FITS standard imposes that the ASCII representation of a real
@@ -1856,9 +1859,9 @@ func _fits_format_real(key, value, comment)
                         key, s, (is_void(comment)?"":comment)), 1:80);
 }
 
-func _fits_format_complex(key, value, comment)
-/** DOCUMENT _fits_format_complex(key, value)
-          or _fits_format_complex(key, value, comment)
+/* PRIVATE */ func _fits_format_complex(key, value, comment)
+/* DOCUMENT _fits_format_complex(key, value)
+         or _fits_format_complex(key, value, comment)
      Private routine to format FITS complex card.  Returns a 80-character
      string.
    SEE ALSO: fits, fits_set. */
@@ -1868,9 +1871,9 @@ func _fits_format_complex(key, value, comment)
                         (is_void(comment)?"":comment)), 1:80);
 }
 
-func _fits_format_string(key, value, comment)
-/** DOCUMENT _fits_format_string(key, value)
-          or _fits_format_string(key, value, comment)
+/* PRIVATE */ func _fits_format_string(key, value, comment)
+/* DOCUMENT _fits_format_string(key, value)
+         or _fits_format_string(key, value, comment)
      Private routine to format FITS string card.  Returns a 80-character
      string.
 
@@ -1908,9 +1911,9 @@ func _fits_format_string(key, value, comment)
                         key, value, (is_void(comment)?"":comment)), 1:80);
 }
 
-func _fits_format_comment(key, text, unused)
-/** DOCUMENT _fits_format_comment(key)
-          or _fits_format_comment(key, text)
+/* PRIVATE */ func _fits_format_comment(key, text, unused)
+/* DOCUMENT _fits_format_comment(key)
+         or _fits_format_comment(key, text)
      Private  routine to  format  FITS  commentary card,  return  an array  of
      80-character string(s).  Text comment, if longer than 72 characters, will
      result in more than one comment cards.
@@ -3074,8 +3077,8 @@ func fits_pack_bintable(ptr, list)
   return arr;
 }
 
-func _fits_bintable_header(fh, nbytes, nrows, tfields)
-/** DOCUMENT _fits_bintable_header(fh, nbytes, nrows, tfields)
+/* PRIVATE */ func _fits_bintable_header(fh, nbytes, nrows, tfields)
+/* DOCUMENT _fits_bintable_header(fh, nbytes, nrows, tfields)
      Set/update  header information  in  FITS  handle FH  for  a binary  table
      extension.  NBYTES is the number of  bytes per row of the table, NROWS is
      the number of table rows and  TFIELDS is the number of fields (columns in
@@ -3197,8 +3200,8 @@ func fits_index_of_table_field(fh, name)
   return index;
 }
 
-func _fits_bintable_fix_logical(a, bad)
-/** DOCUMENT _fits_bintable_fix_logical(a, bad)
+/* PRIVATE */ func _fits_bintable_fix_logical(a, bad)
+/* DOCUMENT _fits_bintable_fix_logical(a, bad)
      Fix logical value.
    SEE ALSO: fits_read_bintable. */
 {
@@ -3207,8 +3210,8 @@ func _fits_bintable_fix_logical(a, bad)
   return r;
 }
 
-func _fits_bintable_fix_string(a, n, trim)
-/** DOCUMENT _fits_bintable_fix_string(a, n, trim)
+/* PRIVATE */ func _fits_bintable_fix_string(a, n, trim)
+/* DOCUMENT _fits_bintable_fix_string(a, n, trim)
      Convert 2D array of characters into a 1D array of strings.  N is the
      leading dimension of A.
    SEE ALSO: fits_read_bintable. */
@@ -3233,9 +3236,9 @@ func _fits_bintable_fix_string(a, n, trim)
   return result;
 }
 
-func _fits_bintable_setup(letter, ident, type, size)
-/** DOCUMENT _fits_bintable_setup, letter, ident, type, size;
-          or _fits_bintable_setup, letter, ident;
+/* PRIVATE */ func _fits_bintable_setup(letter, ident, type, size)
+/* DOCUMENT _fits_bintable_setup, letter, ident, type, size;
+         or _fits_bintable_setup, letter, ident;
      Private function to setup parse tables for binary tables.
    SEE ALSO: fits_read_bintable.
  */
@@ -3290,7 +3293,7 @@ local fits_toupper, fits_tolower;
 func fits_tolower(s) { return strcase(0, s); }
 func fits_toupper(s) { return strcase(1, s); }
 
-local _fits_blank;
+/* PRIVATE */ local _fits_blank;
 func fits_trimright(s)
 /* DOCUMENT fits_trimright(s)
      Removes trailing  ordinary spaces (character  0x20) from string  array S.
@@ -3447,7 +3450,7 @@ func fits_bitpix_of(x, native=)
 /*---------------------------------------------------------------------------*/
 /* CARDS AND KEYS */
 
-local _fits_parse_comment;
+/* PRIVATE */ local _fits_parse_comment;
 func fits_parse(card, id, safe=)
 /* DOCUMENT fits_parse(card);
          or fits_parse(card, id);
@@ -3639,7 +3642,7 @@ func fits_get(fh, pattern, &comment, default=, promote=)
   return result;
 }
 
-local _fits_match_id;
+/* PRIVATE */ local _fits_match_id;
 func fits_match(fh, pattern)
 /* DOCUMENT fits_match(fh, pattern)
      Return array  of int's which are  non-zero where FITS card  names in FITS
@@ -3748,8 +3751,8 @@ func fits_id(card)
   return sum(_fits_multiplier(1:len)*digit);
 }
 
-func _fits_bad_keyword(c)
-/** DOCUMENT _fits_bad_keyword(c)
+/* PRIVATE */ func _fits_bad_keyword(c)
+/* DOCUMENT _fits_bad_keyword(c)
      Returns error  message due  to invalid  FITS keyword.  C  is an  array of
      characters that compose the bad FITS keyword.
    SEE ALSO: fits_id, fits_read_header. */
@@ -3771,8 +3774,8 @@ func _fits_bad_keyword(c)
   return ("no error in FITS keyword  \"" + key + "\" (BUG?)");
 }
 
-func _fits_id(hdr)
-/** DOCUMENT _fits_id(hdr)
+/* PRIVATE */ func _fits_id(hdr)
+/* DOCUMENT _fits_id(hdr)
      Return array of numerical identifier  for FITS header data HDR which must
      be an array(char, 80, N).  Any  invalid FITS key will have its identifier
      set to -1.
@@ -3797,8 +3800,8 @@ func fits_key(id)
   return fits_map(_fits_key, id);
 }
 
-func _fits_key(id)
-/** DOCUMENT _fits_key(id)
+/* PRIVATE */ func _fits_key(id)
+/* DOCUMENT _fits_key(id)
      Private routine used by fits_key, only useful if ID is a valid scalar
      numerical identifier.
    SEE ALSO: fits_key. */
@@ -3929,18 +3932,18 @@ func fits_get_list(fh, key)
 /*---------------------------------------------------------------------------*/
 /* INITIALIZATION OF PRIVATE DATA */
 
-local _fits_true, _fits_false;
-/** DOCUMENT _fits_true
-          or _fits_false
+/* PRIVATE */ local _fits_true, _fits_false;
+/* DOCUMENT _fits_true
+         or _fits_false
      True/false FITS values ('T' and 'F' respectively). */
 _fits_true = 'T';
 _fits_false = 'F';
 
-local _fits_digitize, _fits_multiplier, _fits_alphabet, _fits_max_id;
-/** DOCUMENT _fits_digitize   - char -> number conversion array;
-             _fits_multiplier - multiplier;
-             _fits_alphabet   - allowed characters in FITS keys;
-             _fits_max_id     - maximum possible ID value.
+/* PRIVATE */ local _fits_digitize, _fits_multiplier, _fits_alphabet, _fits_max_id;
+/* DOCUMENT _fits_digitize   - char -> number conversion array;
+            _fits_multiplier - multiplier;
+            _fits_alphabet   - allowed characters in FITS keys;
+            _fits_max_id     - maximum possible ID value.
      Private arrays used to convert FITS keyword to/from numerical
      identifiers.  If you experiment a strange behaviour of FITS routines, it
      may be because one of these arrays get corrupted; in that case, just run
@@ -3948,27 +3951,27 @@ local _fits_digitize, _fits_multiplier, _fits_alphabet, _fits_max_id;
      your FITS handles: see fits_rehash).
    SEE ALSO: fits, fits_init, fits_rehash, fits_id, fits_key. */
 
-local _fits_id_simple, _fits_id_bitpix, _fits_id_naxis, _fits_id_end;
-local _fits_id_comment, _fits_id_history, _fits_id_xtension, _fits_id_bscale;
-local _fits_id_bzero, _fits_id_gcount, _fits_id_pcount, _fits_id_hierarch;
-/** DOCUMENT _fits_id_simple    _fits_id_bitpix   _fits_id_naxis
-             _fits_id_end       _fits_id_comment  _fits_id_history
-             _fits_id_xtension  _fits_id_bscale   _fits_id_bzero
-             _fits_id_gcount    _fits_id_pcount   _fits_id_hierarch
+/* PRIVATE */ local _fits_id_simple, _fits_id_bitpix, _fits_id_naxis, _fits_id_end;
+/* PRIVATE */ local _fits_id_comment, _fits_id_history, _fits_id_xtension, _fits_id_bscale;
+/* PRIVATE */ local _fits_id_bzero, _fits_id_gcount, _fits_id_pcount, _fits_id_hierarch;
+/* DOCUMENT _fits_id_simple    _fits_id_bitpix   _fits_id_naxis
+            _fits_id_end       _fits_id_comment  _fits_id_history
+            _fits_id_xtension  _fits_id_bscale   _fits_id_bzero
+            _fits_id_gcount    _fits_id_pcount   _fits_id_hierarch
      Numerical identifers of common FITS keywords. If you experiment a strange
      behaviour of FITS routines, it may be because one of these values get
      corrupted; in that case, just run subroutine fits_init to reinitialize
      things.
    SEE ALSO: fits, fits_init. */
 
-local _fits_id_special;
-/** DOCUMENT _fits_id_special
+/* PRIVATE */ local _fits_id_special;
+/* DOCUMENT _fits_id_special
      Private array of all numerical identifers of common FITS keys: "SIMPLE",
      "BITPIX", "NAXIS", "END", "", "COMMENT", "HISTORY", and "XTENSION".
    SEE ALSO: fits, fits_init. */
 
-local _fits_strict;
-/** DOCUMENT _fits_strict
+/* PRIVATE */ local _fits_strict;
+/* DOCUMENT _fits_strict
      Private flag: apply strict FITS compliance?  Never change this flag
      directly but rather call `fits_init'.
 
@@ -4247,14 +4250,14 @@ fitsOldHeaderMembers = ["bitpix","naxis","bscale","bzero","bunit",
 fitsOldHeaderKeywords = fits_toupper(fitsOldHeaderMembers);
 
 
-func _fits_strjoin(s)
+/* PRIVATE */ func _fits_strjoin(s)
 {
   if ((n = numberof(s)) < 1) return;
   r = s(1);
   for (i=2;i<=n;++i) r += "\n" + s(i);
   return r;
 }
-func _fits_strsplit(s)
+/* PRIVATE */ func _fits_strsplit(s)
 {
   i = 0;
   r = array(string);
