@@ -17,15 +17,19 @@
  *
  *-----------------------------------------------------------------------------
  *
- * $Id: fits.i,v 1.32 2010-04-20 13:04:11 thiebaut Exp $
+ * $Id: fits.i,v 1.33 2010-04-24 16:14:56 thiebaut Exp $
  * $Log: fits.i,v $
- * Revision 1.32  2010-04-20 13:04:11  thiebaut
+ * Revision 1.33  2010-04-24 16:14:56  thiebaut
+ * Bug in fits_pack_bintable fixed (thanks to Ariane Lançon).
+ *
+ * Revision 1.32  2010/04/20 13:04:11  thiebaut
  * hack to prevent HTML doc of private symbols
  *
  * Revision 1.31  2010/04/18 09:56:38  thiebaut
  *  - Hide documentation of private functions.
  *  - Use new Yorick functions (is_scalar, identof, filepath, etc.).
- *  - Obsolete functions (fits_is_scalar, fits_is_integer, fits_is_string) removed.
+ *  - Obsolete functions (fits_is_scalar, fits_is_integer, fits_is_string)
+ *    removed.
  *
  * Revision 1.30  2010/04/18 09:07:30  thiebaut
  *  - Fix documentation for nice HTML output.
@@ -175,7 +179,7 @@
  */
 
 local fits;
-fits = "$Revision: 1.32 $";
+fits = "$Revision: 1.33 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided  by   this  (standalone)  package  are  aimed  at
@@ -840,12 +844,18 @@ func fits_check_file(filename, errmode)
   return (value == 'T');
 }
 
+local fits_ignore_short_file;
 func fits_read_header(fh)
 /* DOCUMENT fits_read_header(fh)
      (Re)read and parse header of current  HDU of FITS handle FH.  Contents of
      FH is  updated with header part of  new HDU.  To allow  for linked calls,
      the returned value is FH.  If the  current HDU is empty (i.e. last HDU in
      the file), the header will be empty.
+
+     Variable fits_ignore_short_file can be set true to ignore short FITS file
+     when reading the header.  If fits_ignore_short_file is -1, short FITS file
+     are silently ignored.  Otherwise, if fits_ignore_short_file is non-zero,
+     a warning is printed.
 
    SEE ALSO: fits, fits_open, fits_read_array, fits_next_hdu. */
 {
@@ -863,13 +873,19 @@ func fits_read_header(fh)
   for (;;) {
     /* Read next header block. */
     if ((nbytes = _read(file, address, block)) != block_size) {
-      if (nbytes == 0 && nblocks == 0) {
-        offset(4) = offset(3) = offset(2);
-        _car, fh, 1, [];
-        _car, fh, 2, [];
-        return fh;
+      if (nbytes != 0 || nblocks != 0) {
+        /* Short file. */
+        extern fits_ignore_short_file;
+        if (! fits_ignore_short_file || fits_ignore_short_file != -1) {
+          reason = swrite(format="short FITS file (incomplete header in HDU %d)", unit);
+          if (! fits_ignore_short_file) error, reason;
+          _fits_warn, reason;
+        }
       }
-      error, "cannot read FITS header or keyword END not found";
+      offset(4) = offset(3) = offset(2);
+      _car, fh, 1, [];
+      _car, fh, 2, [];
+      return fh;
     }
     ++nblocks;
     address += block_size;
@@ -3029,10 +3045,10 @@ func fits_pack_bintable(ptr, list)
     error, "expecting array of pointer argument";
   }
   if (is_void(list)) {
-    seletct = 0n;
+    select = 0n;
     n = numberof(ptr);
   } else {
-    seletct = 1n;
+    select = 1n;
     n = numberof(list);
   }
   start = stop = array(long, n);
