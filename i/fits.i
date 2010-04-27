@@ -17,9 +17,12 @@
  *
  *-----------------------------------------------------------------------------
  *
- * $Id: fits.i,v 1.33 2010-04-24 16:14:56 thiebaut Exp $
+ * $Id: fits.i,v 1.34 2010-04-27 14:27:37 thiebaut Exp $
  * $Log: fits.i,v $
- * Revision 1.33  2010-04-24 16:14:56  thiebaut
+ * Revision 1.34  2010-04-27 14:27:37  thiebaut
+ * remaining fits_is_scalar fixed (thanks to Eric Gendron)
+ *
+ * Revision 1.33  2010/04/24 16:14:56  thiebaut
  * Bug in fits_pack_bintable fixed (thanks to Ariane Lançon).
  *
  * Revision 1.32  2010/04/20 13:04:11  thiebaut
@@ -179,7 +182,7 @@
  */
 
 local fits;
-fits = "$Revision: 1.33 $";
+fits = "$Revision: 1.34 $";
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided  by   this  (standalone)  package  are  aimed  at
@@ -766,8 +769,8 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
     error, "bad value for keyword BITPIX";
   }
   if (! is_void(extend)) {
-    if (! fits_is_scalar(extend) || ((s = structof(extend)) != long &&
-                                     s != int && s != short && s != char))
+    if (! is_scalar(extend) || ((s = structof(extend)) != long &&
+                                s != int && s != short && s != char))
       error, "keyword EXTEND must be a scalar integer";
     if (s != char) extend = (extend ? 'T' : 'F');
     else if (extend!='T' && extend!='F') error, "bad value for keyword EXTEND";
@@ -1697,7 +1700,7 @@ func fits_set(fh, key, value, comment)
     }
     error, "unsupported type \""+typeof(value)+"\" for FITS card \""+key+"\"";
   }
-  if (! fits_is_scalar(value)) error, "expecting a scalar VALUE";
+  if (! is_scalar(value)) error, "expecting a scalar VALUE";
   if (! is_void(comment) && ! fits_is_string_scalar(comment))
     error, "optional COMMENT must be a scalar string";
 
