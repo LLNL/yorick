@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.35 2010-04-18 10:33:38 thiebaut Exp $
+ * $Id: std.i,v 1.36 2010-05-11 05:17:59 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3764,7 +3764,7 @@ func openb(filename, clogfile, update, open102=, one=)
 {
   if (is_stream(filename)) f = filename;
   else if (structof(filename)==char) f = vopen(filename, 1);
-  else f = open(filename, (update? "r+b" : "rb"));
+  else f = open(filename, (update? update : "rb"));
   if (!is_void(clogfile)) return read_clog(f, clogfile);
   if (!is_void(open102)) yPDBopen= ((open102&3)|(at_pdb_open&~3));
   else yPDBopen= at_pdb_open;
@@ -4002,7 +4002,7 @@ local openb_hooks;
  */
 openb_hooks= _lst(_not_pdbf, _not_cdf);
 
-func createb(filename, primitives, close102=)
+func createb(filename, primitives, close102=, clog=)
 /* DOCUMENT file= createb(filename)
          or file= createb(filename, primitives)
      creates FILENAME as a PDB file in "w+b" mode, destroying any
@@ -4036,7 +4036,7 @@ func createb(filename, primitives, close102=)
             close102, close102_default, at_pdb_open, at_pdb_close
  */
 {
-  file = (filename==char)? vopen(,1) : open(filename, "w+b");
+  file = (filename==char)? vopen(,1) : open(filename, "w+b"+(clog?"c":""));
   if (!is_void(primitives)) primitives, file;
   if (!is_void(close102)) yPDBclose= ((close102&1)|(at_pdb_close&~1));
   else if (is_void(close102_default)) yPDBclose= at_pdb_close;
@@ -4243,7 +4243,7 @@ __vax = __vaxg =
     0, 1,8,  9,23, 0,  0x81,   0, 1,8,  9,55, 0,  0x81];
 __vaxg(26:32) = [0, 1,11, 12,52, 0, 0x401];
 
-func updateb(filename, primitives, close102=, open102=)
+func updateb(filename, primitives, close102=, open102=, clog=)
 /* DOCUMENT file= updateb(filename)
          or file= updateb(filename, primitives)
      open a binary data file FILENAME for update (mode "r+b").
@@ -4255,9 +4255,9 @@ func updateb(filename, primitives, close102=, open102=)
  */
 {
   if (is_void(open(filename, "r", 1)))   /* "rb" does much more work */
-    return createb(filename, primitives, close102=close102);
+    return createb(filename, primitives, close102=close102, clog=clog);
   else
-    return openb(filename,,1, open102=open102);
+    return openb(filename,,(clog?"r+bc":"r+b"), open102=open102);
 }
 
 extern save;

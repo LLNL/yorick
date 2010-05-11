@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.5 2010-04-13 11:36:37 thiebaut Exp $
+ * $Id: ascio.c,v 1.6 2010-05-11 05:17:59 dhmunro Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -165,41 +165,48 @@ Operations bookOps = {
 void Y_open(int nArgs)
 {
   Symbol *stack= sp-nArgs+1;
-  char *filename, *filemode, *fullname;
+  char *filename, *fmode, *fullname, filemode[8];
   int errmode, permissions;
   p_file *file;
 
   if (nArgs<1 || nArgs>3) YError("bad argument list to open function");
   filename= YGetString(stack);
-  if (nArgs<2) filemode= 0;
-  else filemode= YGetString(stack+1);
+  if (nArgs<2) fmode= 0;
+  else fmode= YGetString(stack+1);
   if (nArgs<3) errmode= 0;
   else errmode= YGetInteger(stack+2);
 
-  if (!filemode || !filemode[0])
-    filemode= "r";
-  else if (filemode[0]!='r' && filemode[0]!='w' && filemode[0]!='a')
+  memset(filemode, 0, 8);
+  if (!fmode || !fmode[0])
+    strcpy(filemode, "r");
+  else if (fmode[0]!='r' && fmode[0]!='w' && fmode[0]!='a')
     YError("2nd argument to open must begin with r, w, or a");
+  else
+    strncat(filemode, fmode, 7);
+  if (filemode[0]=='r') permissions= 1;
+  else if (filemode[0]=='w') permissions= 2;
+  else permissions= 6;
+  if (filemode[1]=='+' || filemode[2]=='+') permissions|= 3;
+  if (filemode[1]=='b' || filemode[2]=='b') {
+    permissions|= 8;
+    if (filemode[2]=='c') {
+      if (permissions&2) permissions|= 16;
+      filemode[2]= '\0';
+    } else if (filemode[3]=='c') {
+      if (permissions&2) permissions|= 16;
+      filemode[3]= '\0';
+    }
+  }
 
   fullname= YExpandName(filename);
   file= p_fopen(fullname, filemode);
 
   if (file) {
     /* set permission bits and push result IOStream */
-    if (filemode[0]=='r') permissions= 1;
-    else if (filemode[0]=='w') permissions= 2;
-    else permissions= 6;
-    if (filemode[1]=='+') {
-      if (filemode[2]=='b') permissions|= 11;
-      else permissions|= 3;
-    } else if (filemode[1]=='b') {
-      if (filemode[2]=='+') permissions|= 11;
-      else permissions|= 8;
-    }
     if (permissions&8) {
       IOStream *ios= NewIOStream(fullname, file, permissions);
       PushDataBlock(ios);
-      if (permissions&2) CLupdate(ios);
+      if (permissions&16) CLupdate(ios);
     } else {
       PushDataBlock(NewTextStream(fullname, file, permissions, 0L, 0L));
     }
