@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.6 2010-05-11 05:17:59 dhmunro Exp $
+ * $Id: ascio.c,v 1.7 2010-05-12 06:51:50 thiebaut Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -318,10 +318,10 @@ void Y_filepath(int argc)
       output[i] = (input[i] ? YExpandName(input[i]) : 0);
     }
   } else if (op.ops == &streamOps) {
-    output = ypush_q(NULL);
+    output = ((Array *)PushDataBlock(NewArray(&stringStruct, NULL)))->value.q;
     output[0] = p_strcpy(((IOStream *)op.value)->fullname);
   } else if (op.ops == &textOps) {
-    output = ypush_q(NULL);
+    output = ((Array *)PushDataBlock(NewArray(&stringStruct, NULL)))->value.q;
     output[0] = p_strcpy(((TextStream *)op.value)->fullname);
   } else if (op.ops == &voidOps) {
     PushDataBlock(RefNC(&nilDB));
