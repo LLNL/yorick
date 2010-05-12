@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.14 2010-04-16 05:23:43 dhmunro Exp $
+ * $Id: std0.c,v 1.15 2010-05-12 06:45:28 thiebaut Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -838,10 +838,14 @@ void Y_is_scalar(int nargs)
   s = sp;
   for (;;) {
     if (s->ops == &dataBlockSym) {
-      Operand op;
       Operations *ops =  s->value.db->ops;
-      result = ((ops->isArray || ops == &lvalueOps)
-		&& s->ops->FormOperand(s, &op)->type.dims == (Dimension *)0);
+      if (ops->isArray) {
+        result = (((Array *)s->value.db)->type.dims == (Dimension *)0);
+      } else if (ops == &lvalueOps) {
+        result = (((LValue *)s->value.db)->type.dims == (Dimension *)0);
+      } else {
+        result = 0;
+      }
       break;
     } else if (s->ops != &referenceSym) {
       /* Must be one of: intScalar, longScalar, or doubleScalar. */
@@ -862,12 +866,17 @@ void Y_is_vector(int nargs)
   s = sp;
   for (;;) {
     if (s->ops == &dataBlockSym) {
-      Operand op;
       Dimension *dims;
       Operations *ops =  s->value.db->ops;
-      result = ((ops->isArray || ops == &lvalueOps)
-		&& (dims = s->ops->FormOperand(s, &op)->type.dims) != (Dimension *)0
-		&& dims->next == (Dimension *)0);
+      if (ops->isArray) {
+        dims = ((Array *)s->value.db)->type.dims;
+      } else if (ops == &lvalueOps) {
+        dims = ((LValue *)s->value.db)->type.dims;
+      } else {
+        result = 0;
+        break;
+      }
+      result = (dims != (Dimension *)0 && dims->next == (Dimension *)0);
       break;
     } else if (s->ops != &referenceSym) {
       /* Must be one of: intScalar, longScalar, or doubleScalar. */
@@ -888,12 +897,17 @@ void Y_is_matrix(int nargs)
   s = sp;
   for (;;) {
     if (s->ops == &dataBlockSym) {
-      Operand op;
       Dimension *dims;
       Operations *ops =  s->value.db->ops;
-      result = ((ops->isArray || ops == &lvalueOps)
-		&& (dims = s->ops->FormOperand(s, &op)->type.dims) != (Dimension *)0
-		&& dims->next != (Dimension *)0
+      if (ops->isArray) {
+        dims = ((Array *)s->value.db)->type.dims;
+      } else if (ops == &lvalueOps) {
+        dims = ((LValue *)s->value.db)->type.dims;
+      } else {
+        result = 0;
+        break;
+      }
+      result = (dims != (Dimension *)0 && dims->next != (Dimension *)0
                 && dims->next->next == (Dimension *)0);
       break;
     } else if (s->ops != &referenceSym) {
@@ -1526,7 +1540,7 @@ void Y_lround(int nArgs)
     if (promoteID < T_LONG) {
       op.ops->ToLong(&op);
     }
-    PopToD(sp - 1);
+    PopToL(sp - 1);
     return;
   }
   if (promoteID < T_DOUBLE) {
