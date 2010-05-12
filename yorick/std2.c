@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.2 2010-05-12 04:03:30 dhmunro Exp $
+ * $Id: std2.c,v 1.3 2010-05-12 07:00:15 thiebaut Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.
@@ -676,7 +676,6 @@ Y_set_blocksize(int nArgs)
 
 void Y_set_cachesize(int nArgs)
 {
-  IOStream *file;
   long size;
   /* yMaxBlockSize, yCacheSize declared in binio.h */
 
