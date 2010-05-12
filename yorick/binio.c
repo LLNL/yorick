@@ -1,5 +1,5 @@
 /*
- * $Id: binio.c,v 1.5 2010-05-11 05:17:59 dhmunro Exp $
+ * $Id: binio.c,v 1.6 2010-05-12 04:03:30 dhmunro Exp $
  * Define Yorick functions for dealing with binary I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -805,6 +805,7 @@ static MemryBlock iosBlock= {0, 0, sizeof(IOStream),
                                  16*sizeof(IOStream)};
 
 IOFileLink *yBinaryFiles= 0;
+long y_block_size_0 = 0x3fff;  /* must be 2^n-1, see Y_default_blocksize */
 
 IOStream *NewIOStream(char *fullname, void *stream, int permissions)
 {
@@ -818,7 +819,7 @@ IOStream *NewIOStream(char *fullname, void *stream, int permissions)
   ios->permissions= permissions;
   ios->ioOps= &defaultIOops;
 
-  ios->blockSize= 0x3fff;
+  ios->blockSize= y_block_size_0;
   ios->blockList= 0;
   ios->seqAddress= 0;
 

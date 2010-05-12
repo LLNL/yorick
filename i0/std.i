@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.36 2010-05-11 05:17:59 dhmunro Exp $
+ * $Id: std.i,v 1.37 2010-05-12 04:03:30 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -4412,11 +4412,27 @@ extern add_variable;
 
 extern set_blocksize;
 /* DOCUMENT set_blocksize, file, blocksize
+         or set_blocksize, blocksize
      sets smallest cache block size for FILE to BLOCKSIZE.  BLOCKSIZE
      is rounded to the next larger number of the form 4096*2^n if
      necessary; cache blocks for this file will be multiples of
-     BLOCKSIZE bytes long.  The default BLOCKSIZE is 0x4000 (16 KB).
-   SEE ALSO: openb, updateb, createb, save, restore, _read, _write
+     BLOCKSIZE bytes long.  The default BLOCKSIZE is 0x4000 (16 KB)
+     initially.  The second form, with no FILE argument, sets the
+     default BLOCKSIZE.
+   SEE ALSO: openb, updateb, createb, save, restore, _read, _write,
+             set_cachesize
+ */
+
+extern set_cachesize;
+/* DOCUMENT set_cachesize, maxBlockSize, totalCacheSize
+     Sets largest cache block size to  MAXBLOCKSIZE.  MAXBLOCKSIZE
+     is rounded to the next larger number of the form 4096*2^n if
+     necessary.
+     Sets the total cache size to TOTALCACHESIZE.  TOTALCACHESIZE
+     will be set to 4*MAXBLOCKSIZE if it is smaller than that.
+     The default MAXBLOCKSIZE is 0x080000 (512k) and the default
+     TOTALCACHESIZE is  0x140000 (1.25 Mbytes).
+   SEE ALSO: set_blocksize, openb, updateb, createb
  */
 
 extern set_filesize;

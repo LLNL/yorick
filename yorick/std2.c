@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.1 2005-09-18 22:04:07 dhmunro Exp $
+ * $Id: std2.c,v 1.2 2010-05-12 04:03:30 dhmunro Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.
@@ -19,6 +19,7 @@
 extern BuiltIn Y_save, Y_restore, Y_add_record, Y__jt, Y__jc, Y__jr,
   Y_get_times, Y_get_ncycs, Y_get_vars, Y_get_addrs, Y_add_variable,
   Y_set_filesize, Y_set_blocksize, Y_add_member, Y_install_struct;
+extern BuiltIn Y_set_cachesize;
 
 extern BuiltIn Y_edit_times, Y_add_next_file, Y__read, Y__write,
   Y_data_align, Y_struct_align, Y__not_pdb, Y__init_pdb, Y__set_pdb,
@@ -646,22 +647,45 @@ void Y_set_filesize(int nArgs)
   history->fileSize= size;
 }
 
-void Y_set_blocksize(int nArgs)
+static long y_legal_blksz(long nbytes);
+static long 
+y_legal_blksz(long nbytes)
 {
-  IOStream *file;
-  long size, nbytes;
-  if (nArgs!=2) YError("set_block takes exactly two arguments");
-
-  file= yarg_file(1);
-
-  nbytes= YGetInteger(sp);
-  size= 4096;
+  long size = 4096;
   while (size < nbytes) {
     if ((size<<1) >= yMaxBlockSize) break;
-    size<<= 1;
+    size <<= 1;
   }
+  return size;
+}
 
-  file->blockSize= size-1;
+void
+Y_set_blocksize(int nArgs)
+{
+  IOStream *file = 0;
+  long size;
+
+  if (nArgs == 2) file = yarg_file(1);
+  else if (nArgs != 1) YError("set_blocksize takes one or two arguments");
+
+  size = y_legal_blksz(YGetInteger(sp)) - 1;
+
+  if (file) file->blockSize = size;
+  else y_block_size_0 = size;
+}
+
+void Y_set_cachesize(int nArgs)
+{
+  IOStream *file;
+  long size;
+  /* yMaxBlockSize, yCacheSize declared in binio.h */
+
+  if (nArgs!=2) YError("set_cachesize takes exactly two arguments");
+
+  yMaxBlockSize = y_legal_blksz(YGetInteger(sp-1));
+  size = YGetInteger(sp);
+  if (size < 4*yMaxBlockSize) size = 4*yMaxBlockSize;
+  yCacheSize = size;
 }
 
 /*--------------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 /*
- * $Id: binio.h,v 1.4 2010-05-11 05:17:59 dhmunro Exp $
+ * $Id: binio.h,v 1.5 2010-05-12 04:03:30 dhmunro Exp $
  * Declare structures and functions for arrays of data that have
  * meaningful interpretations on disk.
  *
@@ -673,7 +673,7 @@ PLUG_API int JumpRecord(HistoryInfo *history, long recNumber);
 /*--------------------------------------------------------------------------*/
 
 /* Parameters for adjusting caching system -- see cache.c */
-PLUG_API long yMaxBlockSize, yCacheSize, yCacheTotal;
+PLUG_API long yMaxBlockSize, yCacheSize, yCacheTotal, y_block_size_0;
 PLUG_API int yCacheNumber, yCacheN;
 
 /* copy src from 0 to src->nextAddress to dst, return 0 on success */
