@@ -1,5 +1,5 @@
 /*
- * $Id: hydra.i,v 1.4 2009-03-11 03:37:59 dhmunro Exp $
+ * $Id: hydra.i,v 1.5 2010-05-27 03:11:51 dhmunro Exp $
  * functions to access hydra-generated Silo/PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -8,7 +8,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-_h_i_version = 1.00;
+_h_i_version = 1.01;
 
 local hydra;
 /* DOCUMENT hydra.i
@@ -77,6 +77,20 @@ func h_openb(name, one=)
   _h_legacy = 0;  /* 1 to use obsolete hydra format */
   if (!root && _h_autodetect)
     _h_legacy = noneof((*get_vars(f)(1))=="/Global/");
+  _h_mapfmt = 0;
+  if (!_h_legacy) {
+    vars = *(get_vars(f)(1));
+    if (anyof(strmatch(vars, "/Decomposition/Block_Extents")))
+      _h_mapfmt = 1;
+    else if (anyof(strmatch(vars, "/Decomposition/Block_Decomposition")))
+      _h_mapfmt = 2;
+    if (anyof(strmatch(vars, "/Decomposition/Domain_Extents")))
+      _h_mapfmt += 2;
+    else if (anyof(strmatch(vars, "/Decomposition/Domain_Decomposition")))
+      _h_mapfmt += 4;
+    if (_h_mapfmt && _h_mapfmt<3)
+      error, "unrecognized umap/gmap format";
+  }
 
   sfx = strpart(name,-3:0);
   n = 0;
@@ -177,7 +191,7 @@ func h_openb(name, one=)
   /* is this always same as h_iparm(f0, "ndims") ?? */
   ndims = dimsof(get_member(f0, "/hblk0/hydro_mesh_coord0"))(1);
 
-  return _lst(f0, [1,1,ndims,_h_legacy], data, time, ncyc);
+  return _lst(f0, [1,1,ndims,_h_legacy, _h_mapfmt], data, time, ncyc);
 }
 
 func h_close(&f)
@@ -270,21 +284,23 @@ func h_show(f)
     vars = strpart(vars(list),8:0);
     vars = vars(where(strlen(vars)>0));
     vars = vars(where(!strmatch(vars,"/")));
-    mask = strpart(vars,-4:0) == "_data";
-    list = where(mask);
-    if (numberof(list)) vars(list) = strpart(vars(list),1:-5);
     list = where(vars=="Materials_matlist");
-    if (numberof(list)) { mask(list) = 1;  vars(list) = "Materials"; }
-    mask += 2*(vars=="hydro_mesh_coord0") + 3*(vars=="hydro_mesh_coord1") +
-      4*(vars=="hydro_mesh_coord2");
+    if (numberof(list)) vars(list) = "Materials";
+    mask = (vars=="hydro_mesh_coord0") + 2*(vars=="hydro_mesh_coord1") +
+      3*(vars=="hydro_mesh_coord2");
+    list = where(mask);
+    if (numberof(list)) vars(list) = ["x","y","z"](mask(list));
+    mask = strmatch(vars,"_");
     list = where(mask);
     if (numberof(list)) {
-      vars = vars(list);
-      mask = mask(list);
-      list = where(mask > 1);
-      if (numberof(list)) vars(list) = ["x","y","z"](mask(list)-1);
-      vars = vars(sort(vars));
+      v = strpart(vars(list), -1:-1);
+      i = where(v == "_");
+      if (numberof(i)) v(i) = strpart(vars(list(i)), 0:0);
+      i = where((v>="0") & (v<="9"));
+      if (numberof(i)) mask(list(i)) = 0;
     }
+    vars = vars(where(!mask));
+    vars = vars(sort(vars));
   }
   if (am_subroutine() && numberof(vars)) {
     write, vars;
@@ -1450,9 +1466,13 @@ func _h_read_maps(f, name, root)
   if (root) {
     unblk = get_member(f,"/Decomposition/NumBlocks")(1);
     umap = array(0, 7, unblk);
-    for (i=1 ; i<=unblk ; i++) {
-      nm = swrite(format="/Decomposition/umap%ld/umap",i-1);
-      umap(,i) = get_member(f, nm)(list);
+    if (!_h_mapfmt) {
+      for (i=1 ; i<=unblk ; i++) {
+        nm = swrite(format="/Decomposition/umap%ld/umap",i-1);
+        umap(,i) = get_member(f, nm)(list);
+      }
+    } else {
+      umap = _h_rdmap(f, "", 0, unblk);
     }
     gnblk = get_member(f,"/Decomposition/NumDomains")(1);
     names = array(string, gnblk);
@@ -1461,8 +1481,14 @@ func _h_read_maps(f, name, root)
     for (i=1 ; i<=gnblk ; i++) {
       toks = strtok(toks(2),";");
       names(i) = strtok(toks(1),":")(1);
-      nm = swrite(format="/Decomposition/gmap%ld/gmap",i-1);
-      gmap(1:7,i) = get_member(f, nm)(list);
+    }
+    if (!_h_mapfmt) {
+      for (i=1 ; i<=gnblk ; i++) {
+        nm = swrite(format="/Decomposition/gmap%ld/gmap",i-1);
+        gmap(1:7,i) = get_member(f, nm)(list);
+      }
+    } else {
+      gmap = _h_rdmap(f, "", 1, gnblk);
     }
     gmap(8,) = get_member(f,"/DomainFiles")(1:gnblk);
     names = name+names;
@@ -1474,16 +1500,24 @@ func _h_read_maps(f, name, root)
     pname = *pointer("unblk");
     i = where(!(iparmn(1:6,)!=pname)(sum,))(1);
     unblk = iparmv(i);
-    umap = array(0, 7, unblk);
-    for (i=1 ; i<=unblk ; i++)
-      umap(,i) = get_member(f, _h_umapname(i-1))(list);
+    if (!_h_mapfmt) {
+      umap = array(0, 7, unblk);
+      for (i=1 ; i<=unblk ; i++)
+        umap(,i) = get_member(f, _h_umapname(i-1))(list);
+    } else {
+      umap = _h_rdmap(f, "/Global", 0, unblk);
+    }
     pname(1) = 'g';  /* "gnblk" */
     i = where(!(iparmn(1:6,)!=pname)(sum,))(1);
     gnblk = iparmv(i);
-    gmap = array(0, 8, gnblk);
-    for (i=1 ; i<=gnblk ; i++) {
-      nblk = get_member(f,_h_varname(i-1,"hydrodati"))(36);
-      gmap(1:7,i) = get_member(f, _h_gmapname(nblk))(list);
+    if (!_h_mapfmt) {
+      gmap = array(0, 8, gnblk);
+      for (i=1 ; i<=gnblk ; i++) {
+        nblk = get_member(f,_h_varname(i-1,"hydrodati"))(36);
+        gmap(1:7,i) = get_member(f, _h_gmapname(nblk))(list);
+      }
+    } else {
+      gmap = _h_rdmap(f, "/Global", 1, gnblk);
     }
     gmap(8,) = indgen(0:gnblk-1);
     names = array(name, gnblk);
@@ -1494,6 +1528,26 @@ func _h_read_maps(f, name, root)
   gmap(2:7,) -= 1;
 
   return [&names, &gmap, &umap];
+}
+
+func _h_rdmap(f, prefix, gmap, nblk)
+{
+  list = [1,2,3,4,5,6];
+  nm0 = prefix + "/Decomposition/";
+  nm = nm0 + (gmap? "Domain" : "Block");
+  map = indgen(0:nblk-1)(-:1:7+gmap,);
+  if (gmap) fmt = (_h_mapfmt-3)&2;
+  else fmt = (_h_mapfmt-3)&1;
+  if (!fmt) {
+    map(2:7,) = get_member(f, nm+"_Extents")(list);
+  } else {
+    nm += "_Decomposition_";
+    nn = get_member(f, nm+"nneighbors");
+    nodes = get_member(f, nm+"nodelists");
+    map(2:7,) = nodes(list + 15*nn(-,cum:1:-1));
+  }
+  if (gmap) map(1,) = get_member(f, nm0+"Domains_BlockNums");
+  return map;
 }
 
 struct HX_block {   /* must match hex.h */
