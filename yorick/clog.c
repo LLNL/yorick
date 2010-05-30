@@ -1,5 +1,5 @@
 /*
- * $Id: clog.c,v 1.4 2010-02-28 21:52:29 dhmunro Exp $
+ * $Id: clog.c,v 1.5 2010-05-30 16:24:04 dhmunro Exp $
  * Define routines to handle Contents Log (CLOG) language
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -209,7 +209,7 @@ void ZapClogFile(IOStream *file)
     CLzero(clBuffer);
     p_free(clBuffer);
   }
-  remove(name);
+  if (file->permissions&16) p_remove(name);
   clogName= 0;
   p_free(name);
   if (child) {
@@ -219,7 +219,7 @@ void ZapClogFile(IOStream *file)
       CLzero(childCL);
       p_free(childCL);
     }
-    remove(name);
+    if (file->permissions&16) p_remove(name);
     clogName= 0;
     p_free(name);
   }

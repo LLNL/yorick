@@ -1,5 +1,5 @@
 /*
- * $Id: cheby.i,v 1.2 2007-01-28 23:47:31 dhmunro Exp $
+ * $Id: cheby.i,v 1.3 2010-05-30 16:24:04 dhmunro Exp $
  * Chebyshev polynomial approximation routines
  * after Numerical Recipes (Press et. al.) section 5.6
  */
@@ -9,14 +9,16 @@
  * Read the accompanying LICENSE file for details.
  */
 
-func cheby_fit(f, x, n)
+func cheby_fit(f, x, n, nterp=)
 /* DOCUMENT fit = cheby_fit(f, interval, n)
  *       or fit = cheby_fit(f, x, n)
  *   returns the Chebyshev fit (for use in cheby_eval) of degree N
  *   to the function F on the INTERVAL (a 2 element array [a,b]).
  *   In the second form, F and X are arrays; the function to be
  *   fit is the piecewise linear function of xp interp(f,x,xp), and
- *   the interval of the fit is [min(x),max(x)].
+ *   the interval of the fit is [min(x),max(x)].  You can use the
+ *   nterp= keyword to set a different interpolator, which must have
+ *   the same calling sequence as interp (e.g.- nterp=spline).
  *
  *   The return value is the array [a,b, c0,c1,c2,...cN] where [a,b]
  *   is the interval over which the fit applies, and the ci are the
@@ -24,7 +26,8 @@ func cheby_fit(f, x, n)
  *   large value of N in the call to cheby_fit, then to truncate the
  *   resulting fit to fit(1:3+m) before calling cheby_eval.
  *
- * SEE ALSO: cheby_eval, cheby_integ, cheby_deriv, cheby_poly
+ * SEE ALSO: cheby_eval, cheby_integ, cheby_deriv, cheby_poly, cheby_conv,
+ *           cheby_trunc, rcheby_fit
  */
 {
   a = double(min(x));
@@ -105,7 +108,7 @@ func cheby_poly(fit)
   *   actually using these for very low degree polynomials; cheby_eval
   *   is nearly always a superior way to evaluate the polynomial.
   *
-  * SEE ALSO: cheby_fit
+  * SEE ALSO: cheby_fit, cheby_conv
   */
 {
    c = fit(3:0);
@@ -134,4 +137,46 @@ func cheby_poly(fit)
    c = 0.5*(a+b);
    for (j=1 ; j<n ; j++) for (k=n-1 ; k>=j ; k--) d(k) -= c*d(k+1);
    return d;
+}
+
+func cheby_conv(_p_, x)
+/* DOCUMENT fit = cheby_conv(poly, interval)
+ *   convert polynomial coefficients POLY = [a0, a1, ..., aN] to a
+ *   Chebyshev fit suitable for input to cheby_eval.  The INTERVAL
+ *   = [xmin,xmax] is the most stable region for evaluation.  Omitting
+ *   INTERVAL gives the natural interval [-1,1] for Chebyshev polynomials.
+ *   You may also pass another Chebyshev fit (from cheby_fit) as the
+ *   INTERVAL to use the same interval as that fit.
+ * SEE ALSO: cheby_fit, cheby_eval, cheby_poly
+ */
+{
+  if (is_void(x)) x = [-1.0, 1.0];
+  if (numberof(_p_) == 1) return grow(double(x(1:2)), 2.*_p_(1));
+  return cheby_fit(_cheby_conv, x(1:2), numberof(_p_)-1);
+}
+func _cheby_conv(x)
+{
+  y = _p_(0);
+  for (i=numberof(_p_)-1 ; i>=1 ; --i) y = y*x + _p_(i);
+  return y;
+}
+
+func cheby_trunc(fit, err, &e)
+/* DOCUMENT tfit = cheby_trunc(fit, err)
+ *       or tfit = cheby_trunc(fit, err, e)
+ *   truncate cheby_fit FIT to relative error ERR by dropping trailing
+ *   Chebyshev coefficients smaller than ERR.  If ERR is omitted, it
+ *   defaults to 1.e-9.  Optionally returns E, which is the list of
+ *   relative errors incurred by dropping each order [e0, e1, ... eN].
+ *   Often there will be a sudden improvement with some order, which
+ *   can assist you with selecting an appropriate truncation.
+ * SEE ALSO: cheby_fit
+ */
+{
+  if (is_void(err)) err = 1.e-9;
+  else err = min(abs(err), 0.5);
+  e = abs(fit(0:3:-1))(psum);
+  e = e(::-1) / e(0);
+  m = -sum(e < err);
+  return fit(1:m);
 }

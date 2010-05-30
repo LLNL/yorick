@@ -44,6 +44,10 @@
      Functions: digit2, interp2
    cheby.i    - Chebyshev fitting and evaluation routines
      Functions: cheby_fit, cheby_eval, cheby_integ, cheby_deriv, cheby_poly
+                cheby_conv, cheby_trunc
+   rcheby.i   - rational and polynomial Chebyshev fitting and evaluation
+                routines (these are minimax fitting, as opposed to cheby.i)
+     Functions: rcheby_fit, rcheby_eval, rcheby_conv, rcheby_build, and more
    regress.i  - Linear regression (least squares fitting)
      Functions: regress, regress_cov
    levmar.i   - Non-linear least squares fitting by Levenberg-Marquardt
