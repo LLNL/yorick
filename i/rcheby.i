@@ -1,5 +1,5 @@
 /* rcheby.i
- * $Id: rcheby.i,v 1.1 2010-05-30 16:24:04 dhmunro Exp $
+ * $Id: rcheby.i,v 1.2 2010-05-30 19:34:20 dhmunro Exp $
  * rational/polynomial minimax Chebyshev fits
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -56,10 +56,10 @@ func rcheby_fit(f, x, m, k, nterp=)
    * with an order much larger than m+k+1 (a factor of rcheby_np).
    */
   np = rcheby_np * (m+k+1);   /* number of points np many times order */
-  th = (pi/(np-1.0))*indgen(0:np-1)
-    xn = cos(th);
+  th = (pi/(np-1.0))*indgen(0:np-1);
+  xn = cos(th);
   if (is_func(f)) f = f(interp([xmin,xmax],[-1.,1.], xn));
-  else            f = nterp(f,x, xn);
+  else            f = nterp(f,x, interp([xmin,xmax],[-1.,1.], xn));
 
   /* Trick is to do least squares fit to f(x)+-e where e is the mean
    * absolute deviation and the sign is chosen to be the pointwise sign
