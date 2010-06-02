@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.c,v 1.4 2010-04-16 05:23:43 dhmunro Exp $
+ * $Id: ydata.c,v 1.5 2010-06-02 02:15:49 dhmunro Exp $
  * Implement functions for Yorick-specific types of data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -920,6 +920,21 @@ void Y_symbol_set(int nArgs)
   glob= &globTab[Globalize(YGetString(spp), 0L)];
   ReplaceRef(sp);
   /* following copied from Define function in ops3.c */
+  if (glob->ops==&dataBlockSym) {
+    DataBlock *db= glob->value.db;
+    if (db->ops==&lvalueOps) {
+      /* Note that an explicit UnDefine operation is required in order
+         for the interpreter to be able to ever get rid of a reference
+         to an LValue in globTab.  This is provided as a part of a
+         non-kernal Yorick package, since it is not a crucial feature
+         of the language (see Y_reshape).  */
+      DoAssign((LValue *)db, sp);
+      return;
+    } else {
+      glob->ops= &intScalar;
+      Unref(db);
+    }
+  }
   if (sp->ops==&dataBlockSym) {
     Array *array= (Array *)sp->value.db;
     if (array->references && array->ops->isArray) {
