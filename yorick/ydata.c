@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.c,v 1.5 2010-06-02 02:15:49 dhmunro Exp $
+ * $Id: ydata.c,v 1.6 2010-06-02 15:06:49 dhmunro Exp $
  * Implement functions for Yorick-specific types of data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -923,12 +923,14 @@ void Y_symbol_set(int nArgs)
   if (glob->ops==&dataBlockSym) {
     DataBlock *db= glob->value.db;
     if (db->ops==&lvalueOps) {
-      /* Note that an explicit UnDefine operation is required in order
-         for the interpreter to be able to ever get rid of a reference
-         to an LValue in globTab.  This is provided as a part of a
-         non-kernal Yorick package, since it is not a crucial feature
-         of the language (see Y_reshape).  */
-      DoAssign((LValue *)db, sp);
+      /* copied from ops3.c:DoAssign */
+      LValue *lvalue = (LValue *)db;
+      Operations *ops= lvalue->type.base->dataOps;
+      Operand rhs;
+      sp->ops->FormOperand(sp, &rhs);
+      if (rhs.ops->isArray && RightConform(lvalue->type.dims, &rhs))
+        YError("rhs not conformable with lhs in assign =");
+      ops->Assign((Operand *)lvalue, &rhs);
       return;
     } else {
       glob->ops= &intScalar;
