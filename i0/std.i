@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.37 2010-05-12 04:03:30 dhmunro Exp $
+ * $Id: std.i,v 1.38 2010-06-07 08:39:08 thiebaut Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -2986,7 +2986,8 @@ extern filepath;
      expansion is performed and the result will have the same shape as the
      input).
 
-   SEE ALSO: open. */
+   SEE ALSO: cd, lsdir, mkdir, open.
+*/
 
 extern rename;
 extern remove;
@@ -3607,16 +3608,22 @@ extern lsdir;
          for (i=1 ; i<=numberof(files) ; ++i) {...use files(i)...}
          for (i=1 ; i<=numberof(subdirs) ; ++i) {...use subdirs(i)...}
        }
-   SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home
+   SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home, filepath
  */
 
 extern mkdir;
 extern rmdir;
 /* DOCUMENT mkdir, directory_name
-            rmdir, directory_name
-     Create DIRECTORY_NAME with mkdir, or remove it with rmdir.
-     The rmdir function only works if the directory is empty.
-   SEE ALSO: mkdirp, cd, lsdir, get_cwd, get_home
+         or rmdir, directory_name 
+     Create DIRECTORY_NAME with mkdir, or remove it with rmdir.  The rmdir
+     function only works if the directory is empty.  An error is raised if
+     DIRECTORY_NAME is not a non-nil scalar string or if mkdir or rmdir are
+     called as subroutines and the operation fails.  Otherwise, if
+     DIRECTORY_NAME is a non-nil scalar string and if mkdir and rmdir are
+     called as a function, they return an integer: 0 to indicate success and
+     -1 to indicate failure.
+     
+   SEE ALSO: mkdirp, cd, lsdir, get_cwd, get_home, filepath
  */
 
 func mkdirp(dir)

@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.3 2010-05-12 07:00:15 thiebaut Exp $
+ * $Id: std2.c,v 1.4 2010-06-07 08:39:05 thiebaut Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.
@@ -1501,7 +1501,11 @@ Y_lsdir(int nArgs)
   dlist->nfils = dlist->nsubs = 0;
   PushDataBlock(dlist);
 
-  dlist->dir = p_dopen(YGetString(stack));
+  name = YGetString(stack);
+  if (name == NULL) {
+    YError("first argument to lsdir must be a non-nil scalar string");
+  }
+  dlist->dir = p_dopen(name);
 
   if (!dlist->dir) {
     Drop(1);
@@ -1575,14 +1579,32 @@ Y_lsdir(int nArgs)
 
 void Y_mkdir(int nArgs)
 {
+  char *name;
+
   if (nArgs!=1) YError("mkdir takes exactly one argument");
-  p_mkdir(YGetString(sp));
+  name = YGetString(sp);
+  if (name == NULL) YError("argument to mkdir must be a non-nil scalar string");
+  if (p_mkdir(name) != 0) {
+    if (CalledAsSubroutine()) YError("cannot make directory");
+    PushIntValue(-1);
+  } else {
+    PushIntValue(0);
+  }
 }
 
 void Y_rmdir(int nArgs)
 {
+  char *name;
+
   if (nArgs!=1) YError("rmdir takes exactly one argument");
-  p_rmdir(YGetString(sp));
+  name = YGetString(sp);
+  if (name == NULL) YError("argument to rmdir must be a non-nil scalar string");
+  if (p_rmdir(name) != 0) {
+    if (CalledAsSubroutine()) YError("cannot remove directory");
+    PushIntValue(-1);
+  } else {
+    PushIntValue(0);
+  }
 }
 
 /*--------------------------------------------------------------------------*/
