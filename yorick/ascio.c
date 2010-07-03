@@ -1,5 +1,5 @@
 /*
- * $Id: ascio.c,v 1.7 2010-05-12 06:51:50 thiebaut Exp $
+ * $Id: ascio.c,v 1.8 2010-07-03 19:42:31 dhmunro Exp $
  * Define standard Yorick built-in functions for ASCII I/O
  *
  * See std.i for documentation on the interface functions defined here.
@@ -190,10 +190,10 @@ void Y_open(int nArgs)
   if (filemode[1]=='b' || filemode[2]=='b') {
     permissions|= 8;
     if (filemode[2]=='c') {
-      if (permissions&2) permissions|= 16;
+      if (permissions&2) permissions|= 64;
       filemode[2]= '\0';
     } else if (filemode[3]=='c') {
-      if (permissions&2) permissions|= 16;
+      if (permissions&2) permissions|= 64;
       filemode[3]= '\0';
     }
   }
@@ -206,7 +206,7 @@ void Y_open(int nArgs)
     if (permissions&8) {
       IOStream *ios= NewIOStream(fullname, file, permissions);
       PushDataBlock(ios);
-      if (permissions&16) CLupdate(ios);
+      if (permissions&64) CLupdate(ios);
     } else {
       PushDataBlock(NewTextStream(fullname, file, permissions, 0L, 0L));
     }
@@ -318,10 +318,10 @@ void Y_filepath(int argc)
       output[i] = (input[i] ? YExpandName(input[i]) : 0);
     }
   } else if (op.ops == &streamOps) {
-    output = ((Array *)PushDataBlock(NewArray(&stringStruct, NULL)))->value.q;
+    output = ypush_q(0);
     output[0] = p_strcpy(((IOStream *)op.value)->fullname);
   } else if (op.ops == &textOps) {
-    output = ((Array *)PushDataBlock(NewArray(&stringStruct, NULL)))->value.q;
+    output = ypush_q(0);
     output[0] = p_strcpy(((TextStream *)op.value)->fullname);
   } else if (op.ops == &voidOps) {
     PushDataBlock(RefNC(&nilDB));
@@ -1576,16 +1576,24 @@ void Y_popen(int nArgs)
   PushDataBlock(NewTextStream(p_strcpy(command), file, mode?50:49, 0L, 0L));
 }
 
-void Y_fflush(int nArgs)
+void
+Y_fflush(int nArgs)
 {
-  TextStream *ts;
   Operand op;
-  if (nArgs!=1) YError("fflush needs exactly one argument");
+  if (nArgs!=1) YError("fflush accepts exactly one argument");
   sp->ops->FormOperand(sp, &op);
-  if (sp->value.db->ops!=&textOps)
-    YError("fflush only works for text files");
-  ts= (TextStream *)sp->value.db;
-  if (ts->stream) p_fflush(ts->stream);
+  if (sp->value.db->ops==&textOps) {
+    TextStream *ts = (TextStream *)sp->value.db;
+    if (ts->stream) p_fflush(ts->stream);
+  } else if (sp->value.db->ops==&streamOps) {
+    IOStream *file = (IOStream *)sp->value.db;
+    if (file->permissions & 2) {
+      ClearPointees(file, 1);
+      FlushFile(file, 0);
+    }
+  } else {
+    YError("fflush expecting file handle as argument");
+  }
 }
 
 /*--------------------------------------------------------------------------*/

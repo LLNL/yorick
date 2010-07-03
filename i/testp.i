@@ -1,5 +1,5 @@
 /*
- * $Id: testp.i,v 1.1 2005-09-18 22:06:13 dhmunro Exp $
+ * $Id: testp.i,v 1.2 2010-07-03 19:42:31 dhmunro Exp $
  * Test of Yorick parser
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1889,6 +1889,7 @@ iS= lS= dS= cA= sA= iA= lA= fA= dA= zA= [];
 write, format= "End of Yorick parser test, %d goofs\n", goofs;
 
 #include "teststr.i"
+#include "testoxy.i"
 
 if (!skip_testb) {
   require, "testb.i";
@@ -1902,7 +1903,6 @@ if (!skip_test1) { write,"\nShock tracker timing test:";  test1, 20; }
 
 if (!skip_test2) include, "test2.i";
 if (!skip_test2) { write,"\nEscape factor timing test:";  test2, 15; }
-
 
 if (!skip_test3) include, "test3.i";
 if (!skip_test3) { write,"\nZone generator timing test:";  test3, 100; }

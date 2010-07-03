@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.4 2010-06-07 08:39:05 thiebaut Exp $
+ * $Id: std2.c,v 1.5 2010-07-03 19:42:31 dhmunro Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.
@@ -16,7 +16,7 @@
 #include "play.h"
 #include <string.h>
 
-extern BuiltIn Y_save, Y_restore, Y_add_record, Y__jt, Y__jc, Y__jr,
+extern BuiltIn Y_add_record, Y__jt, Y__jc, Y__jr,
   Y_get_times, Y_get_ncycs, Y_get_vars, Y_get_addrs, Y_add_variable,
   Y_set_filesize, Y_set_blocksize, Y_add_member, Y_install_struct;
 extern BuiltIn Y_set_cachesize;
@@ -33,148 +33,12 @@ extern void YPDBpointers(IOStream *file, long size, int align); /* binpdb.c */
 
 extern void SetSequentialWrite(IOStream *file, long last);  /* yrdwr.c */
 
-static void GrabVariable(IOStream *file, long iFile, long iGlob);
-static void StuffVariable(IOStream *file, long iFile,
-                          Operand *op, int notNew);
-
 extern int YtestPDB(IOStream *file, int familyOK);
 extern int YinitPDB(IOStream *file, int close102);
 extern void (*YPDBcloser[16])(IOStream *file);
 
 /*--------------------------------------------------------------------------*/
-
-void Y_save(int nArgs)
-{
-  Operand op;
-  IOStream *file;
-  long globIndex;
-  char *name;
-  Symbol *stack= sp-nArgs+1;
-  int notNew, structsOnly;
-  HistoryInfo *history;
-  if (nArgs<1) YError("save requires at least one argument");
-
-  file= YGetFile(stack);
-  history= file->history;
-  if (history) {
-    structsOnly= (history->nRecords<=0 || history->recNumber<0);
-    file= history->child;
-  } else {
-    structsOnly= 0;
-  }
-
-  stack++;
-  nArgs--;
-  if (nArgs<=0) {
-    if (history) YError("no save,f (save all) to history record");
-    globIndex= 0;
-    nArgs= 1;
-  } else {
-    globIndex= -1;
-  }
-  while (nArgs!=0) {
-    if (globIndex<0) {
-      /* get name and value to be saved */
-      if (stack->ops!=&referenceSym)
-        YError("save needs simple variable references as arguments");
-      name= globalTable.names[stack->index];
-      stack->ops->FormOperand(stack, &op);
-      if (!op.ops || (!op.ops->isArray && op.ops!=&structDefOps))
-        YError("save can output array data only");
-      stack++;
-      nArgs--;
-
-    } else {
-      /* save everything that's savable */
-      Symbol *global;
-      OpTable *gops;
-      if (globIndex>=globalTable.nItems) break;
-      global= &globTab[globIndex];
-      name= globalTable.names[globIndex++];
-      gops= global->ops;
-      if (gops==&dataBlockSym) {
-        Operations *ops= global->value.db->ops;
-        if (!ops->isArray && ops!=&lvalueOps && ops!=&structDefOps) continue;
-      } else if (gops!=&doubleScalar &&
-                 gops!=&longScalar && gops!=&intScalar) {
-        continue;
-      }
-      gops->FormOperand(global, &op);
-    }
-
-    /* look up name in dataTable (history child first, if any) */
-    if (op.ops!=&structDefOps) {
-      if (structsOnly) YError("file has no current record for save");
-      notNew= AddVariable(file, -1L, name, op.type.base, op.type.dims);
-      if (notNew>1)
-        YError("data type (struct) name conflict in save to binary file");
-
-      StuffVariable(file, hashIndex, &op, notNew);
-
-    } else {
-      if (!CopyStruct(file, (StructDef *)op.value))
-        YError("problem saving struct to binary file (name conflict?)");
-    }
-  }
-
-  /* be sure data is actually written to file */
-  ClearPointees(file, 1);
-  FlushFile(file, 0);
-}
-
-void Y_restore(int nArgs)
-{
-  IOStream *file, *parent= 0;
-  long i, index;
-  char *name;
-  Symbol *stack= sp-nArgs+1;
-  if (nArgs<1) YError("restore requires at least one argument");
-
-  file= YGetFile(stack);
-  if (file->history) {
-    HistoryInfo *history= file->history;
-    if (history->nRecords>0 && history->recNumber>=0) {
-      file= history->child;
-      parent= history->parent;
-    }
-  }
-
-  stack++;
-  nArgs--;
-
-  if (nArgs) {
-    /* specific list to be restored */
-    do {
-      /* get name and value to be restore */
-      if (stack->ops!=&referenceSym)
-        YError("restore needs simple variable references as arguments");
-      index= stack->index;
-      name= globalTable.names[index];
-      stack++;
-      nArgs--;
-
-      /* look up name in dataTable (in child if a current record) */
-      if (HashFind(&file->dataTable, name, 0L))
-        GrabVariable(file, hashIndex, index);
-      else if (parent && HashFind(&parent->dataTable, name, 0L))
-        GrabVariable(parent, hashIndex, index);
-      else
-        YError("restore variable does not exist in binary file");
-
-    } while (nArgs);
-
-  } else {
-    /* restore everything (only one of record or non-record) */
-    long n= file->dataTable.nItems;
-    char **dataNames= file->dataTable.names;
-    for (i=0 ; i<n ; i++) {
-      index= Globalize(dataNames[i], 0L);
-      GrabVariable(file, i, index);
-    }
-  }
-
-  ClearPointees(file, 0);
-}
+/* Y_save, Y_restore moved to oxy.c */
 
 /*--------------------------------------------------------------------------*/
 
@@ -1135,84 +999,6 @@ void Y_struct_align(int nArgs)
 
 /*--------------------------------------------------------------------------*/
 
-static int doNotRecurse= 1;  /* dummy for ReadGather/WriteScatter */
-
-extern void ReadGather(void *dst, void *srcM, long srcD, StructDef *base,
-                       long number, const Strider *strider);
-extern void WriteScatter(void *src, void *dstM, long dstD, StructDef *base,
-                         long number, const Strider *strider);
-
-/* Grab the variable file->dataTable.names[iFile] and stuff its value
-   into globTab[iGlob].  */
-static void GrabVariable(IOStream *file, long iFile, long iGlob)
-{
-  StructDef *base= file->types[iFile].base;
-  Dimension *dims= file->types[iFile].dims;
-  long address= file->addresses[iFile]+file->offset;
-  void *memory= 0;
-  long number;
-
-  StructDef *model= base->model;
-  while (model->model) model= model->model;
-
-  /* delete current in-memory value */
-  if (globTab[iGlob].ops==&dataBlockSym) {
-    globTab[iGlob].ops= &intScalar;
-    Unref(globTab[iGlob].value.db);
-  }
-
-  /* check for scalar types and simplify if possible */
-  if (!dims) {
-    Operations *ops= model->dataOps;
-    if (ops==&doubleOps) {
-      globTab[iGlob].ops= &doubleScalar;
-      memory= &globTab[iGlob].value.d;
-    } else if (ops==&longOps) {
-      globTab[iGlob].ops= &longScalar;
-      memory= &globTab[iGlob].value.l;
-    } else if (ops==&intOps) {
-      globTab[iGlob].ops= &intScalar;
-      memory= &globTab[iGlob].value.i;
-    }
-  }
-
-  /* otherwise, create an array to hold the result */
-  if (!memory) {
-    Array *array;
-    array= NewArray(model, dims);
-    globTab[iGlob].value.db= (DataBlock *)array;
-    globTab[iGlob].ops= &dataBlockSym;
-    memory= array->value.c;
-    number= array->type.number;
-  } else {
-    number= 1;
-  }
-
-  ReadGather(memory, &doNotRecurse, address, base, number, (Strider *)0);
-}
-
-static void StuffVariable(IOStream *file, long iFile,
-                          Operand *op, int notNew)
-{
-  StructDef *base= file->types[iFile].base;
-  long address= file->addresses[iFile]+file->offset;
-
-  if (notNew) {
-    /* this is an assignment to an existing variable --
-       verify operand data type and number */
-    long number= file->types[iFile].number;
-    if (!EquivStruct(base, op->type.base) || number!=op->type.number)
-      YError("variable type or dimensions have changed since last save");
-  }
-
-  if (base->addressType==2)
-    SetSequentialWrite(file, address+base->size*op->type.number);
-  WriteScatter(op->value, &doNotRecurse, address, base, op->type.number,
-               (Strider *)0);
-}
-
-/*--------------------------------------------------------------------------*/
-
 extern int yPDBopen;  /* in binpdb.c */
 static long pdb_open= 0;
 
@@ -1502,9 +1288,8 @@ Y_lsdir(int nArgs)
   PushDataBlock(dlist);
 
   name = YGetString(stack);
-  if (name == NULL) {
+  if (!name)
     YError("first argument to lsdir must be a non-nil scalar string");
-  }
   dlist->dir = p_dopen(name);
 
   if (!dlist->dir) {
@@ -1580,10 +1365,9 @@ Y_lsdir(int nArgs)
 void Y_mkdir(int nArgs)
 {
   char *name;
-
   if (nArgs!=1) YError("mkdir takes exactly one argument");
   name = YGetString(sp);
-  if (name == NULL) YError("argument to mkdir must be a non-nil scalar string");
+  if (!name) YError("argument to mkdir must be a non-nil scalar string");
   if (p_mkdir(name) != 0) {
     if (CalledAsSubroutine()) YError("cannot make directory");
     PushIntValue(-1);
@@ -1595,10 +1379,9 @@ void Y_mkdir(int nArgs)
 void Y_rmdir(int nArgs)
 {
   char *name;
-
   if (nArgs!=1) YError("rmdir takes exactly one argument");
   name = YGetString(sp);
-  if (name == NULL) YError("argument to rmdir must be a non-nil scalar string");
+  if (!name) YError("argument to rmdir must be a non-nil scalar string");
   if (p_rmdir(name) != 0) {
     if (CalledAsSubroutine()) YError("cannot remove directory");
     PushIntValue(-1);

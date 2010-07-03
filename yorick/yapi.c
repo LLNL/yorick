@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.25 2010-03-21 18:40:16 dhmunro Exp $
+ * $Id: yapi.c,v 1.26 2010-07-03 19:42:31 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -135,16 +135,7 @@ yarg_string(int iarg)
   return is_string;
 }
 
-int
-yarg_func(int iarg)
-{
-  if (iarg >= 0) {
-    Symbol *s = sp - iarg;
-    if (s->ops==&referenceSym) s = &globTab[s->index];
-    return (s->ops == &dataBlockSym) && (s->value.db->ops == &functionOps);
-  }
-  return 0;
-}
+/* yarg_func moved to fwrap.c */
 
 int
 yarg_typeid(int iarg)
@@ -167,7 +158,6 @@ yarg_typeid(int iarg)
     } else if (s->ops==&intScalar) {
       return T_INT;
     }
-    return T_OPAQUE;
   }
   return T_OPAQUE + 100;
 }
@@ -1182,7 +1172,7 @@ yfind_name(long vndex)
 }
 
 long
-yfind_global(char *name, long len)
+yfind_global(const char *name, long len)
 {
   if (HashFind(&globalTable, name, len))
     return hashIndex;
@@ -1191,7 +1181,7 @@ yfind_global(char *name, long len)
 }
 
 long
-yget_global(char *name, long len)
+yget_global(const char *name, long len)
 {
   if (!HashAdd(&globalTable, name, len)) {
     HASH_MANAGE(globalTable, Symbol, globTab);
@@ -1259,7 +1249,6 @@ union y_uo_body_t {
   void (*f)(void);
 };
 
-/* if this struct or above union changes, must also change fwrap.c */
 typedef struct y_uo_t y_uo_t;
 struct y_uo_t {
   int references;      /* reference counter */
@@ -1348,7 +1337,11 @@ y_uo_eval(Operand *op)
     Symbol *stack;
     long owner = op->owner - spBottom;
     uo->uo_type->on_eval(uo->body.c, op->references); /*argc in references*/
-    if (sp > spBottom+owner) {
+    /* put result in correct place on stack, unless an interpreted
+     * function has been pushed into place, in which case assume on_eval
+     * took care of proper stack alignment
+     */
+    if (sp>spBottom+owner && sp->ops!=&returnSym) {
       Symbol *s = spBottom + owner;
       PopTo(s);
       while (sp - s > 0) {
@@ -1389,6 +1382,16 @@ y_uo_print(Operand *op)
   } else {
     PrintX(op);
   }
+}
+
+/* similar to yget_use, but no use increment */
+void *
+yget_obj_s(DataBlock *db)
+{
+  y_uo_t *uo = (y_uo_t *)db;
+  if (uo->uo_type->uo_ops != uo->ops)
+    y_error("(BUG) corrupted user object in yget_obj_s");
+  return uo->body.c;
 }
 
 void *
@@ -1490,6 +1493,24 @@ ypush_use(void *handle)
 {
   if (!handle) ypush_nil();
   else PushDataBlock(handle);
+}
+
+void
+ykeep_use(void *handle)
+{
+  if (handle) {
+    DataBlock *db = handle;
+    PushDataBlock(RefNC(db));
+  } else {
+    ypush_nil();
+  }
+}
+
+void
+ydrop_use(void *handle)
+{
+  DataBlock *db = handle;
+  Unref(db);
 }
 
 /* defined in task.c */

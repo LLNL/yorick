@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.15 2010-05-12 06:45:28 thiebaut Exp $
+ * $Id: std0.c,v 1.16 2010-07-03 19:42:31 dhmunro Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -808,140 +808,82 @@ void Y_nameof(int nArgs)
 
 /*--------------------------------------------------------------------------*/
 
-void Y_is_array(int nArgs)
+void
+Y_is_array(int nargs)
 {
-  Symbol *s= sp;
-  int isArray;
-  if (nArgs != 1) YError("is_array takes exactly one argument");
-
-  for (;;) {
-    if (s->ops==&dataBlockSym) {
-      Operations *ops= s->value.db->ops;
-      isArray= (ops==&lvalueOps || ops->isArray);
-      break;
-    } else if (s->ops!=&referenceSym) {
-      isArray= 1;
-      break;
-    }
-    s= &globTab[s->index];
+  int result;
+  if (nargs != 1) YError("is_array takes exactly one argument");
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops==&dataBlockSym) {
+    Operations *ops= sp->value.db->ops;
+    result = (ops==&lvalueOps || ops->isArray);
+  } else if (sp->ops==&intScalar || sp->ops==&longScalar ||
+             sp->ops==&doubleScalar) {
+    result = 1;
   }
-
-  PushIntValue(isArray);
+  PushIntValue(result);
 }
 
-void Y_is_scalar(int nargs)
+void
+Y_is_scalar(int nargs)
 {
-  Symbol *s;
   int result;
-
   if (nargs != 1) YError("is_scalar takes exactly one argument");
-  s = sp;
-  for (;;) {
-    if (s->ops == &dataBlockSym) {
-      Operations *ops =  s->value.db->ops;
-      if (ops->isArray) {
-        result = (((Array *)s->value.db)->type.dims == (Dimension *)0);
-      } else if (ops == &lvalueOps) {
-        result = (((LValue *)s->value.db)->type.dims == (Dimension *)0);
-      } else {
-        result = 0;
-      }
-      break;
-    } else if (s->ops != &referenceSym) {
-      /* Must be one of: intScalar, longScalar, or doubleScalar. */
-      result = 1;
-      break;
-    }
-    s = &globTab[s->index];
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops == &dataBlockSym) {
+    Operations *ops =  sp->value.db->ops;
+    if (ops->isArray)
+      result = (((Array *)sp->value.db)->type.dims == (Dimension *)0);
+    else if (ops == &lvalueOps)
+      result = (((LValue *)sp->value.db)->type.dims == (Dimension *)0);
+    else
+      result = 0;
+  } else if (sp->ops==&intScalar || sp->ops==&longScalar ||
+             sp->ops==&doubleScalar) {
+    result = 1;
   }
   PushIntValue(result);
 }
 
-void Y_is_vector(int nargs)
+void
+Y_is_vector(int nargs)
 {
-  Symbol *s;
-  int result;
-
+  int result = 0;
   if (nargs != 1) YError("is_vector takes exactly one argument");
-  s = sp;
-  for (;;) {
-    if (s->ops == &dataBlockSym) {
-      Dimension *dims;
-      Operations *ops =  s->value.db->ops;
-      if (ops->isArray) {
-        dims = ((Array *)s->value.db)->type.dims;
-      } else if (ops == &lvalueOps) {
-        dims = ((LValue *)s->value.db)->type.dims;
-      } else {
-        result = 0;
-        break;
-      }
-      result = (dims != (Dimension *)0 && dims->next == (Dimension *)0);
-      break;
-    } else if (s->ops != &referenceSym) {
-      /* Must be one of: intScalar, longScalar, or doubleScalar. */
-      result = 0;
-      break;
-    }
-    s = &globTab[s->index];
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops == &dataBlockSym) {
+    Dimension *dims;
+    Operations *ops =  sp->value.db->ops;
+    if (ops->isArray) dims = ((Array *)sp->value.db)->type.dims;
+    else if (ops == &lvalueOps) dims = ((LValue *)sp->value.db)->type.dims;
+    else dims = 0;
+    result = (dims && !dims->next);
   }
   PushIntValue(result);
 }
 
-void Y_is_matrix(int nargs)
+void
+Y_is_matrix(int nargs)
 {
-  Symbol *s;
-  int result;
-
+  int result = 0;
   if (nargs != 1) YError("is_matrix takes exactly one argument");
-  s = sp;
-  for (;;) {
-    if (s->ops == &dataBlockSym) {
-      Dimension *dims;
-      Operations *ops =  s->value.db->ops;
-      if (ops->isArray) {
-        dims = ((Array *)s->value.db)->type.dims;
-      } else if (ops == &lvalueOps) {
-        dims = ((LValue *)s->value.db)->type.dims;
-      } else {
-        result = 0;
-        break;
-      }
-      result = (dims != (Dimension *)0 && dims->next != (Dimension *)0
-                && dims->next->next == (Dimension *)0);
-      break;
-    } else if (s->ops != &referenceSym) {
-      /* Must be one of: intScalar, longScalar, or doubleScalar. */
-      result = 0;
-      break;
-    }
-    s = &globTab[s->index];
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops == &dataBlockSym) {
+    Dimension *dims;
+    Operations *ops =  sp->value.db->ops;
+    if (ops->isArray) dims = ((Array *)sp->value.db)->type.dims;
+    else if (ops == &lvalueOps) dims = ((LValue *)sp->value.db)->type.dims;
+    else dims = 0;
+    result = (dims && dims->next && !dims->next->next);
   }
   PushIntValue(result);
 }
 
-void Y_is_func(int nArgs)
+void
+Y_is_func(int nArgs)
 {
-  Symbol *s= sp;
-  int isFunc;
   if (nArgs != 1) YError("is_func takes exactly one argument");
-
-  for (;;) {
-    if (s->ops==&dataBlockSym) {
-      Operations *ops= s->value.db->ops;
-      if (ops==&functionOps) isFunc= 1;
-      else if (ops==&builtinOps) isFunc= 2;
-      else if (ops==&auto_ops) isFunc= 3;
-      else isFunc= 0;
-      break;
-    } else if (s->ops!=&referenceSym) {
-      isFunc= 0;
-      break;
-    }
-    s= &globTab[s->index];
-  }
-
-  PushIntValue(isFunc);
+  PushIntValue(yarg_func(0));
 }
 
 void Y_is_void(int nArgs)
@@ -965,67 +907,34 @@ void Y_is_void(int nArgs)
   PushIntValue(isVoid);
 }
 
-void Y_is_range(int nArgs)
+void
+Y_is_range(int nArgs)
 {
-  Symbol *s= sp;
-  int isRange;
+  int result = 0;
   if (nArgs != 1) YError("is_range takes exactly one argument");
-
-  for (;;) {
-    if (s->ops==&dataBlockSym) {
-      Operations *ops= s->value.db->ops;
-      isRange= (ops==&rangeOps);
-      break;
-    } else if (s->ops!=&referenceSym) {
-      isRange= 0;
-      break;
-    }
-    s= &globTab[s->index];
-  }
-
-  PushIntValue(isRange);
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops==&dataBlockSym) result = (sp->value.db->ops==&rangeOps);
+  PushIntValue(result);
 }
 
-void Y_is_struct(int nArgs)
+void
+Y_is_struct(int nArgs)
 {
-  Symbol *s= sp;
-  int isStruct;
+  int result = 0;
   if (nArgs != 1) YError("is_struct takes exactly one argument");
-
-  for (;;) {
-    if (s->ops==&dataBlockSym) {
-      Operations *ops= s->value.db->ops;
-      isStruct= (ops==&structDefOps);
-      break;
-    } else if (s->ops!=&referenceSym) {
-      isStruct= 0;
-      break;
-    }
-    s= &globTab[s->index];
-  }
-
-  PushIntValue(isStruct);
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops==&dataBlockSym) result= (sp->value.db->ops==&structDefOps);
+  PushIntValue(result);
 }
 
-void Y_is_stream(int nArgs)
+void
+Y_is_stream(int nArgs)
 {
-  Symbol *s= sp;
-  int isStream;
+  int result = 0;
   if (nArgs != 1) YError("is_stream takes exactly one argument");
-
-  for (;;) {
-    if (s->ops==&dataBlockSym) {
-      Operations *ops= s->value.db->ops;
-      isStream= (ops==&streamOps);
-      break;
-    } else if (s->ops!=&referenceSym) {
-      isStream= 0;
-      break;
-    }
-    s= &globTab[s->index];
-  }
-
-  PushIntValue(isStream);
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  if (sp->ops==&dataBlockSym) result = (sp->value.db->ops==&streamOps);
+  PushIntValue(result);
 }
 
 void Y_is_integer(int nargs)

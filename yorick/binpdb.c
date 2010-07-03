@@ -1,5 +1,5 @@
 /*
- * $Id: binpdb.c,v 1.4 2010-05-30 16:24:04 dhmunro Exp $
+ * $Id: binpdb.c,v 1.5 2010-07-03 19:42:31 dhmunro Exp $
  * Define Yorick interface to PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -487,7 +487,7 @@ static void ClosePDB(IOStream *file)
     else file->history->parent->CloseHook= file->history->child->CloseHook= 0;
     YErrorIO("failed (but tried) to properly close PDB file");
   } else {
-    if (file->permissions&16) ZapClogFile(file);
+    ZapClogFile(file);
   }
 }
 

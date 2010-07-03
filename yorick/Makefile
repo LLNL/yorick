@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2009-07-12 04:16:14 dhmunro Exp $
+# $Id: Makefile,v 1.4 2010-07-03 19:42:31 dhmunro Exp $
 # similar to any yorick package Makefile
 
 # ------------------------------------------------ macros for yor base package
@@ -15,7 +15,7 @@ OBJS = opsv.o task.o yorick.o yinput.o parse.o ydata.o yapi.o yio.o fnctn.o \
   array.o range.o ops.o ops0.o ops1.o ops2.o ops3.o nonc.o debug.o \
   std0.o std1.o std2.o ascio.o defmem.o yhash.o  yrdwr.o bcast.o binio.o \
   binobj.o binstd.o cache.o convrt.o binpdb.o clog.o ystr.o graph.o fwrap.o \
-  graph0.o style.o list.o pathfun.o autold.o funcdef.o spawn.o fortrn.o
+  graph0.o style.o list.o pathfun.o autold.o funcdef.o spawn.o fortrn.o oxy.o
 
 PKG_CLEAN=libyor main.* prmtyp.h codger lib$(PKG_NAME).a $(PKG_EXENAME) yorapi*
 
@@ -134,6 +134,7 @@ ops1.o: $(YDATA_H)
 ops2.o: $(YDATA_HP)   $(PSLIB)
 ops3.o: bcast.h $(PSLIB)   $(YDATA_HP)
 opsv.o: $(YDATA_HP) $(PSLIB) prmtyp.h
+oxy.o: $(YDATA_HP) $(PSLIB) ../play/phash.h
 parse.o: parse.h $(YDATA_HP) $(PSLIB)
 pathfun.o: yio.h $(PSLIO)   $(HSH)
 range.o: $(YDATA_HP) $(PSLIB)

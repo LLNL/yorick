@@ -1,5 +1,5 @@
 /*
- * $Id: fwrap.c,v 1.4 2010-02-28 21:52:29 dhmunro Exp $
+ * $Id: fwrap.c,v 1.5 2010-07-03 19:42:31 dhmunro Exp $
  * implement function argument wrapping with wrap_args
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -43,6 +43,25 @@ struct y_wrapped_args {
   int npos, nkey;
   Symbol *args;
 };
+
+int
+yarg_func(int iarg)
+{
+  int is_func = 0;
+  if (iarg >= 0) {
+    Symbol *s = sp - iarg;
+    if (s->ops==&referenceSym) s = &globTab[s->index];
+    if (s->ops == &dataBlockSym) {
+      Operations *ops= s->value.db->ops;
+      if (ops == &functionOps) is_func = 1;
+      else if (ops == &builtinOps) is_func = 2;
+      else if (ops == &auto_ops) is_func = 3;
+      else if (s->value.db->ops->typeName==ywrap_f_ops.type_name) is_func = 4;
+      else if (yo_is_closure(iarg)) is_func = 5;
+    }
+  }
+  return is_func;
+}
 
 void
 Y_wrap_args(int argc)
@@ -148,18 +167,8 @@ ywrap_f_eval(Operand *op)
 {
   int argc = op->references;   /* (sic) # of actual parameters supplied */
   Symbol *args, *me = sp - argc;
-  struct y_uo_t {        /* must match yapi.c declaration */
-    int references;
-    Operations *ops;
-    y_userobj_t *uo_type;
-    union y_uo_body_t {
-      char c[8];
-      double d;
-      void *p;
-      void (*f)(void);
-    } body;
-  } *uo = op->value;
-  y_wrapped_func *wf = (y_wrapped_func *)&uo->body.c;
+  DataBlock *uo = op->value;
+  y_wrapped_func *wf = (y_wrapped_func *)yget_obj_s(uo);
   y_wrapped_args *wa;
   int i, j, k;
   /* wf has been called, time to wrap its arguments */
@@ -220,9 +229,8 @@ ywrap_a_eval(void *obj, int argc)
 {
   y_wrapped_args *wa = obj;
   long junk[3];
-  int isquery = (argc>0)?
-    yget_range(argc-1, junk)==(Y_PSEUDO|Y_MIN_DFLT|Y_MAX_DFLT) : 0;
-  int iskey = (argc>0 && !isquery)? yarg_string(argc-1)==1 : 0;
+  int isquery = (argc>0)? yget_range(argc-1, junk) : 0;
+  int iskey = 0;
   Symbol *arg = 0;
   long iarg = 0;
   char *key = 0;
@@ -230,6 +238,13 @@ ywrap_a_eval(void *obj, int argc)
     y_error("wrapped arg only accepts one or two arguments");
   if (!sp->ops)
     y_error("wrapped arg only accepts no keyword arguments");
+  if (isquery == (Y_PSEUDO|Y_MIN_DFLT|Y_MAX_DFLT)) {
+    isquery = 1;
+  } else if (isquery == (Y_RUBBER1|Y_MIN_DFLT|Y_MAX_DFLT)) {
+    if (argc == 1) isquery = 2;
+    else isquery = 3;
+  }
+  if (!isquery) iskey = yarg_string(argc-1)==1;
   if (!iskey && !isquery) {
     iarg = ygets_l(argc-1);
     if (!iarg) isquery = 2;
@@ -237,9 +252,14 @@ ywrap_a_eval(void *obj, int argc)
     key = ygets_q(argc-1);
   }
   if (isquery && argc==2) {
-    iskey = (yarg_string(0) == 1);
-    if (!iskey) iarg = ygets_l(0);
-    else key = ygets_q(0);
+    if (isquery != 3) {
+      iskey = (yarg_string(0) == 1);
+      if (!iskey) iarg = ygets_l(0);
+      else key = ygets_q(0);
+    } else {
+      isquery = 1;
+      if (!yarg_nil(0)) iarg = ygets_l(0);
+    }
   }
   if (key) {
     char *name;
@@ -256,7 +276,7 @@ ywrap_a_eval(void *obj, int argc)
     if (iarg >= -wa->nkey) arg = wa->args + wa->npos + 1 + ((-1-iarg)<<1);
   }
   if (isquery == 2) {
-    if (!iarg) {         /* ARGS(0) */
+    if (!iarg) {         /* ARGS(0) or ARGS(*) */
       ypush_long(wa->npos);
     } else {             /* ARGS(0,i) */
       if (!arg) ypush_long(2);

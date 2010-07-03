@@ -1,5 +1,5 @@
 /*
- * $Id: ydata.h,v 1.8 2010-04-16 05:23:43 dhmunro Exp $
+ * $Id: ydata.h,v 1.9 2010-07-03 19:42:31 dhmunro Exp $
  * Declare structures and functions for Yorick's "private" data.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -446,6 +446,11 @@ PLUG_API BIFunction *NewBIFunction(BuiltIn *bi, long index);
 PLUG_API void FreeBIFunction(void *bif);    /* *** Use Unref(bif) *** */
 
 PLUG_API int yDebugLevel;
+
+/* ------------------------------------------------------------------------ */
+/* mixed old-new functions for oxy object extension, wrap_args */
+PLUG_API void *yget_obj_s(DataBlock *db);
+PLUG_API void yo_cupdate(int iarg);
 
 /*--------------------------------------------------------------------------*/
 /* following are deprecated -- use alternatives in yapi.h */

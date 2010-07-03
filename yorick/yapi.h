@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.18 2010-03-21 18:40:16 dhmunro Exp $
+ * $Id: yapi.h,v 1.19 2010-07-03 19:42:31 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -336,8 +336,8 @@ onto the stack.  The yput_global function sets a global variable from
 the stack, discarding any previous value.
 */
 PLUG_API char *yfind_name(long index);
-PLUG_API long yfind_global(char *name, long len);
-PLUG_API long yget_global(char *name, long len);
+PLUG_API long yfind_global(const char *name, long len);
+PLUG_API long yget_global(const char *name, long len);
 PLUG_API int ypush_global(long index);
 PLUG_API void yput_global(long index, int iarg);
 /*
@@ -468,10 +468,15 @@ the opaque handle.  You can use the ygeta_* or yget_obj functions to
 get the pointers to the actual data.  As a side effect, yget_use converts
 a scalar double, long, or int stack element into a rank 0 array, since
 you cannot own a use of the scalars.  This invalidates any existing pointer
-you may have retrieved using ygeta_*, so call yget_use first.
+you may have retrieved using ygeta_*, so call yget_use first.  The
+ykeep_use function is like ypush_use, except you do not give up your
+use of the object; ydrop_use discards your use (like ypush_use) without
+pushing the object onto the stack.
 */
 PLUG_API void *yget_use(int iarg);
 PLUG_API void ypush_use(void *handle);
+PLUG_API void ykeep_use(void *handle);
+PLUG_API void ydrop_use(void *handle);
 /*
 Your compiled package may need to execute code after the interpreter
 shuts down on a quit operation or after a fatal error.  This function
@@ -518,6 +523,123 @@ PLUG_API void y_warnq(const char *msg_format, const char *q);
  *   4  - if bit 2 set, after_error left in dbug mode iff bit 4 set
  */
 PLUG_API int (*y_errhook)(const char *fullmsg, long *after);
+
+/* ------------------------------------------------------------------------ */
+/* oxy: object-oriented extension to yorick */
+
+/* here are the methods all oxy_objects share
+ *
+ * arguments and return values:
+ *   obj    - the oxy_object
+ *   nmemb  - number of object members
+ *   mndx   - object member index (1-origin, 1 <= mndx <= nmemb)
+ *   name   - object member name
+ *   iname  - index into globtab corresponding to name (yfind_global)
+ *            iname=-1 on input or output means unknown correspondence
+ *     there are two ways to indicate an object member:
+ *       by name (or iname)
+ *       by 1-origin index (mndx) into the object
+ *     multiple anonymous members permitted, but otherwise name is unique
+ *     objects not required to assign a fixed mndx to each member,
+ *       but if they do not, no anonymous members permitted
+ *   iarg   - stack position (for arguments on stack, 0 = top, 1 = next, etc)
+ *   flag   - 0 means success, non-0 various sorts of failure
+ */
+typedef struct yo_ops_t yo_ops_t;
+struct yo_ops_t {
+  char *type_name;
+  void (*dealloc)(void *obj);    /* deallocate obj */
+  long (*count)(void *obj);      /* return number of members */
+  long (*find_mndx)(void *obj, const char *name, long iname);
+  /*      iname=-1 if correspondence with globtab unknown
+   *      find_mndx==0 permitted, means no fixed member indices
+   */
+  char *(*find_name)(void *obj, long mndx, long *iname);
+  /*      returns iname=-1 if correspondence with globtab unknown
+   *      return value owned by obj, caller must copy string
+   *        next call to find_name may invalidate return value
+   *      if find_mndx==0, this will only be called in a sequence
+   *        from mndx=1 to mndx=count(obj) to list all names
+   *        get_q or set_q may be called during listing sequence,
+   *        but only with name just returned
+   */
+  int (*get_i)(void *obj, long mndx);
+  int (*get_q)(void *obj, const char *name, long iname);
+  /*      push member onto stack
+   *      get_i unused (0 permitted) when find_mndx==0
+   *      pass iname=-1 if correspondence with globtab unknown
+   *      returns 0 on success, otherwise push nil and return:
+   *        1 if no such member
+   */
+  int (*set_i)(void *obj, long mndx, int iarg);
+  int (*set_q)(void *obj, const char *name, long iname, int iarg);
+  /*      set member to value at iarg on stack
+   *      set_i unused (0 permitted) when find_mndx==0
+   *      both set_i==0, set_q==0 permitted if changing values unsupported
+   *      pass iname=-1 if correspondence with globtab unknown
+   *      returns 0 on success, otherwise return:
+   *        1 if no such member and creating member not allowed
+   *        2 if member is read-only
+   *        3 if type or shape of iarg cannot be converted to member type
+   *        4 if type not supported by this object
+   */
+  void (*get_atts)(void *obj);
+  /*      push (possibly empty) attribute oxy_object
+   *        may push nil to indicate no attributes present or writable
+   *      get_atts==0 permitted if attributes unsupported
+   *      attribute oxy_object may be read-only or read-write
+   */
+  void (*print)(void *obj);    /* print obj, print==0 uses default method */
+  void (*sr_hook)(void *obj, int flags);
+  /* called at end of save/restore, flags&1 == 1 if restore
+   * required for back compatibilty with IOStream, which flushes to file
+   * at end of save/restore operation
+   */
+
+  /* more optional methods may be added to support LValue oxy_objects */
+};
+
+/* yo_push_alloc makes obj part of data block, initialize in place
+ * yo_push makes data block with pointer to obj (returning obj)
+ *   yo_ops_t method functions obviously know how to distinguish
+ *     - in particular, del_obj erases obj contents for yo_push_alloc,
+ *       but must also free obj pointer for yo_push
+ * yo_get returns obj and ops, making it possible to call method functions
+ *   - returns 0 if iarg (on stack) not an oxy_object
+ *   - for legacy support, returns oxy wrapper if iarg is IOStream
+ *
+ * note that you can use yget_use, ypush_use to pluck your own use of
+ * an object off the stack, then give it back
+ */
+PLUG_API void *yo_push_alloc(yo_ops_t *ops, unsigned long size);
+PLUG_API void *yo_push(yo_ops_t *ops, void *obj);
+PLUG_API void *yo_get(int iarg, yo_ops_t **ops);
+
+/* yo_get_context returns the context object for the current function
+ * iarg>=0 means get the context object for the builtin function at iarg
+ *           normally called with iarg=argc, the argument to the builtin
+ * iarg<0  means return the context for the current interpreted func,
+ *           which was called as an object method
+ * allows compiled functions to examine and set context objects,
+ * like interpreted functions can do with use function
+ *
+ * non-0 push flag pushes context (or nil) onto stack as side effect
+ */
+PLUG_API void *yo_get_context(int iarg, yo_ops_t **ops, int push);
+
+/* yo_new_group pushes empty group object onto stack, returning obj,ops */
+PLUG_API void *yo_new_group(yo_ops_t **ops);
+
+/* ------------------------------------------------------------------------ */
+/* closure, invented by Eric Thiebaut, see closure doc in i0/std.i */
+
+/* create a closure on top of stack from function at farg, data at darg
+ * returns 0 on success, 1 if farg is not a function or darg is not data
+ */
+extern int yo_closure(int farg, int darg);
+extern int yo_is_closure(int iarg);
+
+/* ------------------------------------------------------------------------ */
 
 END_EXTERN_C
 

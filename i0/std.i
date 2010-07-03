@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.38 2010-06-07 08:39:08 thiebaut Exp $
+ * $Id: std.i,v 1.39 2010-07-03 19:42:31 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -791,7 +791,13 @@ extern wrap_args;
        ARGS(-)   returns [keyname1, keyname2, keyname3, ...]
                    the actual names of the keyword arguments passed
                    or nil [] if no keywords were passed
+                   ARGS(*,) is a synonym for ARGS(-) to resemble
+                   the object syntax (see help,oxy), although the
+                   analogy is not exact.
        ARGS(0)   returns the number of positional arguments passed
+                   ARGS(*) is a synonym for ARGS(0) to resemble
+                   the object syntax (see help,oxy), although the
+                   analogy is not exact.
        ARGS(i)   returns the i-th positional argument
                    i can also be a string to return a keyword argument,
                      or a negative number to return the -i-th keyword
@@ -800,6 +806,9 @@ extern wrap_args;
                    an output variable declared as func f(..., &x, ...)
        ARGS(-,i) returns the name of argument i if it was
                    passed as a simple variable reference
+                   ARGS(*,i) is a synonym for ARGS(-,i) to resemble
+                   the object syntax (see help,oxy), although the
+                   analogy is not exact.
        ARGS(0,i) returns a flag describing the argument:
          0 if argument is a simple variable reference (set value works)
          1 if argument is an expression (set value will be discarded)
@@ -1047,8 +1056,10 @@ extern is_func;
 /* DOCUMENT is_func(object)
      returns 1 if OBJECT is a Yorick interpreted function, 2 if OBJECT
      is a built-in (that is, compiled) function, 3 if OBJECT is an
-     autoload (will become either 1 or 2 on reference), else 0.
-  SEE ALSO: is_array, is_void, is_range, is_struct, is_stream, autoload
+     autoload, 4 if object is a wrap_args function, 5 if object
+     is a closure function, else 0.
+  SEE ALSO: is_array, is_void, is_range, is_struct, is_stream, autoload,
+            closure
  */
 
 extern is_void;
@@ -4269,28 +4280,391 @@ func updateb(filename, primitives, close102=, open102=, clog=)
 
 extern save;
 extern restore;
-/* DOCUMENT save, file, var1, var2, ...
-            restore, file, var1, var2, ...
-     saves the variables VAR1, VAR2, etc. in the binary file FILE,
-     or restores them from that file.
-     The VARi may be either non-record or record data in the case that
-     FILE contains records.
+/* DOCUMENT save, obj, var1, var2, ...
+            restore, obj, var1, var2, ...
+            grp = save(var1, var2, ...)
+            grp = restore(var1, var2, ...)
+     saves the variables VAR1, VAR2, etc. in the object OBJ, or restores
+     them from that object.  An object can be a binary file handle, in which
+     case there may be restrictions on the type of the VARi; in particular,
+     the VARi will need to be arrays or structure definitions.  In general,
+     the kind of object OBJ determines what kinds of variables can be
+     saved in it.
 
-     If one of the VARi does not already exist in FILE, it is created
-     by the save command; after add_record, save adds or stores VARi to
-     the current record.  See add_record for more.  The VARi may be
-     structure definitions (for the save command) to declare data
-     structures for the file.  This is necessary only in the case that
-     a record variable is a pointer -- all of the potential data types
-     of pointees must be known.  No data structures may be declared
-     using the save command after the first record has been added.
+     Called as functions, save and restore return a grp object, a very
+     light weight in-memory container that can hold any kind of yorick
+     variable.  In the case of save, the grp contains the the specified
+     variables VARi.  For group objects (not necessarily other objects),
+     the saved items are not copies, but references.  However, if you
+     redefine a VARi after a save to a group object, the group member
+     corresponding to that VARi does not change.  Hence, groups are a
+     way to maintain "namespaces" in yorick.  The return value from
+     save is simply a group object containing the VARi.  The return
+     value from restore is more interesting: it is a group object containing
+     the values of the VARi before they were restored.  This enables you to
+     put things back the way they were before a restore, after you are
+     finished using the restored variables.
 
-     If no VARi are present, save saves all array variables, and
-     restore restores every non-record variable in the file if there
-     is no current record, and every variable in the current record if
-     there is one.
-   SEE ALSO: openb, createb, updateb, get_vars, add_record, get_addrs
-             jt, jc, _read, _write, data_align
+     Special cases of save:
+       grp = save();   // return an empty group object
+       obj = save(*);  // return the entire global symbol table as an object
+       save, obj;      // saves entire global symbol table in OBJ, silently
+         skipping any variables whose data type OBJ does not support
+     Other special cases:
+       restore, obj;   // restores all named variables in OBJ
+       save, use, var1, var2, ...;
+       restore, use, var1, var2, ...;
+         save and restore to the current context object (see help,use).
+
+     Each VARi may be a simple variable reference, in which case the name
+     of the VARi specifies which member of the object.  (In the case of
+     save, a VARi whose name matches no current object member will create
+     a new object member of that name.)  However, any of the VARi may
+     instead be be a pair of arguments instead of a single argument:
+       VARi -->  MEMBSPECi, VALi
+     where MEMBSPECi is an expression (but NOT a simple variable reference)
+     whose value specifies which object member, and the VALi argument is
+     the external value.  In the case of save, VALi may also be an
+     expression; in the case of restore, VALi must be the simple variable
+     reference for the variable which restore will set to the specified
+     object member.  For example:
+       var2 = 3*x+7;
+       save, obj, var1, var2, var3;
+       save, obj, var1, "var2", 3*x+7, var3;
+       save, obj, var1, swrite(format="var%ld",8/4), 3*x+7, var3;
+     All three save calls do the same thing.  The corresponding restore
+     works by name; the order need not be the same as the save:
+       restore, obj, var2, var3, var1;
+     puts the saved values back where they started, while:
+       restore, obj, var2, swrite(format="var%ld",1), x;
+     puts var2 back to its saved value, but sets x to the value saved
+     as var1.  You can use the noop() function to make an expression out
+     of a variable holding a MEMBSPEC.  For example, if varname="var1", then
+       restore, obj, noop(varname), x;  // or
+       restore, obj, varname+"", x;
+     will set x to the value saved as var1, while
+       restore, obj, varname, x;   // error!
+     attempts to restore two variables named "varname" and "x" from obj.
+
+     For the save function, each VARi may also be a keyword argument:
+       VARi -->  member=VALi
+     which behaves exactly the same as:
+       VARi -->  "member",VALi
+     but is slightly more efficient, since it avoids the string argument.
+     You can also omit the "save" in a subroutine call if all arguments
+     are keywords:
+       save, obj, m1=val1, m2=val2, ...;
+     is the same thing as:
+       obj, m1=val1, m2=val2, ...;
+
+     Some kinds of objects (including the group objects, but usually not
+     binary file handles) support anonymous members.  For such objects,
+     the order in which the members were saved is significant, and member
+     names are optional.  You can create anonymous members by passing
+     string(0) to save as the MEMBSPEC.  Unlike ordinary names, each save
+     with string(0) as the name creates a new member (rather than overwriting
+     the existing member with that name).  All members (named as well as
+     anonymous) are numbered starting from 1 for the first member, in the
+     order in which they are created.  For objects supporting anonymous
+     members, MEMBSPEC may also be an integer, which is the member index.
+
+     In fact, MEMBSPECi can be any of the following:
+     scalar string   - member name, string(0) on save creates anonymous member
+     scalar index    - member index
+     string array    - VALi a group with those members (string(0) on save OK)
+     index array     - VALi a group with those members
+     min:max:step    - VALi a group with those members
+     nil []          - save only: if VALi is not an object, same as string(0),
+       if VALi is an object, merge with OBJ, that is members of VALi become
+       members of OBJ, creating or overwriting named members and always
+       appending anonymous members.
+     MEMBSPEC indices and index ranges accept zero or negative values with
+     the same meaning as for array indices, namely 0 represents the last
+     member, -1 the second to the last, and so on.  Unlike array indices,
+     the non-positive index values also work in index array MEMBSPECs.
+
+     See help,oxy (object extension to yorick) for more on objects.
+
+     As a final remark, notice that you can use save and restore to
+     construct group objects without having any side effects -- that is,
+     without "damaging" the state of any other variables.  For example,
+     suppose we want to create an object bump consisting of three
+     variables x, y, and z, that need to be computed.  In order to do
+     that without clobbering existing values of x, y, and z, or anything
+     else, we can do this:
+       bump = save(x, y, z);        // save current values of x, y, z
+       scratch = save(scratch, xy); // save scratch variables (xy and scratch)
+       xy = span(-4, 4, 250);
+       x = xy(,-:1:250);
+       y = xy(-:1:250,);
+       z = sqrt(0.5/pi)*exp(-0.5*abs(x,y)^2);
+       bump = restore(bump);        // put back old x,y,z, set bump to new
+       restore, scratch;            // restore xy and scratch itself
+
+   SEE ALSO: oxy, is_obj, openb, createb, use, noop
+ */
+
+extern is_obj;
+/* DOCUMENT is_obj(x)
+ *       or is_obj(x,m)
+ *       or is_obj(x,m,errflag)
+ *   returns 1 if X is an object, else 0.  If X is an object which permits
+ *   numerical indexing of its members, returns 3.  With second parameter M,
+ *   query is for member M of object X.  If M specifies multiple members
+ *   (an index range, index list, or list of member names), then returns
+ *   an array of results.  Note that is_obj(x,) may return [] if the
+ *   object X is empty.  With third parameter ERRFLAG non-nil and non-zero,
+ *   is_obj will return -2 if X is not an object, and -1 wherever M
+ *   specifies a non-member (either a name not present or an index out
+ *   of range).  Without ERRFLAG, is_obj raises an error when M is not
+ *   a member.
+ * SEE ALSO: oxy, save, restore
+ */
+
+local oxy;
+/* DOCUMENT oxy
+     Object extension to yorick.  Various yorick packages may create
+     "objects", which are collections of data and methods (functions)
+     for operating on that data.  Yorick objects are much more free-form
+     than other object-oriented languages, in keeping with the fact that
+     yorick has no declarative statements.
+
+     Yorick objects have zero or more members; members may be anonymous
+     or named.  For objects supporting anonymous members (an optional
+     feature), all members whether anonymous or named can be accessed
+     by a 1-origin index, as if the members were a 1D array.  Object
+     indexing has unusual semantics, similar to the semantics of the
+     arguments to the save and restore commands, in which it is the
+     name of the variable passed as an argument to the object, rather
+     than the value of the variable, which determines which member is
+     to be extracted.  For example,
+       obj(i)
+     refers to the member of obj named "i", whether the value of i is
+     1 or 100 or "j" or sqrt(3)+2i or span(0,1,200).  However, by passing
+     an expression, rather than a simple variable reference, you can
+     make the value of the argument (now that it has no name) be significant.
+     Hence, obj("i") is also member "i", while obj(7) is the 7th member,
+     obj(3*n+2) is the 3*n+2nd member, and so on.  You can use the noop()
+     function to make a variable into an expression, if the member specifier
+     happens to be stored in a variable:
+       obj(noop(membspec))
+
+     Objects also accept some special arguments:
+       obj()   returns the whole object (same as without the parens)
+       obj(*)  returns the number of members
+       obj(*,) returns an array of member names (string(0) for anonymous)
+                 in the index order (if the object supports indexing)
+       obj(*,m)  returns an array of the specified member names, or the
+                 specified member indices if M is a string array
+                 (if the object supports indexing)
+       obj(..) returns the attribute object associated with obj, which
+                 may be an empty object, or nil [] if obj does not support
+                 attributes
+
+     When called as a subroutine, objects accept keyword arguments as a
+     shorthand for the save command:
+       obj, m1=val1, m2=val2, ...;
+     is the same as:
+       save, obj, m1=val1, m2=val2, ...;
+
+     Yorick has a generic object, called a "group", which holds an arbitrary
+     collection of yorick variables.  You make group objects with the save
+     function (see help,save), and you can also use save to add members to
+     an existing group object.  Another way to create a group object is by
+     passing a membspec argument to any group which specifies multiple
+     members -- the result will be a group containing all the specified
+     members.  Hence, membspec may be an array of strings, an array of
+     indices, or an index range min:max:step, in order to produce a group
+     object holding all the specified members.  (Note that dimensionality
+     of membspec arrays is lost, and potentially not even number is
+     preserved if a single named member is specified multiple times.)
+
+     When you pass more than one argument to an object, the first one
+     specifies a single member, and subsequent arguments apply to that
+     member.  Thus,
+       obj(m, i, j, k)    is similar to     obj(m)(i, j, k)
+     In fact, these are exactly the same as long as M does not specify
+     a function.  When M is a function, there is a slight difference,
+     which is that the function (whether built-in or interpreted) is
+     executed in the context of the object obj.  Unlike classic object
+     oriented languages, in yorick the use of the context object is not
+     automatic -- the function M must specify which object members it
+     wishes to access.  You do that with the use function:
+       func method(x, y, z) {
+         extern var1, var2, var3;
+         use, var1, var2, var3;   // initializes vari from context object
+         // compute using var1, var2, var3, possibly redefining them
+         return result;
+         // just before return, any
+         // changes to var1, var2, var3 stored back to context object
+       }
+     In this form, the arguments to the use call must be external variables
+     to the function (method).  If you put the use call(s) at the top of the
+     function, you can dispense with the explicit extern statement, provided
+     you are careful to check that none of the names matches any of the
+     dummy parameter names (x, y, or z here).  [Eventually, the yorick
+     parser may treat use specially and enforce this restriction.  For now,
+     you need to be sure that any arguments are external to avoid incorrect
+     behavior.  Specifically, if any of the vari is local, the external
+     variable of that name will be set to nil (or the actual argument value
+     if vari is a dummy parameter) when the method returns.  Ouch.]
+     Although the vari look like they are extern to the method function,
+     use saves their external values and arranges to replace them when the
+     function returns, so they behave as if they were local to method.
+
+     You want to restrict the "use" subroutine/declarative to only those
+     object members which the method function changes.  If you merely wish
+     read access, you have two options, either call a special form of
+     restore, or call use() as a function in expressions.  For example,
+     suppose you are going to modify var1 and var3, but merely read var2
+     and var4 in the method context:
+       func method(x, y, z) {
+         use, var1, var3;   // initializes vari from context object
+         local var2, var4;  // otherwise, restore arguments would be extern
+         restore, use, var2, var4;
+         // compute using vari
+         var1 = something(var2);   var3 = something(var4);
+         return result;
+       }
+     Or equivalently,
+       func method(x, y, z) {
+         use, var1, var3;   // initializes vari from context object
+         // compute using vari
+         var1 = something(use(var2));   var3 = something(use(var4));
+         return result;
+       }
+     As a function, use(arg1, arg2, ...) is exactly the same as
+     obj(arg1, arg2, ...), where obj is the context object for the function.
+
+     You can a invoke method function M as a subroutine as well:
+       obj, m, i, j, k;
+
+     This stripped down facility lets you do most of the things (except
+     arguably type checking) other object oriented languages feature,
+     although it is a little difficult to see how to do this at first.
+     For example, you can think of a "class" as the constructor function
+     which makes instances:
+       func myclass(data1, data2, ...) {
+         // build and return the class, for example:
+         return save(method1, method2, ..., data1, data2, ...);
+       }
+       func method1(x) { return something; }
+       func method2(x,y) { return something; }
+     You make an instance with:
+       mything = myclass(d1, d2);
+     Then you can use your object: mything(method2,x,y) and so on.
+
+     This is slightly untidy, because you have to worry about never
+     colliding with the method names.  So you could bundle it up neatly
+     by making myclass itself an object containing all its methods and
+     constructor(s):
+       myclass = save(new, method1, method2, ...);  // save old values
+       func new(data1, data2, ...) {
+         // build and return the class, for example:
+         return save(method1, method2, ..., data1, data2, ...);
+       }
+       func method1(x) { return something; }
+       func method2(x,y) { return something; }
+       myclass = restore(myclass);   // swap new values into myclass
+     (See help,save for examples of this trick.)  Now the only variable
+     you have to worry about not clobbering is myclass, and you create
+     your object with:
+       mything = myclass(new, d1, d2);
+     and use it as before.
+
+     There are many ways to handle inheritance (multiple inheritance
+     is no harder); the simplest is just to use the save function to
+     concatentate new members onto the base class.  [Probably should
+     illustrate a good style here...]  The complete absence of type
+     checking is actually an advantage here: If an object has a method
+     with the required arguments and semantics, it will be usable no
+     matter what other members it has.
+
+     You can also extract object members using the dot operator:
+       obj.member    is a synonym for    obj("member")
+     but note that obj.member(args) may be very different from
+     obj(member,args); in general you are better off not using the
+     dot operator with objects.  In particular, note that
+       obj.member = value;   // ERROR!
+     does NOT set the member to value.  (Use obj,member=value;)
+
+   SEE ALSO: use, save, restore, is_obj, openb, createb, noop, closure
+ */
+
+extern use;
+/* DOCUMENT use, var1, var2, ...
+         or use(membspec, arg1, arg2, ...)
+     Access the context object in an object method function (see help,oxy).
+
+     In the first form, the VARi must be extern to the calling function,
+     and you get read-write access to the VARi.  That is, if you redefine
+     any of the VARi, your changes will be saved back to the context object
+     when the calling function returns.  Even though the VARi are external
+     to the method function, use arranges for their external values to be
+     replaced when the calling function returns, just as if they had been
+     local variables.
+
+     The second form is equivalent to obj(membspec, arg1, arg2, ...),
+     where obj is the context object.  You can use this whenever you need
+     only read access to membspec.
+
+     Alternatively, you can use the special forms of the save and
+     restore function to explicitly save and restore variables from the
+     context object:
+       restore, use, var1, var2, ...;
+       save, use, var1, var2, ...;
+     The use function is merely a shorthand for these explicit operations,
+     so you do not need to worry about multiple return points in the
+     method function or other details.
+
+   SEE ALSO: oxy, save, restore, openb, createb, noop, closure
+ */
+
+extern closure;
+/* DOCUMENT f = closure(function, data)
+         or f = closure(object, member)
+     creates a closure function from FUNCTION and DATA.  Invoking the
+     closure function invokes FUNCTION with argument DATA prepended
+     to the argument list passed to the closure function.  For example,
+        f;        is equivalent to    FUNCTION, DATA;
+        f(a1,a2)  is equivalent to    FUNCTION(DATA, a1, a2)
+     and so on.  When the first argument is an OBJECT, and the second
+     argument a MEMBER, the object is invoked with the member as its
+     first parameter.  (Typically the member would be a function.)
+     If the first argument is an object, then the second argument
+     (MEMBER) has the same semantics as object(member, ...): namely,
+     if MEMBER is a simple variable reference, its value is ignored,
+     and only its name is used to specify which member of the object.
+     Hence, if you want the value of MEMBER to be used, you need to
+     be sure the second argument to closure is an expression, such
+     as noop(member).  If the first argument is a function, then
+     the second argument is always a value.
+
+     Finally, the first argument can be a string in order to specify
+     that the returned closure object use the value of the named
+     variable at runtime for the function (or object).  If you expect
+     the value to be an object, prefix the variable name by "o:" in
+     order to prevent the closure object from keeping a use of the
+     value of the second argument, if MEMBER is a simple variable
+     reference.  For example,
+       f = closure("myfunc", data);     // keeps use of data value
+       g = closure("o:myobj", member);  // ignores value of member
+       h = closure("myobj", noop(member));  // o: unnecessary
+     This feature is primarily an aid during debugging; typically
+     you would remove the quotes (and o:) once the code was working.
+
+     You can query a closure object using the member extraction
+     operator:
+       f.function  returns function or object
+       f.data      returns data or member
+       f.function_name  returns name of function or object
+       f.data_name      returns name of data
+     The names are string(0) if unknown; function_name is known
+     if and only if the first argument to closure was a string;
+     data_name is known only if the first argument was a string or
+     an object and the second argument a simple variable reference.
+
+   SEE ALSO: oxy, is_func, use
  */
 
 func jt(file, time)
@@ -5356,6 +5730,8 @@ extern _len;
             list= _cdr(list)
               list= _cdr(list, i)
               _cdr, list, i, new_list_i
+
+     **** DEPRECATED, object extensions in new code, see help,oxy 
 
      implement rudimentary Lisp-like list handling in Yorick.
      However, in Yorick, a list must have a simple tree structure

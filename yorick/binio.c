@@ -1,5 +1,5 @@
 /*
- * $Id: binio.c,v 1.6 2010-05-12 04:03:30 dhmunro Exp $
+ * $Id: binio.c,v 1.7 2010-07-03 19:42:31 dhmunro Exp $
  * Define Yorick functions for dealing with binary I/O
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -1037,7 +1037,7 @@ int AddNextFile(HistoryInfo *history, char *filename, int create)
   }
 
   /* create Contents Log for new file if necessary */
-  if (file->permissions&16) CLupdate(file);
+  if (file->permissions&64) CLupdate(file);
 
   return 0;
 }

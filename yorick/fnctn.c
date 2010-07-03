@@ -1,5 +1,5 @@
 /*
- * $Id: fnctn.c,v 1.3 2010-03-20 15:14:21 dhmunro Exp $
+ * $Id: fnctn.c,v 1.4 2010-07-03 19:42:31 dhmunro Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -36,7 +36,7 @@
     On exit from EvalFN, the stack would read:
 
     .. sample  p1' kB  pB' p2' p3' kA  pA' p4' kD  pD' p4  p5 (locals)  R
-         -1    p1  -1  pB  p2  p3  -1  pA  p4  -1  pD  -1  -1    -1    -2
+         -2    p1  -1  pB  p2  p3  -1  pA  p4  -1  pD  -1  -1    -1     ?
 
     The R entry contains the return address.
     In addition to what is shown above, the keyword markers
@@ -416,6 +416,7 @@ void EvalFN(Operand *op)
   /* push return address marker */
   spnow= sp+1;
   spnow->ops= &returnSym;
+  spnow->index= 0;  /* offset to object-context, if any */
   spnow->value.pc= pc;
   sp++;
 
@@ -443,8 +444,9 @@ void EvalBI(Operand *op)
   stack= spBottom+stackIndex;
 
   /* Move return value to what will be the top of the stack, and
-     discard the reference to the function which is returning.  */
-  if (sp>stack) {
+     discard the reference to the function which is returning.
+     However, allow builtin to chain to interpreted function. */
+  if (sp>stack && sp->ops!=&returnSym) {
     Symbol *spnow= sp--;
     stack->ops= &intScalar;      /* "dud" BIFunction reference */
     stack->value= spnow->value;  /* move final value into place (dudded) */
@@ -466,6 +468,9 @@ void Return(void)
   /* Pop off any pending catch calls.  */
   if ((sp-1-spBottom)<=ispCatch) YCatchDrop(sp-1-spBottom);
 
+  /* check for object context, update object if present */
+  if ((sp-1)->index) yo_cupdate(1 + (int)(sp-1)->index);
+
   /* Set pc to caller.  Must do this BEFORE the return PC stack element
      is stripped away-- otherwise, there is no way to get back to the
      caller if this routine is asynchronously interrupted.  */
@@ -479,11 +484,11 @@ void Return(void)
   /* Move return value to what will be the top of the stack, and
      discard the reference to the function which is returning.  */
   spnow= sp--;
-  spFunction->ops= &intScalar; /* "dud" this stack entry */
   valueX= spFunction->value;   /* (know that ops is dataBlockSym) */
+  spFunction->ops= &intScalar;
   spFunction->value= spnow->value;
-  Unref(valueX.db);
-  spFunction->ops= spnow->ops; /* "arm" the returned value */
+  spFunction->ops= spnow->ops;
+  Unref(valueX.db);            /* may clobber sp+1 = spnow !! */
 
   /* Redefine any actual parameters which were referenceSyms.  */
   while (nReferences--) {
@@ -492,7 +497,7 @@ void Return(void)
     spReference++;
 
     /* YRecoverExterns has moved the local value of the dummy argument
-       ont onto the stack.  Delete the external value which is about to
+       onto the stack.  Delete the external value which is about to
        be replaced, then "dud" the stack value before moving it into
        the external location.  */
     opsX= extrn->ops;

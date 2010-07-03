@@ -1,5 +1,5 @@
 /*
- * $Id: binio.h,v 1.5 2010-05-12 04:03:30 dhmunro Exp $
+ * $Id: binio.h,v 1.6 2010-07-03 19:42:31 dhmunro Exp $
  * Declare structures and functions for arrays of data that have
  * meaningful interpretations on disk.
  *
@@ -156,7 +156,9 @@ struct IOStream {
                           0 indicates file has been closed */
   char *fullname;      /* filename after YExpandName */
   int permissions;     /* +1 read permission, +2 write permission
-                          +4 append mode, +8 binary mode, +16 clog mode */
+                          +4 append mode, +8 binary mode,
+                          +16 not seekable, +32 pipe, +64 clog mode
+                       */
 
   IOOperations *ioOps; /* virtual functions to read and write file */
 

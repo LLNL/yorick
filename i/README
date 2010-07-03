@@ -186,6 +186,7 @@
      test2.i  - radiation escape factor calculation, highly vectorizing
      test3.i  - scalar arithmetic performance test
      teststr.i - string manipulation function test
+     testoxy.i - object extensions for yorick test
    testlp.i   - rough Yorick version of Linpack benchmark
      Function:  testlp
    testg.i    - a few graphics tests (grtest is a crude tutorial)
