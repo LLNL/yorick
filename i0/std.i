@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.39 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: std.i,v 1.40 2010-07-04 23:07:06 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -5359,17 +5359,40 @@ extern resume;
    SEE ALSO: spawn, funcdef, after
 */
 
+extern _after_func;  /* worker functions for after */
+func _after_work { _after_func; }
+
 extern after;
-/* DOCUMENT after, secs, on_elapse
-     start function ON_ELAPSE at idle time SECS (wall) seconds from now.
-     SECS may be a floating point number to get fractions of a second.
-     Uncaught errors will cancel all afters; if you need controlled
-     cancellation, you must built it into ON_ELAPSE.  With SECS==0,
-     ON_ELAPSE becomes equivalent to set_idler, except that there is
-     only a single idler function, while there can be many ON_ELAPSE
-     functions.  ON_ELAPSE is called with no arguments; it must be an
-     intepreted function, and it will be invoked via the name it was
-     defined with (in its func statement).
+/* DOCUMENT after, secs, f
+         or after, secs, f, arg
+         of after, -, f, arg
+         of after, -
+     Execute yorick statement
+       F;
+     or
+       F, ARG;
+     when yorick becomes idle, but at least SECS seconds from now.
+     SECS may be type double to specify fractions of a second.
+     With SECS = 0.0, this is the same as set_idler, except that
+     while you may have only a single idler function, you may have
+     many after functions.  F may be either a function (is_func(f)
+     non-zero), or an oxy object (is_obj(f) non-zero).  For example,
+       after, 0.1, include, ["fma; plg, y, x;"];
+     can obviously be modified to do anything you want, although you
+     are probably better off writing a function containing the
+     executable line, rather than putting it into a string.
+     As another example,
+       after, 0.1, object, method;
+     invokes the object method after a delay of a tenth of a second.
+     (See help,oxy for more on objects.)  If F is an object, and method
+     is a simple variable reference, the special semantics of object
+     arguments apply; that is, only the name "method" is significant,
+     not its value.
+     In the third form, with the pseudo-index - as the first argument,
+     cancels the specified after call(s).  The ARG, if specified, must
+     be the same variable, not just the same value.  If no ARG is specified,
+     all pending after callbacks with the given F are cancelled.  If
+     neither ARG nor F is specified, all after callbacks are cancelled.
    SEE ALSO: spawn, set_idler, after_error
 */
 

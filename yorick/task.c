@@ -1,5 +1,5 @@
 /*
- * $Id: task.c,v 1.15 2010-04-16 05:23:43 dhmunro Exp $
+ * $Id: task.c,v 1.16 2010-07-04 23:07:06 dhmunro Exp $
  * Implement Yorick virtual machine.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -35,7 +35,7 @@ extern int YpParse(void *func);  /* argument non-zero for YpReparse */
 extern BuiltIn Y_quit, Y_include, Y_require, Y_help, Y_exit, Y_error, Y_batch;
 extern BuiltIn Y_current_include, Y_get_includes;
 extern BuiltIn Y_plug_in, Y_plug_dir, Y_maybe_prompt, Y_suspend, Y_resume;
-extern BuiltIn Y_after, Y_include1, Y_vopen, Y_vclose;
+extern BuiltIn Y_after, Y__after_func, Y_include1, Y_vopen, Y_vclose;
 
 extern void YRun(void);
 extern void YHalt(void);
@@ -340,30 +340,228 @@ Y_resume(int nargs)
 }
 
 static void ym_after(void *context);
+static void ym_after_dq(int i);
+
+typedef struct ym_after_t ym_after_t;
+struct ym_after_t {
+  void *f, *d;     /* yget_use function and data handles */
+  long fndx, dndx;  /* same as closure object, see oxy.c */
+  int next;
+};
+static ym_after_t *ym_after_list = 0;
+static int ym_after_n = 0;  /* length of list, not number active */
+static int ym_after_i = -1; /* index of first active list item */
+static int ym_after_j = -1; /* index of first unused list item */
+static int ym_after_k = -1; /* index of last active list item */
+#define YM_AFTER_MAX 1024
+
+void Y__after_func(int argc)
+{
+  extern void FormEvalOp(int nargs, Operand *obj);
+  ym_after_t *ao;
+  long dref;
+  void *p = 0;
+  Operand op;
+  if (ym_after_i<0 || ym_after_i>=ym_after_n)
+    y_error("(BUG?) bad link in _after_func");
+  ao = ym_after_list + ym_after_i;
+  ym_after_i = ao->next;
+  if (ym_after_i == -1) ym_after_k = -1;
+  ao->next = ym_after_j;
+  ym_after_j = ao - ym_after_list;
+  if (argc!=0 || !yarg_subroutine() || yarg_func(0)!=2)
+    y_error("_after_func must only be called by _after_work");
+  yarg_drop(1);
+  ypush_check(3);
+  dref = ao->dndx;
+  p = ao->f;
+  ao->f = 0;
+  if (ao->fndx >= 0) {
+    ypush_global(ao->fndx);
+    if (yarg_func(0)) dref = -1L;
+  } else {
+    ypush_use(p);
+  }
+  p = ao->d;
+  ao->d = 0;
+  if (dref >= -1L) {
+    if (dref < 0) {
+      ypush_use(p);
+    } else {  /* object(member,...) semantics */
+      sp[1].ops = &referenceSym;
+      sp[1].index = dref;
+      sp++;
+    }
+    argc = 1;
+  } else {
+    argc = 0;
+  }
+  FormEvalOp(argc, &op);
+  op.ops->Eval(&op);
+}
+
+static Function *ym_after_work = 0;  /* yget_use handle to _after_work */
 
 void
-Y_after(int nargs)
+Y_after(int argc)
 {
-  double secs;
-  Operand op, *pop;
-  long callout = -1;
-  if (nargs != 2) YError("after: accepts precisely two arguments");
-  secs = yarg_sd(nargs-1);
-  pop = yarg_op(nargs-2, &op);
-  if (!pop || op.ops!=&functionOps)
-    YError("after: second argument must be interpreted callback function");
-  callout = ((Function *)op.value)->code[0].index;
-  p_set_alarm(secs, ym_after, callout+(char*)0);
+  long range[3];
+  int flags = yget_range(argc-1, range);
+  double secs = -1.0;
+  long fndx=-1L, dndx=-1L;
+  if (!ym_after_work) {  /* this is first call */
+    long w = yfind_global("_after_work", 0);
+    if (w > 0) {
+      ypush_global(w);
+      if (yarg_func(0) == 1) ym_after_work = yget_use(0);
+      yarg_drop(1);
+    }
+    if (!ym_after_work) y_error("(BUG) missing _after_work function");
+  }
+  if (flags==(Y_PSEUDO | Y_MIN_DFLT | Y_MAX_DFLT) && range[2]==1) {
+    if (argc == 1) {
+      ym_after_dq(-1);  /* cancel everything, just like error */
+      return;
+    }
+  } else {
+    secs = ygets_d(argc-1);
+    if (secs < 0.0) secs = 0.0;
+    flags = 0;  /* if not, previous line raised error */
+  }
+  if (argc!=2 && argc!=3)
+    y_error("after called with illegal number of arguments");
+  flags = yarg_func(argc-2);
+  if (!flags) {
+    yo_ops_t *ops;
+    if (yo_get(argc-2, &ops)) {
+      flags = -1;
+    } else if (yarg_string(argc-2)==1) {
+      char *name = ygets_q(argc-2);
+      if (name[0]=='o' && name[1]==':') name+=2, flags=-1;
+      else flags = -2;
+      fndx = yget_global(name, 0L);
+    } else {
+      y_error("unrecognized second argument to after");
+    }
+  }
+  if (argc == 3) {
+    dndx = yget_ref(0);
+    if (flags>0 || dndx<0) {
+      if (yarg_typeid(0) >= 100)
+        y_error("(BUG?) unrecognized third argument to after");
+      dndx = -1L;
+    }
+  } else {
+    dndx = -2L;  /* no data argument */
+  }
+
+  yexec_after(secs, fndx, argc-2, dndx, argc-3);
+}
+
+void
+yexec_after(double secs, long fndx, int farg, long dndx, int darg)
+{
+  int i;
+
+  if (secs < 0.0) { /* dequeue anything which matches */
+    /* first check active list */
+    void *f = (fndx>=0)? 0 : yget_use(farg);
+    void *d = (dndx!=-1L)? 0 : yget_use(darg);
+    int j = -1;
+    if (f) ydrop_use(f);
+    if (d) ydrop_use(d);
+    for (i=ym_after_i ; i>=0 ; j=i,i=ym_after_list[i].next) {
+      if (ym_after_list[i].f==f && ym_after_list[i].fndx==fndx) {
+        if (dndx==-2L ||
+            (ym_after_list[i].d==d && ym_after_list[i].dndx==dndx)) {
+          if (j >= 0) ym_after_list[j].next = ym_after_list[i].next;
+          else ym_after_i = ym_after_list[i].next;
+          if (i == ym_after_k) ym_after_k = j;
+          ym_after_dq(i);
+        }
+      }
+    }
+    /* then check any waiting items (no list of these) */
+    for (i=0 ; i<ym_after_n ; i++) {
+      if (ym_after_list[i].next != -2) continue;
+      if (ym_after_list[i].f==f && ym_after_list[i].fndx==fndx) {
+        if (dndx==-2L &&
+            (ym_after_list[i].d==d && ym_after_list[i].dndx==dndx)) {
+          ym_after_dq(i);
+        }
+      }
+    }
+    return;
+  }
+
+  if (ym_after_j < 0) {  /* need to lengthen list */
+    int j, k;
+    if (ym_after_n+ym_after_n > YM_AFTER_MAX)
+      y_error("runaway queue of after functions");
+    if (!ym_after_n) {
+      j = 0;
+      k = 4;
+    } else {
+      j = ym_after_n;
+      k = j+j;
+    }
+    ym_after_list = p_realloc(ym_after_list, sizeof(ym_after_t)*k);
+    for (i=j ; i<k ; i++) {
+      ym_after_list[i].f = ym_after_list[i].d = 0;
+      ym_after_list[i].fndx = ym_after_list[i].dndx = -1L;
+      ym_after_list[i].next = (i<k-1)? i+1 : -1;
+    }
+    ym_after_j = j;
+    ym_after_n = k;
+  }
+  i = ym_after_j;
+  ym_after_j = ym_after_list[i].next;
+  ym_after_list[i].next = -2;
+
+  ym_after_list[i].f = (fndx>=0)? 0 : yget_use(farg);
+  ym_after_list[i].fndx = fndx;
+  ym_after_list[i].d = (dndx!=-1L)? 0 : yget_use(darg);
+  ym_after_list[i].dndx = dndx;
+
+  p_set_alarm(secs, ym_after, i+(char*)0);
 }
 
 static void
 ym_after(void *context)
 {
-  long index = (char *)context - (char*)0;
-  DataBlock *db = globTab[index].ops==&dataBlockSym?
-    globTab[index].value.db : 0;
-  if (!db || db->ops!=&functionOps) YError("after callback function lost");
-  else PushTask((Function*)Ref(db));
+  long i = (char *)context - (char*)0;
+  if (i>=0 && i<ym_after_n) {
+    if (ym_after_list[i].next != -2) return; /* cancelled */
+    if (ym_after_k>=0) ym_after_list[ym_after_k].next = i;
+    else ym_after_i = i;
+    ym_after_k = i;
+    ym_after_list[i].next = -1;
+    PushTask(ym_after_work);
+  } else {
+    y_error("(BUG) bad task.c:ym_after call");
+  }
+}
+
+static void
+ym_after_dq(int i)
+{
+  if (i<0) {
+    for (i=ym_after_n-1 ; i>=0 ; i--) ym_after_dq(i);
+    ym_after_i = ym_after_k = -1;
+  } else {
+    void *p = ym_after_list[i].f;
+    if (p) {
+      ym_after_list[i].f = 0;
+      ydrop_use(p);
+    }
+    p = ym_after_list[i].d;
+    if (p) {
+      ym_after_list[i].d = 0;
+      ydrop_use(p);
+    }
+    ym_after_list[i].next = ym_after_j;
+    ym_after_j = i;
+  }
 }
 
 int
@@ -559,6 +757,14 @@ Y_include(int nArgs)
   if (now>0) IncludeNow(); /* parse and maybe execute file to be included
                             * -- without now, this won't happen until the
                             * next line is parsed naturally */
+}
+
+void
+yexec_include(int iarg, int now)
+{
+  ypush_use(yget_use(iarg));
+  ypush_int(now);
+  Y_include(2);
 }
 
 void
@@ -1557,7 +1763,6 @@ YError(const char *msg)
         yr_reset();
       }
       yg_got_expose();
-      p_clr_alarm(0, 0);
     } else if (!yBatchMode && !pcUp && (!yAutoDebug || yDebugLevel>1)) {
       if (yDebugLevel>1) {
         YputsErr(" To enter recursive debug level, type <RETURN> now");
@@ -1581,8 +1786,9 @@ YError(const char *msg)
     ym_state &= ~Y_SUSPENDED;
     if (y_read_prompt) yr_reset();
     yg_got_expose();  /* in case window,wait=1 or pause */
-    p_clr_alarm(0, 0);
   }
+  p_clr_alarm(0, 0);
+  ym_after_dq(-1);
 
   if (ym_state&Y_QUITTING) {
     if (!no_pf)

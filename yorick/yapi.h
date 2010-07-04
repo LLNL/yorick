@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.h,v 1.19 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: yapi.h,v 1.20 2010-07-04 23:07:05 dhmunro Exp $
  * API for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -638,6 +638,24 @@ PLUG_API void *yo_new_group(yo_ops_t **ops);
  */
 extern int yo_closure(int farg, int darg);
 extern int yo_is_closure(int iarg);
+
+/* ------------------------------------------------------------------------ */
+
+/* compiled interface to interpreted after function
+ * secs = delay time until fndx/farg executes
+ *      = 0.0 to execute on idle
+ *      < 0.0 to remove existing after function from queue (after,-)
+ * fndx = index into global symbol table for function or object
+ *      = -1 to use farg instead of fndx (recommended)
+ * farg = iarg stack position of function to call (unused if fndx>=0)
+ * dndx = index into global symbol table for data (recommended for object)
+ *      = -1 to use darg instead of dndx (recommended for function)
+ *      = -2 to pass no argument to function
+ * darg = iarg stack position of data for farg/fndx (unused if dndx!=-1)
+ */
+extern void yexec_after(double secs, long fndx, int farg, long dndx, int darg);
+/* compiled interface to interpreted include function */
+extern void yexec_include(int iarg, int now);
 
 /* ------------------------------------------------------------------------ */
 
