@@ -1,5 +1,5 @@
 /*
- * $Id: std0.c,v 1.16 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: std0.c,v 1.17 2010-07-06 10:39:34 thiebaut Exp $
  * Define various standard Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -820,6 +820,8 @@ Y_is_array(int nargs)
   } else if (sp->ops==&intScalar || sp->ops==&longScalar ||
              sp->ops==&doubleScalar) {
     result = 1;
+  } else {
+    result = 0;
   }
   PushIntValue(result);
 }
@@ -827,7 +829,7 @@ Y_is_array(int nargs)
 void
 Y_is_scalar(int nargs)
 {
-  int result;
+  int result = 0;
   if (nargs != 1) YError("is_scalar takes exactly one argument");
   if (sp->ops==&referenceSym) ReplaceRef(sp);
   if (sp->ops == &dataBlockSym) {
@@ -836,8 +838,6 @@ Y_is_scalar(int nargs)
       result = (((Array *)sp->value.db)->type.dims == (Dimension *)0);
     else if (ops == &lvalueOps)
       result = (((LValue *)sp->value.db)->type.dims == (Dimension *)0);
-    else
-      result = 0;
   } else if (sp->ops==&intScalar || sp->ops==&longScalar ||
              sp->ops==&doubleScalar) {
     result = 1;
