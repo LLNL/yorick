@@ -1,0 +1,33 @@
+To use Yorick with TAU:
+
+1) built PDT and TAU.
+
+PDT can be found here:
+
+http://tau.uoregon.edu/pdt.tgz
+
+A newer version than the current release of TAU is needed, it can be found here:
+
+http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/tau-2.19.2p1.tar.gz
+
+on zeus, with the default modules:
+
+PDT: 
+
+./configure ; make -j ; make install
+
+TAU: 
+
+./configure -pdt=/g/g24/morris53/zeus/yorick/pdtoolkit -mpiinc=/usr/local/tools/mvapich-gnu/include -mpilib=/usr/local/tools/mvapich-gnu/lib -mpilibrary=-lpmpich#-lpmpich++#-libverbs#-libumad
+make install -j
+
+
+2) Add TAU bin directory to your path (tau-2.19.2p1/x86_64/bin).
+
+3) configure Yorick and mpy with Tau:
+
+./configure --with-tau=</path/to/TAU/stub/makefile>
+
+4) build and run as normal.
+
+5) analyze data with pprof/paraprof
