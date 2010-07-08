@@ -1,5 +1,5 @@
 /*
- * $Id: basfix.i,v 1.2 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: basfix.i,v 1.3 2010-07-08 15:05:03 dhmunro Exp $
  * Fixes to handle Basis-generated PDB file weirdnesses.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -128,7 +128,7 @@ func basfix_xopenb(filename,clogfile,update, open102=)
   rvars = *vars(2);
   vars = grow(*vars(1), rvars);
 
-  if (!numberof(vars))
+  if (numberof(vars))
     list = where((strpart(vars,0:0)!="/") & (strpart(vars,1:1)=="/"));
   if (!numberof(list)) return f;
 
