@@ -1,5 +1,5 @@
 /*
- * $Id: uinbg.c,v 1.1 2005-09-18 22:05:40 dhmunro Exp $
+ * $Id: uinbg.c,v 1.1.1.1.2.1 2010-07-08 00:34:00 alanmorris Exp $
  * foreground/background detection function (UNIX arcana)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -25,6 +25,11 @@ extern pid_t tcgetpgrp(int fd);
  *   while omitting the paramter to the BSD function is disastrous
  * - the only reason for the first branch is if sys/types.h has the
  *   POSIX prototype for getpgrp */
+
+
+#ifdef _UNISTD_H
+#  define USE_POSIX_GETPGRP
+#else /* _UNISTD_H */
 #ifdef USE_POSIX_GETPGRP
 #undef USE_POSIX_GETPGRP
 #define USE_POSIX_GETPGRP
@@ -33,6 +38,7 @@ extern pid_t getpgrp(void);
 #define USE_POSIX_GETPGRP 0
 extern pid_t getpgrp(pid_t);
 #endif
+#endif /* _UNISTD_H */
 #endif
 
 int

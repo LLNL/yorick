@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: configure,v 1.1 2005-09-18 22:03:38 dhmunro Exp $
+# $Id: configure,v 1.1.1.1.2.1 2010-07-08 00:34:00 alanmorris Exp $
 
 # debug=yes to keep all cfg.* stdout and stderr files
 # (most recent warnings always kept, usually don't need debug)
@@ -8,6 +8,22 @@ debug=no
 echo ""
 echo "=============== begin top level configuration ==============="
 echo ""
+
+
+#----------------------------------------------------------------------
+# TAU
+TAU_ENABLED=false
+for arg in "$@"; do
+  case $arg in
+  --with-tau=*)
+     TAU_MAKEFILE=`echo $arg | sed -e 's/--with-tau=//' -e 's/ /_/g'`
+     echo "Using TAU instrumentation"
+     TAU_ENABLED=true
+     shift
+    ;;
+  esac
+done
+
 
 while test -n "$1"; do
   if test -d "$1"; then
@@ -19,6 +35,7 @@ while test -n "$1"; do
   else
     echo "**** ERROR **** no such directory ($1) to configure"
     echo "rerun ./configure with proper execute line"
+    exit 1
   fi
   shift
 done
@@ -218,6 +235,11 @@ else
 fi
 rm -f cfg cfg.exe cfg.c
 
+
+
+
+
+
 echo "PLAY_DIRS=$PLAY_DIRS" >>Make.cfg
 echo "PLAY_INCS=$PLAY_INCS" >>Make.cfg
 echo "PLAY_CFG=$PLAY_CFG" >>Make.cfg
@@ -285,10 +307,22 @@ done
 #----------------------------------------------------------------------
 # set up optional packages
 
+
+
+
+
 #----------------------------------------------------------------------
 # configure subdirectories
 
 make "PKGDIRS=$pkgdirs" pkgconfig
+
+if [ $TAU_ENABLED = true ] ; then
+#    CC="tau_cc.sh -tau_makefile=$TAU_MAKEFILE -tau_options='-optVerbose -optKeepFiles -optTauSelectFile=$PWD/tau/select.tau -optNoCompInst -optNoRevert'"
+    CC="tau_cc.sh -tau_makefile=$TAU_MAKEFILE -tau_options='-optKeepFiles -optTauSelectFile=$PWD/tau/select.tau -optNoCompInst -optNoRevert'"
+    TAU_ENABLED=true
+    echo "CC=$CC" >>Make.cfg
+fi
+
 
 echo ""
 echo "================ all configuration completed ================"

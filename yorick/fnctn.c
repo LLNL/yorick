@@ -1,5 +1,5 @@
 /*
- * $Id: fnctn.c,v 1.4 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: fnctn.c,v 1.4.2.1 2010-07-08 00:34:00 alanmorris Exp $
  */
 /* Copyright (c) 2005, The Regents of the University of California.
  * All rights reserved.
@@ -48,6 +48,7 @@
  */
 
 #include "ydata.h"
+#include "../tau/ytau.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -272,6 +273,16 @@ void EvalFN(Operand *op)
   int actual, dummy, index, nExtra;
   Symbol *spnow, *extraPos, *key;
 
+#ifdef TAU_ENABLED
+  static int tau_init = 0;
+  const char *currentFunctionName = globalTable.names[func->code[0].index];
+  if (tau_init == 0) {
+    tau_init = 1;
+    TAU_PROFILE_SET_NODE(0);
+  }
+  TAU_START(currentFunctionName);
+#endif
+
   /* Be sure the stack is long enough for a worst-case invocation of this
      function.  nReq= nPos + (hasPosList&1) + nKey + nLoc + (deepest stack
                       required for expression evaluation) + 10
@@ -464,6 +475,8 @@ void Return(void)
   Symbol *spnow, *extrn;
   OpTable *opsX;
   SymbolValue valueX;
+
+  TAU_GLOBAL_TIMER_STOP();
 
   /* Pop off any pending catch calls.  */
   if ((sp-1-spBottom)<=ispCatch) YCatchDrop(sp-1-spBottom);

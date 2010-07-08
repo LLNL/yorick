@@ -1,5 +1,5 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.4 2010-03-20 16:59:15 dhmunro Exp $
+# $Id: Makefile,v 1.4.2.1 2010-07-08 00:34:00 alanmorris Exp $
 
 Y_MAKEDIR=
 Y_EXE=
@@ -84,7 +84,7 @@ MAKE_TEMPLATE = /usr/lib/yorick/1.5/protect-against-1.5
 D_ON_LAUNCH=-Don_launch=mpy_on_launch
 # always compile main.c with -g so new packages can be debugged
 mpymain.o: mpymain.c
-	$(CC) $(CPPFLAGS) $(D_ON_LAUNCH) -g $(Y_IDIR) -o $@ -c mpymain.c
+	$(CC) $(CPPFLAGS) $(MPI_CFLAGS) $(D_ON_LAUNCH) -g $(Y_IDIR) -o $@ -c mpymain.c
 mpymain.c: $(Y_MAIN_SRC)
 	cp $(Y_MAIN_SRC) mpymain.c
 

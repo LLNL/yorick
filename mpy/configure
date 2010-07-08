@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: configure,v 1.2 2010-02-28 21:49:21 dhmunro Exp $
+# $Id: configure,v 1.2.2.1 2010-07-08 00:34:00 alanmorris Exp $
 # configure script for mpy
 
 curdate=`date`
@@ -29,6 +29,12 @@ for opt do
   --cflags=*) mpi_cflags=`echo $opt | sed -e s/--cflags=//`
   ;;
   --ldflags=*) mpi_ldflags=`echo $opt | sed -e s/--ldflags=//`
+  ;;
+  --with-tau=*) 
+    TAU_MAKEFILE=`echo $opt | sed -e 's/--with-tau=//' -e 's/ /_/g'`
+    mpicc_exe="tau_cc.sh"
+    mpi_cflags="-tau_makefile=${TAU_MAKEFILE} -tau_options='-optKeepFiles -optTauSelectFile=../tau/select.tau -optNoCompInst -optNoRevert'"
+    mpi_ldflags="-tau_makefile=$TAU_MAKEFILE -tau_options='-optKeepFiles -optTauSelectFile=../tau/select.tau -optNoCompInst -optNoRevert'"
   ;;
   *) cat <<EOF
 Usage:   ./configure [options]
