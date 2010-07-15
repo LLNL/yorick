@@ -1,5 +1,5 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.4 2010-03-20 16:59:15 dhmunro Exp $
+# $Id: Makefile,v 1.5 2010-07-15 03:06:41 dhmunro Exp $
 
 Y_MAKEDIR=
 Y_EXE=
@@ -44,7 +44,7 @@ EXTRA_PKGS=$(Y_EXE_PKGS)
 PKG_CLEAN=
 
 PKG_I_START=
-PKG_I_EXTRA=custommp.i testmp.i mpy1.i
+PKG_I_EXTRA=custommp.i testmp.i mpool.i mpy1.i
 
 # -------------------------------- standard targets and rules (in Makepkg)
 
