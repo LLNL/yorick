@@ -1,5 +1,5 @@
 /* testoxy.i
- * $Id: testoxy.i,v 1.1 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: testoxy.i,v 1.2 2010-07-17 22:44:56 dhmunro Exp $
  * test object extensions to yorick
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -44,7 +44,7 @@ func test1(x)
       anyof(is_obj(a,["test2","data1"])))
     goof |= 0x200;
   if (is_obj(d,"x",1)!=-2 || anyof(is_obj(a,[0,-5,6],1)!=[3,0,3]) ||
-      is_obj(a,[0,-5,10],1)!=-1 || is_obj(a,"oops")!=-1 || is_obj(a,9)!=-1 ||
+      is_obj(a,[0,-5,10],1)!=-1 ||is_obj(a,"oops",1)!=-1|| is_obj(a,9,1)!=-1 ||
       anyof(is_obj(a,["test2","oops","data1"],1)!=[0,-1,0]))
     goof |= 0x200;
   b = x();

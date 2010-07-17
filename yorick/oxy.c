@@ -1,5 +1,5 @@
 /*
- * $Id: oxy.c,v 1.1 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: oxy.c,v 1.2 2010-07-17 22:44:56 dhmunro Exp $
  * implementation of object extension
  */
 /* Copyright (c) 2010 David H. Munro.
@@ -475,7 +475,7 @@ Y_is_obj(int argc)
 {
   yo_ops_t *ops;
   void *obj = (argc>0)? yo_get(argc-1, &ops) : 0;
-  int err, isobj = (obj != 0);
+  int err = 0, isobj = (obj != 0);
   int hasmndx = (isobj && ops->find_mndx);
   if (argc<1 || argc>3) y_error("is_obj accepts only 1, 2, or 3 arguments");
 
