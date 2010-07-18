@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.5 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: std2.c,v 1.6 2010-07-18 16:38:57 dhmunro Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.
@@ -1387,6 +1387,221 @@ void Y_rmdir(int nArgs)
     PushIntValue(-1);
   } else {
     PushIntValue(0);
+  }
+}
+
+/*--------------------------------------------------------------------------*/
+
+/* Based on public domain code described in "A Painless Guide to CRC
+ * Error Detection Algorithms" at
+ *   http://www.ross.net/crc/
+ * by Ross Williams 3/June/1993
+ */
+
+extern int crc_setup(unsigned long table[260], int width, unsigned long poly,
+                     unsigned long init, int reflect, unsigned long xorot);
+extern unsigned long crc_compute(unsigned long table[260], const char *buf,
+                                 long len, int init, unsigned long crc);
+extern int crc_query(unsigned long table[260], int *width, unsigned long *poly,
+                     unsigned long *init, int *reflect, unsigned long *xorot);
+
+/* table[260]
+ *   [0:255] lookup table values
+ *   [256]   XOROT
+ *   [257]   MASK = REFLECT? 0 : <WIDTH 1 bits>
+ *   [258]   WIDTH-8
+ *   [259]   INITR
+ *   REFLECT = !MASK
+ *   INIT = REFLECT? reflect(INITR,WIDTH) : INITR
+ *   POLY = REFLECT? reflect(table[128],WIDTH) : table[1]
+ */
+int
+crc_setup(unsigned long table[260], int width, unsigned long poly,
+          unsigned long init, int reflect, unsigned long xorot)
+{
+  unsigned long top = 1UL << (width-1);
+  unsigned long mask = ((top - 1UL) << 1) | 1UL;
+  if (width<8 || width>8*sizeof(unsigned long) || (poly&~mask) ||
+      (init&~mask) || (xorot&~mask)) {
+    return 1;
+  } else {
+    unsigned long r;
+    int i, j;
+    /* table[0:255] depends only on width, poly, reflect */
+    if (reflect) {
+      unsigned long q;
+      for (i=0 ; i<256 ; i++) {
+        for (q=i,r=0,j=8 ; j-- ; q>>=1) { r<<=1; if (q&1) r|=1; }
+        r <<= (width-8);
+        for (j=0 ; j<8 ; j++) r = (r<<1) ^ ((r&top)? poly : 0);
+        for (q=r,r=0,j=width ; j-- ; q>>=1) { r<<=1; if (q&1) r|=1; }
+        table[i] = r & mask;
+      }
+      for (q=init,r=0,j=width ; j-- ; q>>=1) { r<<=1; if (q&1) r|=1; }
+    } else {
+      for (i=0 ; i<256 ; i++) {
+        r = i << (width-8);
+        for (j=0 ; j<8 ; j++) r = (r<<1) ^ ((r&top)? poly : 0);
+        table[i] = r & mask;
+      }
+      r = init;
+    }
+    /* fill in auxilliary data used by crc_compute */
+    table[256] = xorot;
+    table[257] = reflect? 0 : mask;
+    table[258] = width - 8;
+    table[259] = r;
+    return 0;
+  }
+}
+
+unsigned long
+crc_compute(unsigned long table[260], const char *buf, long len,
+            int init, unsigned long crc)
+{
+  crc = init? table[259] : (crc^table[256]);
+  if (table[257]) {
+    while (len--) crc = table[((crc>>table[258]) ^ *buf++)&0xffL] ^ (crc << 8);
+    crc &= table[257];
+  } else {
+    while (len--) crc = table[(crc ^ *buf++)&0xffL] ^ (crc >> 8);
+  }
+  return crc ^ table[256];
+}
+
+int
+crc_query(unsigned long table[260], int *width, unsigned long *poly,
+          unsigned long *init, int *reflect, unsigned long *xorot)
+{
+  int w = *width = table[258] + 8;
+  int r = *reflect = !table[257];
+  *xorot = table[256];
+  if (r) {
+    unsigned long n = table[259], p = table[128], a, b;
+    for (a=b=0 ; w-- ; n>>=1,p>>=1) {
+      a<<=1; if (n&1) a|=1;
+      b<<=1; if (p&1) b|=1;
+    }
+    *init = a;
+    *poly = b;
+  } else {
+    *init = table[259];
+    *poly = table[1];
+  }
+  return *width;
+}
+
+extern BuiltIn Y_crc_on;
+
+static unsigned long crc_on_table[260];
+
+static StructDef *crc_array_types[10] =
+  {&charStruct, &shortStruct, &intStruct, &longStruct, &floatStruct,
+   &doubleStruct, &stringStruct, &pointerStruct, &complexStruct, 0};
+
+static char *crc_names[5] = { "pkzip", "cksum", "crc24", "arc", "kermit" };
+static unsigned long crc_defs[5][5] =
+  {{32, 0x04c11db7, 0xffffffff, 1, 0xffffffff},
+   {32, 0x04c11db7, 0, 0, 0xffffffff}, {24, 0x864cfb, 0xb704ce, 0, 0},
+   {16, 0x8005, 0, 1, 0}, {16, 0x1021, 0, 1, 0}};
+
+void
+Y_crc_on(int argc)
+{
+  unsigned long *table = 0;
+  long range[3], n = 0;
+  int flag = (argc>1)? yget_range(argc-2, range) : 0;
+  if (!crc_on_table[1])   /* initialize default pkzip table */
+    crc_setup(crc_on_table, 32, 0x04c11db7UL, 0xffffffffUL, 1, 0xffffffffUL);
+  if (argc<1 || argc>3) y_error("crc_on takes 1, 2, or 3 arguments");
+  if (!flag) {  /* compute a crc */
+    void *addr;
+    long len;
+    unsigned long crc = 0;
+    int init = 1;
+    if (argc > 1)
+      table = yarg_nil(argc-2)? 0 : (unsigned long *)ygeta_l(argc-2, &n, 0);
+    else
+      table = crc_on_table;
+    if (n == 1) {
+      if (argc == 3) y_error("crc_on expecting crc_table as second argument");
+      crc = table[0];
+      init = 0;
+      table = crc_on_table;
+    } else if (n==260 && table[258]<=24UL && !table[0] &&
+               !(table[257]&(table[257]+1))) {
+      if (argc == 3) {
+        crc = ygets_l(0);
+        init = 0;
+      }
+    } else if (n) {
+      y_error("crc_on found bad crc_table as second argument");
+    }
+    flag = yarg_typeid(argc-1);
+    if (flag <= Y_STRUCT) {
+      addr = ygeta_any(argc-1, &len, 0, 0);
+      if (flag == Y_STRING) {
+        long i;
+        char **q = addr;
+        for (i=0 ; i<len ; i++, init=0) {
+          if (!q[i]) crc = crc_compute(table, 0, 0, init, crc);
+          else crc = crc_compute(table, q[i], strlen(q[i])+1, init, crc);
+        }
+      } else {
+        if (flag < Y_STRUCT) {
+          len *= crc_array_types[flag]->size;
+        } else {
+          Array *a = yget_use(argc-1);
+          ydrop_use(a);
+          len *= a->type.base->size;
+        }
+        crc = crc_compute(table, addr, len, init, crc);
+      }
+    } else if (flag == Y_VOID) {
+      crc = crc_compute(table, 0, 0, init, crc);
+    } else if (flag == Y_RANGE) {
+      flag = (argc>1)? yget_range(argc-2, range) : 0;
+      crc = crc_compute(table, (void*)range, 3*sizeof(long), init, crc);
+      crc = crc_compute(table, (void*)&flag, sizeof(int), 0, crc);
+    } else {
+      addr = yget_use(argc-1);
+      ydrop_use(addr);
+      crc = crc_compute(table, (void*)&addr, sizeof(void*), init, crc);
+    }
+    ypush_long(crc);
+
+  } else {      /* compute a crc_table or crc_def */
+    if (flag != (Y_PSEUDO | Y_MIN_DFLT | Y_MAX_DFLT))
+      y_error("unrecognized second argument to crc_on");
+    if (yarg_string(argc-1) == 1) {
+      char *nm = ygets_q(argc-1);
+      for (n=0 ; n<5 ; n++) if (!strcmp(nm, crc_names[n])) break;
+      if (n>=5) y_error("crc_on unrecognized crc_def name");
+      table = crc_defs[n];
+      n = 5;
+    } else {
+      table = yarg_nil(argc-1)? 0 : (unsigned long *)ygeta_l(argc-1, &n, 0);
+      if (!table) n = 260;
+    }
+    if (n == 5) {
+      unsigned long *def = table;
+      long dims[2];
+      dims[0] = 1;  dims[1] = 260;
+      table = (unsigned long *)ypush_l(dims);
+      if (crc_setup(table, def[0], def[1], def[2], def[3], def[4]))
+        y_error("crc_on(arg,-) given illegal crc_def argument");
+    } else if (n == 260) {
+      int w, r;
+      unsigned long p, i, x;
+      long *def;
+      long dims[2];
+      dims[0] = 1;  dims[1] = 5;
+      def = ypush_l(dims);
+      crc_query(table? table : crc_on_table, &w, &p, &i, &r, &x);
+      def[0] = w;  def[1] = p;  def[2] = i;  def[3] = r;  def[4] = x;
+    } else {
+      y_error("crc_on(arg,-) query arg not a crc_def or crc_table");
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.40 2010-07-04 23:07:06 dhmunro Exp $
+ * $Id: std.i,v 1.41 2010-07-18 16:38:57 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -5656,6 +5656,50 @@ extern symbol_names;
 
    SEE ALSO: symbol_def, symbol_exists, symbol_set.
 */
+
+extern crc_on;
+/* DOCUMENT crc = crc_on(x)
+         or crc = crc_on(x, crc0)
+         or crc_table = crc_on(crc_def, -)
+         or crc = crc_on(x, crc_table)
+         or crc = crc_on(x, crc_table, crc0)
+         or crc_def = crc_on(crc_table, -)
+     return a cyclic redundancy check on X.  The crc has type long which
+     is very likely (1 chance in 4 billion) to remain unchanged if X is
+     corrupted by random noise.  With a non-nil crc0 argument previously
+     returned by crc_on, begins with crc0 to yield (roughly speaking) the
+     result you would have gotten on a single call if the two X arguments
+     had been concatenated (note that the order matters).
+
+     There are many different CRC algorithms, which can be parameterized
+     by five integer values:
+       CRC_DEF = [width, poly, init, reflect, xor]
+     Here width is the width in bits, reflect is either 0 or 1 (false or
+     true), and poly, init, and xor are zero except for at most their
+     width least significant bits.  The returned crc is also zero except
+     for its width least significant bits.  The parameterization is
+     described in "A Painless Guide to CRC Error Detection Algorithms" at
+       http://www.ross.net/crc/
+     (The reflect parameter corresponds to refin and refot, which must
+     be equal for crc_on to work, and the xor parameter corresponds to
+     xorot.)  You can find a list of popular parameter values at
+       http://regregex.bbcmicro.net/crc-catalogue.htm
+     Do not try to "roll your own" parameters; let the experts do it.
+     Here are some popular choices (crc_on requires width>=8):
+       crc_def = [32, 0x04C11DB7, 0xFFFFFFFF, 1, 0xFFFFFFFF]  ("pkzip")
+       crc_def = [32, 0x04C11DB7, 0, 0, 0xFFFFFFFF]           ("cksum")
+       crc_def = [24, 0x864CFB, 0xB704CE, 0, 0]               ("crc24")
+       crc_def = [16, 0x8005, 0, 1, 0]                        ("arc")
+       crc_def = [16, 0x1021, 0, 1, 0]                        ("kermit")
+     The default is "pkzip".  You can pass any of these five strings
+     instead of an array of five numbers as CRC_DEF.
+     
+     To use a CRC algorithm other than "pkzip", you must first generate
+     a CRC_TABLE by calling crc_on(crc_def,-), then pass the CRC_TABLE
+     as the second argument with X as the first to compute the CRC.
+     Finally, crc_on(crc_table,-) returns the corresponding CRC_DEF;
+     crc_on(,-) returns the CRC_DEF for the default "pkzip" algorithm.
+ */
 
 /*--------------------------------------------------------------------------*/
 
