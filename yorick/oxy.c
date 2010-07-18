@@ -1,5 +1,5 @@
 /*
- * $Id: oxy.c,v 1.2 2010-07-17 22:44:56 dhmunro Exp $
+ * $Id: oxy.c,v 1.3 2010-07-18 21:43:36 dhmunro Exp $
  * implementation of object extension
  */
 /* Copyright (c) 2010 David H. Munro.
@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
-extern BuiltIn Y_use, Y_save, Y_restore, Y_is_obj, Y_closure;
+extern BuiltIn Y_use, Y_save, Y_restore, Y_is_obj, Y_closure, Y_gaccess;
 
 /* ------------------------------------------------------------------------ */
 /* oxy_object is the base class for yorick's object oriented extension
@@ -1030,6 +1030,7 @@ struct yog_t {
   p_hashtab *ht;  /* globtab index --> member index */
   void *attrib;   /* attribute object */
   void *destruct; /* reserved for destructor */
+  int flags;
 };
 
 void *
@@ -1040,6 +1041,7 @@ yo_new_group(yo_ops_t **ops)
   grp->memb = 0;
   grp->ht = 0;
   grp->attrib = grp->destruct = 0;
+  grp->flags = 0;
   if (ops) *ops = &yog_ops;
   return grp;
 }
@@ -1155,6 +1157,59 @@ yog_seti(void *obj, long mndx, int iarg)
   yog_t *grp = obj;
   Symbol *s = sp - iarg;
   if (mndx<1 || mndx>grp->n_memb || iarg<0) return 1;
+  if (s->ops == &referenceSym) ReplaceRef(s);
+
+  if (grp->flags & 2) {  /* implement gaccess assign= semantics */
+    LValue lvfake, *lv = 0;
+    Operand op;
+    Symbol *d = grp->memb + mndx-1;
+    s->ops->FormOperand(s, &op);
+    if (d->ops == &dataBlockSym) {
+      DataBlock *db = d->value.db;
+      if (db->ops == &lvalueOps) {
+        lv = (LValue *)db;
+      } else if (db->ops->isArray) {
+        Array *a = (Array *)db;
+        lvfake.references = 10;
+        lvfake.owner = 0;
+        lvfake.type.base = a->type.base;
+        lvfake.type.dims = a->type.dims;
+        lvfake.type.number = a->type.number;
+        lvfake.address.m = a->value.c;
+        lvfake.strider = 0;
+        lv = &lvfake;
+      } else if (db->ops == op.ops) {
+        return (op.value == db)? 0 : 2;
+      }
+    } else {
+      lvfake.references = 10;
+      lvfake.owner = 0;
+      lvfake.type.dims = 0;
+      lvfake.type.number = 1;
+      lvfake.strider = 0;
+      if (d->ops==&doubleScalar) {
+        lvfake.ops = &doubleOps;
+        lvfake.type.base = &doubleStruct;
+        lvfake.address.m = (char *)&d->value.d;
+      } else if (d->ops==&longScalar) {
+        lvfake.ops = &longOps;
+        lvfake.type.base = &longStruct;
+        lvfake.address.m = (char *)&d->value.l;
+      } else if (d->ops==&intScalar) {
+        lvfake.ops = &intOps;
+        lvfake.type.base = &intStruct;
+        lvfake.address.m = (char *)&d->value.i;
+      } else {
+        return 4; /* this is returnSym, keyword, etc */
+      }
+      lv = &lvfake;
+    }
+    /* see ops3.c:DoAssign */
+    if (!op.ops->isArray || RightConform(lv->type.dims, &op))
+      return 3;
+    lv->type.base->dataOps->Assign((Operand *)lv, &op);
+    return 0;
+  }
   if (grp->memb[mndx-1].ops == &dataBlockSym) {
     /* note that this discards LValue created by reshape,
      * which is same behavior as pre-2.1.06 restore function
@@ -1162,7 +1217,6 @@ yog_seti(void *obj, long mndx, int iarg)
     grp->memb[mndx-1].ops = &intScalar;
     Unref(grp->memb[mndx-1].value.db);
   }
-  if (s->ops == &referenceSym) ReplaceRef(s);
   if (s->ops == &dataBlockSym) {
     if (s->value.db->ops==&lvalueOps) FetchLValue(s->value.db, s);
     if (s->ops != &dataBlockSym) grp->memb[mndx-1].value = s->value;
@@ -1171,8 +1225,7 @@ yog_seti(void *obj, long mndx, int iarg)
              s->ops==&longScalar || s->ops==&intScalar) {
     grp->memb[mndx-1].value = s->value;
   } else {
-    /* this is returnSym, keyword, etc */
-    return 4;
+    return 4;  /* this is returnSym, keyword, etc */
   }
   grp->memb[mndx-1].ops = s->ops;
   return 0;
@@ -1186,6 +1239,7 @@ yog_setq(void *obj, const char *name, long iname, int iarg)
   if (!mndx) {
     /* create new group member */
     long n = grp->n_memb;
+    if (grp->flags & 1) return 1;
     if (name && !name[0]) name = 0;
     if (name && iname<0) iname = yget_global(name, 0);
     if (!n || (n>2 && !(n&(n-1))))
@@ -1208,6 +1262,22 @@ yog_geta(void *obj)
   if (grp->attrib) {
     ypush_use(grp->attrib);
     grp->attrib = yget_use(0);
+  }
+}
+
+void
+Y_gaccess(int argc)
+{
+  yo_ops_t *ops = 0;
+  yog_t *obj = (argc>0)? yo_get(argc-1, &ops) : 0;
+  if (!obj || ops!=&yog_ops)
+    y_error("gaccess first argument not a group object");
+  if (argc > 1) {  /* gaccess(grp,flags) sets group access flags */
+    if (argc > 2) y_error("gaccess takes at most two arguments");
+    obj->flags = ygets_i(0);
+    yarg_drop(1);
+  } else {         /* gaccess(grp) returns group access flags */
+    ypush_long(obj->flags);
   }
 }
 

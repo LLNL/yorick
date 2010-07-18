@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.41 2010-07-18 16:38:57 dhmunro Exp $
+ * $Id: std.i,v 1.42 2010-07-18 21:43:36 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -4401,7 +4401,20 @@ extern restore;
        bump = restore(bump);        // put back old x,y,z, set bump to new
        restore, scratch;            // restore xy and scratch itself
 
-   SEE ALSO: oxy, is_obj, openb, createb, use, noop
+   SEE ALSO: oxy, is_obj, openb, createb, use, noop, gaccess
+ */
+
+extern gaccess;
+/* DOCUMENT flags = gaccess(grp)
+ *       or grp = gaccess(grp, flags)
+ *   With single GRP argument, return current group object access flags.
+ *   With second FLAGS argument, set group object access flags, returning
+ *   the input GRP to allow constructs like g=gaccess(save(var1,var2), 3);
+ *   The access flags bits are:
+ *     1  set if no new members may be created
+ *     2  set if existing members cannot change data type or dimensions
+ *          (that is, they behave as x(..)=expr, rather than as x=expr)
+ * SEE ALSO: oxy, save, restore
  */
 
 extern is_obj;
@@ -4588,7 +4601,8 @@ local oxy;
        obj.member = value;   // ERROR!
      does NOT set the member to value.  (Use obj,member=value;)
 
-   SEE ALSO: use, save, restore, is_obj, openb, createb, noop, closure
+   SEE ALSO: use, save, restore, is_obj, openb, createb, noop, closure,
+             gaccess
  */
 
 extern use;
