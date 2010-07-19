@@ -1,5 +1,5 @@
 /*
- * $Id: playw.h,v 1.1 2005-09-18 22:05:36 dhmunro Exp $
+ * $Id: playw.h,v 1.2 2010-07-19 07:39:13 thiebaut Exp $
  * MS Windows-private portability layer declarations
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -46,7 +46,6 @@ extern void w_deliver(char *buf);   /* calls on_stdin */
 extern char *w_sendbuf(long len);
 
 extern int w_nwins;  /* count of graphics windows */
-extern int w_nputs;  /* count of w_add_input input sources */
 
 extern HINSTANCE w_app_instance;
 extern HWND w_main_window;
