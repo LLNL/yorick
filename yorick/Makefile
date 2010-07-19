@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.4 2010-07-03 19:42:31 dhmunro Exp $
+# $Id: Makefile,v 1.5 2010-07-19 08:08:33 thiebaut Exp $
 # similar to any yorick package Makefile
 
 # ------------------------------------------------ macros for yor base package
 COPT=$(COPT_DEFAULT)
 Y_MAKEDIR=..
-Y_EXE=./yorick
+Y_EXE=./yorick$(EXE_SFX)
 PKG_NAME=yor
 PKG_EXENAME=yorick
 PKG_I=std.i matrix.i fft.i graph.i

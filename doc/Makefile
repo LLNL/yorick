@@ -1,16 +1,17 @@
-# $Id: Makefile,v 1.7 2008-03-06 00:35:26 dhmunro Exp $
+# $Id: Makefile,v 1.8 2010-07-19 08:08:33 thiebaut Exp $
 # you need the makeinfo and texi2dvi programs from gnu.org
 # and the tex typesetting system from tug.org
 # For the html-doc target, you need a recent texi2html that accepts
 # "--split node". Mac users: The one in fink (1.64) is too old, get one from
 # http://www.nongnu.org/texi2html/
+include ../Make.cfg
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 #TEXI2PDF = texi2pdf
 TEXI2PDF = texi2dvi --pdf
 TEX = tex
 PDFTEX = pdftex
-YORICK = ../yorick/yorick
+YORICK = ../yorick/yorick$(EXE_SFX)
 
 all: yorick.info docs
 

@@ -1,9 +1,10 @@
-# $Id: Makefile,v 1.6 2009-12-05 22:11:14 dhmunro Exp $
+# $Id: Makefile,v 1.7 2010-07-19 08:08:33 thiebaut Exp $
 # This file is part of Yorick and shares its BSD-type copyright.
 # For the "manual" target, you need a recent texi2html that accepts
 # "--split node". Mac users: The one in fink (1.64) is too old, get one from
 # http://www.nongnu.org/texi2html/
-YORICK = ../../yorick/yorick
+include ../../Make.cfg
+YORICK = ../../yorick/yorick$(EXE_SFX)
 DESTDIR = /usr/local/share/doc/yorick
 TEXI2HTML = texi2html -init_file html/texi2html.init -output yorick
 #select mac or win version of ../README.html
