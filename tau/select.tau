@@ -13,6 +13,8 @@ std0.c
 std1.c
 ascio.c
 bcast.c
+umain.c
+fwrap.c
 END_FILE_EXCLUDE_LIST
 
 BEGIN_EXCLUDE_LIST
