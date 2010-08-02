@@ -1,5 +1,5 @@
 /*
- * $Id: oxy.c,v 1.3 2010-07-18 21:43:36 dhmunro Exp $
+ * $Id: oxy.c,v 1.4 2010-08-02 03:59:49 dhmunro Exp $
  * implementation of object extension
  */
 /* Copyright (c) 2010 David H. Munro.
@@ -318,10 +318,17 @@ Y_use(int argc)
 
   } else if (obj) {
     /* use(arg1, arg2, ...) same as obj(arg1, arg2, ...) */
-    yarg_swap(icx, 0);
+    icx = (int)(sp-spBottom) - (argc+1);
+    yarg_swap(argc+1, 0);
     yarg_drop(1);
     /* context obj replaced use builtin, just invoke on_eval obj method */
     yo_on_eval(obj, argc);
+    /* ensure EvalBI gets correctly positioned stack if possible */
+    icx = (int)(sp-spBottom) - icx;
+    if (icx>0 && sp->ops!=&returnSym) {
+      yarg_swap(icx, 0);
+      yarg_drop(icx);
+    }
 
   } else {
     /* use() with no context */
