@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.42 2010-07-18 21:43:36 dhmunro Exp $
+ * $Id: std.i,v 1.43 2010-08-08 04:06:04 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -192,31 +192,66 @@ func _help_auto
   help, topic;
 }
 
-func info(topic)
-/* DOCUMENT info, expr
-     prints the data type and array dimensions of EXPR.
+func info(args)
+/* DOCUMENT info, expr [, expr2, expr3, ...]
+     prints the data type and array dimensions of EXPR.  Multiple
+     expressions result in multiple descriptions.  You can also
+     invoke info as a function to return a string or array of strings
+     instead of printing the result.
    SEE ALSO: about, help, print
  */
 {
-  if (is_array(topic)) {
-    void= use_origins(1);  /* assure NON-forced origin */
-    line= "array(" + nameof(structof(topic));
-    dims= dimsof(topic);
-    orgs= orgsof(topic);
-    ndims= dims(1)+1;
-    for (i=2 ; i<=ndims ; i++) {
-      line+= ",";
-      if (orgs(i)!=1)
-        line+= print(orgs(i))(1)+":"+print(orgs(i)+dims(i)-1)(1);
-      else
-        line+= print(dims(i))(1);
+  /* void = use_origins(1); // either worthless or wrong? */
+  r = args("_depth");
+  prefix = r? string(&array(' ',r+r)) : "";
+  value = [];
+  s = am_subroutine();
+  for (j=1 ; j<=args(0) ; ++j) {
+    if (r) line = prefix + args("_name") + " = ";
+    else if (args(0)>1) line = (args(-,j)? args(-,j) : "<expr>") + " = ";
+    else line = "";
+    if (is_array(args(j,:))) {
+      line += "array(" + nameof(structof(args(j,:)));
+      dims = dimsof(args(j,:));
+      orgs = orgsof(args(j,:));
+      ndims = dims(1)+1;
+      for (i=2 ; i<=ndims ; i++) {
+        line += ",";
+        if (orgs(i)!=1)
+          line += print(orgs(i))(1)+":"+print(orgs(i)+dims(i)-1)(1);
+        else
+          line += print(dims(i))(1);
+      }
+      line = swrite(line + ")");
+    } else if (is_stream(args(j)) || !is_obj(args(j))) {
+      x = print(args(j));
+      x(1) = line + x(1);
+      line = swrite(format=" %s", x);
+    } else {
+      o = args(j);
+      n = o(*);
+      nm = o(*,);
+      line = swrite(format=" %sobject with %ld members:", line, n);
+      n = min(n, 99);
+      for (i=1 ; i<=n ; ++i) {
+        k = _name = nm(i);
+        if (!k) {
+          _name = swrite(format="<%ld>", i);
+          k = i;
+        }
+        if (s) info, o(noop(k)), _depth=(r?r+1:1), _name=_name;
+        else grow, line, info(o(noop(k)), _depth=(r?r+1:1), _name=_name);
+      }
+      n = o(*);
+      if (i <= n)
+        grow, line, swrite(format=" %s  <%ld more>...\n", prefix, n-i+1);
     }
-    line+= ")";
-    write, line;
-  } else {
-    print, topic;
+    if (s) write, format="%s\n", line;
+    else grow, value, line;
   }
+  return value;
 }
+wrap_args, info;
 
 func about(____n____, ____a____)
 /* DOCUMENT about, pattern;
