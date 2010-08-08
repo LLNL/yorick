@@ -1,5 +1,5 @@
 /*
- * $Id: fwrap.c,v 1.5 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: fwrap.c,v 1.6 2010-08-08 04:05:22 dhmunro Exp $
  * implement function argument wrapping with wrap_args
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -305,7 +305,7 @@ ywrap_a_eval(void *obj, int argc)
       }
     }
   } else {
-    if (argc==2 && yget_range(0, junk)==(Y_MIN_DFLT|Y_MAX_DFLT))
+    if (argc==2 && yget_range(0, junk)==(1|Y_MIN_DFLT|Y_MAX_DFLT))
       argc = 3;
     if (argc == 1 || argc == 3) {     /* ARGS(i) or ARGS(i,:) */
       if (arg) {
