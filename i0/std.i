@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.43 2010-08-08 04:06:04 dhmunro Exp $
+ * $Id: std.i,v 1.44 2010-08-10 03:21:27 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -239,12 +239,11 @@ func info(args)
           _name = swrite(format="<%ld>", i);
           k = i;
         }
-        if (s) info, o(noop(k)), _depth=(r?r+1:1), _name=_name;
-        else grow, line, info(o(noop(k)), _depth=(r?r+1:1), _name=_name);
+        grow, line, info(o(noop(k)), _depth=(r?r+1:1), _name=_name);
       }
       n = o(*);
       if (i <= n)
-        grow, line, swrite(format=" %s  <%ld more>...\n", prefix, n-i+1);
+        grow, line, swrite(format=" %s  <%ld more>...", prefix, n-i+1);
     }
     if (s) write, format="%s\n", line;
     else grow, value, line;
