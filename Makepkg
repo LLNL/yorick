@@ -1,4 +1,4 @@
-# $Id: Makepkg,v 1.3 2010-02-25 03:53:28 dhmunro Exp $
+# $Id: Makepkg,v 1.4 2010-08-13 09:46:16 thiebaut Exp $
 # standard parts of yorick package Makefile
 SHELL=/bin/sh
 MAKE=make
@@ -93,7 +93,7 @@ PKG_DEF=$(PKG_NAME).def
 Y_LIBEXE=$(Y_HOME)/lib
 Y_INCLUDE=$(Y_HOME)/include
 
-CODGER=$(Y_LIBEXE)/codger
+CODGER=$(Y_LIBEXE)/codger$(EXE_SFX)
 LIBDEP=$(Y_LIBEXE)/libdep.sh
 
 # might want to override these on make command line

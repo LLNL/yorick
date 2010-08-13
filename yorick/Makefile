@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2010-07-19 08:08:33 thiebaut Exp $
+# $Id: Makefile,v 1.6 2010-08-13 09:46:16 thiebaut Exp $
 # similar to any yorick package Makefile
 
 # ------------------------------------------------ macros for yor base package
@@ -17,7 +17,7 @@ OBJS = opsv.o task.o yorick.o yinput.o parse.o ydata.o yapi.o yio.o fnctn.o \
   binobj.o binstd.o cache.o convrt.o binpdb.o clog.o ystr.o graph.o fwrap.o \
   graph0.o style.o list.o pathfun.o autold.o funcdef.o spawn.o fortrn.o oxy.o
 
-PKG_CLEAN=libyor main.* prmtyp.h codger lib$(PKG_NAME).a $(PKG_EXENAME) yorapi*
+PKG_CLEAN=libyor main.* prmtyp.h codger$(EXE_SFX) lib$(PKG_NAME).a $(PKG_EXENAME) yorapi*
 
 PLAPI=../play/plugin.h
 PLAYONLY=../play/play.h $(PLAPI)
@@ -30,7 +30,7 @@ DIST_DIRS=../drat ../hex
 
 # set macros Makepkg uses in target and dependency names
 H_YWRAP=$(PLAYONLY) ydata.h yapi.h binio.h hash.h
-CODGER_DEP=codger
+CODGER_DEP=codger$(EXE_SFX)
 EXE_TARGETS=main.o $(YWIN_LIB) prepkg
 LIB_TARGETS=libyor
 ALL_TARGETS=postpkg
@@ -157,8 +157,8 @@ ystr.o: ystr.c $(YREH) $(PSLIB) $(YDATA_HP)
 
 # codger code generator computes ywrap.c and yinit.c source files
 CDG_FLAGS=$(CFLAGS)
-codger: codger.c
-	$(CC) $(CPPFLAGS) $(CDG_FLAGS) $(FORTRAN_LINKAGE) -o codger codger.c
+codger$(EXE_SFX): codger.c
+	$(CC) $(CPPFLAGS) $(CDG_FLAGS) $(FORTRAN_LINKAGE) -o codger$(EXE_SFX) codger.c
 
 # numfmt computes binary number formats, results in prmtyp.h
 prmtyp.h: ../play/any/numfmt ../play/any/numfmt.c
