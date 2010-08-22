@@ -1,5 +1,5 @@
 /*
- * $Id: dg.h,v 1.1 2005-09-18 22:04:40 dhmunro Exp $
+ * $Id: dg.h,v 1.2 2010-08-22 17:44:05 dhmunro Exp $
  * Headers for LAPACK and BLAS routines in this directory.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -12,6 +12,74 @@
 #define DG_H_LAPACK
 
 #include "plugin.h"
+
+#ifndef YLAPACK_NOALIAS
+/* names referenced in PROTOTYPE DOCUMENT comments in i0/matrix.i:
+   ygtsv ygesv ygetrf ygecox ygelx ygelss ygesvx
+ */
+# define dgtsv ygtsv
+# define dgesv ygesv
+# define dgetf2 ygetf2
+# define dgetrf ygetrf
+# define dgetrs ygetrs
+# define dlaswp ylaswp
+# define ilaenv ylaenv
+# define dgecon ygecon
+# define dlacon ylacon
+# define dlatrs ylatrs
+# define drscl yrscl
+# define dlabad ylabad
+# define dlamch ylamch
+# define dlamc1 ylamc1
+# define dlamc2 ylamc2
+# define dlamc3 ylamc3
+# define dlamc4 ylamc4
+# define dlamc5 ylamc5
+# define dgels ygels
+# define dormqr yormqr
+# define dorm2r yorm2r
+# define dormlq yormlq
+# define dorml2 yorml2
+# define dgeqrf ygeqrf
+# define dgeqr2 ygeqr2
+# define dgelqf ygelqf
+# define dgelq2 ygelq2
+# define dlarf ylarf
+# define dlarfg ylarfg
+# define dlarft ylarft
+# define dlarfb ylarfb
+# define dlapy2 ylapy2
+# define dlange ylange
+# define dlascl ylascl
+# define dlaset ylaset
+# define dlassq ylassq
+# define dlabrd ylabrd
+# define dgebd2 ygebd2
+# define dgebrd ygebrd
+# define dormbr yormbr
+# define dorg2r yorg2r
+# define dorgqr yorgqr
+# define dorgl2 yorgl2
+# define dorglq yorglq
+# define dorgbr yorgbr
+# define dlartg ylartg
+# define dlasr ylasr
+# define dlasv2 ylasv2
+# define dlas2 ylas2
+# define dbdsqr ybdsqr
+# define dlacpy ylacpy
+# define dgelss ygelss
+# define dgesvd ygesvd
+/* these three are not LAPACK names, only change them for consistency */
+# define dgecox ygecox
+# define dgelx ygelx
+# define dgesvx ygesvx
+
+#else
+# ifndef YCBLAS_NOALIAS
+#  define YCBLAS_NOALIAS 1
+# endif
+#endif
 
 /*--- dgtsv.c (tridiagonal solver) ---*/
 PLUG_API void dgtsv( long n, long nrhs, double dl[], double d[], double du[],

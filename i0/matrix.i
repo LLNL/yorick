@@ -1,5 +1,5 @@
 /*
- * $Id: matrix.i,v 1.1 2005-09-18 22:05:24 dhmunro Exp $
+ * $Id: matrix.i,v 1.2 2010-08-22 17:44:05 dhmunro Exp $
  * Yorick interface to LAPACK matrix solving routines.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -18,6 +18,13 @@ DEPLIBS =
 */
 
 /* ------------------------------------------------------------------------ */
+
+/* Note: Aug/2010
+   prototypes directly linking to LAPACK/BLAS functions removed because
+   they cause severe linking problems when multiple yorick packages also
+   link against different versions of these libraries:
+   dgtsv dgesv dgetrf dgecox dgelx dgelss dgesvx
+*/
 
 func unit(n, m)
 /* DOCUMENT unit(n)
@@ -95,7 +102,7 @@ func TDsolve(c, d, e, b, which=)
 
 extern _dgtsv;
 /* PROTOTYPE
-   void dgtsv(long n, long nrhs, double array c, double array d,
+   void ygtsv(long n, long nrhs, double array c, double array d,
               double array e, double array b, long ldb, long array info)
  */
 /* DOCUMENT _dgtsv
@@ -270,7 +277,7 @@ func LUrcond(a, one_norm=)
 
 extern _dgesv;
 /* PROTOTYPE
-   void dgesv(long n, long nrhs, double array a, long lda,
+   void ygesv(long n, long nrhs, double array a, long lda,
               long array pivot, double array b, long ldb, long array info)
  */
 /* DOCUMENT _dgesv
@@ -279,7 +286,7 @@ extern _dgesv;
 
 extern _dgetrf;
 /* PROTOTYPE
-   void dgetrf(long m, long n, double array a, long lda,
+   void ygetrf(long m, long n, double array a, long lda,
                long array pivot, long array info)
  */
 /* DOCUMENT _dgetrf
@@ -288,7 +295,7 @@ extern _dgetrf;
 
 extern _dgecox;
 /* PROTOTYPE
-   void dgecox(long norm, long n, double array a, long lda,
+   void ygecox(long norm, long n, double array a, long lda,
                double anorm, double array rcond, double array work,
                long array iwork, long array info)
  */
@@ -358,7 +365,7 @@ func QRsolve(a, b, which=)
 
 extern _dgelx;
 /* PROTOTYPE
-   void dgelx(long trans, long m, long n, long nrhs,
+   void ygelx(long trans, long m, long n, long nrhs,
               double array a, long lda, double array b, long ldb,
               double array work, long lwork, long array info)
  */
@@ -505,7 +512,7 @@ func SVdec(a, &u, &vt, full=)
 
 extern _dgelss;
 /* PROTOTYPE
-   void dgelss(long m, long n, long nrhs, double array a, long lda,
+   void ygelss(long m, long n, long nrhs, double array a, long lda,
                double array b, long ldb, double array s, double rcond,
                long array rank, double array work, long lwork,
                long array info)
@@ -516,7 +523,7 @@ extern _dgelss;
 
 extern _dgesvx;
 /* PROTOTYPE
-   void dgesvx(long job, long m, long n, double array a, long lda,
+   void ygesvx(long job, long m, long n, double array a, long lda,
                double array s, double array u, long ldu,
                double array vt, long ldvt, double array work, long lwork,
                long array info)

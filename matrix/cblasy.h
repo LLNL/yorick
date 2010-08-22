@@ -1,5 +1,5 @@
 /*
- * $Id: cblasy.h,v 1.1 2005-09-18 22:04:40 dhmunro Exp $
+ * $Id: cblasy.h,v 1.2 2010-08-22 17:44:05 dhmunro Exp $
  * CBLAS routines used by yorick
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -32,6 +32,26 @@
 #else
 # define INT_IN long
 # define CBLAS_INDEX long
+#endif
+
+#ifndef YCBLAS_NOALIAS
+# define xerbla yxerbla
+# define cblas_ddot yblas_ddot
+# define cblas_dnrm2 yblas_dnrm2
+# define cblas_dasum yblas_dasum
+# define cblas_idamax yblas_idamax
+# define cblas_dswap yblas_dswap
+# define cblas_dcopy yblas_dcopy
+# define cblas_daxpy yblas_daxpy
+# define cblas_drot yblas_drot
+# define cblas_dscal yblas_dscal
+# define cblas_dgemv yblas_dgemv
+# define cblas_dtrmv yblas_dtrmv
+# define cblas_dtrsv yblas_dtrsv
+# define cblas_dger yblas_dger
+# define cblas_dgemm yblas_dgemm
+# define cblas_dtrmm yblas_dtrmm
+# define cblas_dtrsm yblas_dtrsm
 #endif
 
 /*--- LAPACK error routine (see dgyor.c) ---*/
