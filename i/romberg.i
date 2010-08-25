@@ -1,5 +1,5 @@
 /*
- * $Id: romberg.i,v 1.2 2007-01-30 13:45:13 thiebaut Exp $
+ * $Id: romberg.i,v 1.3 2010-08-25 14:07:16 thiebaut Exp $
  * Romberg integrator, after qromb in Numerical Recipes (Press, et.al.)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -46,7 +46,7 @@ func romberg(function, a, b, epsilon, notvector=)
         dss= (2*ns<m5)? c(ns+1) : d(ns--);
         ss+= dss;
       }
-      if (abs(dss) < epsilon*abs(ss)) return ss;
+      if (abs(dss) <= epsilon*abs(ss)) return ss;
       /* extrapolation to h=0 always uses last 5 points */
       s(1:4)= s(2:5);
       h*= 0.25;
@@ -81,7 +81,7 @@ func simpson(function, a, b, epsilon, notvector=)
   for (i=1 ; i<=max_doublings ; ++i) {
     st= trapezoid(function, a, b, i, notvector);
     s= (4.*st - ost)/3.;
-    if (abs(s-os) < epsilon*abs(os)) return s;
+    if (abs(s-os) <= epsilon*abs(os)) return s;
     os= s;
     ost= st;
   }
