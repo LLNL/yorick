@@ -1,5 +1,5 @@
 /*
- * $Id: defmem.h,v 1.1 2005-09-18 22:04:00 dhmunro Exp $
+ * $Id: defmem.h,v 1.2 2010-08-28 23:26:10 dhmunro Exp $
  * Declare structures and functions for memory management.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -32,6 +32,9 @@
 #define DEFMEM_H
 
 #include "plugin.h"
+
+/* FreeUnit conflicts with Fortran I/O function on some platforms */
+#define FreeUnit y_FreeUnit
 
 PLUG2_API void YError(const char *msg);   /* also declared in ydata.h */
 
