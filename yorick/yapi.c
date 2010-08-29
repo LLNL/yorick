@@ -1,5 +1,5 @@
 /*
- * $Id: yapi.c,v 1.26 2010-07-03 19:42:31 dhmunro Exp $
+ * $Id: yapi.c,v 1.27 2010-08-29 00:39:57 dhmunro Exp $
  * API implementation for interfacing yorick packages to the interpreter
  *  - yorick package source should not need to include anything
  *    not here or in the play headers
@@ -187,7 +187,7 @@ yarg_scratch(int iarg)
 {
   if (iarg >= 0) {
     Symbol *s = sp - iarg;
-    if (s->ops==&referenceSym) s = &globTab[s->index];
+    if (s->ops==&referenceSym) return 1;
     if (s->ops == &dataBlockSym) {
       if (s->value.db->ops == &lvalueOps) {
         LValue *lv = (LValue *)s->value.db;
@@ -1399,7 +1399,13 @@ yget_obj(int iarg, y_userobj_t *uo_type)
 {
   if (iarg >= 0) {
     Symbol *s = sp - iarg;
-    if (s->ops==&referenceSym) s = &globTab[s->index];
+    if (s->ops==&referenceSym) {
+      /* change reference to global object into object itself */
+      Symbol *g = &globTab[s->index];
+      if (g->ops == &dataBlockSym) s->value.db = Ref(g->value.db);
+      else s->value = g->value;
+      s->ops = g->ops;
+    }
     if (s->ops == &dataBlockSym) {
       if (!uo_type) {
         return s->value.db->ops->typeName;
