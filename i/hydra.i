@@ -1,5 +1,5 @@
 /*
- * $Id: hydra.i,v 1.5 2010-05-27 03:11:51 dhmunro Exp $
+ * $Id: hydra.i,v 1.6 2010-08-29 16:24:44 dhmunro Exp $
  * functions to access hydra-generated Silo/PDB files
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -103,6 +103,15 @@ func h_openb(name, one=)
     if (!has_five) {
       /* if this is obsolete naming style, assume pbnm has 4 characters */
       if (n!=3) pfx = strpart(name,1:3);
+    } else {
+      for (;;) {
+        fifth = strpart(pfx, 0:0);
+        if ((fifth<"0") || (fifth>"9")) break;
+        ++has_five;
+        pfx = strpart(pfx, 1:-1);
+        --n;
+      }
+      /* has_five= number of digits beyond 4, pfx= non-digit prefix */
     }
     if (n) {
       list = lsdir(dir);
@@ -110,14 +119,16 @@ func h_openb(name, one=)
         list = list(where(strpart(list,-4:0)==".root"));
         if (numberof(list)) list = strpart(list,1:-5);
       }
-      if (numberof(list))
-        list = list(where((strpart(list,1:strlen(pfx))==pfx) &
-                          (strlen(list)==n+5)));
+      if (numberof(list)) {
+        list = list(where(strpart(list,1:strlen(pfx)) == pfx));
+        if (has_five) list = list(where(strlen(list) >= n+4+has_five));
+        else list = list(where(strlen(list) == n+5));
+      }
       if (numberof(list) > 1) {
-        list = list(sort(list));
+        list = list(msort(strlen(list),list));
         final = strpart(list,n+1:n+1);
         if (has_five) {
-          /* all new files have five digit numeric suffix, fixed prefix */
+          /* all new files have >=five digit numeric suffix, fixed prefix */
           list = list(where((final>="0") & (final<="9")));
         } else {
           /* this is obsolete naming convention */
@@ -135,9 +146,11 @@ func h_openb(name, one=)
         }
         if (numberof(list)) {
           ok = array(1n, numberof(list));
-          for (i=n+2 ; i<=n+5 ; i++) {
+          nmax = has_five? n+4+has_five : n+5;
+          len = strlen(list);
+          for (i=n+2 ; i<=nmax ; i++) {
             final = strpart(list, i:i);
-            ok &= (final>="0") & (final<="9");
+            ok &= ((final>="0") & (final<="9")) | (len<i);
           }
           list = list(where(ok));
         }
