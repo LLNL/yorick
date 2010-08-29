@@ -1,5 +1,5 @@
 /*
- * $Id: oxy.c,v 1.4 2010-08-02 03:59:49 dhmunro Exp $
+ * $Id: oxy.c,v 1.5 2010-08-29 00:54:39 dhmunro Exp $
  * implementation of object extension
  */
 /* Copyright (c) 2010 David H. Munro.
@@ -721,7 +721,8 @@ Y_save(int argc)
       return;
     }
     obj = yo_new_group(&ops);
-    if (argc==1 && yarg_nil(1)) return;  /* save() creates empty object */
+    if (argc==1 && yget_ref(1)<0 && yarg_nil(1))
+      return;  /* save() creates empty object */
   }
 
   /* argc = number of sspec arguments, one non-sspec on top of stack */
