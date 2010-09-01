@@ -1,5 +1,5 @@
 /*
- * $Id: std2.c,v 1.6 2010-07-18 16:38:57 dhmunro Exp $
+ * $Id: std2.c,v 1.7 2010-09-01 02:40:00 dhmunro Exp $
  * Define standard Yorick built-in functions for binary I/O
  *
  *  See std.i for documentation on the interface functions defined here.
@@ -1369,7 +1369,8 @@ void Y_mkdir(int nArgs)
   name = YGetString(sp);
   if (!name) YError("argument to mkdir must be a non-nil scalar string");
   if (p_mkdir(name) != 0) {
-    if (CalledAsSubroutine()) YError("cannot make directory");
+    /* legacy code assumes mkdir,name will not fail if name exists */
+    /* if (CalledAsSubroutine()) YError("cannot make directory"); */
     PushIntValue(-1);
   } else {
     PushIntValue(0);
@@ -1383,7 +1384,8 @@ void Y_rmdir(int nArgs)
   name = YGetString(sp);
   if (!name) YError("argument to rmdir must be a non-nil scalar string");
   if (p_rmdir(name) != 0) {
-    if (CalledAsSubroutine()) YError("cannot remove directory");
+    /* legacy code assumes rmdir,name will not fail if name missing */
+    /* if (CalledAsSubroutine()) YError("cannot remove directory"); */
     PushIntValue(-1);
   } else {
     PushIntValue(0);

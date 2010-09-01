@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.44 2010-08-10 03:21:27 dhmunro Exp $
+ * $Id: std.i,v 1.45 2010-09-01 02:40:00 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3662,8 +3662,10 @@ extern rmdir;
          or rmdir, directory_name 
      Create DIRECTORY_NAME with mkdir, or remove it with rmdir.  The rmdir
      function only works if the directory is empty.  An error is raised if
-     DIRECTORY_NAME is not a non-nil scalar string or if mkdir or rmdir are
-     called as subroutines and the operation fails.  Otherwise, if
+     DIRECTORY_NAME is not a non-nil scalar string.  If mkdir or rmdir are
+     called as subroutines and the operation fails, no error is raised
+     (so you can use this form even when the directory already exists for
+     mkdir, or already is missing for rmdir).  Otherwise, if
      DIRECTORY_NAME is a non-nil scalar string and if mkdir and rmdir are
      called as a function, they return an integer: 0 to indicate success and
      -1 to indicate failure.
