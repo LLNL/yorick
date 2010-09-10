@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: configure,v 1.1.1.1.2.1 2010-07-08 00:34:00 alanmorris Exp $
+# $Id: configure,v 1.1.1.1.2.2 2010-09-10 00:37:52 uosameer Exp $
 
 # debug=yes to keep all cfg.* stdout and stderr files
 # (most recent warnings always kept, usually don't need debug)
@@ -318,7 +318,7 @@ make "PKGDIRS=$pkgdirs" pkgconfig
 
 if [ $TAU_ENABLED = true ] ; then
 #    CC="tau_cc.sh -tau_makefile=$TAU_MAKEFILE -tau_options='-optVerbose -optKeepFiles -optTauSelectFile=$PWD/tau/select.tau -optNoCompInst -optNoRevert'"
-    CC="tau_cc.sh -tau_makefile=$TAU_MAKEFILE -tau_options='-optKeepFiles -optTauSelectFile=$PWD/tau/select.tau -optNoCompInst -optNoRevert'"
+    CC="tau_cc.sh -tau_makefile=$TAU_MAKEFILE -tau_options=-optKeepFiles^-optTauSelectFile=$PWD/tau/select.tau^-optNoCompInst^-optNoRevert"
     TAU_ENABLED=true
     echo "CC=$CC" >>Make.cfg
 fi
