@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: configure,v 1.1.1.1.2.3 2010-09-10 00:40:27 uosameer Exp $
+# $Id: configure,v 1.1.1.1.2.4 2010-09-10 01:17:16 uosameer Exp $
 
 # debug=yes to keep all cfg.* stdout and stderr files
 # (most recent warnings always kept, usually don't need debug)
@@ -247,7 +247,10 @@ echo "Y_MAIN_C=$Y_MAIN_C" >>Make.cfg
 echo "YWIN_LIB=$YWIN_LIB" >>Make.cfg
 echo "YWIN_DEF=$YWIN_DEF" >>Make.cfg
 echo "EXE_SFX=$EXE_SFX" >>Make.cfg
-echo "CC=$CC" >>Make.cfg
+
+if [ $TAU_ENABLED = false ] ; then
+  echo "CC=$CC" >>Make.cfg
+fi
 echo "Y_CFLAGS=$CFLAGS" >>Make.cfg
 echo "Y_LDFLAGS=$LDFLAGS" >>Make.cfg
 echo "COPT_DEFAULT=$COPT" >>Make.cfg
