@@ -1,5 +1,5 @@
 /*
- * $Id: std.i,v 1.45 2010-09-01 02:40:00 dhmunro Exp $
+ * $Id: std.i,v 1.46 2010-09-13 03:05:58 dhmunro Exp $
  * Declarations of standard Yorick functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -3211,9 +3211,9 @@ func tonum(s, &mask, nan=)
 {
   if (is_void(nan)) nan = -1.e99;
   x = array(nan, dimsof(s));
-  i = strgrep("^( \t)*[+-]?[0-9]+( \t)*$", s);
-  r = "[+-]?(\.[0-9]+|[0-9]+\.[0-9]*)([dDeE][+-]?[0-9]+)?";
-  r = strgrep("^( \t)*"+r+"( \t)*$", s);
+  i = strgrep("^[ \t]*[+-]?[0-9]+[ \t]*$", s);
+  r = "[+-]?(\\.[0-9]+|[0-9]+\\.[0-9]*)([dDeE][+-]?[0-9]+)?";
+  r = strgrep("^[ \t]*"+r+"[ \t]*$", s);
   mask = (r(2,..)>0) | ((i(2,..)>0)<<1);
   list = where(mask);
   n = numberof(list);
