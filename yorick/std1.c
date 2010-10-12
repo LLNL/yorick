@@ -1,5 +1,5 @@
 /*
- * $Id: std1.c,v 1.3 2009-11-23 21:20:28 dhmunro Exp $
+ * $Id: std1.c,v 1.4 2010-10-12 01:42:23 dhmunro Exp $
  * More Yorick built-in functions declared in std.i
  *
  *  See std.i for documentation on the functions defined here.
@@ -514,6 +514,15 @@ static long Random(long range)
     return (((unsigned long)range)>>1) + (136365*sortSeed)/7875;
 }
 
+static int ystrcmp(const char *s, const char *t);
+int
+ystrcmp(const char *s, const char *t)
+{
+  if (!s) return t? -1 : 0;
+  if (!t) return s? 1 : 0;
+  return strcmp(s, t);
+}
+
 static void ysortQ(long *list, long n)
 {
   long j;
@@ -525,7 +534,7 @@ static void ysortQ(long *list, long n)
       listel= list[i];
       partition= stringData[listel];
       for (j=i-sortStride ;
-           j>=0 && strcmp(stringData[list[j]], partition)>0 ;
+           j>=0 && ystrcmp(stringData[list[j]], partition)>0 ;
            j-=sortStride) list[j+sortStride]= list[j];
       list[j+sortStride]= listel;
     }
@@ -538,18 +547,22 @@ static void ysortQ(long *list, long n)
     long partel= Random(n/sortStride)*sortStride;
     long listel= list[partel];
     char *partition= stringData[listel];
+    int scmp, flipper = 0;
     list[partel]= list[0];
     /* partition the remainder of the list into elements which precede
        the partel then elements which follow it */
     for (j=sortStride ; j<n ; j+=sortStride)
-      if (strcmp(stringData[list[j]], partition) >= 0) break;
-    for (i=j+sortStride ; i<n ; i+=sortStride)
-      if (strcmp(stringData[list[i]], partition) < 0) {
+      if (ystrcmp(stringData[list[j]], partition) >= 0) break;
+    for (i=j+sortStride ; i<n ; i+=sortStride) {
+      scmp = ystrcmp(stringData[list[i]], partition);
+      if (scmp > 0) continue;
+      if (scmp || ((flipper^=1))) {
         register long tmp= list[j];
         list[j]= list[i];
         list[i]= tmp;
         j+= sortStride;  /* known to be >= partel (or == n) */
       }
+    }
     /* re-insert partition element at beginning of 2nd part of list
        -- this will be its final resting place */
     list[0]= list[j-sortStride];
@@ -587,18 +600,21 @@ static void ysortD(long *list, long n)
     long partel= Random(n/sortStride)*sortStride;
     long listel= list[partel];
     double partition= doubleData[listel];
+    int flipper = 0;
     list[partel]= list[0];
     /* partition the remainder of the list into elements which precede
        the partel then elements which follow it */
     for (j=sortStride ; j<n ; j+=sortStride)
       if (doubleData[list[j]] >= partition) break;
-    for (i=j+sortStride ; i<n ; i+=sortStride)
-      if (doubleData[list[i]] < partition) {
+    for (i=j+sortStride ; i<n ; i+=sortStride) {
+      if (doubleData[list[i]] > partition) continue;
+      if ((doubleData[list[i]] != partition) || ((flipper^=1))) {
         register long tmp= list[j];
         list[j]= list[i];
         list[i]= tmp;
         j+= sortStride;  /* known to be >= partel (or == n) */
       }
+    }
     /* re-insert partition element at beginning of 2nd part of list
        -- this will be its final resting place */
     list[0]= list[j-sortStride];
@@ -636,18 +652,21 @@ static void ysortL(long *list, long n)
     long partel= Random(n/sortStride)*sortStride;
     long listel= list[partel];
     long partition= longData[listel];
+    int flipper = 0;
     list[partel]= list[0];
     /* partition the remainder of the list into elements which precede
        the partel then elements which follow it */
     for (j=sortStride ; j<n ; j+=sortStride)
       if (longData[list[j]] >= partition) break;
-    for (i=j+sortStride ; i<n ; i+=sortStride)
-      if (longData[list[i]] < partition) {
+    for (i=j+sortStride ; i<n ; i+=sortStride) {
+      if (longData[list[i]] > partition) continue;
+      if ((longData[list[i]] != partition) || ((flipper^=1))) {
         register long tmp= list[j];
         list[j]= list[i];
         list[i]= tmp;
         j+= sortStride;  /* known to be >= partel (or == n) */
       }
+    }
     /* re-insert partition element at beginning of 2nd part of list
        -- this will be its final resting place */
     list[0]= list[j-sortStride];
