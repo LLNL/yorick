@@ -1,5 +1,5 @@
 /*
- * $Id: oxy.c,v 1.5 2010-08-29 00:54:39 dhmunro Exp $
+ * $Id: oxy.c,v 1.6 2010-11-09 02:39:45 dhmunro Exp $
  * implementation of object extension
  */
 /* Copyright (c) 2010 David H. Munro.
@@ -732,13 +732,12 @@ Y_save(int argc)
       if (ypush_global(iname))
         y_error("(BUG) problem with globtab in save");
       argc = ops->set_q(obj, name, iname, 0);
-      if (!argc)
-        yarg_drop(1);
-      else if (argc == 2)
+      if (argc == 2)
         y_errorq("cannot save to read-only member %s", name);
       else if (argc == 3)
         y_errorq("object to be saved incommensurate with member %s", name);
       /* argc==4 just skips this member, unsupported type */
+      yarg_drop(1);
     }
 
   } else {           /* save specific list of variables */
