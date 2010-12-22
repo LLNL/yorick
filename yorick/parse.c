@@ -1,5 +1,5 @@
 /*
- * $Id: parse.c,v 1.1 2005-09-18 22:04:12 dhmunro Exp $
+ * $Id: parse.c,v 1.2 2010-12-22 21:30:24 dhmunro Exp $
  *
  * Define functions required to parse Yorick grammar.
  */
@@ -575,9 +575,14 @@ void YpDotDot(int which)
 
 void YpKeyword(Literal name, CodeBlock value)
 {
+  int undecided = !(literalTypes[name] & L_REFERENCE);
   if (CheckCodeSpace(2)) return;
   vmCode[nextPC++].Action= previousOp= &FormKeyword;
   VariableReference(name);
+  if (undecided) {  /* default is for keywords to become local, not extern */
+    literalTypes[name] |= L_LOCAL;
+    nLocal++;
+  }
   WillPushStack();
 }
 
