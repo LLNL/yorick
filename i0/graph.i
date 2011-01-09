@@ -1,5 +1,5 @@
 /*
- * $Id: graph.i,v 1.14 2010-04-18 10:33:38 thiebaut Exp $
+ * $Id: graph.i,v 1.15 2011-01-09 01:17:46 dhmunro Exp $
  * Declarations of Yorick graphics functions.
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -273,6 +273,7 @@ func hcps(name)
  */
 {
   if (strpart(name,-2:0)!=".ps") name+= ".ps";
+  extern hcp;
   window, hcp=name, dump=1, legends=0;
   hcp;
   window, hcp="";
