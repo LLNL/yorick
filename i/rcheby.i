@@ -1,5 +1,5 @@
 /* rcheby.i
- * $Id: rcheby.i,v 1.2 2010-05-30 19:34:20 dhmunro Exp $
+ * $Id: rcheby.i,v 1.3 2011-01-23 03:53:33 dhmunro Exp $
  * rational/polynomial minimax Chebyshev fits
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -152,7 +152,7 @@ func rcheby_den(fit)
 {
   m = long(fit(1));
   k = long(fit(2));
-  f = grow(double(fit(1:2)), [2.0]);
+  f = grow(double(fit(3:4)), [2.0]);
   if (k) grow, f, fit(6+m:5+m+k);
   return f;
 }
