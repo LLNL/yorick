@@ -1,5 +1,5 @@
 /* rcheby.i
- * $Id: rcheby.i,v 1.3 2011-01-23 03:53:33 dhmunro Exp $
+ * $Id: rcheby.i,v 1.4 2011-01-23 03:54:26 dhmunro Exp $
  * rational/polynomial minimax Chebyshev fits
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -9,8 +9,8 @@
  */
 
 func rcheby_fit(f, x, m, k, nterp=)
-/* DOCUMENT fit = cheby_fit(f, interval, m, k)
- *       or fit = cheby_fit(f, x, m, k)
+/* DOCUMENT fit = rcheby_fit(f, interval, m, k)
+ *       or fit = rcheby_fit(f, x, m, k)
  *   returns a rational Chebyshev fit (for use in rcheby_eval) of
  *   numerator degree M and denominator degree K, to the function
  *   F on the INTERVAL (a 2 element array [a,b]). In the second form,
