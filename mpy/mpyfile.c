@@ -1,5 +1,5 @@
 /*
- * $Id: mpyfile.c,v 1.1 2010-02-28 21:49:21 dhmunro Exp $
+ * $Id: mpyfile.c,v 1.2 2011-02-11 05:25:42 dhmunro Exp $
  * virtual distributed on_include callback
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -37,6 +37,7 @@ mpy_on_launch(int argc, char *argv[])
   char *txt;
   int ret;
   mpy_initialize(&argc, &argv);
+  if (!mpy_size) return on_launch(argc, argv);
 
   /* on_launch is collective operation, because it queries filesystem
    * to find path for .i files

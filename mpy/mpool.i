@@ -1,5 +1,5 @@
 /*
- * $Id: mpool.i,v 1.1 2010-03-14 18:30:43 dhmunro Exp $
+ * $Id: mpool.i,v 1.2 2011-02-11 05:25:42 dhmunro Exp $
  * Pool of jobs function for mpy.
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -411,6 +411,7 @@ func mpool_test(_mp_fsow, _mp_fwork, _mp_freap,
  * SEE ALSO: mpool, mpool_stats
  */
 {
+  extern vsave;
   _pool = mpool_t(vsave=!(!use_vsave), self=1);
 
   for (;;) {

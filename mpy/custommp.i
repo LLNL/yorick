@@ -1,5 +1,5 @@
 /*
- * $Id: custommp.i,v 1.1 2010-02-28 21:49:21 dhmunro Exp $
+ * $Id: custommp.i,v 1.2 2011-02-11 05:25:42 dhmunro Exp $
  * default version mpy replacement for custom.i
  */
 /* Copyright (c) 2010, David H. Munro
@@ -14,4 +14,4 @@
  */
 
 /* This should be the final line in your custommp.i file. */
-command_line = mpy_process_argv();
+command_line = mp_size? mpy_process_argv() : process_argv();

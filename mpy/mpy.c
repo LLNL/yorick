@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.c,v 1.8 2010-03-20 16:41:17 dhmunro Exp $
+ * $Id: mpy.c,v 1.9 2011-02-11 05:25:42 dhmunro Exp $
  * Provide message passing to Yorick via MPI calls.
  */
 /* Copyright (c) 2010, David H. Munro
@@ -156,7 +156,10 @@ mpy_initialize(int *pargc, char **pargv[])
       mpy_world = MPI_COMM_NULL;
       mpy_size = mpy_rank = mpy_nfan = 0;
       mpy_take_back_signals();
-      y_error("MPI initialization sequence failed");
+      /* y_error("MPI initialization sequence failed"); */
+      /* at least some MPI platforms arrive here when started in serial */
+      mpy_initdone = 1;
+      return;
     }
 
     mpy_nfan = MPY_NFAN_0;

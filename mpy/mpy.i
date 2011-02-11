@@ -1,5 +1,5 @@
 /*
- * $Id: mpy.i,v 1.7 2010-02-28 21:49:21 dhmunro Exp $
+ * $Id: mpy.i,v 1.8 2011-02-11 05:25:42 dhmunro Exp $
  * Message passing extensions to Yorick.
  */
 /* Copyright (c) 2009, The Regents of the University of California.
@@ -471,10 +471,10 @@ func mp_disconnect(n)  /* argument to mimic dbexit */
 func _include_all_hook(dir)
 {
   if (!mp_rank) files = include_all_ls(dir);
-  if (!mp_exec()) mp_handout, files;
+  if (mp_size && !mp_exec()) mp_handout, files;
   return files;
 }
-func customize { }
+if (mp_size) customize = noop;
 
 func mpy_process_argv(void)
 {
@@ -503,6 +503,7 @@ func mpy_process_argv(void)
     }
     if (j) mask(0) = 1;
     command_line = command_line(where(!mask));
+    q = (numberof(command_line) && anyof(command_line=="-q"));
   } else {
     command_line= [];
   }
@@ -510,6 +511,7 @@ func mpy_process_argv(void)
   n = numberof(file);
   for (i=1 ; i<=n ; ++i) mp_include, file(i);
 
+  if (!q) write, format="mpy initialized MPI on %ld processes\n", mp_size;
   return process_argv();
 }
 
@@ -540,7 +542,7 @@ func set_idler(idler)
   extern _mpy_idler;
   _mpy_idler = idler;
 }
-_mpy_set_idler, mpy_idler, (mp_rank? 3 : 2);
+if (mp_size) _mpy_set_idler, mpy_idler, (mp_rank? 3 : 2);
 
 func mpy_after_error
 {
@@ -555,7 +557,7 @@ func mpy_after_error
   }
 }
 /* mp_exec sets this on rank 0 as appropriate */
-after_error = mpy_after_error;  /* reset in mpy_idler for rank 0 */
+if (mp_size) after_error = mpy_after_error; /* reset in mpy_idler for rank 0 */
 
 /* this is the rank 0 after_error function */
 func mpy_on_fault
@@ -589,5 +591,6 @@ func quit(..)
   if (mp_exec()) mp_exec, "_mpy_quit";
   else _mpy_quit;
 }
+if (!mp_size) quit = _mpy_quit;
 
 /* ------------------------------------------------------------------------ */

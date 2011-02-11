@@ -1,5 +1,5 @@
 /* testmp.i
- * $Id: testmp.i,v 1.5 2010-03-14 18:30:44 dhmunro Exp $
+ * $Id: testmp.i,v 1.6 2011-02-11 05:25:42 dhmunro Exp $
  * small test suite for mpy
  */
 /* Copyright (c) 2010, David H. Munro.
@@ -244,11 +244,11 @@ func testmpool(flag)
  * SEE ALSO: testmp1, testmp2, testmp3, testmp, testmpool
  */
 {
-  if (is_void(mp_size)) require, "mpool.i";
+  if (!mp_size) require, "mpool.i";
   else mp_require, "mpool.i";
 
   extern pool;
-  if (is_void(mp_size) || flag) {
+  if (!mp_size || flag) {
     write, "begin testing mpool_test";
     njobs = 10;
     use_vsave = 0;
@@ -260,7 +260,7 @@ func testmpool(flag)
     pool = mpool_test(fsow, fwork, freap, use_vsave=1);
     write, format="mpool_test finished (vsave) nerrors=%ld\n", sum(nbad);
   }
-  if (is_void(mp_size)) return;
+  if (!mp_size) return;
 
   write, "begin testing mpool";
   njobs = 3 * min(mp_size, mpool_nmax0);
