@@ -489,8 +489,8 @@ func png(name, dpi=, gray=)
      using the EPSGS_CMD variable.  With the gray=1 keyword, you get
      the pnggray ghostscript device, otherwise png16m.
      The default yorick graphics window is 6 inches square, and by
-     default png produces 72 dpi (dot per inch) output.  You can change
-     this with the dpi= keyword; dpi=300 is extremely high resolution.
+     default png produces 300 dpi (dot per inch) output.  You can change
+     this with the dpi= keyword; dpi=72 screen resolution.
    SEE ALSO: eps, pdf, jpeg, hcps, window, plg, no_window
  */
 {
@@ -501,7 +501,6 @@ func png(name, dpi=, gray=)
   gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\" \"%s\"";
   dev = gray? "pnggray" : "png16m";
   if (is_void(dpi)) dpi = 300;
-  else if (dpi && !strlen(dpi)) dpi = [];
   dpi = dpi? "-r"+print(dpi)(1) : "";
   system, swrite(format=gscmd, dev, dpi, name+".png", psname);
   remove, psname;
