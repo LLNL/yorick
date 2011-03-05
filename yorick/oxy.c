@@ -770,7 +770,7 @@ Y_save(int argc)
               if (!name) {
                 if (!ops3->get_i || ops3->get_i(obj3, i+1))
                   y_error("(BUG) object to be saved has unfetchable member");
-                if (ops->set_q(obj, 0, -1, argc))
+                if (ops->set_q(obj, 0, -1, argc-1))
                   y_error("unable to save by appending anonymous member");
               } else {
                 if (ops3->get_q(obj3, name, iname))
