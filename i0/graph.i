@@ -99,7 +99,7 @@ extern window;
      If invoked as a function, window(...) returns the current
      window number.
    SEE ALSO: plsys, hcp_file, fma, hcp, redraw, palette, animate, plg,
-             winkill, gridxy
+             winkill, gridxy, no_window
  */
 
 func winkill(n)
@@ -145,7 +145,8 @@ extern window_geometry;
        (2) An  extra 0.5  pixel offset has  been added to  (XBIAS,YBIAS) to
            avoid rounding errors.
 
-   SEE ALSO: window, current_window, viewport, limits. */
+   SEE ALSO: window, current_window, viewport, limits.
+ */
 
 extern window_select;
 extern window_exists;
@@ -197,7 +198,8 @@ local has_mouse;
      directed.  The built-in functions `window' and `current_window'
      (which see) can be used to set/query the current window.
 
-   SEE ALSO: current_window, mouse, window. */
+   SEE ALSO: current_window, mouse, window
+ */
 
 func focused_window(nil)
 {
@@ -230,7 +232,7 @@ extern hcp_file;
      The dump= and ps= settings persist until explicitly changed by a
      second call to hcp_file; the dump=1 setting becomes the default for
      the window command as well.
-   SEE ALSO: window, fma, hcp, plg
+   SEE ALSO: window, fma, hcp, plg, no_window
  */
 
 extern hcp_finish;
@@ -264,19 +266,70 @@ func hcp_out(n,keep=)
   }
 }
 
+func no_window(name, style=)
+/* DOCUMENT no_window
+            no_window, hcpname
+            no_window, ""
+     Set up a graphics window with no interactive display, similar to
+       window, display="", hcp=hcpname, dump=1, legends=0;
+     You can optionally supply a filename HCPNAME; if you do not, the
+     default filename will be "no_window".  If HCPNAME is "" or string(0),
+     this graphics window is killed, and the special behavior of the
+     eps and other commands (see below) is restored to normal.  Use
+     no_window if you do not want to create an interactive graphics
+     window, for example when yorick is running in batch mode and is
+     not connected to any interactive graphics devices, causing the
+     code to crash when it tries to create an interactive window.
+
+     As a convenience, no_window accepts a style= keyword, which it will
+     pass along to the window command.  If you need to set other window
+     properties, call the window function after no_window.
+     
+     Additionally, the no_window function changes the behavior of the
+     single picture commands hcps, eps, pdf, png, jpeg (and other functions
+     based on the hcps command) to write the current drawing to the specified
+     file, then reissue a non-displaying window command.  The effect is to
+     simplify making a sequence of plots in batch mode without creating any
+     interactive graphics window.  If you want to write the whole sequence
+     into a single .ps file, you use the no_window function to set the
+     filename, then hcp or hcp_on to dump frames into the file.
+
+     Alternatively, if you need to write one file per frame (for example
+     one png per picture to include in slides using presentation software),
+     you can call no_window, then issue the png (or similar) command just
+     before advancing to the next frame.  (Unfortunately, you cannot do
+     both -- either you are writing all the frames into one ps file, or
+     you are writing one frame per file.  Calling the single frame function
+     will close the postscript file.)
+
+   SEE ALSO: hcps, eps, pdf, png, jpeg
+ */
+{
+  if (is_void(name)) name = "no_window.ps";
+  extern _no_window;
+  if (!strlen(name)) {
+    _no_window = [];
+    winkill;
+  } else {
+    _no_window = name;
+    window, display="", hcp=_no_window, style=style;
+  }
+}
+
 func hcps(name)
 /* DOCUMENT hcps, name
      writes the picture in the current graphics window to the
      PostScript file NAME+".ps" (i.e.- the suffix .ps is added to NAME).
      Legends are not written, but the palette is always dumped.
-   SEE ALSO: hcps, window, fma, hcp, hcp_finish, plg
+   SEE ALSO: hcps, window, fma, hcp, hcp_finish, plg, no_window
  */
 {
   if (strpart(name,-2:0)!=".ps") name+= ".ps";
   extern hcp;
   window, hcp=name, dump=1, legends=0;
   hcp;
-  window, hcp="";
+  if (!_no_window) window, hcp="";
+  else window, display="", hcp=_no_window;
   return name;
 }
 
@@ -291,7 +344,7 @@ func epsi(name)
      dumping is turned on for the current window.
      The external variable PS2EPSI_FORMAT contains the format for the
      command to start the ps2epsi program.
-   SEE ALSO: eps, hcps, window, fma, hcp, hcp_finish, plg
+   SEE ALSO: eps, hcps, window, fma, hcp, hcp_finish, plg, no_window
  */
 {
   name= hcps(name);
@@ -310,7 +363,7 @@ func eps(name, pdf=)
      dumping is turned on for the current window.
      The external variable EPSGS_CMD contains the command to start
      ghostscript.
-   SEE ALSO: pdf, png, jpeg, epsi, hcps, window, fma, hcp, hcp_finish, plg
+   SEE ALSO: pdf, png, jpeg, epsi, hcps, window, fma, hcp, no_window, plg
  */
 {
   if (strpart(name, -3:0) == ".eps") name = strpart(name,1:-4);
@@ -415,7 +468,7 @@ func pdf(name)
      dumping is turned on for the current window.
      The external variable EPSGS_CMD contains the command to start
      ghostscript.
-   SEE ALSO: eps, png, jpeg, hcps, window, fma, hcp, hcp_finish, plg
+   SEE ALSO: eps, png, jpeg, hcps, window, fma, hcp, no_window, plg
  */
 {
   if (strpart(name, -3:0) == ".pdf") name = strpart(name,1:-4);
@@ -438,7 +491,7 @@ func png(name, dpi=, gray=)
      The default yorick graphics window is 6 inches square, and by
      default png produces 72 dpi (dot per inch) output.  You can change
      this with the dpi= keyword; dpi=300 is extremely high resolution.
-   SEE ALSO: eps, pdf, jpeg, hcps, window, plg
+   SEE ALSO: eps, pdf, jpeg, hcps, window, plg, no_window
  */
 {
   if (strpart(name, -3:0) == ".png") name = strpart(name,1:-4);
@@ -463,7 +516,7 @@ func jpeg(name, dpi=, gray=)
      The default yorick graphics window is 6 inches square, and by
      default png produces 72 dpi (dot per inch) output.  You can change
      this with the dpi= keyword; dpi=300 is extremely high resolution.
-   SEE ALSO: eps, png, pdf, hcps, window, plg
+   SEE ALSO: eps, png, pdf, hcps, window, plg, no_window
  */
 {
   if (strpart(name, -3:0) == ".jpg") name = strpart(name,1:-4);
@@ -482,7 +535,7 @@ extern fma;
      frame advance the current graphics window.  The current picture
      remains displayed in the associated X window until the next element
      is actually plotted.
-   SEE ALSO: window, hcp, animate, plg
+   SEE ALSO: window, hcp, animate, plg, no_window
  */
 
 extern hcp;
@@ -498,7 +551,7 @@ extern hcpoff;
      The hcpon command causes every fma (frame advance) command to do
      and implicit hcp, so that every frame is sent to the hardcopy file.
      The hcpoff command reverts to the default "demand only" mode.
-   SEE ALSO: window, fma, plg, pdf, eps, hcps
+   SEE ALSO: window, fma, plg, pdf, eps, hcps, no_window
  */
 
 extern redraw;
