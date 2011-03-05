@@ -500,6 +500,8 @@ func png(name, dpi=, gray=)
   /* second run ghostscript to produce the png */
   gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\" \"%s\"";
   dev = gray? "pnggray" : "png16m";
+  if (is_void(dpi)) dpi = 300;
+  else if (dpi && !strlen(dpi)) dpi = [];
   dpi = dpi? "-r"+print(dpi)(1) : "";
   system, swrite(format=gscmd, dev, dpi, name+".png", psname);
   remove, psname;
