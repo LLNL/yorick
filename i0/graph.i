@@ -490,7 +490,7 @@ func png(name, dpi=, gray=)
      the pnggray ghostscript device, otherwise png16m.
      The default yorick graphics window is 6 inches square, and by
      default png produces 300 dpi (dot per inch) output.  You can change
-     this with the dpi= keyword; dpi=72 screen resolution.
+     this with the dpi= keyword; dpi=72 is screen resolution.
    SEE ALSO: eps, pdf, jpeg, hcps, window, plg, no_window
  */
 {
