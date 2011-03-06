@@ -644,6 +644,20 @@ if (f) {
 } else {
   "WARNING-- skipping disassembly check, i/testp.i not present";
 }
+
+/* check that first appearance of symbol as keyword leaves it undecided */
+func parser_test(x)
+{
+  png, dpi=72, x;
+  dpi = 300;
+  local dpi;
+}
+func parser_test(x)
+{
+  png, dpi=72, x;
+  call, dpi;
+  extern dpi;
+}
 parser_test= [];
 
 /* Check for limitation on yacc-parser stack depth.

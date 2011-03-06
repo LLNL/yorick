@@ -54,11 +54,16 @@ extern VMaction MatrixMult, Build, CallShell, Print, NextArg, MoreArgs;
    instruction instead of the proper offset.  */
 static HashTable literalTable;
 static long *literalTypes= 0;  /* L_LABEL | (vmCode index << 3) for labels */
-/* bit 1-- set iff variable reference exists (local, external, or keyword)
-   bit 2-- set iff literal is local, not external (could also be keyword)
+/* bit 1-- set iff variable reference exists (local, external)
+   bit 2-- set iff literal is local, not external (keyword if bit 1 not set)
    bit 3-- set iff literal used as statement label
    bit 4-- set when literal used as goto target before statement label
    bit 4>> (vmCode index <<3) for statement labels
+
+   note: if first occurrence of a symbol is as a keyword in a function
+         call, then bit 2 is set, but not bit 1, indicating that the
+         literal must appear in globTab, but that it is undecided whether
+         it is extern or local
  */
 #define L_REFERENCE 1
 #define L_LOCAL 2
@@ -524,6 +529,8 @@ CodeBlock YpVariable(Literal name)
   vmCode[nextPC++].Action= previousOp= &PushVariable;
   /* set wasUndecided flag if this is the first reference of this variable */
   wasUndecided= !(literalTypes[name]&L_REFERENCE);
+  if (wasUndecided && (literalTypes[name]&L_LOCAL))
+    literalTypes[name] &= ~L_LOCAL;  /* now seen as other than keyword */
   VariableReference(name);
   WillPushStack();
   return initialPC;
@@ -580,8 +587,8 @@ void YpKeyword(Literal name, CodeBlock value)
   vmCode[nextPC++].Action= previousOp= &FormKeyword;
   VariableReference(name);
   if (undecided) {  /* default is for keywords to become local, not extern */
-    literalTypes[name] |= L_LOCAL;
-    nLocal++;
+    literalTypes[name] &= ~L_REFERENCE;
+    literalTypes[name] |= L_LOCAL;  /* note nLocal does not increment */
   }
   WillPushStack();
 }
@@ -1268,12 +1275,14 @@ CodeBlock YpAssignOrPrint(CodeBlock aexpr)
 void YpExtern(Literal name)
 {
   long literalType= literalTypes[name];
-  if (literalType&L_LOCAL)
+  if ((literalType&(L_REFERENCE|L_LOCAL)) == (L_REFERENCE|L_LOCAL)) {
     YpError("extern variable conflicts with local variable");
-  else
+  } else {
     /* presume that it WILL be referenced, otherwise it could revert
        to local without comment */
-    literalTypes[name]|= L_REFERENCE;
+    literalTypes[name] |= L_REFERENCE;
+    literalTypes[name] &= ~L_LOCAL;
+  }
   if (!insideFunc) {
     /* Outside a func body, extern is used to point to variables
        whose definitions are to be accessible via Yorick's help
@@ -1490,7 +1499,7 @@ void YpFunc(int isMain, int eol)
   }
   if (isMain) {
     for (i=0 ; i<literalTable.nItems ; i++)
-      if (literalTypes[i]&L_REFERENCE)
+      if (literalTypes[i]&(L_REFERENCE|L_LOCAL))
         literalTypes[i]= Globalize(literalTable.names[i], 0L);
     vmCode[nextPC++].index=
       Globalize(isMain==1? "*main*" : literalTable.names[0], 0L);
@@ -1498,8 +1507,8 @@ void YpFunc(int isMain, int eol)
     for (i=0 ; i<literalTable.nItems ; i++) {
       /* Note that function name is first, then positional parameters,
          then optional *va* parameter, then keyword parameters.  */
-      if (literalTypes[i]&L_REFERENCE) {
-        if (literalTypes[i]&L_LOCAL)
+      if (literalTypes[i]&(L_REFERENCE|L_LOCAL)) {
+        if ((literalTypes[i]&(L_REFERENCE|L_LOCAL)) == (L_REFERENCE|L_LOCAL))
           vmCode[nextPC++].index=
             literalTypes[i]= Globalize(literalTable.names[i], 0L);
         else
