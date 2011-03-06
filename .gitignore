@@ -1,0 +1,30 @@
+# generic build files (probably also in global .gitignore)
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.a
+*.so
+*~
+/#*
+core
+a.out
+
+# yorick-specific build files, see also .gitignore in subdirectories
+Make.cfg
+cfg*
+ysite.sh?
+*.doc
+ywrap.c
+yinit.c
+libyor
+libplay
+numfmt
+codger
+relocate/
+
+# files copied from drat/ and hex/ during build
+i0/drat.i
+i0/hex.i
+i/ylmdec.i
