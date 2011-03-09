@@ -170,6 +170,7 @@ install-exe: $(PKG_EXE)
 	$(YNSTALL) $(PKG_EXE) $(DEST_Y_BINDIR)
 	$(YNSTALL) $(PKG_LIB) $(DEST_Y_HOME)/lib
 	$(RANLIB) $(DEST_Y_HOME)/lib/$(PKG_LIB)
+	if test -f "$(PKG_LIB).dep"; then $(YNSTALL) $(PKG_LIB).dep $(DEST_Y_SITE)/lib; fi
 install-dll: $(PKG_DLL)
 	$(YNSTALL) $(PKG_DLL) $(DEST_Y_HOME)/lib
 
@@ -194,6 +195,9 @@ distmake:
 	s/^Y_EXE_HOME=.*/Y_EXE_HOME=/";\
 	sed -e "$$S" Makefile >Make.tmp; then mv Make.tmp Makefile; fi
 
+# create optional $(PKG_NAME).cfg file which records package configuration
+# do make dumpconfig before make install
+# this information insufficient on some platforms
 dumpconfig:
 	@rm -f $(PKG_NAME).cfg
 	@echo "$(PKG_NAME).cfg built by Make on `date`" >> $(PKG_NAME).cfg
