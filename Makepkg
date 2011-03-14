@@ -1,3 +1,4 @@
+# -*-mode: makefile;-*-
 # $Id: Makepkg,v 1.4 2010-08-13 09:46:16 thiebaut Exp $
 # standard parts of yorick package Makefile
 SHELL=/bin/sh
@@ -57,10 +58,15 @@ MAKE=make
 # PKG_CFLAGS   optional additional CFLAGS for this package (e.g. -I...)
 # PKG_LDFLAGS  optional additional LDFLAGS for this package (rare)
 # EXTRA_PKGS   additional static packages if TGT=exe, default Y_EXE_PKGS
+# Y_HOME_ALT   alternate Y_HOME directory to scan for EXTRA_PKGS
 # PKG_CLEAN    optional list of non-standard cleanup files
 # PKG_I_START  optional autoload file(s) for this package
 # PKG_I_EXTRA  optional ordinary yorick include file(s) for this package
-# Y_HOME, Y_SITE  override values in Make.cfg with Y_EXE_HOME, Y_EXE_SITE
+
+# defined in Make.cfg
+# Y_CFG_HOME, Y_CFG_SITE   Y_HOME, Y_SITE defined by yorick configure script
+#   these should always both be relocate in modern yorick installations
+# Y_HOME, Y_SITE   obsolete, set to Y_CFG_* for backward compatibility
 
 # ALL_TARGETS  optional prerequisites for all:
 # EXE_TARGETS  optional prerequisites for executable
@@ -68,8 +74,8 @@ MAKE=make
 # DLL_TARGETS  optional prerequisites for dynamic library
 
 # DESTDIR       optional (un)install root
-# DEST_Y_SITE   optional install Y_SITE (default: $(DESTDIR)$(Y_SITE))
-# DEST_Y_HOME   optional install Y_HOME (default: $(DESTDIR)$(Y_HOME))
+# DEST_Y_SITE   optional install Y_SITE (default: $(DESTDIR)$(Y_EXE_SITE))
+# DEST_Y_HOME   optional install Y_HOME (default: $(DESTDIR)$(Y_EXE_HOME))
 # DEST_Y_BINDIR optional install Y_BINDIR (default: $(DESTDIR)$(Y_BINDIR))
 
 # ------------------------------------------------------------------------
@@ -90,8 +96,8 @@ PKG_LIB=lib$(PKG_NAME).a
 PKG_DLL=$(PKG_NAME)$(PLUG_SFX)
 PKG_DEF=$(PKG_NAME).def
 
-Y_LIBEXE=$(Y_HOME)/lib
-Y_INCLUDE=$(Y_HOME)/include
+Y_LIBEXE=$(Y_EXE_HOME)/lib
+Y_INCLUDE=$(Y_EXE_HOME)/include
 
 CODGER=$(Y_LIBEXE)/codger$(EXE_SFX)
 LIBDEP=$(Y_LIBEXE)/libdep.sh
@@ -106,7 +112,8 @@ CFLAGS=$(COPT) $(Y_CFLAGS) $(PKG_CFLAGS) $(PLUG) -I. $(Y_IDIR)
 LDFLAGS=$(COPT) $(Y_LDFLAGS) $(PKG_LDFLAGS)
 ARFLAGS=rc
 
-EXTRA_LIBS=`$(LIBDEP) "$(Y_HOME)" $(EXTRA_PKGS)`
+Y_HOME_ALT=
+EXTRA_LIBS=`$(LIBDEP) "$(Y_EXE_HOME)" "$(Y_HOME_ALT)" $(EXTRA_PKGS)`
 LD_EXE=$(CC) $(LDFLAGS) $(PLUG_EXPORT)
 EXE_LIBS=$(PKG_L_OPT) $(Y_LDIR) $(PKG_DEPLIBS) $(EXTRA_LIBS) -lyor $(SYS_LIBS)
 Y_MAIN_O=$(Y_LIBEXE)/main.o
@@ -139,7 +146,7 @@ ywrap.c: Makefile $(CODGER_DEP) $(PKG_I_DEPS)
 	$(CODGER) w $(PKG_NAME) $(PKG_I_DIR) $(PKG_I)
 
 yinit.c: Makefile $(CODGER_DEP)
-	$(CODGER) i "$(Y_HOME)" "$(Y_SITE)" $(EXTRA_PKGS) $(PKG_NAME)
+	$(CODGER) i "$(Y_CFG_HOME)" "$(Y_CFG_SITE)" $(EXTRA_PKGS) $(PKG_NAME)
 
 yinit.o: yinit.c $(H_YWRAP)
 ywrap.o: ywrap.c $(H_YWRAP)
@@ -154,45 +161,68 @@ dist: distclean
 	D=`pwd`; D=`basename "$$D"`; cd ..; tar cvf - "$$D"|gzip - >"$$D.tgz"
 
 # following have two colons so you can define additional rules elsewhere
+# install-exe  build and install PKG_EXE assuming TGT=exe
+# install-dll  build and install PKG_DLL assuming TGT=exe
+# install      build and install PKG_$(TGT)
+# install0     build PKG_EXE, install all but PKG_EXE executable
+#  make clean; make TGT=exe install0; make clean; make TGT=dll install
+#    builds and installs both static and dynamic libraries
+#    use install instead of install0 to also install static executable
 
 Y_GROUP=`cat $(Y_LIBEXE)/install.grp`
 YNSTALL=$(Y_LIBEXE)/install.sh $(Y_GROUP)
 DESTDIR=
-DEST_Y_SITE=$(DESTDIR)$(Y_SITE)
-DEST_Y_HOME=$(DESTDIR)$(Y_HOME)
+DEST_Y_SITE=$(DESTDIR)$(Y_EXE_SITE)
+DEST_Y_HOME=$(DESTDIR)$(Y_EXE_HOME)
 DEST_Y_BINDIR=$(DESTDIR)$(Y_BINDIR)
 install:: install-$(TGT)
 	$(YNSTALL) $(PKG_I_DEPS) $(DEST_Y_SITE)/i0
 	if test -n "$(PKG_I_START)"; then $(YNSTALL) $(PKG_I_START) $(DEST_Y_HOME)/i-start; fi
 	if test -n "$(PKG_I_EXTRA)"; then $(YNSTALL) $(PKG_I_EXTRA) $(DEST_Y_SITE)/i; fi
 	if test -f "$(PKG_NAME).cfg"; then $(YNSTALL) $(PKG_NAME).cfg $(DEST_Y_SITE)/lib; fi
-install-exe: $(PKG_EXE)
+install-exe:: install0
 	$(YNSTALL) $(PKG_EXE) $(DEST_Y_BINDIR)
+install0:: $(PKG_EXE)
 	$(YNSTALL) $(PKG_LIB) $(DEST_Y_HOME)/lib
 	$(RANLIB) $(DEST_Y_HOME)/lib/$(PKG_LIB)
 	if test -f "$(PKG_LIB).dep"; then $(YNSTALL) $(PKG_LIB).dep $(DEST_Y_SITE)/lib; fi
-install-dll: $(PKG_DLL)
+install-dll:: $(PKG_DLL)
 	$(YNSTALL) $(PKG_DLL) $(DEST_Y_HOME)/lib
 
 uninstall::
 	if test $(PKG_EXE) != yorick; then rm -f $(DEST_Y_BINDIR)/$(PKG_EXE); fi
-	rm -f $(DEST_Y_HOME)/lib/$(PKG_LIB) $(DEST_Y_HOME)/lib/$(PKG_DLL)
+	rm -f $(DEST_Y_HOME)/lib/$(PKG_LIB) $(DEST_Y_HOME)/lib/$(PKG_LIB).dep $(DEST_Y_HOME)/lib/$(PKG_DLL)
 	cd $(DEST_Y_SITE)/i0; rm -f $(PKG_I)
 	if test -n "$(PKG_I_START)"; then cd $(DEST_Y_HOME)/i-start; rm -f $(PKG_I_START); fi
 	if test -n "$(PKG_I_EXTRA)"; then cd $(DEST_Y_SITE)/i; rm -f $(PKG_I_EXTRA); fi
+
+# non-Y_HOME package installation to directory DEST (default relocate)
+# install2     install to directory other than Y_EXE_HOME
+# uninstall2   uninstall from directory other than Y_EXE_HOME
+DEST=relocate
+install2:
+	echo $(Y_EXE_HOME) >Y_HOME.txt
+	@$(MAKE) DEST_Y_HOME=$(DEST) DEST_Y_SITE=$(DEST) DEST_Y_BINDIR=$(DEST)/bin TGT=$(TGT) install
+	$(YNSTALL) Y_HOME.txt $(DEST)/bin; fi
+uninstall2:
+	@$(MAKE) DEST_Y_HOME=$(DEST) DEST_Y_SITE=$(DEST) DEST_Y_BINDIR=$(DEST)/bin TGT=$(TGT) uninstall
+	rm -f $(DEST)/bin/Y_HOME.txt
+	if test $(DEST) = relocate; then rm -rf relocate; fi
 
 debug:
 	@$(MAKE) TGT=exe COPT=-g
 
 clean::
 	rm -f *~ '#'* core* a.out yinit.* ywrap.* *.dep so_locations Make.tmp
+	rm -f Y_HOME.txt
 	rm -f $(OBJS) $(PKG_EXE) $(PKG_LIB) $(PKG_DLL) $(PKG_DEF) $(PKG_CLEAN)
 distclean:: clean $(Y_DISTMAKE)
 	rm -f Makefile.old
+	rm -rf relocate
 distmake:
 	if S="s/^Y_MAKEDIR=.*/Y_MAKEDIR=/;s/^Y_EXE=.*/Y_EXE=/;\
 	s/^Y_EXE_PKGS=.*/Y_EXE_PKGS=/;s/^Y_EXE_SITE=.*/Y_EXE_SITE=/;\
-	s/^Y_EXE_HOME=.*/Y_EXE_HOME=/";\
+	s/^Y_EXE_HOME=.*/Y_EXE_HOME=/;s/^Y_HOME_PKG=.*/Y_HOME_PKG=/";\
 	sed -e "$$S" Makefile >Make.tmp; then mv Make.tmp Makefile; fi
 
 # create optional $(PKG_NAME).cfg file which records package configuration

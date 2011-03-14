@@ -196,7 +196,7 @@ PLUG_API int nYpPrefixes;
    special version of stdx.i.  */
 PLUG_API void YpSetPaths(const char *pathlist);    /* also sets yCWD, yHOME */
 PLUG_API char *yLaunchDir, *ySiteDir, *yHomeDir, *defaultPath;
-PLUG_API char *y_user_dir, *y_gist_dir;
+PLUG_API char *y_user_dir, *y_gist_dir, *y_home_pkg;
 
 /*--------------------------------------------------------------------------*/
 

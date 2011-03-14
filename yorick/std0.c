@@ -62,7 +62,7 @@ static void YInit(char *home, char *site, y_pkg_t **pkgs);
 extern int YGetLaunchDir(char *argv0);  /* sysdep.c */
 
 char *yLaunchDir=0, *ySiteDir=0, *yHomeDir=0, *defaultPath = 0;
-char *y_user_dir=0, *y_gist_dir=0;
+char *y_user_dir=0, *y_gist_dir=0, *y_home_pkg=0;
 
 extern int y_on_idle(void);
 extern void y_on_stdin(char *input_line);
@@ -257,36 +257,55 @@ Y_set_site(int nArgs)
     }
   } else if (nArgs == -1) {
 #ifndef NO_FALLBACK_TEST
+    /* always look for relocatable installation first */
     p_file *test = 0;
-    if (ySiteDir && ySiteDir[0] && YIsAbsolute(ySiteDir)) {
-      path = p_strncat(ySiteDir, "i0/std.i", 0);
+    long i = yLaunchDir? strlen(yLaunchDir) : 0;
+    long iparent = 0;
+    if (i > 1) {
+      /* first try Y_SITE = parent of Y_LAUNCH */
+      for (i-=2 ; i>0 ; i-=2)
+        if (yLaunchDir[i-1]!='/' || yLaunchDir[i]!='.') break;
+      for (; i>0 ; i--) if (yLaunchDir[i]=='/') break;
+      /* yLaunchDir[i] is / at end of parent of Y_LAUNCH directory */
+      path = p_malloc(i+10);
+      strncpy(path, yLaunchDir, i+1);
+      strcpy(path+i+1, "i0/std.i");
       test = p_fopen(path, "r");
-      p_free(path);
-    }
-    if (test) {
-      p_fclose(test);
-    } else if (yLaunchDir) {
-      /* ySiteDir is not correct, make last ditch effort to find it */
-      long i = strlen(yLaunchDir);
-      if (i > 1) {
-        for (i-=2 ; i>0 ; i-=2)
-          if (yLaunchDir[i-1]!='/' || yLaunchDir[i]!='.') break;
-        for (; i>0 ; i--) if (yLaunchDir[i]=='/') break;
-        path = p_malloc(i+10);
-        strncpy(path, yLaunchDir, i+1);
-        strcpy(path+i+1, "i0/std.i");
-        test= p_fopen(path, "r");
-        if (test) {
-          p_fclose(test);
-          path[i+1] = '\0';
-          ySiteDir = path;
-          /* if ySiteDir was bad, so is yHomeDir, guess the same */
-          yHomeDir = p_strcpy(ySiteDir);  
-        } else {
-          p_free(path);
+      if (!test) {
+        /* then check for Y_LAUNCH/Y_HOME.txt file */
+        p_free(path);
+        path = p_strncat(yLaunchDir, "Y_HOME.txt", 0);
+        test = p_fopen(path, "r");
+        if (test) {  /* get Y_HOME from Y_HOME.txt file */
+          p_wkspc.c[P_WKSIZ] = '\0';
+          if (p_fgets(test, p_wkspc.c, P_WKSIZ)) {
+            iparent = i+1;  /* yLaunchDir length to parent / */
+            for (i=0 ; p_wkspc.c[i] ; i++) if (p_wkspc.c[i] == '\n') break;
+            if (i>0 && p_wkspc.c[i-1]!='/') p_wkspc.c[i++] = '/';
+            p_wkspc.c[i] = '\0';
+            i--;
+            path = p_strncat(p_wkspc.c, "i0/std.i", 0);
+            test = p_fopen(path, "r");
+          }
         }
       }
+      if (test) {
+        p_fclose(test);
+        path[i+1] = '\0';
+        ySiteDir = path;
+        /* Y_HOME == Y_SITE for all relocatable installations */
+        yHomeDir = p_strcpy(ySiteDir);
+        if (iparent) {
+          y_home_pkg = p_strcpy(yLaunchDir);
+          y_home_pkg[iparent] = '\0';
+        }
+      } else {
+        p_free(path);
+      }
     }
+    /* if !test, this is not relocatable installation
+     * we have no choice but to assume ySiteDir and yHomeDir are correct
+     */
 #endif
   }
 
@@ -298,6 +317,8 @@ Y_set_site(int nArgs)
 
   /* record Y_SITE in global variable */
   y_set_globvar("Y_SITE", ySiteDir, 1);
+
+  y_set_globvar("Y_HOME_PKG", y_home_pkg, 1);
 
   /* note: by default, this is never called from paths.i at all */
 
@@ -330,7 +351,7 @@ y_set_globvar(const char *globname, const char *value, int tohead)
   globTab[index].ops = &dataBlockSym;
   Unref(oldDB);
   dirName->value.q[0] = p_strcpy(value);
-  if (tohead) YNameToHead(dirName->value.q);
+  if (tohead && value) YNameToHead(dirName->value.q);
 }
 
 static char *
@@ -412,6 +433,20 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
   p_free(path2);
   path2 = p_strncat(path1, yhome, 0);
   p_free(path1);
+  if (y_home_pkg) {
+    path1 = p_strncat(path2, "lib" PATH_SEP, 0);
+    p_free(path2);
+    path2 = p_strncat(path1, y_home_pkg, 0);
+    p_free(path1);
+    path1 = p_strncat(path2, "i" PATH_SEP, 0);
+    p_free(path2);
+    path2 = p_strncat(path1, y_home_pkg, 0);
+    p_free(path1);
+    path1 = p_strncat(path2, "i0" PATH_SEP, 0);
+    p_free(path2);
+    path2 = p_strncat(path1, y_home_pkg, 0);
+    p_free(path1);
+  }
   path1 = p_strncat(path2, "lib", 0);
   p_free(path2);
   return path1;

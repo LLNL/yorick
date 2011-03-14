@@ -3470,6 +3470,7 @@ func istart_include
 {
   dir = istart_places(Y_SITE);
   if (Y_HOME!=Y_SITE) grow, dir, istart_places(Y_HOME);
+  if (Y_HOME_PKG && (Y_HOME_PKG!=Y_SITE)) grow, dir, istart_places(Y_HOME_PKG);
   if (!_istart_hook()) grow, dir, [Y_USER+"i-start"];
   files = _include_all_hook(dir);
   for (i=1 ; i<=numberof(files) ; ++i) include, files(i), 3;

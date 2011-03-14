@@ -53,6 +53,8 @@ echo "Y_VERSION=$Y_VERSION" >>../Make.cfg
 echo "Y_SITE=$Y_SITE" >>../Make.cfg
 echo "Y_HOME=$Y_HOME" >>../Make.cfg
 echo "Y_BINDIR=$Y_BINDIR" >>../Make.cfg
+echo "Y_CFG_SITE=$Y_SITE" >>../Make.cfg
+echo "Y_CFG_HOME=$Y_HOME" >>../Make.cfg
 
 # extract global variables from ../Make.cfg
 CC=`grep '^CC=' ../Make.cfg | sed -e s/CC=//`

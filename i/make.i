@@ -32,7 +32,7 @@ func make(path, template=)
  *  1. A Makefile (or makefile) already exists.  Provided the file
  *     contains a Y_MAKEDIR= line, make merely updates Y_MAKEDIR,
  *     Y_EXE, and Y_EXE_PKGS to reflect this running yorick, and
- *     attempts no other modifiactions of the existing Makefile.
+ *     attempts no other modifications of the existing Makefile.
  *  2. No such Makefile exists.  Then make writes a template Makefile,
  *     and reads all the .i interpreted source files, .c and .h C source
  *     files, and .f or .F or .m Fortran source files in the directory,
@@ -105,9 +105,10 @@ func make(path, template=)
  *    make debug          builds a debugging version (never a plugin)
  *    make                builds a release version (a plugin if possible)
  *    make install        installs the release version (may require root)
+ *    make install2       installs to relocate subdirectory
  *    make clean          removes all results, leaving only original source
  *
- * SEE ALSO: plug_in, autoload, cd
+ * SEE ALSO: write_home, plug_in, autoload, cd
  */
 {
   if (!path) path = ".";
@@ -358,7 +359,7 @@ LINK.cc = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(TARGET_ARCH)
 	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 */
 
-func make_subst(line)
+func make_subst(&line)
 {
   i = where(strglob("Y_MAKEDIR=*", line));
   if (numberof(i)) {
@@ -388,7 +389,7 @@ func make_subst(line)
     line(k) = "Y_EXE_PKGS=" + pkgs;
     i = k;
     k = where(strglob("Y_EXE_HOME=*", line));
-    if (numberof(i)) {
+    if (numberof(k)) {
       k = k(1);
     } else {  /* file probably corrupt */
       k = i+1;
@@ -397,13 +398,23 @@ func make_subst(line)
     line(k) = "Y_EXE_HOME=" + make_despace(strpart(Y_HOME,1:-1));
     i = k;
     k = where(strglob("Y_EXE_SITE=*", line));
-    if (numberof(i)) {
+    if (numberof(k)) {
       k = k(1);
     } else {  /* file probably corrupt */
       k = i+1;
       line = grow(line(1:i), string(0), line(k:0));
     }
     line(k) = "Y_EXE_SITE=" + make_despace(strpart(Y_SITE,1:-1));
+    i = k;
+    k = where(strglob("Y_HOME_PKG=*", line));
+    if (numberof(k)) {
+      k = k(1);
+    } else {  /* file probably corrupt */
+      k = i+1;
+      line = grow(line(1:i), string(0), line(k:0));
+    }
+    y = Y_HOME_PKG? make_despace(strpart(Y_HOME_PKG,1:-1)) : "";
+    line(k) = "Y_HOME_PKG=" + y;
   }
   return i;
 }
@@ -429,6 +440,7 @@ make_file =
   "Y_EXE_PKGS=### packages statically loaded into Y_EXE",
   "Y_EXE_HOME=### Y_HOME for Y_EXE",
   "Y_EXE_SITE=### Y_SITE for Y_EXE",
+  "Y_HOME_PKG=### Y_HOME_PKG for Y_EXE",
   "",
   "# ----------------------------------------------------- optimization flags",
   "",
@@ -478,9 +490,10 @@ make_file =
   "include $(Y_MAKEDIR)/Make$(TGT)",
   "",
   "# override macros Makepkg sets for rules and other macros",
-  "# Y_HOME and Y_SITE in Make.cfg may not be correct (e.g.- relocatable)",
-  "Y_HOME=$(Y_EXE_HOME)",
-  "Y_SITE=$(Y_EXE_SITE)",
+  "# see comments in Y_HOME/Makepkg for a list of possibilities",
+  "",
+  "# configure script for this package may produce make macros:",
+  "# include output-makefile-from-package-configure",
   "",
   "# reduce chance of yorick-1.5 corrupting this Makefile",
   "MAKE_TEMPLATE = protect-against-1.5",
@@ -501,4 +514,16 @@ if (batch()) {
     error, "yorick -batch make.i no longer accepts any parameters";
   make;
   quit;
+}
+
+func write_home(dir)
+/* DOCUMENT write_home, dir
+     writes file Y_HOME.txt to directory DIR (current working directory
+     by default).  This file contains the path of Y_HOME, used by yorick
+     to find its public installation when started as a private pacakge.
+ */
+{
+  if (!dir) dir = "";
+  else if (strpart(dir,0:0) != "/") dir += "/";
+  write,create(dir+"Y_HOME.txt"),format="%s\n", Y_HOME;
 }
