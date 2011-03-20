@@ -5,7 +5,8 @@ Yorick is an interactive programming language for scientific computing
 that includes scientific visualization functions, and text and binary
 I/O functions geared to millions of numbers.
 
-Yorick is open source software, under a [BSD license](LICENSE.md).
+Yorick is open source software, under a
+[BSD license](https://github.com/dhmunro/yorick/blob/master/LICENSE.md).
 Yorick runs under UNIX, MacOS X (X windows), and MS Windows.  You can
 find many yorick resources online:
 
