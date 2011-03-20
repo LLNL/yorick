@@ -418,6 +418,20 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
   if (path1) p_free(path1);
   if (path2[strlen(path2)-1] == '/') path2[strlen(path2)-1] = '\0';
   path1 = p_strncat(path2, PATH_SEP, 0);
+  if (y_home_pkg) {
+    p_free(path2);
+    path2 = p_strncat(path1, y_home_pkg, 0);
+    p_free(path1);
+    path1 = p_strncat(path2, "i" PATH_SEP, 0);
+    p_free(path2);
+    path2 = p_strncat(path1, y_home_pkg, 0);
+    p_free(path1);
+    path1 = p_strncat(path2, "i0" PATH_SEP, 0);
+    p_free(path2);
+    path2 = p_strncat(path1, y_home_pkg, 0);
+    p_free(path1);
+    path1 = p_strncat(path2, "lib" PATH_SEP, 0);
+  }
   p_free(path2);
   path2 = p_strncat(path1, ysite, 0);
   p_free(path1);
@@ -433,20 +447,6 @@ y_make_ipath(char *ylaunch, char *ysite, char *yhome)
   p_free(path2);
   path2 = p_strncat(path1, yhome, 0);
   p_free(path1);
-  if (y_home_pkg) {
-    path1 = p_strncat(path2, "lib" PATH_SEP, 0);
-    p_free(path2);
-    path2 = p_strncat(path1, y_home_pkg, 0);
-    p_free(path1);
-    path1 = p_strncat(path2, "i" PATH_SEP, 0);
-    p_free(path2);
-    path2 = p_strncat(path1, y_home_pkg, 0);
-    p_free(path1);
-    path1 = p_strncat(path2, "i0" PATH_SEP, 0);
-    p_free(path2);
-    path2 = p_strncat(path1, y_home_pkg, 0);
-    p_free(path1);
-  }
   path1 = p_strncat(path2, "lib", 0);
   p_free(path2);
   return path1;
