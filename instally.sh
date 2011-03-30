@@ -99,7 +99,7 @@ touch ./junk.tst
 if test -f "$Y_HOME/junk.tst"; then
   :
 else
-  $YNSTALL $YGP LICENSE Make.cfg Makepkg Makeexe Makedll "$Y_HOME"
+  $YNSTALL $YGP LICENSE.md Make.cfg Makepkg Makeexe Makedll "$Y_HOME"
 fi
 rm -f ./junk.tst
 $YNSTALL $YGP $YNSTALL yorick/libdep.sh "$Y_HOME/lib"

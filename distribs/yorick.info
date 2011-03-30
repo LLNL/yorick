@@ -25,7 +25,7 @@ InstallScript: <<
    rm -rf %i/share/%n/1.6/doc
    ln -s -f %p/share/doc/yorick %i/share/yorick/1.6/doc
 <<
-DocFiles: README TODO VERSION NEWS LICENSE doc/README:README.doc doc/FILE_FORMATS doc/*.doc doc/*.pdf doc/*.ps doc/*.tex
+DocFiles: README.md TODO VERSION NEWS LICENSE.md doc/README:README.doc doc/FILE_FORMATS doc/*.doc doc/*.pdf doc/*.ps doc/*.tex
 InfoDocs: yorick.info
 Homepage: ftp://ftp-icf.llnl.gov/pub/Yorick/doc/index.html  
 DescDetail: <<

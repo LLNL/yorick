@@ -120,7 +120,7 @@ fi
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE README
+%doc LICENSE.md README.md
 %docdir %{yordir}/doc
 %doc %{_mandir}/man1/yorick.1.gz
 %doc %{_mandir}/man1/gist.1.gz
