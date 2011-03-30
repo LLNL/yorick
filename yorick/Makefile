@@ -15,7 +15,8 @@ OBJS = opsv.o task.o yorick.o yinput.o parse.o ydata.o yapi.o yio.o fnctn.o \
   array.o range.o ops.o ops0.o ops1.o ops2.o ops3.o nonc.o debug.o \
   std0.o std1.o std2.o ascio.o defmem.o yhash.o  yrdwr.o bcast.o binio.o \
   binobj.o binstd.o cache.o convrt.o binpdb.o clog.o ystr.o graph.o fwrap.o \
-  graph0.o style.o list.o pathfun.o autold.o funcdef.o spawn.o fortrn.o oxy.o
+  graph0.o style.o list.o pathfun.o autold.o funcdef.o spawn.o fortrn.o oxy.o \
+  mdigest.o
 
 PKG_CLEAN=libyor main.* prmtyp.h codger$(EXE_SFX) lib$(PKG_NAME).a $(PKG_EXENAME) yorapi*
 
@@ -126,6 +127,7 @@ graph.o: graph.c $(YDATA_HP) yio.h   $(PLAYALL) $(HGIST)
 graph0.o: $(YDATA_H)
 yhash.o: $(HSH) defmem.h $(PSLIB)
 list.o: $(YDATA_H) defmem.h
+mdigest.o: mdigest.h
 nonc.o: nonc.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(NO_HYPOT) -o $@ -c nonc.c
 ops.o: bcast.h $(PSLIB)   ydata.h binio.h $(HSH)
@@ -141,7 +143,7 @@ range.o: $(YDATA_HP) $(PSLIB)
 std0.o: std0.c bcast.h yio.h defmem.h $(PLAYALL)   ydata.h binio.h $(HSH)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_Y_VERSION) -o $@ -c std0.c
 std1.o: $(YDATA_HP) $(PSPLAY)
-std2.o: $(YDATA_HP) yio.h $(PLAYALL)
+std2.o: mdigest.h $(YDATA_HP) yio.h $(PLAYALL)
 style.o: style.c $(YDATA_HP) $(PSLIB) $(HGIST) ../gist/draw.h
 task.o: $(YDATA_HP) yio.h $(PLAYALL)
 yapi.o: $(YDATA_HP) yio.h bcast.h $(PSLIB)

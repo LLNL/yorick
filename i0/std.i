@@ -5722,6 +5722,16 @@ extern crc_on;
      result you would have gotten on a single call if the two X arguments
      had been concatenated (note that the order matters).
 
+     If X is a string array, the strings themselves, not including trailing
+     '\0', are concatenated; string(0) is indistinguishable from "".
+     If X is a struct instance array or a pointer array, the checksum
+     returns an error.  X must be an array or nil [].
+
+     Note that the crc value for any data type other than char depends
+     on the native binary format on the platform where crc_on runs; the
+     value will be different on other formats, just as it will be different
+     for an array cast to a different data type.
+
      There are many different CRC algorithms, which can be parameterized
      by five integer values:
        CRC_DEF = [width, poly, init, reflect, xor]
@@ -5750,6 +5760,62 @@ extern crc_on;
      as the second argument with X as the first to compute the CRC.
      Finally, crc_on(crc_table,-) returns the corresponding CRC_DEF;
      crc_on(,-) returns the CRC_DEF for the default "pkzip" algorithm.
+   SEE ALSO: md5, sha1
+ */
+
+extern md5;
+extern sha1;
+/* DOCUMENT digest = md5(data)         compute digest of DATA array
+            state = []                 initialize STATE
+            md5, state, data           process DATA updating STATE
+            digest = md5(state, data)  return DIGEST from STATE
+            sha1 function has same semantics as md5 function
+     The md5 and sha1 functions compute message digests or hashes.  The
+     digest returned by md5 is an array of 16 char (128 bits); the digest
+     returned by sha1 is an array of 20 char (160 bits).  There is a
+     single call form, in which the input DATA array comprises the entire
+     "message" to be digested.  There is also a multi-call sequence, in
+     which you invoke md5 or sha1 with two arguments: The first argument
+     is a STATE variable, while the second argument is the DATA to be
+     appended to the "message" in that call.  DATA may be nil [], which
+     causes no change in the STATE.  STATE must be a simple variable
+     reference, which is updated and returned with each call.  As long
+     as you call md5 or sha1 as a subroutine, STATE continues to be updated;
+     call md5 or sha1 as a function to return the final digest of the
+     concatenated "message".  Before the first call, you must initialize
+     STATE to [].  The final function call destroys STATE, returning it
+     as [].  (To generate the final digest, both the md5 and sha1 algorithms
+     append some padding to the input message, which destroys STATE.)
+
+     If DATA is a string array, the strings themselves, not including trailing
+     '\0', are concatenated; string(0) is indistinguishable from "".
+     If DATA is a struct instance array or a pointer array, the digesting
+     function returns an error.  DATA must be an array or nil [].
+
+     Although STATE is an array of char, it is platform dependent even
+     though the final digest is not.  Do not attempt to save STATE or
+     to use STATE itself as a digest.
+
+     The advantage of md5 or sha1 over the crc_on function is that
+     the resulting digest will be unique; no two DATA streams will
+     ever produce the same digest for nearly all practical purposes.
+     For the 32-bit crc result, you will get different data streams
+     that have identical crc values after you process a modest number
+     of data streams (tens of thousands).  Thus, md5 or sha1 can be used
+     to "fingerprint" data streams; if the fingerprints of two streams
+     agree, you can be practically sure the streams themselves agree.
+
+     Both md5 and sha1 have now been "broken" cryptographically, which
+     means that it is possible by heroic effort to create two different
+     streams with the same digest.  (At this writing, many examples of
+     streams with identical md5 digests exist.  No such examples exist
+     yet for sha1, but it is clear that a few will appear fairly soon.)
+     However, absent malicious intent and huge levels of effort, both
+     md5 and sha1 are perfectly useful for fingerprinting data.  These
+     algorithms give the same results as the md5sum and sha1sum
+     utilities, widely used to fingerprint files on the Web.
+
+   SEE ALSO: crc_on
  */
 
 /*--------------------------------------------------------------------------*/

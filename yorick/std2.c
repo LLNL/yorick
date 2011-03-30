@@ -1540,27 +1540,22 @@ Y_crc_on(int argc)
       y_error("crc_on found bad crc_table as second argument");
     }
     flag = yarg_typeid(argc-1);
-    if (flag <= Y_STRUCT) {
+    if (flag < Y_POINTER) {
       addr = ygeta_any(argc-1, &len, 0, 0);
       if (flag == Y_STRING) {
         long i;
         char **q = addr;
-        for (i=0 ; i<len ; i++, init=0) {
-          if (!q[i]) crc = crc_compute(table, 0, 0, init, crc);
-          else crc = crc_compute(table, q[i], strlen(q[i])+1, init, crc);
-        }
+        for (i=0 ; i<len ; i++, init=0)
+          crc = crc_compute(table, q[i], q[i]?strlen(q[i]):0, init, crc);
       } else {
-        if (flag < Y_STRUCT) {
-          len *= crc_array_types[flag]->size;
-        } else {
-          Array *a = yget_use(argc-1);
-          ydrop_use(a);
-          len *= a->type.base->size;
-        }
+        len *= crc_array_types[flag]->size;
         crc = crc_compute(table, addr, len, init, crc);
       }
     } else if (flag == Y_VOID) {
       crc = crc_compute(table, 0, 0, init, crc);
+    } else {
+      y_error("crc_on accepts only non-struct, non-pointer array data");
+      /*
     } else if (flag == Y_RANGE) {
       flag = (argc>1)? yget_range(argc-2, range) : 0;
       crc = crc_compute(table, (void*)range, 3*sizeof(long), init, crc);
@@ -1569,6 +1564,7 @@ Y_crc_on(int argc)
       addr = yget_use(argc-1);
       ydrop_use(addr);
       crc = crc_compute(table, (void*)&addr, sizeof(void*), init, crc);
+      */
     }
     ypush_long(crc);
 
@@ -1603,6 +1599,77 @@ Y_crc_on(int argc)
       def[0] = w;  def[1] = p;  def[2] = i;  def[3] = r;  def[4] = x;
     } else {
       y_error("crc_on(arg,-) query arg not a crc_def or crc_table");
+    }
+  }
+}
+
+/*--------------------------------------------------------------------------*/
+
+extern BuiltIn Y_md5, Y_sha1;
+static void mdig_worker(int argc, int sha1);
+
+void Y_md5(int argc) { mdig_worker(argc, 0); }
+void Y_sha1(int argc) { mdig_worker(argc, 1); }
+
+#include "mdigest.h"
+
+static void
+mdig_worker(int argc, int sha1)
+{
+  md_state *state = 0, astate;
+  int final = !yarg_subroutine();
+  long len, ref = -1L;
+  int typeid;
+  if (argc == 2) {
+    long dims[Y_DIMSIZE];
+    ref = yget_ref(1);
+    if (ref < 0)
+      y_errorq("%s state argument must be simple variable reference",
+               sha1?"sha1":"md5");
+    typeid = yarg_typeid(1);
+    if (typeid == Y_VOID) {       /* initialize new state vector */
+      dims[0] = 1;
+      dims[1] = sizeof(md_state);
+      state = (md_state *)ypush_c(dims);
+      md_init(state);
+      yput_global(ref, 0);
+      yarg_drop(1);
+    } else if (typeid == Y_CHAR) {  /* continue with existing state vector */
+      state = (md_state *)ygeta_c(1, 0, dims);
+      if (dims[0]!=1 || dims[1]!=sizeof(md_state))
+        y_errorq("%s state argument has wrong type or size",
+                 sha1?"sha1":"md5");
+    }
+  } else if (argc == 1) {
+    state = &astate;   /* use temporary state */
+    md_init(state);
+  }
+  typeid = yarg_typeid(0);
+  if (typeid < Y_POINTER) {
+    void *addr = ygeta_any(0, &len, 0, 0);
+    void (*update)(md_state *ctx, void *data, unsigned long nbytes) =
+      sha1? &sha1_update : &md5_update;
+    if (typeid == Y_STRING) {
+      long i;
+      char **q = addr;
+      for (i=0 ; i<len ; i++) update(state, q[i], q[i]?strlen(q[i]):0);
+    } else {
+      update(state, addr, len*crc_array_types[typeid]->size);
+    }
+  } else if (typeid != Y_VOID) {
+    y_errorq("%s accepts only non-struct, non-pointer array data",
+             sha1?"sha1":"md5");
+  }
+  if (final) {
+    long dims[2];
+    dims[0] = 1;
+    dims[1] = sha1? 20 : 16;
+    if (sha1) sha1_final(ypush_c(dims), state);
+    else md5_final(ypush_c(dims), state);
+    if (ref >= 0) {
+      ypush_nil();
+      yput_global(ref, 0);
+      yarg_drop(1);
     }
   }
 }
