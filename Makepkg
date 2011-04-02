@@ -203,7 +203,7 @@ DEST=relocate
 install2:
 	echo $(Y_EXE_HOME) >Y_HOME.txt
 	@$(MAKE) DEST_Y_HOME=$(DEST) DEST_Y_SITE=$(DEST) DEST_Y_BINDIR=$(DEST)/bin TGT=$(TGT) install
-	$(YNSTALL) Y_HOME.txt $(DEST)/bin; fi
+	$(YNSTALL) Y_HOME.txt $(DEST)/bin
 uninstall2:
 	@$(MAKE) DEST_Y_HOME=$(DEST) DEST_Y_SITE=$(DEST) DEST_Y_BINDIR=$(DEST)/bin TGT=$(TGT) uninstall
 	rm -f $(DEST)/bin/Y_HOME.txt
