@@ -1,5 +1,4 @@
 /* levmar.i
- * $Id: levmar.i,v 1.2 2010-01-07 05:51:47 dhmunro Exp $
  * Non-linear least squares fitting by Levenberg-Marquardt algorithm
  */
 /* Copyright (c) 2009, David H. Munro.
@@ -8,7 +7,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
+func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=, lu=)
 /* DOCUMENT a = levmar(y, x, f, a0, avar, acovar)
  *   perform a Levenberg-Marquardt non-linear least squares fit
  *   to data values Y, which are functions of X.  The dimensions
@@ -77,6 +76,9 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
  *    wgt=   same size as Y, weightings for each point
  *      if sigma_y(i) is standard deviation of i-th point, then
  *      wgt=1./sigma_y^2 is the appropriate weight.
+ *    lu=    set non-zero to use LUsolve instead of SVsolve
+ *      LUsolve will be faster, which will only be an issue if the
+ *      number of parameters is large
  *
  *  SEE ALSO: regress, levmar_partial
  */
@@ -117,6 +119,7 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
   amult = array(1.0, nfit, nfit);
   diag = indgen(1:nfit*nfit:1+nfit);
   levmar_lambda = levmar_lambda0;
+  solver = lu? LUsolve : SVsolve;
   for (niter=0 ; niter<levmar_itmax ; ++niter) {
     dfda = 1;
     dy = y - ff(x, aa, dfda);
@@ -136,14 +139,14 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
     chi2prev = levmar_chi2;
     for (a1=a ;;) {  /* try to step away from a1 = initial a */
       amult(diag) = 1.0 + levmar_lambda;
-      a = a1 + LUsolve(alpha*amult, beta);
+      a = a1 + solver(alpha*amult, beta);
       if (!is_void(amin)) a = max(a, amin);
       if (!is_void(amax)) a = min(a, amax);
       aa(fit) = a;
       dy = y - ff(x, aa);
       levmar_neval++;
       levmar_chi2 = sum(wgt*dy*dy);
-      if (levmar_chi2 < chi2prev) break;
+      if (levmar_chi2<1.0000000001*chi2prev || allof(a1==a)) break;
       /* attempt to step with this lambda made things worse,
        * increase lambda to take more conservative steepest descents step
        */
@@ -163,7 +166,7 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=)
   avar = 0.0*a0;
   acovar = avar(-,) + avar;
   if (levmar_chi2) {
-    acovar(fit,fit) = LUsolve(alpha);
+    acovar(fit,fit) = lu? LUsolve(alpha) : SVsolve(alpha,unit(numberof(diag)));
     avar(fit) = acovar(fit,fit)(diag);
   }
 
