@@ -1359,6 +1359,8 @@ func log1p(x)
   return x * (log(y)+z)/(y-1.+z);
 }
 
+errs2caller, sech, csch, asinh, acosh, atanh, expm1, log1p;
+
 extern sqrt;
 /* DOCUMENT sqrt(x)
      returns the square root of its argument.
@@ -1867,6 +1869,7 @@ func spanl(start, stop, n, which)
   return exp(span(log(abs(start)), log(abs(stop)), n, which)) *
              span(s,s,n,which);
 }
+errs2caller, spanl;
 
 extern digitize;
 /* DOCUMENT digitize(x, bins)
@@ -3010,6 +3013,7 @@ func create(filename)
    SEE ALSO: write, close, open
  */
 { return open(filename, "w"); }
+errs2caller, create;
 
 extern close;
 /* DOCUMENT close, f
@@ -3831,6 +3835,7 @@ func openb(filename, clogfile, update, open102=, one=)
   }
   return [];
 }
+errs2caller, openb;
 
 autoload, "show.i", show;
 local show;
@@ -4099,6 +4104,7 @@ func createb(filename, primitives, close102=, clog=)
   _init_pdb, file, yPDBclose;
   return file;
 }
+errs2caller, createb;
 
 func sun_primitives(file)
 /* DOCUMENT sun_primitives, file
@@ -4314,6 +4320,7 @@ func updateb(filename, primitives, close102=, open102=, clog=)
   else
     return openb(filename,,(clog?"r+bc":"r+b"), open102=open102);
 }
+errs2caller, updateb;
 
 extern save;
 extern restore;

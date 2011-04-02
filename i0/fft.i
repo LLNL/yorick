@@ -91,6 +91,7 @@ func fft(x, ljdir, rjdir, setup=)
   fft_inplace, result, ljdir, rjdir, setup=setup;
   return result;
 }
+errs2caller, fft;
 
 func fft_inplace(x, ljdir, rjdir, setup=)
 /* DOCUMENT fft_inplace, x, direction
@@ -134,6 +135,7 @@ func fft_inplace(x, ljdir, rjdir, setup=)
     fft_raw, dirs(j), x, stds(j), ndims, tops(j), ws;
   }
 }
+errs2caller, fft_inplace;
 
 func fft_setup(dims, ljdir, rjdir)
 /* DOCUMENT workspace= fft_setup(dimsof(x))

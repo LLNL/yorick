@@ -99,6 +99,7 @@ func TDsolve(c, d, e, b, which=)
 
   return b;
 }
+errs2caller, TDsolve;
 
 extern _dgtsv;
 /* PROTOTYPE
@@ -203,6 +204,7 @@ func LUsolve(a, b, which=)
 
   return b;
 }
+errs2caller, LUsolve;
 
 func _to_real_system(a, &b, &which)
 {
@@ -274,6 +276,7 @@ func LUrcond(a, one_norm=)
   _dgecox, one_norm, n, a, n, anorm, rcond, work, iwork, info;
   return rcond;
 }
+errs2caller, LUrcond;
 
 extern _dgesv;
 /* PROTOTYPE
@@ -362,6 +365,7 @@ func QRsolve(a, b, which=)
 
   return b;
 }
+errs2caller, QRsolve;
 
 extern _dgelx;
 /* PROTOTYPE
@@ -439,6 +443,7 @@ func SVsolve(a, b, rcond, which=)
 
   return b;
 }
+errs2caller, SVsolve;
 
 func SVdec(a, &u, &vt, full=)
 /* DOCUMENT s= SVdec(a, u, vt)
@@ -509,6 +514,7 @@ func SVdec(a, &u, &vt, full=)
 
   return s;
 }
+errs2caller, SVdec;
 
 extern _dgelss;
 /* PROTOTYPE
