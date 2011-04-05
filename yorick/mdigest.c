@@ -260,8 +260,9 @@ sha1_update(md_state *ctx, void *data, unsigned long nbytes)
   (a)[i+2]=(v)>>8; (a)[i+3]=(v) 
 
 void
-md5_final(unsigned char *result, md_state *ctx)
+md5_final(void *rslt, md_state *ctx)
 {
+  unsigned char *result = rslt;
   unsigned long i, j;
   i = (ctx->lo>>3) & 0x3f;
   ctx->buffer[i++] = 0x80;  /* one bit marker after data */
@@ -288,8 +289,9 @@ md5_final(unsigned char *result, md_state *ctx)
 }
 
 void
-sha1_final(unsigned char *result, md_state *ctx)
+sha1_final(void *rslt, md_state *ctx)
 {
+  unsigned char *result = rslt;
   unsigned long i, j;
   i = (ctx->lo>>3) & 0x3f;
   ctx->buffer[i++] = 0x80;  /* one bit marker after data */

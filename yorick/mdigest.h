@@ -28,8 +28,8 @@ struct md_state {
 extern void md_init(md_state *ctx);
 
 extern void md5_update(md_state *ctx, void *data, unsigned long nbytes);
-extern void md5_final(unsigned char *result, md_state *ctx);
+extern void md5_final(void *result, md_state *ctx);
 extern void sha1_update(md_state *ctx, void *data, unsigned long nbytes);
-extern void sha1_final(unsigned char *result, md_state *ctx);
+extern void sha1_final(void *result, md_state *ctx);
 
 #endif
