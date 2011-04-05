@@ -162,7 +162,7 @@ dist: distclean
 
 # following have two colons so you can define additional rules elsewhere
 # install-exe  build and install PKG_EXE assuming TGT=exe
-# install-dll  build and install PKG_DLL assuming TGT=exe
+# install-dll  build and install PKG_DLL assuming TGT=dll
 # install      build and install PKG_$(TGT)
 # install0     build PKG_EXE, install all but PKG_EXE executable
 #  make clean; make TGT=exe install0; make clean; make TGT=dll install

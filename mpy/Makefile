@@ -65,9 +65,6 @@ Y_MAIN_O=mpymain.o
 # this overrides CC and FC macros, provides MPI_CFLAGS
 include $(Y_MAKEMPY)
 
-# Y_HOME and Y_SITE in Make.cfg may not be correct (e.g.- relocatable)
-#Y_HOME=$(Y_EXE_HOME)
-#Y_SITE=$(Y_EXE_SITE)
 # above appropriate for TGT=dll, below because this is TGT=exe
 Y_BINDIR=$(Y_EXE_HOME)/bin
 Y_LIBEXE=$(Y_EXE_HOME)/lib
