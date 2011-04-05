@@ -95,7 +95,7 @@ func legal(void)
    SEE ALSO: copyright, warranty
  */
 {
-  f = open(Y_HOME+"LICENSE", "r", 1);
+  f = open(Y_HOME+"LICENSE.md", "r", 1);
   if (!f) error, "missing LICENSE file, yorick improperly installed";
   f = rdline(f, 1000);
   write, format="%s\n", f(where(f));
