@@ -10,6 +10,7 @@
 /#*
 core
 a.out
+*.dSYM/
 
 # yorick-specific build files, see also .gitignore in subdirectories
 Make.cfg
