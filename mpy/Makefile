@@ -1,11 +1,11 @@
 # Makefile for MPY = Message Passing Yorick based on the MPI standard
-# $Id: Makefile,v 1.6 2011-02-11 05:25:42 dhmunro Exp $
 
-Y_MAKEDIR=/home/dave/sf/yorick/mpy/../relocate
-Y_EXE=/home/dave/sf/yorick/mpy/../relocate/bin/yorick
+Y_MAKEDIR=
+Y_EXE=
 Y_EXE_PKGS=
-Y_EXE_HOME=/home/dave/sf/yorick/mpy/../relocate
-Y_EXE_SITE=/home/dave/sf/yorick/mpy/../relocate
+Y_EXE_HOME=
+Y_EXE_SITE=
+Y_HOME_PKG=
 
 # note: to be fully scalable, mpy cannot use dll packages; all
 # packages should be statically linked via Y_EXE_PKGS or EXTRA_PKGS
@@ -53,6 +53,7 @@ PKG_I_EXTRA=custommp.i testmp.i mpool.i mpy1.i
 # are any additional targets (defined below) prerequisite to
 # the plugin library, archive library, and executable, respectively
 PKG_I_DEPS=$(PKG_I)
+Y_DISTMAKE=distmake
 EXE_TARGETS=mpymain.o paths.i
 
 include $(Y_MAKEDIR)/Make.cfg
