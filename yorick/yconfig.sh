@@ -45,7 +45,7 @@ if test -z "$Y_HOME"; then
   Y_HOME="$Y_SITE/$Y_PLATFORM"
 fi
 if test -z "$Y_BINDIR"; then
-  Y_BINDIR='$(Y_HOME)/bin'
+  Y_BINDIR='$(Y_EXE_HOME)/bin'
 fi
 
 Y_VERSION="$VERSION".`tail -n 1 ../VERSION`

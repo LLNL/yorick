@@ -492,7 +492,7 @@ else
   echo 'DISTRIB_TGT=$(DEFAULT_TGT)' >>../../Make.cfg
 fi
 echo "ALT_LIBS=$ALT_LIBS" >>../../Make.cfg
-echo "EXTRA_PKGS=$EXTRA_PKGS" >>../../Make.cfg
+echo "DIST_PKGS=$EXTRA_PKGS" >>../../Make.cfg
 
 echo "PLUG_UDL=$PLUG_UDL" >>../../Make.cfg
 echo "PLUG_EXPORT=$PLUG_EXPORT" >>../../Make.cfg

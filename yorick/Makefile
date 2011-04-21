@@ -23,7 +23,6 @@ PKG_CLEAN=libyor main.* prmtyp.h codger$(EXE_SFX) lib$(PKG_NAME).a $(PKG_EXENAME
 PLAPI=../play/plugin.h
 PLAYONLY=../play/play.h $(PLAPI)
 
-DIST_PKGS=drat hex
 DIST_LIBS=-L../drat -ldrat -L../hex -lhex
 DIST_DIRS=../drat ../hex
 
@@ -49,6 +48,7 @@ Y_LDIR=-L../drat -L../hex
 PKG_L_OPT=-L.
 ARFLAGS=r
 EXTRA_LIBS=$(ALT_LIBS)
+EXTRA_PKGS=$(DIST_PKGS)
 
 # hack combines gist, matrix, and fft libs into a single libyor.a
 # (this does not get inter-directory dependencies absolutely correct)
