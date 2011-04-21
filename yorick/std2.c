@@ -1664,8 +1664,8 @@ mdig_worker(int argc, int sha1)
     long dims[2];
     dims[0] = 1;
     dims[1] = sha1? 20 : 16;
-    if (sha1) sha1_final(ypush_c(dims), state);
-    else md5_final(ypush_c(dims), state);
+    if (sha1) sha1_final((void*)ypush_c(dims), state);
+    else md5_final((void*)ypush_c(dims), state);
     if (ref >= 0) {
       ypush_nil();
       yput_global(ref, 0);
