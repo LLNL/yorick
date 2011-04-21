@@ -213,7 +213,7 @@ debug:
 	@$(MAKE) TGT=exe COPT=-g
 
 clean::
-	rm -f *~ '#'* core* a.out yinit.* ywrap.* *.dep so_locations Make.tmp
+	rm -f *~ '#'* core* *.core a.out yinit.* ywrap.* *.dep so_locations Make.tmp
 	rm -f Y_HOME.txt
 	rm -f $(OBJS) $(PKG_EXE) $(PKG_LIB) $(PKG_DLL) $(PKG_DEF) $(PKG_CLEAN)
 distclean:: clean $(Y_DISTMAKE)
