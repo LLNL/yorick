@@ -31,7 +31,7 @@ config:
 	CC="$(CC)" CFLAGS="$(Y_CFLAGS)" LDFLAGS="$(Y_LDFLAGS)" ./xconfig.sh
 
 clean::
-	rm -f *~ '#'* *.o *.a core a.out cfg* libplay
+	rm -f *~ '#'* *.o *.a core* *.core a.out cfg* libplay
 
 distclean:: clean
 

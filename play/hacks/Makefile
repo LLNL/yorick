@@ -11,7 +11,7 @@ OBJS=$(HACK_OBJS)
 all: $(OBJS)
 
 clean::
-	rm -f *~ '#'* *.o *.a core ../hack103.h
+	rm -f *~ '#'* *.o *.a core* *.core ../hack103.h
 
 distclean:: clean
 

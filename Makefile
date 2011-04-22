@@ -61,14 +61,14 @@ clean::
 	@if test ! -r Make.cfg; then touch Make.cfg Make.del; fi
 	@for d in $(ALLDIRS); do ( cd $$d; $(MAKE) TGT=exe clean; ); done
 	@if test -r Make.del; then rm -f Make.cfg Make.del; fi
-	rm -f *~ '#'* *.o cfg* ysite.sh? core a.out
+	rm -f *~ '#'* *.o cfg* ysite.sh? core* *.core a.out
 	rm -f i/*~ i0/*~ i-start/*~ g/*~ extend/*~
 	rm -rf relocate
 
 distclean::
 	@touch Make.cfg
 	@for d in $(ALLDIRS); do ( cd $$d; $(MAKE) TGT=exe distclean; ); done
-	rm -f *~ '#'* *.o cfg* Make.* ysite.sh? core a.out
+	rm -f *~ '#'* *.o cfg* Make.* ysite.sh? core* *.core a.out
 	rm -f i/*~ i0/*~ i-start/*~ g/*~ extend/*~
 	rm -rf relocate
 

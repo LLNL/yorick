@@ -29,7 +29,7 @@ libplay: $(OBJS) ../playwin.h
 config:
 	cp Make.win ../../Make.cfg
 
-CLEANUP_LIST=cfg* config.0* fputest core a.out wdltest.??*
+CLEANUP_LIST=cfg* config.0* fputest core* *.core a.out wdltest.??*
 clean::
 	rm -f *~ '#'* *.o *.a $(CLEANUP_LIST) libplay
 

@@ -21,7 +21,7 @@ config:
 	@:
 
 clean::
-	rm -f *~ '#'* *.o *.a core a.out libyor
+	rm -f *~ '#'* *.o *.a core* *.core a.out libyor
 
 distclean:: clean
 

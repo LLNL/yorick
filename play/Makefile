@@ -28,6 +28,6 @@ distclean:: distcleantop
 	@for dir in $(ALLDIRS); do ( cd $$dir; $(MAKE) distclean; ); done
 
 cleantop:
-	rm -f *~ '#'* *.o *.a core a.out hack*.h playwin.h
+	rm -f *~ '#'* *.o *.a core* *.core a.out hack*.h playwin.h
 
 distcleantop: cleantop

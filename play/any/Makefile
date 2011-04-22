@@ -20,7 +20,7 @@ libplay: $(OBJS)
 
 EXE_FILES=numfmt test2d hashtest
 clean::
-	rm -f *~ '#'* *.o *.a main.c core a.out $(EXE_FILES) libplay
+	rm -f *~ '#'* *.o *.a main.c core* *.core a.out $(EXE_FILES) libplay
 
 distclean:: clean
 	rm -f .gdb*

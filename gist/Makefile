@@ -50,7 +50,7 @@ main.c: ../play/$(Y_MAIN_C)
 	cp ../play/$(Y_MAIN_C) main.c
 
 clean::
-	rm -f *~ '#'* *.o *.a core a.out main.c gist bench
+	rm -f *~ '#'* *.o *.a core* *.core a.out main.c gist bench
 
 distclean:: clean
 	rm -f .gdb*

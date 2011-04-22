@@ -21,7 +21,7 @@ libplay: $(OBJS)
 config:
 	CC="$(CC)" CFLAGS="$(Y_CFLAGS)" LDFLAGS="$(Y_LDFLAGS)" MATHLIB="$(MATHLIB)" ./config.sh
 
-CLEANUP_LIST=cfg* config.0* fputest core a.out udltest.??*
+CLEANUP_LIST=cfg* config.0* fputest core* *.core a.out udltest.??*
 clean::
 	rm -f *~ '#'* *.o *.a $(CLEANUP_LIST) libplay
 
