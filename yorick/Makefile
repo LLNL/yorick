@@ -25,6 +25,9 @@ PLAYONLY=../play/play.h $(PLAPI)
 
 DIST_LIBS=-L../drat -ldrat -L../hex -lhex
 DIST_DIRS=../drat ../hex
+# Make.cfg sets IF_TGT according to DEFAULT_TGT
+IF_EXE=drat hex
+IF_DLL=
 
 # ------------------------------------ standard targets and rules (in Makepkg)
 
@@ -48,7 +51,7 @@ Y_LDIR=-L../drat -L../hex
 PKG_L_OPT=-L.
 ARFLAGS=r
 EXTRA_LIBS=$(ALT_LIBS)
-EXTRA_PKGS=$(DIST_PKGS)
+EXTRA_PKGS=$(IF_TGT)
 
 # hack combines gist, matrix, and fft libs into a single libyor.a
 # (this does not get inter-directory dependencies absolutely correct)

@@ -456,7 +456,7 @@ fi
 fi
 
 ALT_LIBS=
-EXTRA_PKGS=
+IF_TGT='$(IF_DLL)'
 if test $dl_works = no; then
   PLUG_UDL=-DPLUG_UNSUPPORTED
   PLUG_EXPORT=
@@ -466,7 +466,7 @@ if test $dl_works = no; then
   PLUG_DEF=
   echo "DEFAULT_TGT=exe" >>../../Make.cfg
   ALT_LIBS='$(DIST_LIBS)'
-  EXTRA_PKGS='$(DIST_PKGS)'
+  IF_TGT='$(IF_EXE)'
 else
   case "$os_name" in
     AIX)
@@ -486,13 +486,13 @@ else
 fi
 if test "$LD_STATIC" = yes; then
   ALT_LIBS='$(DIST_LIBS)'
-  EXTRA_PKGS='$(DIST_PKGS)'
+  IF_TGT='$(IF_EXE)'
   echo "DISTRIB_TGT=exe" >>../../Make.cfg
 else
   echo 'DISTRIB_TGT=$(DEFAULT_TGT)' >>../../Make.cfg
 fi
 echo "ALT_LIBS=$ALT_LIBS" >>../../Make.cfg
-echo "#DIST_PKGS=$EXTRA_PKGS" >>../../Make.cfg
+echo "IF_TGT=$IF_TGT" >>../../Make.cfg
 
 echo "PLUG_UDL=$PLUG_UDL" >>../../Make.cfg
 echo "PLUG_EXPORT=$PLUG_EXPORT" >>../../Make.cfg
