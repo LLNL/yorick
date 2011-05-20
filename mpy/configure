@@ -58,10 +58,11 @@ rm -f core a.out *.o *.a *.so *.sl *.dylib *.dll *~ '#'*
 rm -f mpy Makempy paths.i cfg*
 
 mpicc_dir=""
-case "$mpicc_exe" in
+mpicc_name=`echo $mpicc_exe | sed -e 's/[ \t].*//'`
+case "$mpicc_name" in
   */*)
-    if test -x "$mpicc_exe" -a ! -d "$mpicc_exe"; then
-      mpicc_dir=`dirname "$mpicc_exe"`
+    if test -x "$mpicc_name" -a ! -d "$mpicc_name"; then
+      mpicc_dir=`dirname "$mpicc_name"`
     fi
   ;;
   *)
@@ -69,7 +70,7 @@ case "$mpicc_exe" in
     IFS=:
     for d in `echo "$PATH" | sed -e 's/^:/.:/' -e 's/::/:.:/g' -e 's/:$/:./'`
     do
-      if test -x "$d/$mpicc_exe" -a ! -d "$d/$mpicc_exe"; then
+      if test -x "$d/$mpicc_name" -a ! -d "$d/$mpicc_name"; then
         mpicc_dir="$d"
         mpicc_exe="$d/$mpicc_exe"
         break;
