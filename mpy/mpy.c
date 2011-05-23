@@ -18,6 +18,16 @@
 
 #ifdef DEBUG
 #include <stdio.h>
+/* p = priority, 0 for everything, 1 for less, 2 for even less, etc */
+#define DBG_MSG(p,m) if (mp_dbstate>p) printf("%d: " m, mpy_rank)
+#define DBG_MSG1(p,m,n) if (mp_dbstate>p) printf("%d: " m, mpy_rank,n)
+#define DBG_MSG2(p,m,n1,n2) if (mp_dbstate>p) printf("%d: " m, mpy_rank,n1,n2)
+#define DBG_MSG3(p,m,n1,n2,n3) if (mp_dbstate>p) printf("%d: " m, mpy_rank,n1,n2,n3)
+#else
+#define DBG_MSG(p,m)
+#define DBG_MSG1(p,m,n1)
+#define DBG_MSG2(p,m,n1,n2)
+#define DBG_MSG3(p,m,n1,n2,n3)
 #endif
 
 #ifdef USE_MYPROBE
@@ -233,6 +243,16 @@ mpy_errquiet(void)
   y_errquiet();
 }
 
+static int mp_dbstate = 0;
+void
+Y_mp_dbstate(int argc)
+{
+  int n = argc>0? yarg_nil(0) : 1;
+  int i = n? 0 : ygets_i(0);
+  ypush_int(mp_dbstate);
+  if (!n) mp_dbstate = i;
+}
+
 int
 mpy_get_next(int block)
 {
@@ -273,6 +293,7 @@ mpy_get_next(int block)
                    MPI_ANY_TAG, mpy_world, &status) != MPI_SUCCESS)
         mperr_fatal("MPI_Recv failed in mpy_get_next");
       mperr_from = status.MPI_SOURCE;
+      DBG_MSG1(0, "recv control msg from %d\n", status.MPI_SOURCE);
       if (block < 3) {
         mpy_errquiet();
       }
@@ -304,6 +325,8 @@ mpy_get_next(int block)
       block = 0;
     }
 
+    DBG_MSG3(1, "recv msg from %d, type %d count %d\n", status.MPI_SOURCE,
+             type, n);
     if (MPI_Recv(buf, n, mpi_types[type], MPI_ANY_SOURCE, MPI_ANY_TAG,
                  mpy_world, &status) != MPI_SUCCESS)
       mperr_fatal("MPI_Recv failed in mpy_get_next");
@@ -666,6 +689,7 @@ mpy_send(int argc, long *to, long nto)
           arg = ygeta_any(i, (long*)0, (long*)0, (int*)0);
         /* initiate the isend transaction */
         if (to) dest = to[m];
+        DBG_MSG3(1, "isend msg to %d, type %d count %ld\n", dest, ytype, n);
         if (MPI_Isend(arg, n, mpi_types[ytype], dest, ytype,
                       mpy_world, mpy_request+s) != MPI_SUCCESS)
           mperr_fatal("MPI_Isend failed in Y_mp_send");
@@ -676,6 +700,7 @@ mpy_send(int argc, long *to, long nto)
   }
 
   /* wait for all isend requests to complete */
+  s++;  /* one more for control irecv */
   for (;;) {
     if (s > 1) s = mpy_isend_wait(s, 0);
     if (mpy_request[0] == MPI_REQUEST_NULL) {
@@ -705,10 +730,14 @@ mpy_isend_wait(int nreq, int noblock)
   }
   if (ncomplete==MPI_UNDEFINED || !ncomplete)
     mperr_fatal("MPI_Waitsome ncomplete failed in mpy_isend_wait");
+  DBG_MSG2(2, "%s, ncomplete=%d\n", (noblock?"testsome":"waitsome"),
+           ncomplete);
   for (s=0 ; s<ncomplete ; s++) {
     handle = mpy_rhandle[complete[s]+noblock];
     if (!handle) continue;
     /* discard use of isend message buffer */
+    DBG_MSG3(2, "%s, discarding use %d, %p\n", (noblock?"testsome":"waitsome"),
+             complete[s]+noblock, handle);
     mpy_rhandle[complete[s]+noblock] = 0;
     ypush_check(1);  /* may be called outside any interpreted function */
     ypush_use(handle);

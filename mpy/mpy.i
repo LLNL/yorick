@@ -379,6 +379,8 @@ func mp_set_debug(onoff)
   mp_exec, "mp_debug="+print(!(!onoff))(1)+";";
 }
 
+extern mp_dbstate;  /* compiled debug printing switch */
+
 func mp_dbg(msg)
 /* DOCUMENT mp_dbg, msg
  *   print mpy debugging message MSG if and only if mp_debug is set.
