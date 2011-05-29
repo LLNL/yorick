@@ -252,6 +252,27 @@ func info(args)
 }
 wrap_args, info;
 
+func strgrepm(pat, x, off, case=)
+/* DOCUMENT strgrepm(pat, string_array)
+ *       or strgrepm(pat, string_array, off)
+ *   call strgrep, but simply return mask of same dimensions as STRING_ARRAY
+ *   set to 1 where it matches the PAT, and 0 where it does not match.
+ *   The strgrepm function does not accept any of the strgrep keywords,
+ *   but it does accept the strglob case= keyword to indicate a case
+ *   insensitive search.
+ * SEE ALSO: strglob, strgrep
+ */
+{
+  if (case) {
+    pat = strcase(0, pat);
+    x = strcase(0, x);
+  }
+  return strgrep(pat, x, off)(2,..) >= 0;
+}
+
+about_glob = strgrepm;
+
+/* need strange variable names to avoid matches with help topic pattern! */
 func about(____n____, ____a____)
 /* DOCUMENT about, pattern;
          or about, pattern, 1;
@@ -262,41 +283,44 @@ func about(____n____, ____a____)
      PATTERN is a string with a trailing "/i", the other part of the
      regular expression is interpreted so as to ignore case.
 
-   SEE ALSO: help, info, symbol_def, symbol_names,
-             strgrep, strcase, select_name.
+     Set
+       about_glob = strglob;
+     to use UNIX shell style matching (e.g.- ls command line) to match
+     PATTERN instead of grep style matching.  The default about_glob
+     function is strgrepm.
+
+   SEE ALSO: help, info, strgrep, strglob
 */
 {
-  /* Attempt to use _very_ odd names to avoid clash with caller. */
-  ____a____ = symbol_names((____a____ ? -1 : 2096));
   if (structof(____n____) != string) {
     ____n____ = nameof(____n____);
-    if (structof(____n____) != string) {
+    if (structof(____n____) != string)
       error, "expecting a string, a function, or a structure definition";
-    }
   }
-  if (strpart(____n____, -1:0) == "/i") {
-    /* There is no 'ignore case' flag in strgrep,
-       so we have to emulate this feature... */
-    ____n____ = strgrep(strcase(0, strpart(____n____, 1:-2)),
-                        strcase(0, ____a____));
-  } else {
-    ____n____ = strgrep(____n____, ____a____);
+  /* first get list of all symbol names matching the pattern */
+  ____c____ = strpart(____n____, -1:0) == "/i";
+  if (____c____) ____n____ = strpart(____n____, 1:-2);
+  ____b____ = save(*)(*,);
+  ____b____ = ____b____(where(about_glob(____n____,____b____,case=____c____)));
+  if (!____a____) {
+    /* by default remove all matches which are not functions */
+    for (____a____=1 ; ____a____<=numberof(____b____) ; ++____a____)
+      if (!is_func(symbol_def(____b____(____a____))))
+        ____b____(____a____) = string(0);
   }
-  ____n____ = where(____n____(1,..) <= ____n____(2,..));
-  if (! is_array(____n____)) {
+  ____a____ = ____b____(where(____b____));
+  if (!numberof(____a____)) {
     write, " Sorry no match found.";
     return;
   }
-  if (numberof(____n____) == 1) {
-    ____a____ = ____a____(____n____(1));
-  } else {
-    ____a____ = ____a____(____n____);
+  if (numberof(____a____) == 1)
+    ____a____ = ____a____(1);
+  else
     ____a____ = select_name(____a____(sort(____a____)), bol=" ",
                             prompt=" Choose one subject: ");
-  }
-  if (! is_void(____a____)) {
-    /* Explicitely filter range operators which have a built-in
-       function counterpart to avoid a deadly bug in Yorick. */
+  if (numberof(____a____)) {
+    /* Explicitly filter range operators which have a built-in
+     * function counterpart to avoid ambiguity in yorick. */
     if (____a____ == "sum") {
       write, format="%s\n%s\n%s\n%s\n",
         "/* DOCUMENT sum(x)",
@@ -322,7 +346,7 @@ func about(____n____, ____a____)
         "     Can also be used as a range operator.",
         "   SEE ALSO: avg, min, sum. */";
     } else {
-      help, symbol_def(____a____);
+      include, ["help, "+____a____];
     }
   }
 }
@@ -2583,7 +2607,8 @@ extern strgrep;
     strgrep("(Hello|Goodbye), *(([A-Z]*)|([a-z]*))!", s, sub=[0,2,3,4])
       --> [0,13,7,12,13,-1,7,12]
 
-   SEE ALSO: string, strglob, strfind, strword, strpart, streplace
+   SEE ALSO: string, strglob, strfind, strword, strpart, streplace,
+             strgrepm
  */
 
 func strmatch(s, pat, case)
