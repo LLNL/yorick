@@ -384,7 +384,6 @@ func select_name(list, index=,  prompt=, forever=,
   return (index ? k : list(k));
 }
 
-local __select_file_dir;
 func select_file(dir, prompt=, width=, forever=, all=, pattern=)
 /* DOCUMENT select_file()
          or select_file(dir)
@@ -411,8 +410,7 @@ func select_file(dir, prompt=, width=, forever=, all=, pattern=)
 
    SEE ALSO: lsdir, regmatch, print_columns. */
 {
-  /* fool codger */ extern __select_file_dir;
-  local dir_list;
+  /* fool codger */ extern __select_file_dir;  local dir_list;
   if (is_void(width)) width = 79;
   if (is_void(prompt)) prompt=" Select file/directory: ";
   if (! is_void(pattern) && ! (is_string(pattern) && is_scalar(pattern))) {
@@ -1683,7 +1681,7 @@ func mergei(__x, ..)
  * SEE ALSO: mergef, merge
  */
 {
-  local __r;
+  /**/ local __r;
   _1_ = !dimsof(__x)(1);
   __n = dimsof(__x)(1)? indgen(numberof(__x)) : 1;
   while (numberof(__x)) {
@@ -1743,7 +1741,7 @@ func mergef(__x, ..)
  * SEE ALSO: mergei, merge
  */
 {
-  local __r;
+  /**/ local __r;
   _1_ = !dimsof(__x)(1);
   __n = dimsof(__x)(1)? indgen(numberof(__x)) : 1;
   while (numberof(__x)) {
@@ -2783,7 +2781,7 @@ func vsave(args)
   SEE ALSO: openb, vopen, vpack, restore, get_member, wrap_args
  */
 {
-  local a, name;
+  /**/ local a, name;
   prims = args(-);
   if (numberof(prims)) {
     if (numberof(prims)!=1 || prims(1)!="prims")
@@ -3481,7 +3479,7 @@ func include_all(dir, ..)
 }
 func include_all_ls(dir)
 {
-  local files;
+  /**/ local files;
   for (i=1 ; i<=numberof(dir) ; ++i) {
     list = lsdir(dir(i));
     if (structof(list) != string) continue;
