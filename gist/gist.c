@@ -148,6 +148,7 @@ int GpMarkers(long n, const GpReal *px, const GpReal *py)
     py= yClip;
   }
   gpClipInit= 0;
+  if (!n) return value;
 
   for (engine=GpNextActive(0) ; engine ; engine=GpNextActive(engine)) {
     if (!engine->inhibit) {
