@@ -480,7 +480,16 @@ func pdf(name)
   remove, psname;
 }
 
-func png(name, dpi=, gray=)
+local png_dpi;
+local png_gray;
+local png_smooth;
+/* DOCUMENT png_dpi, png_gray, png_smooth
+     You can set these variables to change the default values
+     of the dpi=, gray=, and smooth= keywords for the png command
+   SEE ALSO: png
+ */
+
+func png(name, dpi=, gray=, smooth=)
 /* DOCUMENT png, name
      writes the picture in the current graphics window to the PNG
      file NAME+".png" (i.e.- the suffix .png is added to NAME).  The
@@ -491,6 +500,14 @@ func png(name, dpi=, gray=)
      The default yorick graphics window is 6 inches square, and by
      default png produces 300 dpi (dot per inch) output.  You can change
      this with the dpi= keyword; dpi=72 is screen resolution.
+     Finally, the smooth=1 keyword sets the TextAlphaBits and
+     GraphicsAlphaBits postscript variables to 2; smooth=2 sets them
+     to 4, which produce increasing levels of anti-aliasing.  With
+     smooth=1 or smooth=2, you can probably get away with lower dpi.
+     The default is smooth=0.  (Arguably, smooth=2 and dpi=72 or 100
+     should be the defaults.)
+     The default values of the keywords can be changed by setting
+     the corresponding extern variable png_dpi, png_gray, or png_smooth.
    SEE ALSO: eps, pdf, jpeg, hcps, window, plg, no_window
  */
 {
@@ -498,13 +515,22 @@ func png(name, dpi=, gray=)
   /* first run ghostscript to produce an eps translated to (0,0) */
   psname = eps(name+".png", pdf=1);
   /* second run ghostscript to produce the png */
-  gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\" \"%s\"";
-  dev = gray? "pnggray" : "png16m";
-  if (is_void(dpi)) dpi = 300;
+  gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\"%s \"%s\"";
+  dev = (gray || png_gray)? "pnggray" : "png16m";
+  if (is_void(dpi)) dpi = png_dpi? png_dpi : 300;
   dpi = dpi? "-r"+print(dpi)(1) : "";
-  system, swrite(format=gscmd, dev, dpi, name+".png", psname);
+  if (is_void(smooth)) smooth = png_smooth;
+  if (smooth) {
+    smooth = (smooth==1)? 2 : 4;
+    smooth = " "+swrite(format=GS_SMOOTH_OPT, smooth, smooth);
+  } else {
+    smooth = "";
+  }
+  system, swrite(format=gscmd, dev, dpi, name+".png", smooth, psname);
   remove, psname;
 }
+
+GS_SMOOTH_OPT = "-dTextAlphaBits=%ld -dGraphicsAlphaBits=%ld"
 
 func jpeg(name, dpi=, gray=)
 /* DOCUMENT jpeg, name
@@ -515,7 +541,7 @@ func jpeg(name, dpi=, gray=)
      using the EPSGS_CMD variable.  With the gray=1 keyword, you get
      the jpeggray ghostscript device, otherwise jpeg.
      The default yorick graphics window is 6 inches square, and by
-     default png produces 72 dpi (dot per inch) output.  You can change
+     default jpeg produces 72 dpi (dot per inch) output.  You can change
      this with the dpi= keyword; dpi=300 is extremely high resolution.
    SEE ALSO: eps, png, pdf, hcps, window, plg, no_window
  */
