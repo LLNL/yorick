@@ -1557,7 +1557,7 @@ func _h_rdmap(f, prefix, gmap, nblk)
     nm += "_Decomposition_";
     nn = get_member(f, nm+"nneighbors");
     nodes = get_member(f, nm+"nodelists");
-    map(2:7,) = nodes(list + 15*nn(-,cum:1:-1));
+    map(2:7,) = nodes(list + 15*nn(cum)(-,1:-1));
   }
   if (gmap) map(1,) = get_member(f, nm0+"Domains_BlockNums");
   return map;
