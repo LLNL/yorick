@@ -14,7 +14,7 @@
 #endif
 #ifndef _XOPEN_SOURCE
 /* to get popen declared */
-#define _XOPEN_SOURCE 1
+#define _XOPEN_SOURCE 500
 #endif
 
 #include "config.h"
