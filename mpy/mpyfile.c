@@ -27,7 +27,8 @@ static void (*mpy0_eval_auto)(Operand *op) = 0;
 static char *mpy_fake_argv[3] = {"--no-paths", "-batch", 0};
 
 #define STRLEN_P_1(s) ((s)?strlen(s):0)+1
-#define STRCPY_TXT(s) if(s)for(i=0;(*(txt++)=(s)[i]);i++);else *(txt++)='\0';
+#define STRCPY_TXT(s) if(s)for(i=0;(*(txt++)=(s)[i]);i++);else *(txt++)='\0'
+#define STRGET_TXT(s,t) if(!t[0])t++,s=0;else s=p_strcpy(t),t+=strlen(t)+1
 
 /* modified main calls mpy_on_launch instead of on_launch */
 int
@@ -63,7 +64,8 @@ mpy_on_launch(int argc, char *argv[])
     ym_argv = argv;
     dims[0] = 1;
     dims[1] = STRLEN_P_1(yLaunchDir) + STRLEN_P_1(ySiteDir)
-      + STRLEN_P_1(yHomeDir) + STRLEN_P_1(y_user_dir) + STRLEN_P_1(y_gist_dir);
+      + STRLEN_P_1(yHomeDir) + STRLEN_P_1(y_user_dir)
+      + STRLEN_P_1(y_gist_dir) + STRLEN_P_1(y_home_pkg);
     ypush_check(1);  /* we are outside any interpreted function */
     txt = ypush_c(dims);
     STRCPY_TXT(yLaunchDir);
@@ -71,6 +73,7 @@ mpy_on_launch(int argc, char *argv[])
     STRCPY_TXT(yHomeDir);
     STRCPY_TXT(y_user_dir);
     STRCPY_TXT(y_gist_dir);
+    STRCPY_TXT(y_home_pkg);
     mpy_bcast(1);
 
   } else {
@@ -79,16 +82,12 @@ mpy_on_launch(int argc, char *argv[])
     ret = on_launch(2, mpy_fake_argv);
     mpy_bcast(1);
     txt = ygeta_c(0, (long *)0, (long *)0);
-    if (!txt[0]) txt++, yLaunchDir = 0;
-    else yLaunchDir = p_strcpy(txt), txt += strlen(txt)+1;
-    if (!txt[0]) txt++, ySiteDir = 0;
-    else ySiteDir = p_strcpy(txt), txt += strlen(txt)+1;
-    if (!txt[0]) txt++, yHomeDir = 0;
-    else yHomeDir = p_strcpy(txt), txt += strlen(txt)+1;
-    if (!txt[0]) txt++, y_user_dir = 0;
-    else y_user_dir = p_strcpy(txt);
-    if (!txt[0]) txt++, y_gist_dir = 0;
-    else y_gist_dir = p_strcpy(txt);
+    STRGET_TXT(yLaunchDir, txt);
+    STRGET_TXT(ySiteDir, txt);
+    STRGET_TXT(yHomeDir, txt);
+    STRGET_TXT(y_user_dir, txt);
+    STRGET_TXT(y_gist_dir, txt);
+    STRGET_TXT(y_home_pkg, txt);
     Y_set_site(0);
   }
   yarg_drop(1);
