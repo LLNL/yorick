@@ -1,5 +1,0 @@
-debian/helpers/update-yorickdoc usr/bin
-debian/etc/yorick-doc etc
-doc/html/template.html usr/share/yorick-doc
-doc/html/texi2html.tpl usr/share/yorick-doc
-build/00yorick.* usr/share/yorick-doc

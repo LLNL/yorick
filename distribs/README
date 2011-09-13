@@ -4,7 +4,7 @@ Yorick distributions
 Here are templates for producing yorick distributions for various open
 source software systems.
 
-../debian/    - Debian GNU/Linux
+README.Debian - Instructions for Debian GNU/Linux (and derivatives)
 
 yorick.spec   - RedHat (or Fedora) RPM
                 Version, Release must be updated from ../VERSION

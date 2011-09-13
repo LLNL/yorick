@@ -1,4 +1,0 @@
-?package(yorick):needs="text" section="Applications/Science/Data Analysis"\
-  title="Yorick" command="rlwrap yorick 2> /dev/null || yorick"\
-  icon16x16="yorick16x16.xpm" icon32x32="yorick32x32.xpm"\
-  longtitle="Shell for numerical computations and scientific graphics"
