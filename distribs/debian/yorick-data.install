@@ -1,6 +1,0 @@
-build/share usr
-debian/zzdebian.i usr/share/yorick/i-start
-emacs/yorick.el usr/share/emacs/site-lisp
-build/yorick*.xpm usr/share/pixmaps
-debian/lintian-overrides.d/yorick-data usr/share/lintian/overrides
-doc/html/htmldoc.i usr/share/yorick/i

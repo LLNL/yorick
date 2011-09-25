@@ -1,0 +1,25 @@
+                       Building Yorick for Debian
+                       ==========================
+
+The Debian files for building Yorick are not kept in the tarball anymore.
+
+To build a new package, two options:
+
+ - get the Debian source package with
+     apt-get source yorick
+   and copy the debian subdirectory from yorick-<version> to the
+   yorick source tree you want to build;
+
+ - get everything using git. As of writing, this should work:
+    sudo aptitude install pbuilder git-buildpackage
+    git clone git://github.com/paumard/yorick.git
+    cd yorick
+    git checkout -b debian origin/debian
+    debian/rules orig-tbz
+    sudo /usr/lib/pbuilder/pbuilder-satisfydepends
+    git-buildpackage --git-upstream-branch=master --git-debian-branch=debian
+
+An updated version of this file may be available at:
+ https://github.com/dhmunro/yorick/blob/master/distribs/README.Debian
+
+					Thibaut Paumard, 2011-09-13
