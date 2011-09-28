@@ -8,8 +8,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-/*--------------------------------------------------------------------------*/
-/* Control functions */
+/*= SECTION(plotout) controlling plot windows and files ====================*/
 
 extern window;
 /* DOCUMENT window, n, display="host:server.screen", dpi=100/75, wait=0/1,
@@ -213,6 +212,26 @@ func has_mouse(win)
   return (! is_void(current_mouse(win)));
 }
 
+extern viewport;
+/* DOCUMENT port= viewport();
+     returns [xmin,xmax,ymin,ymax] of the current viewport (or 0,0,0,0
+     if currently plotting to system 0) in NDC coordinates.
+   SEE ALSO: limits, gridxy
+ */
+
+extern raw_style;
+/* DOCUMENT raw_style: get_style, set_style, read_style, write_style
+            #include "style.i"
+     alternatives to the style= keyword of the window command which
+     allow the interpreter to set or get all the details of the
+     window style.  Include "style.i" and read the help for get_style.
+ */
+
+extern set_gpath;
+/* DOCUMENT old = set_gpath(gist_path)
+     set path (colon delimited directories) for Gist graphics package,
+     returning old path.  GIST_PATH nil or string(0) just returns old.
+ */
 
 extern hcp_file;
 /* DOCUMENT hcp_file, filename, dump=0/1, ps=0/1
@@ -315,6 +334,23 @@ func no_window(name, style=)
     window, display="", hcp=_no_window, style=style;
   }
 }
+
+extern keybd_focus;
+/* DOCUMENT keybd_focus, on_off
+     By default, graphics windows set a window manager hint which
+     allows them to accept keyboard focus.  With ON_OFF zero, that
+     hint will not be set when a new graphics window is created.
+     This causes the window manager to refuse to offer keyboard
+     focus to the graphics window -- very desirable, since it can't
+     accept keyboard input anyway.  With fvwm, for example, this
+     means keyboard focus can stay in the terminal window even when
+     you are mouse zooming the graphics window.  However, many
+     window managers confuse colormap focus with keyboard focus, so
+     if you set the private=1 colormap in the window function, you
+     may not be able to convince the window manager to give the
+     graphics window colormap focus since it won't give it keyboard
+     focus.  Weird.
+ */
 
 func hcps(name)
 /* DOCUMENT hcps, name
@@ -662,8 +698,7 @@ extern plsys;
    SEE ALSO: window, limits, plg
  */
 
-/*--------------------------------------------------------------------------*/
-/* Plotting functions (output primitives) */
+/*= SECTION(plotter) plotting functions ====================================*/
 
 extern plg;
 /* DOCUMENT plg, y, x
@@ -750,42 +785,6 @@ extern plc;
              smooth, triangle, region
    SEE ALSO: plg, plm, plc, plv, plf, pli, plt, pldj, plfp, plmesh, plfc
              contour, spann, limits, logxy, range, fma, hcp
- */
-
-extern contour;
-/* DOCUMENT nc= contour(yc,xc, level, z, y,x)
-         or nc= contour(yc,xc, level, z, y,x,ireg)
-
-     returns the points on the contour curve that would have been
-     plotted by plc.  Z, Y, X, and IREG are as for plc, and the
-     triangle= and region= keywords are accepted and have the same
-     meaning as for plc.  Unlike plc, the triangle array is an output
-     as well as an input to contour; if supplied it may be modified
-     to reflect any triangulations which were performed by contour.
-
-     LEVEL is a scalar z value to return the points at that contour
-     level.  All such points lie on edges of the mesh.  If a contour
-     curve closes, the final point is the same as the initial point
-     (i.e.- that point is included twice in the returned list).
-
-     LEVEL is a pair of z values [z0,z1] to return the points of
-     a set of polygons which outline the regions between the two
-     contour levels.  These will include points on the mesh boundary
-     which lie between the levels, in addition to the edge points
-     for both levels.  The polygons are closed, simply connected,
-     and will not contain more than about 4000 points (larger polygons
-     are split into pieces with a few points repeated where the pieces
-     join).
-
-     YC and XC are the output points on the curve(s), or nil if there
-     are no points.  On input, they must be simple variable references,
-     not expressions.  The return value NC is a list of the lengths of
-     the polygons/polylines returned in (XC,YC), or nil if there are
-     none.  numberof(XC)==numberof(YC)==sum(NC).  For the level pair
-     case, YC, XC, and NC are ready to be used as inputs to plfp.
-
-   KEYWORDS: triangle, region
-   SEE ALSO: plc, plfp
  */
 
 extern plv;
@@ -1013,8 +1012,7 @@ func xytitles(xtitle, ytitle, adjust)
 pltitle_height= 18;
 pltitle_font= "helvetica";
 
-/*--------------------------------------------------------------------------*/
-/* Plot limits and log/linear scaling */
+/*= SECTION(plotlim) plot limits and axis scaling ==========================*/
 
 e= "e";         /* for use with limits and range functions */
 
@@ -1171,8 +1169,7 @@ extern unzoom;
    SEE ALSO: limits, range, zoom_factor, plg
  */
 
-/*--------------------------------------------------------------------------*/
-/* Keywords for plotting functions */
+/*= SECTION(plotkey) keywords for plotting functions =======================*/
 
 local legend;
 /* DOCUMENT legend=   plotting keyword
@@ -1441,8 +1438,7 @@ local edges, ecolor, ewidth;
    SEE ALSO: color, width
  */
 
-/*--------------------------------------------------------------------------*/
-/* Inquiry and editing functions */
+/*= SECTION(plotq) plot query and edit functions ===========================*/
 
 extern plq;
 /* DOCUMENT plq
@@ -1584,8 +1580,7 @@ extern pldefault;
    SEE ALSO: window, plsys, plq, pledit, plg
  */
 
-/*--------------------------------------------------------------------------*/
-/* Miscellany */
+/*= SECTION(plotmisc) miscellaneous plotting-related functions =============*/
 
 extern bytscl;
 /* DOCUMENT bytscl(z)
@@ -1616,6 +1611,42 @@ extern mesh_loc;
      After #include "digit2.i", type:  help,digit2
 
    SEE ALSO: plmesh, moush, mouse
+ */
+
+extern contour;
+/* DOCUMENT nc= contour(yc,xc, level, z, y,x)
+         or nc= contour(yc,xc, level, z, y,x,ireg)
+
+     returns the points on the contour curve that would have been
+     plotted by plc.  Z, Y, X, and IREG are as for plc, and the
+     triangle= and region= keywords are accepted and have the same
+     meaning as for plc.  Unlike plc, the triangle array is an output
+     as well as an input to contour; if supplied it may be modified
+     to reflect any triangulations which were performed by contour.
+
+     LEVEL is a scalar z value to return the points at that contour
+     level.  All such points lie on edges of the mesh.  If a contour
+     curve closes, the final point is the same as the initial point
+     (i.e.- that point is included twice in the returned list).
+
+     LEVEL is a pair of z values [z0,z1] to return the points of
+     a set of polygons which outline the regions between the two
+     contour levels.  These will include points on the mesh boundary
+     which lie between the levels, in addition to the edge points
+     for both levels.  The polygons are closed, simply connected,
+     and will not contain more than about 4000 points (larger polygons
+     are split into pieces with a few points repeated where the pieces
+     join).
+
+     YC and XC are the output points on the curve(s), or nil if there
+     are no points.  On input, they must be simple variable references,
+     not expressions.  The return value NC is a list of the lengths of
+     the polygons/polylines returned in (XC,YC), or nil if there are
+     none.  numberof(XC)==numberof(YC)==sum(NC).  For the level pair
+     case, YC, XC, and NC are ready to be used as inputs to plfp.
+
+   KEYWORDS: triangle, region
+   SEE ALSO: plc, plfp
  */
 
 extern mouse;
@@ -1754,30 +1785,49 @@ func histeq_scale(z, top=, cmin=, cmax=)
   return char(max(min(digitize(z,bins)-2,top),0));
 }
 
+func spann(zmin, zmax, n, fudge=)
+/* DOCUMENT spann(zmin, zmax, n)
+     return no more than N equally spaced "nice" numbers between
+     ZMIN and ZMAX.
+   SEE ALSO: span, spanl, plc, plfc
+ */
+{
+  if (is_void(fudge)) fudge= 1.e-12;
+  reverse= zmin>zmax;
+  if (reverse) { dz=zmin; zmin=zmax; zmax=dz; }
+  dz= (zmax-zmin)/max(double(n),0.);
+  if (!dz) dz= abs(zmin);
+  if (dz) {
+    power= floor(log10(dz)+0.00001);
+    base= dz/10.^power;
+    if (base>5.00001) { base= 1.0; power+= 1.0; }
+    else if (base>2.00001) base= 5.0;
+    else base= 2.0;
+    /* round dz up to the nearest "nice" number */
+    dz= base*10.^power;
+    zmin= ceil(zmin/dz - fudge);
+    zmax= floor(zmax/dz + fudge);
+    nz= long(zmax-zmin+1.0);
+    if (nz>1) {
+      levs= span(zmin*dz, zmax*dz, nz);
+    } else {
+      if (nz<1) {   /* find any nice number in interval */
+        if (base<1.5) { base= 5.0; power-= 1.0; }
+        else if (base<2.5) base= 1.0;
+        else base= 2.0;
+        dz= base*10.^power;
+        zmin= ceil(zmin/dz + 0.001);
+      }
+      levs= [zmin*dz];
+    }
+  } else {
+    levs= [-1.0,1.0];
+  }
+  if (reverse) levs= levs(0:1:-1);
+  return levs;
+}
+
 /*--------------------------------------------------------------------------*/
-
-extern viewport;
-/* DOCUMENT port= viewport();
-     returns [xmin,xmax,ymin,ymax] of the current viewport (or 0,0,0,0
-     if currently plotting to system 0) in NDC coordinates.
-   SEE ALSO: limits, gridxy
- */
-
-extern raw_style;
-/* DOCUMENT raw_style: get_style, set_style, read_style, write_style
-            #include "style.i"
-     alternatives to the style= keyword of the window command which
-     allow the interpreter to set or get all the details of the
-     window style.  Include "style.i" and read the help for get_style.
- */
-
-/*--------------------------------------------------------------------------*/
-
-extern set_gpath;
-/* DOCUMENT old = set_gpath(gist_path)
-     set path (colon delimited directories) for Gist graphics package,
-     returning old path.  GIST_PATH nil or string(0) just returns old.
- */
 
 extern _pl_init;
 /* xxDOCUMENT _pl_init
@@ -1785,24 +1835,7 @@ extern _pl_init;
  */
 _pl_init, GISTPATH; /* ...except right here (see paths.i) */
 
-extern keybd_focus;
-/* DOCUMENT keybd_focus, on_off
-     By default, graphics windows set a window manager hint which
-     allows them to accept keyboard focus.  With ON_OFF zero, that
-     hint will not be set when a new graphics window is created.
-     This causes the window manager to refuse to offer keyboard
-     focus to the graphics window -- very desirable, since it can't
-     accept keyboard input anyway.  With fvwm, for example, this
-     means keyboard focus can stay in the terminal window even when
-     you are mouse zooming the graphics window.  However, many
-     window managers confuse colormap focus with keyboard focus, so
-     if you set the private=1 colormap in the window function, you
-     may not be able to convince the window manager to give the
-     graphics window colormap focus since it won't give it keyboard
-     focus.  Weird.
- */
-
-/*--------------------------------------------------------------------------*/
+/*= SECTION(plothi) higher level plotting functions ========================*/
 /* functions which call plg, plf, or other automatic legend generating
  * functions must be defined after _pl_init, since that function turns
  * on argument "quining" which changes the way things are parsed (yuck) */
@@ -1997,48 +2030,6 @@ func plfc(z, y, x, ireg, levs=, colors=, region=, triangle=)
     if (!numberof(nc)) continue;
     plfp,array(colors(i),numberof(nc)),yc,xc,nc,edges=0;
   }
-}
-
-func spann(zmin, zmax, n, fudge=)
-/* DOCUMENT spann(zmin, zmax, n)
-     return no more than N equally spaced "nice" numbers between
-     ZMIN and ZMAX.
-   SEE ALSO: span, spanl, plc, plfc
- */
-{
-  if (is_void(fudge)) fudge= 1.e-12;
-  reverse= zmin>zmax;
-  if (reverse) { dz=zmin; zmin=zmax; zmax=dz; }
-  dz= (zmax-zmin)/max(double(n),0.);
-  if (!dz) dz= abs(zmin);
-  if (dz) {
-    power= floor(log10(dz)+0.00001);
-    base= dz/10.^power;
-    if (base>5.00001) { base= 1.0; power+= 1.0; }
-    else if (base>2.00001) base= 5.0;
-    else base= 2.0;
-    /* round dz up to the nearest "nice" number */
-    dz= base*10.^power;
-    zmin= ceil(zmin/dz - fudge);
-    zmax= floor(zmax/dz + fudge);
-    nz= long(zmax-zmin+1.0);
-    if (nz>1) {
-      levs= span(zmin*dz, zmax*dz, nz);
-    } else {
-      if (nz<1) {   /* find any nice number in interval */
-        if (base<1.5) { base= 5.0; power-= 1.0; }
-        else if (base<2.5) base= 1.0;
-        else base= 2.0;
-        dz= base*10.^power;
-        zmin= ceil(zmin/dz + 0.001);
-      }
-      levs= [zmin*dz];
-    }
-  } else {
-    levs= [-1.0,1.0];
-  }
-  if (reverse) levs= levs(0:1:-1);
-  return levs;
 }
 
 func color_bar(levs, colors, vert=, labs=, adjust=, ecolor=)

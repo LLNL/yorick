@@ -32,6 +32,7 @@
     command.  Codger can generate certain simple Y_variable wrapper
     routines if further information is provided in a PROTOTYPE comment.
  */
+/*= SECTION(info) help and information =====================================*/
 
 extern help;
 /* DOCUMENT help, topic
@@ -252,26 +253,6 @@ func info(args)
 }
 wrap_args, info;
 
-func strgrepm(pat, x, off, case=)
-/* DOCUMENT strgrepm(pat, string_array)
- *       or strgrepm(pat, string_array, off)
- *   call strgrep, but simply return mask of same dimensions as STRING_ARRAY
- *   set to 1 where it matches the PAT, and 0 where it does not match.
- *   The strgrepm function does not accept any of the strgrep keywords,
- *   but it does accept the strglob case= keyword to indicate a case
- *   insensitive search.
- * SEE ALSO: strglob, strgrep
- */
-{
-  if (case) {
-    pat = strcase(0, pat);
-    x = strcase(0, x);
-  }
-  return strgrep(pat, x, off)(2,..) >= 0;
-}
-
-about_glob = strgrepm;
-
 /* need strange variable names to avoid matches with help topic pattern! */
 func about(____n____, ____a____)
 /* DOCUMENT about, pattern;
@@ -351,289 +332,92 @@ func about(____n____, ____a____)
   }
 }
 
-func select_name(list, index=,  prompt=, forever=,
-                 label=, width=, sep=, eol=, bol=, maxcols=)
-/* DOCUMENT select_name(list)
-     Print out array of strings LIST (using print_columns) and
-     interactively ask the user a number/item in the list and return the
-     selected item.  If keyword INDEX is true, the item number is returned
-     rather than its value.  The prompt string can be set with keyword PROMPT
-     (default is " Select one item: ").  If keyword FOREVER is true the user
-     is prompted until a valid choice is made.
-
-     Other keywords are passed to print_columns: LABEL (as
-     LABEL), WIDTH, SEP, EOL, BOL and MAXCOLS.
-
-   SEE ALSO: print_columns. */
+func library(void)
+/* DOCUMENT library
+     print the Y_SITE/i/README file at the terminal.
+ */
 {
-  number = numberof(list);
-  print_columns, list, label=(is_void(label) ? " - " : label),
-    width=width, sep=sep, eol=eol, bol=bol, maxcols=maxcols;
-  if (is_void(prompt)) prompt=" Select one item: ";
-  for (;;) {
-    t = string(0);
-    k = 0;
-    s = rdline(prompt=prompt);
-    if (sread(s, format="%d %s", k, t) == 1 && k >= 1 && k <= number) break;
-    if (numberof((k = where(list == s))) == 1) {
-      k = k(1);
-      break;
-    }
-    if (! forever) return;
-  }
-  return (index ? k : list(k));
+  f= open(Y_SITE+"i/README");
+  while ((line= rdline(f))) write, line;
 }
 
-func select_file(dir, prompt=, width=, forever=, all=, pattern=)
-/* DOCUMENT select_file()
-         or select_file(dir)
-     Interactively select name of an existing file starting at current working
-     directory or at last selected directory or at DIR if this argument is
-     specified.  The function returns full path of selected file or nil [] if
-     no valid selection is made.  If keyword FOREVER is true, a file must be
-     selected for the function to return.
-
-     If keyword ALL is true, then all files and directories get displayed --
-     even the "hidden" ones which name start with a dot.  In any cases, the
-     current and parent directories ("." and "..") get displayed to allow the
-     user to re-scan the current directory or to go into the parent directory.
-
-     Keyword PATTERN can be set to a regular expression to select only files
-     that match PATTERN.  For instance, PATTERN="\\.(tgz|tar\\.gz)$" would
-     match any files with suffix ".tgz" or ".tar.gz".
-
-     Keyword WIDTH can be used to specify a different text width than the
-     default of 79 characters.
-
-     Keyword PROMPT can be set to change the default prompt:
-       " Select file/directory: "
-
-   SEE ALSO: lsdir, regmatch, print_columns. */
-{
-  /* fool codger */ extern __select_file_dir;  local dir_list;
-  if (is_void(width)) width = 79;
-  if (is_void(prompt)) prompt=" Select file/directory: ";
-  if (! is_void(pattern) && ! (is_string(pattern) && is_scalar(pattern))) {
-    error, "value of keyword PATTERN must be nil or a scalar string";
-  }
-  cwd = get_cwd();
-  if (! is_void(dir)) __select_file_dir = dir;
-  if (structof(__select_file_dir) != string) {
-    __select_file_dir = cwd;
-  } else {
-    __select_file_dir = cd(__select_file_dir);
-  }
-
-  hline = "-------------------------------------";
-  for (;;) {
-    file_list = lsdir(__select_file_dir, dir_list);
-    if (! all) {
-      if ((n = numberof(file_list)) > 0) {
-        i = where(strpart(file_list, 1:1) != ".");
-        if (numberof(i) != n) file_list = file_list(i);
-      }
-      if ((n = numberof(dir_list)) > 0) {
-        i = where(strpart(dir_list, 1:1) != ".");
-        if (numberof(i) != n) dir_list = dir_list(i);
-      }
-    }
-    if (pattern && (n = numberof(file_list)) > 0) {
-      i = where(strgrep(pattern, file_list)(2,..) >= 0);
-      if (numberof(i) != n) file_list = file_list(i);
-    }
-    grow, dir_list, ".", ".."; /* use . to allow reading directory again */
-    dir_list = dir_list(sort(dir_list));
-    list = dir_list + "/";
-    if (is_array(file_list)) {
-      grow, list, file_list(sort(file_list));
-      file_list = [];
-    }
-    ndirs = numberof(dir_list);
-    number = numberof(list);
-
-    /* Print out directory list. */
-    text = print_columns(list, label=": ", width=width,
-                         sep=, eol=" ", bol="| ", maxcols=);
-    text_len = strlen(text(1))+1;
-    len = max(width, text_len);
-    while (strlen(hline) < len) hline += hline;
-    head_line = "[" + __select_file_dir + "]";
-    n = (len - strlen(head_line) - 2)/2;
-    if (n > 0) head_line = strpart(hline, 1:n)+head_line;
-    n = len - strlen(head_line) - 2;
-    if (n > 0) head_line += strpart(hline, 1:n);
-    write, format=",%s.\n", head_line;
-    write, format=swrite(format="%%-%ds|\n", len-1), text;
-    write, format="`%s'\n", strpart(hline, 1:len-2);
-    for (;;) {
-      t = string(0);
-      k = 0;
-      s = rdline(prompt=prompt);
-      if (sread(s, format="%d %s", k, t) == 1 && k >= 1 && k <= number) break;
-      if (numberof((k = where(list == s))) == 1) {
-        k = k(1);
-        break;
-      }
-      if (numberof((k = where(dir_list == s))) == 1) {
-        k = k(1);
-        break;
-      }
-      if (! forever) {
-        cd, cwd;
-        return;
-      }
-    }
-    if (k > ndirs) {
-      cd, cwd;
-      return __select_file_dir + list(k);
-    }
-    __select_file_dir = cd(__select_file_dir + dir_list(k));
-  }
-}
-
-func print_columns(list, label=, width=, start=, sep=, eol=, bol=, maxcols=)
-/* DOCUMENT print_columns, list;
-         or print_columns(list);
-     Write array of strings LIST in columns.  In subroutine form, the result
-     is printed to standard output; otherwise, the function returns an array
-     of formatted strings (one per row).
-
-     The maximum width (in number of characters) of each row can be specified
-     with keyword WIDTH (default 79).  But actual width may be larger, since
-     at least one column is produced.
-
-     The maximum number of columns may be limited by using keyword MAXCOLS (by
-     default, there is no limit).
-
-     Keywords BOL, SEP and EOL, can be set to scalar strings to use at begin
-     of line, between each column, at end of line respectively.  SEP can also
-     be the number of spaces to insert between columns.  The default are:
-     BOL="", SEP=5 (five spaces) and EOL=string(0).
-
-     Keyword LABEL can be used to number items. LABEL must be a scalar string.
-     If LABEL contains a "%d", it is used to format the index; otherwise,
-     LABEL is the string to use as separator between indices and items.  For
-     instance:
-       label="[%d] "  yields: "[1] first_item    [2] second_item  ..."
-       label=" - "    yields: "1 - first_item    2 - second_item  ..."
-
-     Keyword START can be used to specify the starting index for numbering
-     items (default START=1).
-
-
-   SEE ALSO: swrite, select_name, select_file. */
-{
-  number = numberof(list);
-  if (is_scalar(label) && is_string(label)) {
-    if (is_void(start)) start = 1;
-    index = indgen(start:start+number-1);
-    if (strmatch(label, "%d")) {
-      index = swrite(format=label, index);
-    } else {
-      index = swrite(format="%d", index) + label;
-    }
-    len = strlen(index);
-    if (max(len) != min(len)) {
-      /* Justify index list. */
-      index = swrite(format=swrite(format="%%%ds", max(len)), index);
-    }
-    list = index + list(*);
-  } else if (is_void(label)) {
-    list = list(*);
-  } else {
-    error, "value of keyword LABEL must be nil or a scalar string";
-  }
-
-  if (is_void(bol)) bol = "";
-  if (is_void(eol)) eol = string(0);
-  if (is_void(width)) width = 79;
-  if (structof(sep) != string) {
-    /* Convert margin separator into spaces. */
-    if (is_void(sep)) sep = 5;
-    sep = swrite(format=swrite(format="%%%ds", sep), "");
-  }
-  len = max(strlen(list));
-  slen = strlen(sep);
-  ncols = (width + slen - strlen(bol) - strlen(eol))/(len + slen);
-  if (! is_void(maxcols) && ncols > maxcols) ncols = maxcols;
-  if (ncols < 1) ncols = 1;
-  nrows = (number+ncols-1)/ncols;
-
-  (tmp = array(string, nrows, ncols))(1:number) = unref(list);
-  if (ncols > 1) {
-    fmt = swrite(format="%%-%ds%s", len, sep);
-    for (j=1 ; j<ncols ; ++j) bol += swrite(format=fmt, tmp(,j));
-  }
-  fmt = (eol ? swrite(format="%%-%ds%s", len, eol) : "%s");
-  bol += swrite(format=fmt, tmp(,ncols));
-  if (! am_subroutine()) return bol;
-  write, format="%s\n", bol;
-}
-
-/*--------------------------------------------------------------------------*/
-
-extern quit;
-/* DOCUMENT quit
-     Exit YMainLoop when current task finishes.
-     Normally this terminates the program.
+extern get_pkgnames;
+/* DOCUMENT get_pkgnames(all)
+     returns list of package names, ALL non-zero means to return both
+     statically and dynamically loaded packages, otherwise just the
+     initial statically loaded packages.
+   SEE ALSO: get_path
  */
 
-extern system;
-/* DOCUMENT system, "shell command line"
-     Passes the command line string to a shell for execution.
-     If the string is constant, you may use the special syntax:
-         $shell command line
-     (A long command line may be continued by ending the line with \
-     as usual.)  The system function syntax allows Yorick to compute
-     parts of the command line string, while the simple $ escape
-     syntax does not.  In either case, the only way to get output
-     back from such a command is to redirect it to a file, then
-     read the file.  Note that Yorick does not regain control
-     until the subordinate shell finishes.  (Yorick will get control
-     back if the command line backgrounds the job.)
-     WARNING: If Yorick has grown to a large size, this may crash
-     your operating system, since the underlying POSIX fork function
-     first copies all of the running Yorick process before the exec
-     function can start the shell.  See Y_SITE/sysafe.i for a fix.
-   SEE ALSO: popen
+extern symbol_def;
+/* DOCUMENT symbol_def(func_name)(arglist)
+         or symbol_def(var_name)
+     invokes the function FUNC_NAME with the specified ARGLIST,
+     returning the return value.  ARGLIST may be zero or more arguments.
+     In fact, symbol_def("fname")(arg1, arg2, arg3) is equivalent to
+     fname(arg1, arg2, arg3), so that "fname" can be the name of any
+     variable for which the latter syntax is meaningful -- interpreted
+     function, built-in function, or array.
+
+     Without an argument list, symbol_def("varname") is equivalent to
+     varname, which allows you to get the value of a variable whose name
+     you must compute.
+
+     DO NOT OVERUSE THIS FUNCTION.  It works around a specific deficiency
+     of the Yorick language -- the lack of pointers to functions -- and
+     should be used for such purposes as hook lists (see openb).
+
+   SEE ALSO: symbol_set, symbol_exists
  */
 
-extern yorick_init;
-/* xxDOCUMENT yorick_init
-     Re-initializes all of the built-in functions for this version
-     of Yorick.  To be used in desperation if you overwrite some
-     critical built-in function by mistake.  Of course, if you
-     redefine yorick_init, you won't be able to recover anything.
+extern symbol_set;
+/* DOCUMENT symbol_set, var_name, value
+     is equivalent to the redefinition
+          varname= value
+     except that var_name="varname" is a string which must be computed.
+
+     DO NOT OVERUSE THIS FUNCTION.  It works around a specific deficiency
+     of the Yorick language -- the lack of pointers to functions, streams,
+     bookmarks, and other special non-array data types.
+
+   SEE ALSO: symbol_def, symbol_exists
  */
 
-extern set_path;
-/* DOCUMENT set_path, "dir1:dir2:dir3:..."
-         or set_path
-     sets the include file search path to the specified list of
-     directories.  The specified directories are searched left to
-     right for include files specified as relative file names in
-     #include directives, or to the include or require functions.
-     If the argument is omitted, restores the default search path,
-     ".:~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib",
-     where y_site is the main Yorick directory for this site.
-     The Y_LAUNCH directory is the directory which contains the
-     executable; this directory is omitted if it is the same as
-     Y_SITE.
+extern symbol_exists;
+/* DOCUMENT symbol_exists(name)
+     Check whether variable/function named NAME exists.  This routine can be
+     used prior to symbol_def to check existence of a symbol since symbol_def
+     raise an error for non-existing symbol.
 
-     Only the "end user" should ever call set_path, and then only in
-     his or her custom.i file, for the purpose of placing a more
-     elaborate set of personal directories containing Yorick procedures.
-     For example, if someone else maintains Yorick code you use, you
-     might put their ~/yorick on your include path.
+   SEE ALSO: symbol_def, symbol_names, symbol_set.
+*/
 
-   SEE ALSO: Y_LAUNCH, Y_SITE, include, require, get_path
- */
+extern symbol_names;
+/* DOCUMENT symbol_names()
+         or symbol_names(flags)
+     Return an  array of  strings with  the names of  all symbols  of given
+     type(s) found in  global symbol table.  To select  the type of symbol,
+     FLAGS is be the bitwise-or of one or more of the following bits:
+         1 - basic array symbols
+         2 - structure instance symbols
+         4 - range symbols
+         8 - nil symbols (i.e. symbols undefined at current scope level)
+        16 - interpreted function symbols
+        32 - builtin function symbols
+        64 - structure definition symbols
+       128 - file stream symbols
+       256 - opaque symbols (other than the ones below)
+       512 - list objects
+      1024 - auto-loaded functions
 
-extern get_path;
-/* DOCUMENT get_path()
-     returns the current include file search path.
-   SEE ALSO: set_path, get_pkgnames, split_path
- */
+     The special value FLAGS = -1 can be used to get all names found in
+     global symbol table.  The default (if FLAGS is nil or omitted) is to
+     return the names of all symbols but the nil ones.  Beware that lists,
+     hash tables and auto-loaded functions are also opaque symbols (use
+     0xffffff7f to get *all* opaque symbols).
+
+   SEE ALSO: symbol_def, symbol_exists, symbol_set.
+*/
 
 func split_path(path)
 /* DOCUMENT split_path(path)
@@ -663,105 +447,7 @@ func split_path(path)
   return strchar(path);
 }
 
-extern get_pkgnames;
-/* DOCUMENT get_pkgnames(all)
-     returns list of package names, ALL non-zero means to return both
-     statically and dynamically loaded packages, otherwise just the
-     initial statically loaded packages.
-   SEE ALSO: get_path
- */
-
-extern set_site;
-/* xxDOCUMENT set_site, site_directory
-     sets Y_LAUNCH, Y_SITE as a side effect.  Should only be called from
-     paths.i.  See paths.i.  */
-
-extern yorick_stats;
-/* DOCUMENT yorick_stats
-     returns an array of longs describing Yorick memory usage.
-     For debugging.  See ydata.c source code.
- */
-
-extern disassemble;
-/* DOCUMENT disassemble(function)
-         or disassemble, function
-     Disassembles the specified function.  If called as a function, the
-     result is returned as a vector of strings; if called as a subroutine,
-     the disassembly is printed at the terminal.  If the function is nil,
-     the current *main* program is disassembled -- you must include the
-     call to disassemble in the main program, of course, NOT on its own
-     line as a separate main program.
- */
-
-extern reshape;
-/* DOCUMENT reshape, reference, address, type, dimension_list
-         or reshape, reference, type, dimension_list
-         or reshape, reference
-     The REFERENCE must be an unadorned variable, not an expression;
-     reshape sets this variable to an LValue at the specified ADDRESS
-     with the specified TYPE and DIMENSION_LIST.  (See the array
-     function documentation for acceptable DIMENSION_LIST formats.)
-     If ADDRESS is an integer (e.g.- a long), the programmer is
-     responsible for assuring that the data at ADDRESS is valid.
-     If ADDRESS is a (Yorick) pointer, Yorick will assure that the
-     data pointed to will not be discarded, and the reshape will
-     fail if TYPE and DIMENSION_LIST extend beyond the pointee
-     bounds.  In the second form, ADDRESS is taken to be &REFERENCE;
-     that is, the TYPE and DIMENSION_LIST of the variable are changed
-     without doing any type conversion.  In the third form, REFERENCE
-     is set to nil ([]).  (Simple redefinition will not work on a
-     variable defined using reshape.)
-     WARNING: There are almost no situations for which reshape is
-       the correct operation.  Use reform instead.
-  SEE ALSO: reform, array, dimsof, numberof, is_array, eq_nocopy
- */
-
-func reform(x, ..)
-/* DOCUMENT reform(x, dimlist)
- *    returns array X reshaped according to dimension list DIMLIST.
- * SEE ALSO: array, dimsof, accum_dimlist
- */
-{
-  dims = [0];
-  while (more_args()) accum_dimlist, dims, next_arg();
-  if (dims(1)) {
-    y = array(structof(x), dims);
-    y(*) = x(*);   /* will blow up if lengths differ */
-  } else {
-    if (numberof(x)>1) error, "X longer than specified DIMLIST";
-    y = x(1);
-  }
-  return y;
-}
-
-func accum_dimlist(&dims, d)
-/* DOCUMENT accum_dimlist, dims, d
-     accumulate a dimension argument D onto a dimension list DIMS.
-     This can be used to emulate the dimension lists supplied to the
-     array function.  For example:
-       func myfunc(arg1, arg2, ..) {
-         local dims;
-         while (more_args()) accum_dimlist, dims, next_arg();
-         ...
-       }
-   SEE ALSO: array, reform
- */
-{
-  if (is_void(d)) return;
-  if (is_range(d)) {  /* yuck */
-    mn = mx = 0;
-    if (sread(print(d)(1),format="%ld:%ld",mn,mx) != 2)
-      error, "only min:max ranges allowed in dimension list";
-    d = mx - mn + 1;
-  }
-  if (!dimsof(d)(1)) d = [1, d];
-  if (is_void(dims)) {
-    dims = d;
-  } else {
-    grow, dims, d(2:1+d(1));
-    dims(1) += d(1);
-  }
-}
+/*= SECTION(advanced) performance and interface optimizations ==============*/
 
 extern eq_nocopy;
 /* DOCUMENT eq_nocopy, y, x
@@ -896,27 +582,7 @@ extern errs2caller;
   SEE ALSO: wrap_args
  */
 
-/*--------------------------------------------------------------------------*/
-
-extern array;
-/* DOCUMENT array(value, dimension_list)
-         or array(type, dimension_list)
-     returns an object of the same type as VALUE, consisting of copies
-     of VALUE, with the given DIMENSION_LIST appended to the dimensions
-     of VALUE.  Hence, array(1.5, 3, 1) is the same as [[1.5, 1.5, 1.5]].
-     In the second form, the VALUE is taken as scalar zero of the TYPE.
-     Hence, array(short, 2, 3) is the same as [[0s,0s],[0s,0s],[0s,0s]].
-     A DIMENSION_LIST is a list of arguments, each of which may be
-     any of the following:
-        (1) A positive scalar integer expression,
-        (2) An index range with no step field (e.g.-  1:10), or
-        (3) A vector of integers [number of dims, length1, length2, ...]
-            (that is, the format returned by the dimsof function).
-  SEE ALSO: reshape, is_array, dimsof, numberof, grow, span, use_origins,
-            _lst
- */
-
-/*--------------------------------------------------------------------------*/
+/*= SECTION(query) finding out variable type and properties ================*/
 
 extern structof;
 /* DOCUMENT structof(object)
@@ -1012,92 +678,6 @@ extern nameof;
      the name of the variable passed to the nameof function).
   SEE ALSO: typeof
  */
-
-/*--------------------------------------------------------------------------*/
-
-extern print;
-/* DOCUMENT print, object1, object2, object3, ...
-         or print(object1, object2, object3, ...)
-     prints an ASCII representation of the OBJECTs, in roughly the format
-     they could appear in Yorick source code.  When invoked as a subroutine
-     (in the first form), output is to the terminal.  When invoked as a
-     function (int the second form), the output is stored as a vector of
-     strings, one string per line that would have been output.
-     Printing a structure definition prints the structure definition;
-     printing a function prints its "func" definition; printing files,
-     bookmarks, and other objects generally provides some sort of
-     useful description of the object.
-  SEE ALSO: totxt, pr1, print_format, write, exit, error, nameof, typeof
- */
-
-func pr1(x)
-/* DOCUMENT pr1(x)
-     returns text representing expression X, equivalent to print(X)(1).
-   SEE ALSO: print, swrite, totxt
- */
-{ return print(x)(1); }
-
-extern print_format;
-/* DOCUMENT print_format, line_length, max_lines, char=, short=, int=,
-                          float=, double=, complex=, pointer=
-     sets the format string the print function will use for each of
-     the basic data types.  Yorick format strings are the same as the
-     format strings for the printf function defined in the ANSI C standard.
-     The default strings may be restored individually by setting the
-     associated format string to ""; all defaults are restored if
-     print_format is invoked with no arguments.  The default format strings
-     are:  "0x%02x", "%d", "%d", "%ld", "%g", "%g", and "%g+%gi".
-     Note that char and short values are converted to int before being
-     passed to printf, and that float is converted to double.
-     If present, an integer positional argument is taken as the line
-     length; <=0 restores the default line length of 80 characters,
-     while nil [] leaves the line length unchanged.
-     A second positional argument, if present, becomes the maximum number
-     of lines to output; <=0 restores the default of 5000 lines.  A single
-     print command will not produce more than this many lines of output;
-     output simply stops without any additional messages.
-  SEE ALSO: print, write, totxt, nameof, typeof
- */
-
-func totxt(x, fmt)
-/* DOCUMENT totxt(x)
-         or totxt(x, fmt)
-     returns text representing expression X.  If X is not numeric,
-     then totxt(x) is the same as print(x).  If X is numeric, then
-     totxt returns an array of strings with the same dimensions as X.
-     Integers get %d format, while reals get %g format, unless you
-     specify FMT.  FMT can be a single numeric format, or just a
-     number with the following interpretation:
-       FMT = integer w  means %wd for integers or %wf for reals
-       FMT = real w.p  means %wd for integers or %w.pf for reals
-     In either case, a negative value -w or -w.p switches to hex
-     format for integers %wx or exponential format %w.pe for reals.
-   SEE ALSO: print, swrite, tonum
- */
-{
-  i = identof(x);
-  if (i > 6) return print(x);
-  if (is_void(fmt)) {
-    fmt = (i>3)? "%g" : ((i==3)? "%ld" : "%d");
-  } else if (structof(fmt) != string) {
-    a = fmt<0;
-    fmt = abs(fmt);
-    w = long(fmt);
-    p = long(100.*(fmt-w)+1.e-6);
-    if (!(p%10)) p /= 10;
-    w = w? print(w)(1) : "";
-    if ((identof(fmt)>3) && (i>3)) p = "."+print(p)(1);
-    else p = "";
-    if (i > 3) a = a? "e" : "f";
-    else if (i == 3) a = a? "lx" : "ld";
-    else a = a? "x" : "d";
-    fmt = "%"+w+p+a;
-  }
-  if (i < 6) return swrite(format=fmt, x);
-  return swrite(format=fmt, x.re)+"+"+swrite(format=fmt, x.im)+"i";
-}
-
-/*--------------------------------------------------------------------------*/
 
 extern is_array;
 /* DOCUMENT is_array(object)
@@ -1238,8 +818,6 @@ Y_STRUCTDEF = 15;
 Y_STREAM = 16;
 Y_OPAQUE = 17;
 
-/*--------------------------------------------------------------------------*/
-
 extern am_subroutine;
 /* DOCUMENT am_subroutine()
      returns 1 if the current Yorick function was invoked as a subroutine,
@@ -1248,7 +826,7 @@ extern am_subroutine;
      has been called for its side effects only).
  */
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(math) simple mathematical functions ============================*/
 
 extern sin;
 extern cos;
@@ -1497,39 +1075,24 @@ func randomize(void)
   return seed;
 }
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(array) building and manipulating arrays ========================*/
 
-extern min;
-/* DOCUMENT min(x)
-         or min(x, y, z, ...)
-     returns the scalar minimum value of its array argument, or, if
-     more than one argument is supplied, returns an array of the
-     minimum value for each array element among the several arguments.
-     In the multi-argument case, the arguments must be conformable.
-  SEE ALSO: max, sum, avg
- */
-
-extern max;
-/* DOCUMENT max(x)
-         or max(x, y, z, ...)
-     returns the scalar maximum value of its array argument, or, if
-     more than one argument is supplied, returns an array of the
-     maximum value for each array element among the several arguments.
-     In the multi-argument case, the arguments must be conformable.
-  SEE ALSO: min, sum, avg
- */
-
-extern sum;
-/* DOCUMENT sum(x)
-     returns the scalar sum of all elements of its array argument.
-     If X is a string, concatenates all elements.
-  SEE ALSO: avg, min, max
- */
-
-extern avg;
-/* DOCUMENT avg(x)
-     returns the scalar average of all elements of its array argument.
-  SEE ALSO: sum, min, max
+extern array;
+/* DOCUMENT array(value, dimension_list)
+         or array(type, dimension_list)
+     returns an object of the same type as VALUE, consisting of copies
+     of VALUE, with the given DIMENSION_LIST appended to the dimensions
+     of VALUE.  Hence, array(1.5, 3, 1) is the same as [[1.5, 1.5, 1.5]].
+     In the second form, the VALUE is taken as scalar zero of the TYPE.
+     Hence, array(short, 2, 3) is the same as [[0s,0s],[0s,0s],[0s,0s]].
+     A DIMENSION_LIST is a list of arguments, each of which may be
+     any of the following:
+        (1) A positive scalar integer expression,
+        (2) An index range with no step field (e.g.-  1:10), or
+        (3) A vector of integers [number of dims, length1, length2, ...]
+            (that is, the format returned by the dimsof function).
+  SEE ALSO: reshape, is_array, dimsof, numberof, grow, span, use_origins,
+            _lst
  */
 
 extern allof;
@@ -1799,8 +1362,6 @@ func mergeg(&z, value)
   }
 }
 
-/*--------------------------------------------------------------------------*/
-
 extern grow;
 extern _;
 /* DOCUMENT grow, x, xnext1, xnext2, ...
@@ -1946,6 +1507,76 @@ func histinv(hist)
   return hist(0)? histogram(hist+1)(psum:1:-1) + 1 : [];
 }
 
+extern reshape;
+/* DOCUMENT reshape, reference, address, type, dimension_list
+         or reshape, reference, type, dimension_list
+         or reshape, reference
+     The REFERENCE must be an unadorned variable, not an expression;
+     reshape sets this variable to an LValue at the specified ADDRESS
+     with the specified TYPE and DIMENSION_LIST.  (See the array
+     function documentation for acceptable DIMENSION_LIST formats.)
+     If ADDRESS is an integer (e.g.- a long), the programmer is
+     responsible for assuring that the data at ADDRESS is valid.
+     If ADDRESS is a (Yorick) pointer, Yorick will assure that the
+     data pointed to will not be discarded, and the reshape will
+     fail if TYPE and DIMENSION_LIST extend beyond the pointee
+     bounds.  In the second form, ADDRESS is taken to be &REFERENCE;
+     that is, the TYPE and DIMENSION_LIST of the variable are changed
+     without doing any type conversion.  In the third form, REFERENCE
+     is set to nil ([]).  (Simple redefinition will not work on a
+     variable defined using reshape.)
+     WARNING: There are almost no situations for which reshape is
+       the correct operation.  Use reform instead.
+  SEE ALSO: reform, array, dimsof, numberof, is_array, eq_nocopy
+ */
+
+func reform(x, ..)
+/* DOCUMENT reform(x, dimlist)
+ *    returns array X reshaped according to dimension list DIMLIST.
+ * SEE ALSO: array, dimsof, accum_dimlist
+ */
+{
+  dims = [0];
+  while (more_args()) accum_dimlist, dims, next_arg();
+  if (dims(1)) {
+    y = array(structof(x), dims);
+    y(*) = x(*);   /* will blow up if lengths differ */
+  } else {
+    if (numberof(x)>1) error, "X longer than specified DIMLIST";
+    y = x(1);
+  }
+  return y;
+}
+
+func accum_dimlist(&dims, d)
+/* DOCUMENT accum_dimlist, dims, d
+     accumulate a dimension argument D onto a dimension list DIMS.
+     This can be used to emulate the dimension lists supplied to the
+     array function.  For example:
+       func myfunc(arg1, arg2, ..) {
+         local dims;
+         while (more_args()) accum_dimlist, dims, next_arg();
+         ...
+       }
+   SEE ALSO: array, reform
+ */
+{
+  if (is_void(d)) return;
+  if (is_range(d)) {  /* yuck */
+    mn = mx = 0;
+    if (sread(print(d)(1),format="%ld:%ld",mn,mx) != 2)
+      error, "only min:max ranges allowed in dimension list";
+    d = mx - mn + 1;
+  }
+  if (!dimsof(d)(1)) d = [1, d];
+  if (is_void(dims)) {
+    dims = d;
+  } else {
+    grow, dims, d(2:1+d(1));
+    dims(1) += d(1);
+  }
+}
+
 extern interp;
 /* DOCUMENT interp(y, x, xp)
          or interp(y, x, xp, which)
@@ -1997,6 +1628,39 @@ extern sort;
         help, msort
 
    SEE ALSO: median, digitize, interp, integ, histogram
+ */
+
+extern min;
+/* DOCUMENT min(x)
+         or min(x, y, z, ...)
+     returns the scalar minimum value of its array argument, or, if
+     more than one argument is supplied, returns an array of the
+     minimum value for each array element among the several arguments.
+     In the multi-argument case, the arguments must be conformable.
+  SEE ALSO: max, sum, avg
+ */
+
+extern max;
+/* DOCUMENT max(x)
+         or max(x, y, z, ...)
+     returns the scalar maximum value of its array argument, or, if
+     more than one argument is supplied, returns an array of the
+     maximum value for each array element among the several arguments.
+     In the multi-argument case, the arguments must be conformable.
+  SEE ALSO: min, sum, avg
+ */
+
+extern sum;
+/* DOCUMENT sum(x)
+     returns the scalar sum of all elements of its array argument.
+     If X is a string, concatenates all elements.
+  SEE ALSO: avg, min, max
+ */
+
+extern avg;
+/* DOCUMENT avg(x)
+     returns the scalar average of all elements of its array argument.
+  SEE ALSO: sum, min, max
  */
 
 func median(x, which)
@@ -2071,7 +1735,7 @@ extern transpose;
         dimsof(transpose(x,[4,6,3],[2,5])) == [6, 1,5,6,3,2,4]
  */
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(string) string manipulation ====================================*/
 /*
  * yorick string manipulation functions
  *
@@ -2609,6 +2273,26 @@ extern strgrep;
              strgrepm
  */
 
+func strgrepm(pat, x, off, case=)
+/* DOCUMENT strgrepm(pat, string_array)
+ *       or strgrepm(pat, string_array, off)
+ *   call strgrep, but simply return mask of same dimensions as STRING_ARRAY
+ *   set to 1 where it matches the PAT, and 0 where it does not match.
+ *   The strgrepm function does not accept any of the strgrep keywords,
+ *   but it does accept the strglob case= keyword to indicate a case
+ *   insensitive search.
+ * SEE ALSO: strglob, strgrep
+ */
+{
+  if (case) {
+    pat = strcase(0, pat);
+    x = strcase(0, x);
+  }
+  return strgrep(pat, x, off)(2,..) >= 0;
+}
+
+about_glob = strgrepm;
+
 func strmatch(s, pat, case)
 /* DOCUMENT strmatch(string_array, pattern)
          or strmatch(string_array, pattern, case_fold)
@@ -2670,7 +2354,7 @@ extern streplace;
      SEE ALSO: string, strfind, strgrep, strword, strpart
  */
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(fileio) generic file i/o =======================================*/
 
 extern open;
 /* DOCUMENT f= open(filename)
@@ -3069,6 +2753,90 @@ extern remove;
    SEE ALSO: open, close, openb
  */
 
+/*= SECTION(filetxt) text i/o to terminal, file, or string =================*/
+
+extern print;
+/* DOCUMENT print, object1, object2, object3, ...
+         or print(object1, object2, object3, ...)
+     prints an ASCII representation of the OBJECTs, in roughly the format
+     they could appear in Yorick source code.  When invoked as a subroutine
+     (in the first form), output is to the terminal.  When invoked as a
+     function (int the second form), the output is stored as a vector of
+     strings, one string per line that would have been output.
+     Printing a structure definition prints the structure definition;
+     printing a function prints its "func" definition; printing files,
+     bookmarks, and other objects generally provides some sort of
+     useful description of the object.
+  SEE ALSO: totxt, pr1, print_format, write, exit, error, nameof, typeof
+ */
+
+func pr1(x)
+/* DOCUMENT pr1(x)
+     returns text representing expression X, equivalent to print(X)(1).
+   SEE ALSO: print, swrite, totxt
+ */
+{ return print(x)(1); }
+
+extern print_format;
+/* DOCUMENT print_format, line_length, max_lines, char=, short=, int=,
+                          float=, double=, complex=, pointer=
+     sets the format string the print function will use for each of
+     the basic data types.  Yorick format strings are the same as the
+     format strings for the printf function defined in the ANSI C standard.
+     The default strings may be restored individually by setting the
+     associated format string to ""; all defaults are restored if
+     print_format is invoked with no arguments.  The default format strings
+     are:  "0x%02x", "%d", "%d", "%ld", "%g", "%g", and "%g+%gi".
+     Note that char and short values are converted to int before being
+     passed to printf, and that float is converted to double.
+     If present, an integer positional argument is taken as the line
+     length; <=0 restores the default line length of 80 characters,
+     while nil [] leaves the line length unchanged.
+     A second positional argument, if present, becomes the maximum number
+     of lines to output; <=0 restores the default of 5000 lines.  A single
+     print command will not produce more than this many lines of output;
+     output simply stops without any additional messages.
+  SEE ALSO: print, write, totxt, nameof, typeof
+ */
+
+func totxt(x, fmt)
+/* DOCUMENT totxt(x)
+         or totxt(x, fmt)
+     returns text representing expression X.  If X is not numeric,
+     then totxt(x) is the same as print(x).  If X is numeric, then
+     totxt returns an array of strings with the same dimensions as X.
+     Integers get %d format, while reals get %g format, unless you
+     specify FMT.  FMT can be a single numeric format, or just a
+     number with the following interpretation:
+       FMT = integer w  means %wd for integers or %wf for reals
+       FMT = real w.p  means %wd for integers or %w.pf for reals
+     In either case, a negative value -w or -w.p switches to hex
+     format for integers %wx or exponential format %w.pe for reals.
+   SEE ALSO: print, swrite, tonum
+ */
+{
+  i = identof(x);
+  if (i > 6) return print(x);
+  if (is_void(fmt)) {
+    fmt = (i>3)? "%g" : ((i==3)? "%ld" : "%d");
+  } else if (structof(fmt) != string) {
+    a = fmt<0;
+    fmt = abs(fmt);
+    w = long(fmt);
+    p = long(100.*(fmt-w)+1.e-6);
+    if (!(p%10)) p /= 10;
+    w = w? print(w)(1) : "";
+    if ((identof(fmt)>3) && (i>3)) p = "."+print(p)(1);
+    else p = "";
+    if (i > 3) a = a? "e" : "f";
+    else if (i == 3) a = a? "lx" : "ld";
+    else a = a? "x" : "d";
+    fmt = "%"+w+p+a;
+  }
+  if (i < 6) return swrite(format=fmt, x);
+  return swrite(format=fmt, x.re)+"+"+swrite(format=fmt, x.im)+"i";
+}
+
 extern read;
 extern sread;
 /* DOCUMENT n= read(f, format=fstring, obj1, obj2, ...)
@@ -3362,6 +3130,227 @@ extern backup;
    SEE ALSO: read, rdline, open, close
  */
 
+func select_name(list, index=,  prompt=, forever=,
+                 label=, width=, sep=, eol=, bol=, maxcols=)
+/* DOCUMENT select_name(list)
+     Print out array of strings LIST (using print_columns) and
+     interactively ask the user a number/item in the list and return the
+     selected item.  If keyword INDEX is true, the item number is returned
+     rather than its value.  The prompt string can be set with keyword PROMPT
+     (default is " Select one item: ").  If keyword FOREVER is true the user
+     is prompted until a valid choice is made.
+
+     Other keywords are passed to print_columns: LABEL (as
+     LABEL), WIDTH, SEP, EOL, BOL and MAXCOLS.
+
+   SEE ALSO: print_columns. */
+{
+  number = numberof(list);
+  print_columns, list, label=(is_void(label) ? " - " : label),
+    width=width, sep=sep, eol=eol, bol=bol, maxcols=maxcols;
+  if (is_void(prompt)) prompt=" Select one item: ";
+  for (;;) {
+    t = string(0);
+    k = 0;
+    s = rdline(prompt=prompt);
+    if (sread(s, format="%d %s", k, t) == 1 && k >= 1 && k <= number) break;
+    if (numberof((k = where(list == s))) == 1) {
+      k = k(1);
+      break;
+    }
+    if (! forever) return;
+  }
+  return (index ? k : list(k));
+}
+
+func select_file(dir, prompt=, width=, forever=, all=, pattern=)
+/* DOCUMENT select_file()
+         or select_file(dir)
+     Interactively select name of an existing file starting at current working
+     directory or at last selected directory or at DIR if this argument is
+     specified.  The function returns full path of selected file or nil [] if
+     no valid selection is made.  If keyword FOREVER is true, a file must be
+     selected for the function to return.
+
+     If keyword ALL is true, then all files and directories get displayed --
+     even the "hidden" ones which name start with a dot.  In any cases, the
+     current and parent directories ("." and "..") get displayed to allow the
+     user to re-scan the current directory or to go into the parent directory.
+
+     Keyword PATTERN can be set to a regular expression to select only files
+     that match PATTERN.  For instance, PATTERN="\\.(tgz|tar\\.gz)$" would
+     match any files with suffix ".tgz" or ".tar.gz".
+
+     Keyword WIDTH can be used to specify a different text width than the
+     default of 79 characters.
+
+     Keyword PROMPT can be set to change the default prompt:
+       " Select file/directory: "
+
+   SEE ALSO: lsdir, regmatch, print_columns. */
+{
+  /* fool codger */ extern __select_file_dir;  local dir_list;
+  if (is_void(width)) width = 79;
+  if (is_void(prompt)) prompt=" Select file/directory: ";
+  if (! is_void(pattern) && ! (is_string(pattern) && is_scalar(pattern))) {
+    error, "value of keyword PATTERN must be nil or a scalar string";
+  }
+  cwd = get_cwd();
+  if (! is_void(dir)) __select_file_dir = dir;
+  if (structof(__select_file_dir) != string) {
+    __select_file_dir = cwd;
+  } else {
+    __select_file_dir = cd(__select_file_dir);
+  }
+
+  hline = "-------------------------------------";
+  for (;;) {
+    file_list = lsdir(__select_file_dir, dir_list);
+    if (! all) {
+      if ((n = numberof(file_list)) > 0) {
+        i = where(strpart(file_list, 1:1) != ".");
+        if (numberof(i) != n) file_list = file_list(i);
+      }
+      if ((n = numberof(dir_list)) > 0) {
+        i = where(strpart(dir_list, 1:1) != ".");
+        if (numberof(i) != n) dir_list = dir_list(i);
+      }
+    }
+    if (pattern && (n = numberof(file_list)) > 0) {
+      i = where(strgrep(pattern, file_list)(2,..) >= 0);
+      if (numberof(i) != n) file_list = file_list(i);
+    }
+    grow, dir_list, ".", ".."; /* use . to allow reading directory again */
+    dir_list = dir_list(sort(dir_list));
+    list = dir_list + "/";
+    if (is_array(file_list)) {
+      grow, list, file_list(sort(file_list));
+      file_list = [];
+    }
+    ndirs = numberof(dir_list);
+    number = numberof(list);
+
+    /* Print out directory list. */
+    text = print_columns(list, label=": ", width=width,
+                         sep=, eol=" ", bol="| ", maxcols=);
+    text_len = strlen(text(1))+1;
+    len = max(width, text_len);
+    while (strlen(hline) < len) hline += hline;
+    head_line = "[" + __select_file_dir + "]";
+    n = (len - strlen(head_line) - 2)/2;
+    if (n > 0) head_line = strpart(hline, 1:n)+head_line;
+    n = len - strlen(head_line) - 2;
+    if (n > 0) head_line += strpart(hline, 1:n);
+    write, format=",%s.\n", head_line;
+    write, format=swrite(format="%%-%ds|\n", len-1), text;
+    write, format="`%s'\n", strpart(hline, 1:len-2);
+    for (;;) {
+      t = string(0);
+      k = 0;
+      s = rdline(prompt=prompt);
+      if (sread(s, format="%d %s", k, t) == 1 && k >= 1 && k <= number) break;
+      if (numberof((k = where(list == s))) == 1) {
+        k = k(1);
+        break;
+      }
+      if (numberof((k = where(dir_list == s))) == 1) {
+        k = k(1);
+        break;
+      }
+      if (! forever) {
+        cd, cwd;
+        return;
+      }
+    }
+    if (k > ndirs) {
+      cd, cwd;
+      return __select_file_dir + list(k);
+    }
+    __select_file_dir = cd(__select_file_dir + dir_list(k));
+  }
+}
+
+func print_columns(list, label=, width=, start=, sep=, eol=, bol=, maxcols=)
+/* DOCUMENT print_columns, list;
+         or print_columns(list);
+     Write array of strings LIST in columns.  In subroutine form, the result
+     is printed to standard output; otherwise, the function returns an array
+     of formatted strings (one per row).
+
+     The maximum width (in number of characters) of each row can be specified
+     with keyword WIDTH (default 79).  But actual width may be larger, since
+     at least one column is produced.
+
+     The maximum number of columns may be limited by using keyword MAXCOLS (by
+     default, there is no limit).
+
+     Keywords BOL, SEP and EOL, can be set to scalar strings to use at begin
+     of line, between each column, at end of line respectively.  SEP can also
+     be the number of spaces to insert between columns.  The default are:
+     BOL="", SEP=5 (five spaces) and EOL=string(0).
+
+     Keyword LABEL can be used to number items. LABEL must be a scalar string.
+     If LABEL contains a "%d", it is used to format the index; otherwise,
+     LABEL is the string to use as separator between indices and items.  For
+     instance:
+       label="[%d] "  yields: "[1] first_item    [2] second_item  ..."
+       label=" - "    yields: "1 - first_item    2 - second_item  ..."
+
+     Keyword START can be used to specify the starting index for numbering
+     items (default START=1).
+
+
+   SEE ALSO: swrite, select_name, select_file. */
+{
+  number = numberof(list);
+  if (is_scalar(label) && is_string(label)) {
+    if (is_void(start)) start = 1;
+    index = indgen(start:start+number-1);
+    if (strmatch(label, "%d")) {
+      index = swrite(format=label, index);
+    } else {
+      index = swrite(format="%d", index) + label;
+    }
+    len = strlen(index);
+    if (max(len) != min(len)) {
+      /* Justify index list. */
+      index = swrite(format=swrite(format="%%%ds", max(len)), index);
+    }
+    list = index + list(*);
+  } else if (is_void(label)) {
+    list = list(*);
+  } else {
+    error, "value of keyword LABEL must be nil or a scalar string";
+  }
+
+  if (is_void(bol)) bol = "";
+  if (is_void(eol)) eol = string(0);
+  if (is_void(width)) width = 79;
+  if (structof(sep) != string) {
+    /* Convert margin separator into spaces. */
+    if (is_void(sep)) sep = 5;
+    sep = swrite(format=swrite(format="%%%ds", sep), "");
+  }
+  len = max(strlen(list));
+  slen = strlen(sep);
+  ncols = (width + slen - strlen(bol) - strlen(eol))/(len + slen);
+  if (! is_void(maxcols) && ncols > maxcols) ncols = maxcols;
+  if (ncols < 1) ncols = 1;
+  nrows = (number+ncols-1)/ncols;
+
+  (tmp = array(string, nrows, ncols))(1:number) = unref(list);
+  if (ncols > 1) {
+    fmt = swrite(format="%%-%ds%s", len, sep);
+    for (j=1 ; j<ncols ; ++j) bol += swrite(format=fmt, tmp(,j));
+  }
+  fmt = (eol ? swrite(format="%%-%ds%s", len, eol) : "%s");
+  bol += swrite(format=fmt, tmp(,ncols));
+  if (! am_subroutine()) return bol;
+  write, format="%s\n", bol;
+}
+
+/*= SECTION(include) including files and parsing strings ===================*/
+
 extern include;
 extern require;
 /* DOCUMENT #include "yorick_source.i"
@@ -3530,6 +3519,131 @@ func istart_places(dir)
 
 func customize { if (!_istart_hook()) include, "custom.i"; }
 
+extern autoload;
+/* DOCUMENT autoload, ifile, var1, var2, ...
+         or autoload, ifile
+     causes IFILE to be included when any of the variables VAR1, VAR2, ...
+     is referenced as a function or subroutine.  Multiple autoload
+     calls may refer to a single IFILE; the effect is cumulative.  Note
+     that any reference to a single one of the VARi causes all of them
+     to be replaced (when IFILE is included).
+     The semantics of this process are complicated, but should work
+     as expected in most cases: After the call to autoload, the VARi
+     may not be redefined (e.g.- VARi=something or func VARi) without
+     generating a warning message, and causing all the VARi for the
+     same IFILE to become undefined.  The semantic subtlety arises
+     from the yorick variable scoping rules; if any of the VARi has local
+     scope for any function in the calling chain when the inclusion of
+     IFILE is actually triggered, only those local values will be
+     replaced.  (The autoload function is no different than the require
+     or include functions in this regard.)
+     The second form, with no VARi, cancels the autoload, without giving
+     any warning; all the VARi become undefined.
+
+     Before IFILE is included, the VARi behave like [] (nil) variables
+     as far as their response to the is_void function, and the ! and ?
+     operators.  (You can use is_func to discover whether a variable is
+     an autoload.)  Only their actual use in a function or subroutine call
+     will trigger the autoload.  While the IFILE may define the VARi
+     as any type of object, the autoload feature only works as intended
+     if the VARi are defined as interpreted or built-in functions.  The
+     only way it makes sense for a VARi to be a built-in function, is
+     if the IFILE executes a plug_in command to dynamically load an
+     associated compiled library.
+
+     If IFILE (or a file with the same name) has already been included,
+     autoload is a silent no-op.  This is exactly analogous to the
+     behavior of the require function; it does not harm to call either
+     require or autoload if the IFILE has already been included.  Note
+     that you may want to place a require at the beginning of a file
+     you expect to be autoloaded, in preference to providing separate
+     autoloads for the second file.
+
+   SEE ALSO: include, require, plug_in, is_func
+ */
+
+extern funcdef;
+/* DOCUMENT function = funcdef(command_line)
+     creates an anonymous interpreted function from the input
+     COMMAND_LINE, equivalent to
+     func function {
+       command_line;
+     }
+     The COMMAND_LINE string is restricted to the following
+     format:
+       "funcname arg1 arg2 ..."
+     where each of the arguments is one of
+     (a) a symbol (that is, a yorick variable name)
+     (b) a decimal integer
+     (c) a real number
+     (d) a quoted string
+     The quoted string is enclosed in double quotes, and a
+     backslash can be used to escape a double quote or a
+     backslash (but the other backslash escape sequences are
+     not recognized and unnecessary - just insert the ascii code).
+
+     Note that funcdef merely creates the function; if you want
+     to execute it and discard it, use the following statement:
+       funcdef(command_line);
+
+     The huge advantage of funcdef over the full yorick parser
+     is that it is stateless, which means you can invoke it to
+     generate actions for event callbacks.  The extreme simplicity
+     of the permitted COMMAND_LINE is not a limitation for this
+     application, because you are free to invoke an arbitrarily
+     complex "funcname", and to provide it with arbitrary inputs.
+
+     The intent with funcdef is not to permit you to create an
+     arbitrary toolkit of interpreted functions, but merely to
+     allow you to invoke such a toolkit; the toolkit itself is
+     supposed to be parsed by the ordinary include, require, or
+     autoload mechanisms.  Generally, you will have to design
+     an interpreted toolkit somewhat differently if it is to be
+     invoked by funcdef.  For example, funcdef does not allow
+     you to set variables as in x=value, but you can use the
+     funcset (or similarly designed) function to set variables
+     like this:
+       funcdef("funcset x value")
+
+     Do not attempt to use funcdef to input vast amounts of data.
+     As a rule of thumb, if your funcdef strings have more than a
+     couple of dozen tokens, you probably haven't thought hard
+     enough about what you are doing.
+
+   SEE ALSO: include, spawn, funcset
+*/
+
+func funcset(&v1,x1,&v2,x2,&v3,x3,&v4,x4,&v5,x5,&v6,x6,&v7,x7,&v8,x8)
+/* DOCUMENT funcset var1 val1 var2 val2 ...
+
+     Equivalent to
+       var1=val1; var2=val2; ...
+
+     This function it is not useful for yorick programs.  It is intended
+     to be used to create functions with funcdef that set variable values.
+
+     Handles at most 8 var/val pairs.
+     As a special case, if given an odd number of arguments, funcset
+     sets the final var to [], e.g.-
+       funcset var1 12.34 var2
+     is equivalent to
+       var1=12.34; var2=[];
+
+   SEE ALSO: funcdef
+ */
+{
+  v1 = x1;
+  if (is_void(x1)) return; else v2 = x2;
+  if (is_void(x2)) return; else v3 = x3;
+  if (is_void(x3)) return; else v4 = x4;
+  if (is_void(x4)) return; else v5 = x5;
+  if (is_void(x5)) return; else v6 = x6;
+  if (is_void(x6)) return; else v7 = x7;
+  if (is_void(x7)) return; else v8 = x8;
+}
+
+/*= SECTION(plugin) loading plugins ========================================*/
+
 extern plug_in;
 /* DOCUMENT plug_in, "pkgname"
 
@@ -3598,217 +3712,7 @@ extern plug_dir;
    SEE ALSO: plug_in
  */
 
-extern autoload;
-/* DOCUMENT autoload, ifile, var1, var2, ...
-         or autoload, ifile
-     causes IFILE to be included when any of the variables VAR1, VAR2, ...
-     is referenced as a function or subroutine.  Multiple autoload
-     calls may refer to a single IFILE; the effect is cumulative.  Note
-     that any reference to a single one of the VARi causes all of them
-     to be replaced (when IFILE is included).
-     The semantics of this process are complicated, but should work
-     as expected in most cases: After the call to autoload, the VARi
-     may not be redefined (e.g.- VARi=something or func VARi) without
-     generating a warning message, and causing all the VARi for the
-     same IFILE to become undefined.  The semantic subtlety arises
-     from the yorick variable scoping rules; if any of the VARi has local
-     scope for any function in the calling chain when the inclusion of
-     IFILE is actually triggered, only those local values will be
-     replaced.  (The autoload function is no different than the require
-     or include functions in this regard.)
-     The second form, with no VARi, cancels the autoload, without giving
-     any warning; all the VARi become undefined.
-
-     Before IFILE is included, the VARi behave like [] (nil) variables
-     as far as their response to the is_void function, and the ! and ?
-     operators.  (You can use is_func to discover whether a variable is
-     an autoload.)  Only their actual use in a function or subroutine call
-     will trigger the autoload.  While the IFILE may define the VARi
-     as any type of object, the autoload feature only works as intended
-     if the VARi are defined as interpreted or built-in functions.  The
-     only way it makes sense for a VARi to be a built-in function, is
-     if the IFILE executes a plug_in command to dynamically load an
-     associated compiled library.
-
-     If IFILE (or a file with the same name) has already been included,
-     autoload is a silent no-op.  This is exactly analogous to the
-     behavior of the require function; it does not harm to call either
-     require or autoload if the IFILE has already been included.  Note
-     that you may want to place a require at the beginning of a file
-     you expect to be autoloaded, in preference to providing separate
-     autoloads for the second file.
-
-   SEE ALSO: include, require, plug_in, is_func
- */
-
-func library(void)
-/* DOCUMENT library
-     print the Y_SITE/i/README file at the terminal.
- */
-{
-  f= open(Y_SITE+"i/README");
-  while ((line= rdline(f))) write, line;
-}
-
-/*--------------------------------------------------------------------------*/
-
-extern cd;
-/* DOCUMENT cd, directory_name
-         or cd(directory_name)
-     change current working directory to DIRECTORY_NAME, returning
-     the expanded path name (i.e.- with leading environment variables,
-     ., .., or ~ replaced by the actual pathname).  If called as a
-     function, returns nil to indicate failure, otherwise failure
-     causes a Yorick error.
-   SEE ALSO: lsdir, mkdir, rmdir, get_cwd, get_home, get_env, get_argv
- */
-
-extern lsdir;
-/* DOCUMENT files = lsdir(directory_name)
-         or files = lsdir(directory_name, subdirs)
-     List DIRECTORY_NAME.  The return value FILES is an array of
-     strings or nil; the order of the filenames is unspecified;
-     it does not contain "." or "..".  If present, SUBDIRS must be
-     a simple variable reference, and is set to a list of subdirectory
-     names (or nil if none).  If SUBDIRS is not present (first form),
-     the return value of lsdir includes both files and subdirectories.
-     If DIRECTORY_NAME does not exist or is not a directory, the return
-     value is the integer 0 rather than nil.  Hence:
-       files = lsdir(dirname, subdirs);
-       if (structof(files) == long) {
-         directory does not exist
-       } else {
-         for (i=1 ; i<=numberof(files) ; ++i) {...use files(i)...}
-         for (i=1 ; i<=numberof(subdirs) ; ++i) {...use subdirs(i)...}
-       }
-   SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home, filepath
- */
-
-extern mkdir;
-extern rmdir;
-/* DOCUMENT mkdir, directory_name
-         or rmdir, directory_name 
-     Create DIRECTORY_NAME with mkdir, or remove it with rmdir.  The rmdir
-     function only works if the directory is empty.  An error is raised if
-     DIRECTORY_NAME is not a non-nil scalar string.  If mkdir or rmdir are
-     called as subroutines and the operation fails, no error is raised
-     (so you can use this form even when the directory already exists for
-     mkdir, or already is missing for rmdir).  Otherwise, if
-     DIRECTORY_NAME is a non-nil scalar string and if mkdir and rmdir are
-     called as a function, they return an integer: 0 to indicate success and
-     -1 to indicate failure.
-     
-   SEE ALSO: mkdirp, cd, lsdir, get_cwd, get_home, filepath
- */
-
-func mkdirp(dir)
-/* DOCUMENT mkdirp, directory_name
-     Create DIRECTORY_NAME, creating any missing parent directories
-     (like UNIX utility mkdir -p).  Unlike mkdir, signals error if
-     the creation is unsuccessful.  If DIRECTORY_NAME already exists
-     and is a directory, mkdirp is a no-op.
-   SEE ALSO: mkdir
- */
-{
-  dir = strtrim(dir, 2, blank="/") + "/";
-  list = strfind("/", dir, n=1024);  /* assume <1024 components in dir */
-  i = list(1:-1:2);
-  list = i(where((i>0) & (list(2:0:2)>0)));
-  for (i=numberof(list) ; i>=1 ; i--) {
-    name = strpart(dir, [0,list(i)]);
-    if (lsdir(name) != 0) break;
-  }
-  for (i++ ; i<=numberof(list) ; i++)
-    mkdir, strpart(dir, [0,list(i)]);
-  if (lsdir(dir) == 0) error, "mkdirp: failed to create "+dir;
-}
-
-extern get_cwd;
-extern get_home;
-/* DOCUMENT get_cwd()
-         or get_home()
-     returns the pathname of the current working directory or of your
-     home directory.
-   SEE ALSO: cd, lsdir, get_env, get_argv
- */
-
-extern get_env;
-/* DOCUMENT get_env(environment_variable_name)
-     returns the environment variable (a string) associated with
-     ENVIRONMENT_VARIABLE_NAME (calls ANSI getenv routine).
-   SEE ALSO: cd, get_cwd, get_home, get_env, get_argv
- */
-
-extern get_argv;
-/* DOCUMENT get_argv()
-     returns string array containing the argv from the command line.
-     The -batch and batch_include.i arguments are removed (not returned).
-   SEE ALSO: process_argv, cd, get_cwd, get_home, get_env, batch
- */
-
-func process_argv(msg)
-/* DOCUMENT remaining= process_argv()
-         or remaining= process_argv("your startup message")
-     Performs standard command line processing.  This function is
-     invoked by the default custom.i file (in $Y_SITE/i); you
-     can also invoke it from your personal ~/yorick/custom.i file.
-     The process_argv calls get_argv, removes any arguments of
-     the form "-ifilename" or "-i filename" (the latter is a pair of
-     arguments.  It returns any arguments not of this form as its
-     result, after including any filenames it found in the order
-     they appeared on the command line.
-     The optional string argument may be an array of strings to print
-     a multi-line message.
-
-     A Yorick package may define the function get_command_line in
-     order to feed process_argv something other than get_argv.
-
-   SEE ALSO: batch
- */
-{
-  if (is_void(get_command_line)) command_line = get_argv();
-  else if (get_command_line == process_argv) return command_line;
-  else command_line = get_command_line();
-  get_command_line = process_argv;  /* try to avoid infinite loops */
-  if (numberof(command_line)>=2) {
-    command_line = command_line(2:);
-    mask = (strpart(command_line, 1:2) == "-i");
-    j = (command_line(0) == "-i");
-    if (j) mask(0) = 0;
-    list = where(mask);
-    n = numberof(list);
-    if (n) {
-      file = strpart(command_line(list), 3:);
-      i = where(file == "");
-      if (numberof(i)) {
-        list = list(i) + 1;
-        file(i) = command_line(list);
-        mask(list) = 1;
-      }
-      /* push onto stack in reverse order, to include in given order */
-      for (i=n ; i>=1 ; --i) include, file(i);
-    }
-    if (j) mask(0) = 1;
-    command_line= command_line(where(!mask));
-  } else {
-    command_line= [];
-  }
-  mask = (command_line == "-q");
-  if (noneof(mask)) {
-    if (is_void(msg)) {
-      v = Y_VERSION;
-      msg = [
-" Copyright (c) 2005.  The Regents of the University of California.",
-" All rights reserved.  Yorick "+v+" ready.  For help type 'help'"];
-    }
-    write, msg, format="%s\n";
-  } else if (numberof(command_line)) {
-    command_line = command_line(where(!mask));
-  }
-  return command_line;
-}
-
-/*--------------------------------------------------------------------------*/
+/*= SECTION(filebin) save and restore binary data ==========================*/
 
 func openb(filename, clogfile, update, open102=, one=)
 /* DOCUMENT file = openb(filename)
@@ -4471,283 +4375,6 @@ extern restore;
    SEE ALSO: oxy, is_obj, openb, createb, use, noop, gaccess
  */
 
-extern gaccess;
-/* DOCUMENT flags = gaccess(grp)
- *       or grp = gaccess(grp, flags)
- *   With single GRP argument, return current group object access flags.
- *   With second FLAGS argument, set group object access flags, returning
- *   the input GRP to allow constructs like g=gaccess(save(var1,var2), 3);
- *   The access flags bits are:
- *     1  set if no new members may be created
- *     2  set if existing members cannot change data type or dimensions
- *          (that is, they behave as x(..)=expr, rather than as x=expr)
- * SEE ALSO: oxy, save, restore
- */
-
-extern is_obj;
-/* DOCUMENT is_obj(x)
- *       or is_obj(x,m)
- *       or is_obj(x,m,errflag)
- *   returns 1 if X is an object, else 0.  If X is an object which permits
- *   numerical indexing of its members, returns 3.  With second parameter M,
- *   query is for member M of object X.  If M specifies multiple members
- *   (an index range, index list, or list of member names), then returns
- *   an array of results.  Note that is_obj(x,) may return [] if the
- *   object X is empty.  With third parameter ERRFLAG non-nil and non-zero,
- *   is_obj will return -2 if X is not an object, and -1 wherever M
- *   specifies a non-member (either a name not present or an index out
- *   of range).  Without ERRFLAG, is_obj raises an error when M is not
- *   a member.
- * SEE ALSO: oxy, save, restore
- */
-
-local oxy;
-/* DOCUMENT oxy
-     Object extension to yorick.  Various yorick packages may create
-     "objects", which are collections of data and methods (functions)
-     for operating on that data.  Yorick objects are much more free-form
-     than other object-oriented languages, in keeping with the fact that
-     yorick has no declarative statements.
-
-     Yorick objects have zero or more members; members may be anonymous
-     or named.  For objects supporting anonymous members (an optional
-     feature), all members whether anonymous or named can be accessed
-     by a 1-origin index, as if the members were a 1D array.  Object
-     indexing has unusual semantics, similar to the semantics of the
-     arguments to the save and restore commands, in which it is the
-     name of the variable passed as an argument to the object, rather
-     than the value of the variable, which determines which member is
-     to be extracted.  For example,
-       obj(i)
-     refers to the member of obj named "i", whether the value of i is
-     1 or 100 or "j" or sqrt(3)+2i or span(0,1,200).  However, by passing
-     an expression, rather than a simple variable reference, you can
-     make the value of the argument (now that it has no name) be significant.
-     Hence, obj("i") is also member "i", while obj(7) is the 7th member,
-     obj(3*n+2) is the 3*n+2nd member, and so on.  You can use the noop()
-     function to make a variable into an expression, if the member specifier
-     happens to be stored in a variable:
-       obj(noop(membspec))
-
-     Objects also accept some special arguments:
-       obj()   returns the whole object (same as without the parens)
-       obj(*)  returns the number of members
-       obj(*,) returns an array of member names (string(0) for anonymous)
-                 in the index order (if the object supports indexing)
-       obj(*,m)  returns an array of the specified member names, or the
-                 specified member indices if M is a string array
-                 (if the object supports indexing)
-       obj(..) returns the attribute object associated with obj, which
-                 may be an empty object, or nil [] if obj does not support
-                 attributes
-
-     When called as a subroutine, objects accept keyword arguments as a
-     shorthand for the save command:
-       obj, m1=val1, m2=val2, ...;
-     is the same as:
-       save, obj, m1=val1, m2=val2, ...;
-
-     Yorick has a generic object, called a "group", which holds an arbitrary
-     collection of yorick variables.  You make group objects with the save
-     function (see help,save), and you can also use save to add members to
-     an existing group object.  Another way to create a group object is by
-     passing a membspec argument to any group which specifies multiple
-     members -- the result will be a group containing all the specified
-     members.  Hence, membspec may be an array of strings, an array of
-     indices, or an index range min:max:step, in order to produce a group
-     object holding all the specified members.  (Note that dimensionality
-     of membspec arrays is lost, and potentially not even number is
-     preserved if a single named member is specified multiple times.)
-
-     When you pass more than one argument to an object, the first one
-     specifies a single member, and subsequent arguments apply to that
-     member.  Thus,
-       obj(m, i, j, k)    is similar to     obj(m)(i, j, k)
-     In fact, these are exactly the same as long as M does not specify
-     a function.  When M is a function, there is a slight difference,
-     which is that the function (whether built-in or interpreted) is
-     executed in the context of the object obj.  Unlike classic object
-     oriented languages, in yorick the use of the context object is not
-     automatic -- the function M must specify which object members it
-     wishes to access.  You do that with the use function:
-       func method(x, y, z) {
-         extern var1, var2, var3;
-         use, var1, var2, var3;   // initializes vari from context object
-         // compute using var1, var2, var3, possibly redefining them
-         return result;
-         // just before return, any
-         // changes to var1, var2, var3 stored back to context object
-       }
-     In this form, the arguments to the use call must be external variables
-     to the function (method).  If you put the use call(s) at the top of the
-     function, you can dispense with the explicit extern statement, provided
-     you are careful to check that none of the names matches any of the
-     dummy parameter names (x, y, or z here).  [Eventually, the yorick
-     parser may treat use specially and enforce this restriction.  For now,
-     you need to be sure that any arguments are external to avoid incorrect
-     behavior.  Specifically, if any of the vari is local, the external
-     variable of that name will be set to nil (or the actual argument value
-     if vari is a dummy parameter) when the method returns.  Ouch.]
-     Although the vari look like they are extern to the method function,
-     use saves their external values and arranges to replace them when the
-     function returns, so they behave as if they were local to method.
-
-     You want to restrict the "use" subroutine/declarative to only those
-     object members which the method function changes.  If you merely wish
-     read access, you have two options, either call a special form of
-     restore, or call use() as a function in expressions.  For example,
-     suppose you are going to modify var1 and var3, but merely read var2
-     and var4 in the method context:
-       func method(x, y, z) {
-         use, var1, var3;   // initializes vari from context object
-         local var2, var4;  // otherwise, restore arguments would be extern
-         restore, use, var2, var4;
-         // compute using vari
-         var1 = something(var2);   var3 = something(var4);
-         return result;
-       }
-     Or equivalently,
-       func method(x, y, z) {
-         use, var1, var3;   // initializes vari from context object
-         // compute using vari
-         var1 = something(use(var2));   var3 = something(use(var4));
-         return result;
-       }
-     As a function, use(arg1, arg2, ...) is exactly the same as
-     obj(arg1, arg2, ...), where obj is the context object for the function.
-
-     You can a invoke method function M as a subroutine as well:
-       obj, m, i, j, k;
-
-     This stripped down facility lets you do most of the things (except
-     arguably type checking) other object oriented languages feature,
-     although it is a little difficult to see how to do this at first.
-     For example, you can think of a "class" as the constructor function
-     which makes instances:
-       func myclass(data1, data2, ...) {
-         // build and return the class, for example:
-         return save(method1, method2, ..., data1, data2, ...);
-       }
-       func method1(x) { return something; }
-       func method2(x,y) { return something; }
-     You make an instance with:
-       mything = myclass(d1, d2);
-     Then you can use your object: mything(method2,x,y) and so on.
-
-     This is slightly untidy, because you have to worry about never
-     colliding with the method names.  So you could bundle it up neatly
-     by making myclass itself an object containing all its methods and
-     constructor(s):
-       myclass = save(new, method1, method2, ...);  // save old values
-       func new(data1, data2, ...) {
-         // build and return the class, for example:
-         return save(method1, method2, ..., data1, data2, ...);
-       }
-       func method1(x) { return something; }
-       func method2(x,y) { return something; }
-       myclass = restore(myclass);   // swap new values into myclass
-     (See help,save for examples of this trick.)  Now the only variable
-     you have to worry about not clobbering is myclass, and you create
-     your object with:
-       mything = myclass(new, d1, d2);
-     and use it as before.
-
-     There are many ways to handle inheritance (multiple inheritance
-     is no harder); the simplest is just to use the save function to
-     concatentate new members onto the base class.  [Probably should
-     illustrate a good style here...]  The complete absence of type
-     checking is actually an advantage here: If an object has a method
-     with the required arguments and semantics, it will be usable no
-     matter what other members it has.
-
-     You can also extract object members using the dot operator:
-       obj.member    is a synonym for    obj("member")
-     but note that obj.member(args) may be very different from
-     obj(member,args); in general you are better off not using the
-     dot operator with objects.  In particular, note that
-       obj.member = value;   // ERROR!
-     does NOT set the member to value.  (Use obj,member=value;)
-
-   SEE ALSO: use, save, restore, is_obj, openb, createb, noop, closure,
-             gaccess
- */
-
-extern use;
-/* DOCUMENT use, var1, var2, ...
-         or use(membspec, arg1, arg2, ...)
-     Access the context object in an object method function (see help,oxy).
-
-     In the first form, the VARi must be extern to the calling function,
-     and you get read-write access to the VARi.  That is, if you redefine
-     any of the VARi, your changes will be saved back to the context object
-     when the calling function returns.  Even though the VARi are external
-     to the method function, use arranges for their external values to be
-     replaced when the calling function returns, just as if they had been
-     local variables.
-
-     The second form is equivalent to obj(membspec, arg1, arg2, ...),
-     where obj is the context object.  You can use this whenever you need
-     only read access to membspec.
-
-     Alternatively, you can use the special forms of the save and
-     restore function to explicitly save and restore variables from the
-     context object:
-       restore, use, var1, var2, ...;
-       save, use, var1, var2, ...;
-     The use function is merely a shorthand for these explicit operations,
-     so you do not need to worry about multiple return points in the
-     method function or other details.
-
-   SEE ALSO: oxy, save, restore, openb, createb, noop, closure
- */
-
-extern closure;
-/* DOCUMENT f = closure(function, data)
-         or f = closure(object, member)
-     creates a closure function from FUNCTION and DATA.  Invoking the
-     closure function invokes FUNCTION with argument DATA prepended
-     to the argument list passed to the closure function.  For example,
-        f;        is equivalent to    FUNCTION, DATA;
-        f(a1,a2)  is equivalent to    FUNCTION(DATA, a1, a2)
-     and so on.  When the first argument is an OBJECT, and the second
-     argument a MEMBER, the object is invoked with the member as its
-     first parameter.  (Typically the member would be a function.)
-     If the first argument is an object, then the second argument
-     (MEMBER) has the same semantics as object(member, ...): namely,
-     if MEMBER is a simple variable reference, its value is ignored,
-     and only its name is used to specify which member of the object.
-     Hence, if you want the value of MEMBER to be used, you need to
-     be sure the second argument to closure is an expression, such
-     as noop(member).  If the first argument is a function, then
-     the second argument is always a value.
-
-     Finally, the first argument can be a string in order to specify
-     that the returned closure object use the value of the named
-     variable at runtime for the function (or object).  If you expect
-     the value to be an object, prefix the variable name by "o:" in
-     order to prevent the closure object from keeping a use of the
-     value of the second argument, if MEMBER is a simple variable
-     reference.  For example,
-       f = closure("myfunc", data);     // keeps use of data value
-       g = closure("o:myobj", member);  // ignores value of member
-       h = closure("myobj", noop(member));  // o: unnecessary
-     This feature is primarily an aid during debugging; typically
-     you would remove the quotes (and o:) once the code was working.
-
-     You can query a closure object using the member extraction
-     operator:
-       f.function  returns function or object
-       f.data      returns data or member
-       f.function_name  returns name of function or object
-       f.data_name      returns name of data
-     The names are string(0) if unknown; function_name is known
-     if and only if the first argument to closure was a string;
-     data_name is known only if the first argument was a string or
-     an object and the second argument a simple variable reference.
-
-   SEE ALSO: oxy, is_func, use
- */
-
 func jt(file, time)
 /* DOCUMENT jt, time
          or jt, file, time
@@ -5095,85 +4722,516 @@ extern add_next_file;
    SEE ALSO: openb, updateb, createb, add_record
  */
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(oxy) object oriented extensions to yorick ======================*/
 
-extern error;
-extern exit;
-/* DOCUMENT exit, msg
-            error, msg
-     Exits the current interpreted *main* program, printing the MSG.
-     (MSG can be omitted to print a default.)
-     In the case of exit, the result is equivalent to an immediate
-     return from every function in the current calling chain.
-     In the case of error, the result is the same as if an error had
-     occurred in a compiled routine.
-   SEE ALSO: print, write, batch, catch
+local oxy;
+/* DOCUMENT oxy
+     Object extension to yorick.  Various yorick packages may create
+     "objects", which are collections of data and methods (functions)
+     for operating on that data.  Yorick objects are much more free-form
+     than other object-oriented languages, in keeping with the fact that
+     yorick has no declarative statements.
+
+     Yorick objects have zero or more members; members may be anonymous
+     or named.  For objects supporting anonymous members (an optional
+     feature), all members whether anonymous or named can be accessed
+     by a 1-origin index, as if the members were a 1D array.  Object
+     indexing has unusual semantics, similar to the semantics of the
+     arguments to the save and restore commands, in which it is the
+     name of the variable passed as an argument to the object, rather
+     than the value of the variable, which determines which member is
+     to be extracted.  For example,
+       obj(i)
+     refers to the member of obj named "i", whether the value of i is
+     1 or 100 or "j" or sqrt(3)+2i or span(0,1,200).  However, by passing
+     an expression, rather than a simple variable reference, you can
+     make the value of the argument (now that it has no name) be significant.
+     Hence, obj("i") is also member "i", while obj(7) is the 7th member,
+     obj(3*n+2) is the 3*n+2nd member, and so on.  You can use the noop()
+     function to make a variable into an expression, if the member specifier
+     happens to be stored in a variable:
+       obj(noop(membspec))
+
+     Objects also accept some special arguments:
+       obj()   returns the whole object (same as without the parens)
+       obj(*)  returns the number of members
+       obj(*,) returns an array of member names (string(0) for anonymous)
+                 in the index order (if the object supports indexing)
+       obj(*,m)  returns an array of the specified member names, or the
+                 specified member indices if M is a string array
+                 (if the object supports indexing)
+       obj(..) returns the attribute object associated with obj, which
+                 may be an empty object, or nil [] if obj does not support
+                 attributes
+
+     When called as a subroutine, objects accept keyword arguments as a
+     shorthand for the save command:
+       obj, m1=val1, m2=val2, ...;
+     is the same as:
+       save, obj, m1=val1, m2=val2, ...;
+
+     Yorick has a generic object, called a "group", which holds an arbitrary
+     collection of yorick variables.  You make group objects with the save
+     function (see help,save), and you can also use save to add members to
+     an existing group object.  Another way to create a group object is by
+     passing a membspec argument to any group which specifies multiple
+     members -- the result will be a group containing all the specified
+     members.  Hence, membspec may be an array of strings, an array of
+     indices, or an index range min:max:step, in order to produce a group
+     object holding all the specified members.  (Note that dimensionality
+     of membspec arrays is lost, and potentially not even number is
+     preserved if a single named member is specified multiple times.)
+
+     When you pass more than one argument to an object, the first one
+     specifies a single member, and subsequent arguments apply to that
+     member.  Thus,
+       obj(m, i, j, k)    is similar to     obj(m)(i, j, k)
+     In fact, these are exactly the same as long as M does not specify
+     a function.  When M is a function, there is a slight difference,
+     which is that the function (whether built-in or interpreted) is
+     executed in the context of the object obj.  Unlike classic object
+     oriented languages, in yorick the use of the context object is not
+     automatic -- the function M must specify which object members it
+     wishes to access.  You do that with the use function:
+       func method(x, y, z) {
+         extern var1, var2, var3;
+         use, var1, var2, var3;   // initializes vari from context object
+         // compute using var1, var2, var3, possibly redefining them
+         return result;
+         // just before return, any
+         // changes to var1, var2, var3 stored back to context object
+       }
+     In this form, the arguments to the use call must be external variables
+     to the function (method).  If you put the use call(s) at the top of the
+     function, you can dispense with the explicit extern statement, provided
+     you are careful to check that none of the names matches any of the
+     dummy parameter names (x, y, or z here).  [Eventually, the yorick
+     parser may treat use specially and enforce this restriction.  For now,
+     you need to be sure that any arguments are external to avoid incorrect
+     behavior.  Specifically, if any of the vari is local, the external
+     variable of that name will be set to nil (or the actual argument value
+     if vari is a dummy parameter) when the method returns.  Ouch.]
+     Although the vari look like they are extern to the method function,
+     use saves their external values and arranges to replace them when the
+     function returns, so they behave as if they were local to method.
+
+     You want to restrict the "use" subroutine/declarative to only those
+     object members which the method function changes.  If you merely wish
+     read access, you have two options, either call a special form of
+     restore, or call use() as a function in expressions.  For example,
+     suppose you are going to modify var1 and var3, but merely read var2
+     and var4 in the method context:
+       func method(x, y, z) {
+         use, var1, var3;   // initializes vari from context object
+         local var2, var4;  // otherwise, restore arguments would be extern
+         restore, use, var2, var4;
+         // compute using vari
+         var1 = something(var2);   var3 = something(var4);
+         return result;
+       }
+     Or equivalently,
+       func method(x, y, z) {
+         use, var1, var3;   // initializes vari from context object
+         // compute using vari
+         var1 = something(use(var2));   var3 = something(use(var4));
+         return result;
+       }
+     As a function, use(arg1, arg2, ...) is exactly the same as
+     obj(arg1, arg2, ...), where obj is the context object for the function.
+
+     You can a invoke method function M as a subroutine as well:
+       obj, m, i, j, k;
+
+     This stripped down facility lets you do most of the things (except
+     arguably type checking) other object oriented languages feature,
+     although it is a little difficult to see how to do this at first.
+     For example, you can think of a "class" as the constructor function
+     which makes instances:
+       func myclass(data1, data2, ...) {
+         // build and return the class, for example:
+         return save(method1, method2, ..., data1, data2, ...);
+       }
+       func method1(x) { return something; }
+       func method2(x,y) { return something; }
+     You make an instance with:
+       mything = myclass(d1, d2);
+     Then you can use your object: mything(method2,x,y) and so on.
+
+     This is slightly untidy, because you have to worry about never
+     colliding with the method names.  So you could bundle it up neatly
+     by making myclass itself an object containing all its methods and
+     constructor(s):
+       myclass = save(new, method1, method2, ...);  // save old values
+       func new(data1, data2, ...) {
+         // build and return the class, for example:
+         return save(method1, method2, ..., data1, data2, ...);
+       }
+       func method1(x) { return something; }
+       func method2(x,y) { return something; }
+       myclass = restore(myclass);   // swap new values into myclass
+     (See help,save for examples of this trick.)  Now the only variable
+     you have to worry about not clobbering is myclass, and you create
+     your object with:
+       mything = myclass(new, d1, d2);
+     and use it as before.
+
+     There are many ways to handle inheritance (multiple inheritance
+     is no harder); the simplest is just to use the save function to
+     concatentate new members onto the base class.  [Probably should
+     illustrate a good style here...]  The complete absence of type
+     checking is actually an advantage here: If an object has a method
+     with the required arguments and semantics, it will be usable no
+     matter what other members it has.
+
+     You can also extract object members using the dot operator:
+       obj.member    is a synonym for    obj("member")
+     but note that obj.member(args) may be very different from
+     obj(member,args); in general you are better off not using the
+     dot operator with objects.  In particular, note that
+       obj.member = value;   // ERROR!
+     does NOT set the member to value.  (Use obj,member=value;)
+
+   SEE ALSO: use, save, restore, is_obj, openb, createb, noop, closure,
+             gaccess
  */
 
-extern catch;
-/* DOCUMENT catch(category)
-     Catch errors of the specified category.  Category may be -1 to
-     catch all errors, or a bitwise or of the following bits:
-
-        0x01 math errors (SIGFPE, math library)
-        0x02 I/O errors
-        0x04 keyboard interrupts (e.g.- control C interrupt)
-        0x08 other compiled errors (YError)
-        0x10 interpreted errors (error)
-
-     Use catch by placing it in a function before the section of code
-     in which you are trying to catch errors.  When catch is called,
-     it always returns 0, but it records the virtual machine program
-     counter where it was called, and longjumps there if an error is
-     detected.  The most recent matching call to catch will catch the
-     error.  Returning from the function in which catch was called
-     pops that call off the list of catches the interpreter checks.
-
-     To use catch, place the call near the top of a function:
-
-        if (catch(category)) {
-          ...<code to execute if error is caught>...
-        }
-        ...<code "protected" by the catch>...
-
-     If an error with the specified category occurs in the "protected"
-     code, the program jumps back to the point of the catch and acts
-     as if the catch function had returned 1 (remember that when catch
-     is actually called it always returns 0).
-
-     In order to lessen the chances of infinite loops, the catch is
-     popped off the active list if it is actually used, so that a
-     second error will *not* be caught.  Often, this is only desirable
-     for the error handling code itself -- if you want to re-execute
-     the "protected" code, do this, and take care of the possibility
-     of infinite loops in your interpreted code:
-
-        while (catch(category)) {
-          ...<code to execute if error is caught>...
-        }
-        ...<code "protected" by the catch>...
-
-     After an error has been caught, the associated error message
-     (what would have been printed had it not been caught) is left
-     in the variable catch_message.
-
-     ***WARNING***
-     If the code protected by the catch contains include or require
-     calls, or function references which force autoloads, and the
-     fault occurs while yorick is interpreting an included file,
-     catch will itself fault, and the error code will not execute.
-     If a fault occurs after an include has pushed a file onto
-     the include stack for delayed parsing and you catch that fault,
-     the include stack will not unwind to its condition at the time
-     catch was called.  That is, catch is incapable of protecting
-     you completely during operations involving nested levels of
-     include files.
-
-     In some cases, after_error is a more appropriate way to recover
-     from errors.
-
-   SEE ALSO: error, after_error
+extern is_obj;
+/* DOCUMENT is_obj(x)
+ *       or is_obj(x,m)
+ *       or is_obj(x,m,errflag)
+ *   returns 1 if X is an object, else 0.  If X is an object which permits
+ *   numerical indexing of its members, returns 3.  With second parameter M,
+ *   query is for member M of object X.  If M specifies multiple members
+ *   (an index range, index list, or list of member names), then returns
+ *   an array of results.  Note that is_obj(x,) may return [] if the
+ *   object X is empty.  With third parameter ERRFLAG non-nil and non-zero,
+ *   is_obj will return -2 if X is not an object, and -1 wherever M
+ *   specifies a non-member (either a name not present or an index out
+ *   of range).  Without ERRFLAG, is_obj raises an error when M is not
+ *   a member.
+ * SEE ALSO: oxy, save, restore
  */
+
+extern use;
+/* DOCUMENT use, var1, var2, ...
+         or use(membspec, arg1, arg2, ...)
+     Access the context object in an object method function (see help,oxy).
+
+     In the first form, the VARi must be extern to the calling function,
+     and you get read-write access to the VARi.  That is, if you redefine
+     any of the VARi, your changes will be saved back to the context object
+     when the calling function returns.  Even though the VARi are external
+     to the method function, use arranges for their external values to be
+     replaced when the calling function returns, just as if they had been
+     local variables.
+
+     The second form is equivalent to obj(membspec, arg1, arg2, ...),
+     where obj is the context object.  You can use this whenever you need
+     only read access to membspec.
+
+     Alternatively, you can use the special forms of the save and
+     restore function to explicitly save and restore variables from the
+     context object:
+       restore, use, var1, var2, ...;
+       save, use, var1, var2, ...;
+     The use function is merely a shorthand for these explicit operations,
+     so you do not need to worry about multiple return points in the
+     method function or other details.
+
+   SEE ALSO: oxy, save, restore, openb, createb, noop, closure
+ */
+
+extern closure;
+/* DOCUMENT f = closure(function, data)
+         or f = closure(object, member)
+     creates a closure function from FUNCTION and DATA.  Invoking the
+     closure function invokes FUNCTION with argument DATA prepended
+     to the argument list passed to the closure function.  For example,
+        f;        is equivalent to    FUNCTION, DATA;
+        f(a1,a2)  is equivalent to    FUNCTION(DATA, a1, a2)
+     and so on.  When the first argument is an OBJECT, and the second
+     argument a MEMBER, the object is invoked with the member as its
+     first parameter.  (Typically the member would be a function.)
+     If the first argument is an object, then the second argument
+     (MEMBER) has the same semantics as object(member, ...): namely,
+     if MEMBER is a simple variable reference, its value is ignored,
+     and only its name is used to specify which member of the object.
+     Hence, if you want the value of MEMBER to be used, you need to
+     be sure the second argument to closure is an expression, such
+     as noop(member).  If the first argument is a function, then
+     the second argument is always a value.
+
+     Finally, the first argument can be a string in order to specify
+     that the returned closure object use the value of the named
+     variable at runtime for the function (or object).  If you expect
+     the value to be an object, prefix the variable name by "o:" in
+     order to prevent the closure object from keeping a use of the
+     value of the second argument, if MEMBER is a simple variable
+     reference.  For example,
+       f = closure("myfunc", data);     // keeps use of data value
+       g = closure("o:myobj", member);  // ignores value of member
+       h = closure("myobj", noop(member));  // o: unnecessary
+     This feature is primarily an aid during debugging; typically
+     you would remove the quotes (and o:) once the code was working.
+
+     You can query a closure object using the member extraction
+     operator:
+       f.function  returns function or object
+       f.data      returns data or member
+       f.function_name  returns name of function or object
+       f.data_name      returns name of data
+     The names are string(0) if unknown; function_name is known
+     if and only if the first argument to closure was a string;
+     data_name is known only if the first argument was a string or
+     an object and the second argument a simple variable reference.
+
+   SEE ALSO: oxy, is_func, use
+ */
+
+extern gaccess;
+/* DOCUMENT flags = gaccess(grp)
+ *       or grp = gaccess(grp, flags)
+ *   With single GRP argument, return current group object access flags.
+ *   With second FLAGS argument, set group object access flags, returning
+ *   the input GRP to allow constructs like g=gaccess(save(var1,var2), 3);
+ *   The access flags bits are:
+ *     1  set if no new members may be created
+ *     2  set if existing members cannot change data type or dimensions
+ *          (that is, they behave as x(..)=expr, rather than as x=expr)
+ * SEE ALSO: oxy, save, restore
+ */
+
+/*= SECTION(system) interacting with system ================================*/
+
+extern quit;
+/* DOCUMENT quit
+     Exit YMainLoop when current task finishes.
+     Normally this terminates the program.
+ */
+
+extern system;
+/* DOCUMENT system, "shell command line"
+     Passes the command line string to a shell for execution.
+     If the string is constant, you may use the special syntax:
+         $shell command line
+     (A long command line may be continued by ending the line with \
+     as usual.)  The system function syntax allows Yorick to compute
+     parts of the command line string, while the simple $ escape
+     syntax does not.  In either case, the only way to get output
+     back from such a command is to redirect it to a file, then
+     read the file.  Note that Yorick does not regain control
+     until the subordinate shell finishes.  (Yorick will get control
+     back if the command line backgrounds the job.)
+     WARNING: If Yorick has grown to a large size, this may crash
+     your operating system, since the underlying POSIX fork function
+     first copies all of the running Yorick process before the exec
+     function can start the shell.  See Y_SITE/sysafe.i for a fix.
+   SEE ALSO: popen
+ */
+
+extern yorick_init;
+/* xxDOCUMENT yorick_init
+     Re-initializes all of the built-in functions for this version
+     of Yorick.  To be used in desperation if you overwrite some
+     critical built-in function by mistake.  Of course, if you
+     redefine yorick_init, you won't be able to recover anything.
+ */
+
+extern set_path;
+/* DOCUMENT set_path, "dir1:dir2:dir3:..."
+         or set_path
+     sets the include file search path to the specified list of
+     directories.  The specified directories are searched left to
+     right for include files specified as relative file names in
+     #include directives, or to the include or require functions.
+     If the argument is omitted, restores the default search path,
+     ".:~/yorick:~/Yorick:Y_SITE/i:Y_SITE/contrib:Y_SITE/i0:Y_HOME/lib",
+     where y_site is the main Yorick directory for this site.
+     The Y_LAUNCH directory is the directory which contains the
+     executable; this directory is omitted if it is the same as
+     Y_SITE.
+
+     Only the "end user" should ever call set_path, and then only in
+     his or her custom.i file, for the purpose of placing a more
+     elaborate set of personal directories containing Yorick procedures.
+     For example, if someone else maintains Yorick code you use, you
+     might put their ~/yorick on your include path.
+
+   SEE ALSO: Y_LAUNCH, Y_SITE, include, require, get_path
+ */
+
+extern get_path;
+/* DOCUMENT get_path()
+     returns the current include file search path.
+   SEE ALSO: set_path, get_pkgnames, split_path
+ */
+
+extern set_site;
+/* xxDOCUMENT set_site, site_directory
+     sets Y_LAUNCH, Y_SITE as a side effect.  Should only be called from
+     paths.i.  See paths.i.  */
+
+extern yorick_stats;
+/* DOCUMENT yorick_stats
+     returns an array of longs describing Yorick memory usage.
+     For debugging.  See ydata.c source code.
+ */
+
+extern cd;
+/* DOCUMENT cd, directory_name
+         or cd(directory_name)
+     change current working directory to DIRECTORY_NAME, returning
+     the expanded path name (i.e.- with leading environment variables,
+     ., .., or ~ replaced by the actual pathname).  If called as a
+     function, returns nil to indicate failure, otherwise failure
+     causes a Yorick error.
+   SEE ALSO: lsdir, mkdir, rmdir, get_cwd, get_home, get_env, get_argv
+ */
+
+extern lsdir;
+/* DOCUMENT files = lsdir(directory_name)
+         or files = lsdir(directory_name, subdirs)
+     List DIRECTORY_NAME.  The return value FILES is an array of
+     strings or nil; the order of the filenames is unspecified;
+     it does not contain "." or "..".  If present, SUBDIRS must be
+     a simple variable reference, and is set to a list of subdirectory
+     names (or nil if none).  If SUBDIRS is not present (first form),
+     the return value of lsdir includes both files and subdirectories.
+     If DIRECTORY_NAME does not exist or is not a directory, the return
+     value is the integer 0 rather than nil.  Hence:
+       files = lsdir(dirname, subdirs);
+       if (structof(files) == long) {
+         directory does not exist
+       } else {
+         for (i=1 ; i<=numberof(files) ; ++i) {...use files(i)...}
+         for (i=1 ; i<=numberof(subdirs) ; ++i) {...use subdirs(i)...}
+       }
+   SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home, filepath
+ */
+
+extern mkdir;
+extern rmdir;
+/* DOCUMENT mkdir, directory_name
+         or rmdir, directory_name 
+     Create DIRECTORY_NAME with mkdir, or remove it with rmdir.  The rmdir
+     function only works if the directory is empty.  An error is raised if
+     DIRECTORY_NAME is not a non-nil scalar string.  If mkdir or rmdir are
+     called as subroutines and the operation fails, no error is raised
+     (so you can use this form even when the directory already exists for
+     mkdir, or already is missing for rmdir).  Otherwise, if
+     DIRECTORY_NAME is a non-nil scalar string and if mkdir and rmdir are
+     called as a function, they return an integer: 0 to indicate success and
+     -1 to indicate failure.
+     
+   SEE ALSO: mkdirp, cd, lsdir, get_cwd, get_home, filepath
+ */
+
+func mkdirp(dir)
+/* DOCUMENT mkdirp, directory_name
+     Create DIRECTORY_NAME, creating any missing parent directories
+     (like UNIX utility mkdir -p).  Unlike mkdir, signals error if
+     the creation is unsuccessful.  If DIRECTORY_NAME already exists
+     and is a directory, mkdirp is a no-op.
+   SEE ALSO: mkdir
+ */
+{
+  dir = strtrim(dir, 2, blank="/") + "/";
+  list = strfind("/", dir, n=1024);  /* assume <1024 components in dir */
+  i = list(1:-1:2);
+  list = i(where((i>0) & (list(2:0:2)>0)));
+  for (i=numberof(list) ; i>=1 ; i--) {
+    name = strpart(dir, [0,list(i)]);
+    if (lsdir(name) != 0) break;
+  }
+  for (i++ ; i<=numberof(list) ; i++)
+    mkdir, strpart(dir, [0,list(i)]);
+  if (lsdir(dir) == 0) error, "mkdirp: failed to create "+dir;
+}
+
+extern get_cwd;
+extern get_home;
+/* DOCUMENT get_cwd()
+         or get_home()
+     returns the pathname of the current working directory or of your
+     home directory.
+   SEE ALSO: cd, lsdir, get_env, get_argv
+ */
+
+extern get_env;
+/* DOCUMENT get_env(environment_variable_name)
+     returns the environment variable (a string) associated with
+     ENVIRONMENT_VARIABLE_NAME (calls ANSI getenv routine).
+   SEE ALSO: cd, get_cwd, get_home, get_env, get_argv
+ */
+
+extern get_argv;
+/* DOCUMENT get_argv()
+     returns string array containing the argv from the command line.
+     The -batch and batch_include.i arguments are removed (not returned).
+   SEE ALSO: process_argv, cd, get_cwd, get_home, get_env, batch
+ */
+
+func process_argv(msg)
+/* DOCUMENT remaining= process_argv()
+         or remaining= process_argv("your startup message")
+     Performs standard command line processing.  This function is
+     invoked by the default custom.i file (in $Y_SITE/i); you
+     can also invoke it from your personal ~/yorick/custom.i file.
+     The process_argv calls get_argv, removes any arguments of
+     the form "-ifilename" or "-i filename" (the latter is a pair of
+     arguments.  It returns any arguments not of this form as its
+     result, after including any filenames it found in the order
+     they appeared on the command line.
+     The optional string argument may be an array of strings to print
+     a multi-line message.
+
+     A Yorick package may define the function get_command_line in
+     order to feed process_argv something other than get_argv.
+
+   SEE ALSO: batch
+ */
+{
+  if (is_void(get_command_line)) command_line = get_argv();
+  else if (get_command_line == process_argv) return command_line;
+  else command_line = get_command_line();
+  get_command_line = process_argv;  /* try to avoid infinite loops */
+  if (numberof(command_line)>=2) {
+    command_line = command_line(2:);
+    mask = (strpart(command_line, 1:2) == "-i");
+    j = (command_line(0) == "-i");
+    if (j) mask(0) = 0;
+    list = where(mask);
+    n = numberof(list);
+    if (n) {
+      file = strpart(command_line(list), 3:);
+      i = where(file == "");
+      if (numberof(i)) {
+        list = list(i) + 1;
+        file(i) = command_line(list);
+        mask(list) = 1;
+      }
+      /* push onto stack in reverse order, to include in given order */
+      for (i=n ; i>=1 ; --i) include, file(i);
+    }
+    if (j) mask(0) = 1;
+    command_line= command_line(where(!mask));
+  } else {
+    command_line= [];
+  }
+  mask = (command_line == "-q");
+  if (noneof(mask)) {
+    if (is_void(msg)) {
+      v = Y_VERSION;
+      msg = [
+" Copyright (c) 2005.  The Regents of the University of California.",
+" All rights reserved.  Yorick "+v+" ready.  For help type 'help'"];
+    }
+    write, msg, format="%s\n";
+  } else if (numberof(command_line)) {
+    command_line = command_line(where(!mask));
+  }
+  return command_line;
+}
 
 extern batch;
 /* DOCUMENT batch, 1
@@ -5243,86 +5301,6 @@ extern maybe_prompt;
      were typed.
    SEE ALSO: set_idler
 */
-
-extern funcdef;
-/* DOCUMENT function = funcdef(command_line)
-     creates an anonymous interpreted function from the input
-     COMMAND_LINE, equivalent to
-     func function {
-       command_line;
-     }
-     The COMMAND_LINE string is restricted to the following
-     format:
-       "funcname arg1 arg2 ..."
-     where each of the arguments is one of
-     (a) a symbol (that is, a yorick variable name)
-     (b) a decimal integer
-     (c) a real number
-     (d) a quoted string
-     The quoted string is enclosed in double quotes, and a
-     backslash can be used to escape a double quote or a
-     backslash (but the other backslash escape sequences are
-     not recognized and unnecessary - just insert the ascii code).
-
-     Note that funcdef merely creates the function; if you want
-     to execute it and discard it, use the following statement:
-       funcdef(command_line);
-
-     The huge advantage of funcdef over the full yorick parser
-     is that it is stateless, which means you can invoke it to
-     generate actions for event callbacks.  The extreme simplicity
-     of the permitted COMMAND_LINE is not a limitation for this
-     application, because you are free to invoke an arbitrarily
-     complex "funcname", and to provide it with arbitrary inputs.
-
-     The intent with funcdef is not to permit you to create an
-     arbitrary toolkit of interpreted functions, but merely to
-     allow you to invoke such a toolkit; the toolkit itself is
-     supposed to be parsed by the ordinary include, require, or
-     autoload mechanisms.  Generally, you will have to design
-     an interpreted toolkit somewhat differently if it is to be
-     invoked by funcdef.  For example, funcdef does not allow
-     you to set variables as in x=value, but you can use the
-     funcset (or similarly designed) function to set variables
-     like this:
-       funcdef("funcset x value")
-
-     Do not attempt to use funcdef to input vast amounts of data.
-     As a rule of thumb, if your funcdef strings have more than a
-     couple of dozen tokens, you probably haven't thought hard
-     enough about what you are doing.
-
-   SEE ALSO: include, spawn, funcset
-*/
-
-func funcset(&v1,x1,&v2,x2,&v3,x3,&v4,x4,&v5,x5,&v6,x6,&v7,x7,&v8,x8)
-/* DOCUMENT funcset var1 val1 var2 val2 ...
-
-     Equivalent to
-       var1=val1; var2=val2; ...
-
-     This function it is not useful for yorick programs.  It is intended
-     to be used to create functions with funcdef that set variable values.
-
-     Handles at most 8 var/val pairs.
-     As a special case, if given an odd number of arguments, funcset
-     sets the final var to [], e.g.-
-       funcset var1 12.34 var2
-     is equivalent to
-       var1=12.34; var2=[];
-
-   SEE ALSO: funcdef
- */
-{
-  v1 = x1;
-  if (is_void(x1)) return; else v2 = x2;
-  if (is_void(x2)) return; else v3 = x3;
-  if (is_void(x3)) return; else v4 = x4;
-  if (is_void(x4)) return; else v5 = x5;
-  if (is_void(x5)) return; else v6 = x6;
-  if (is_void(x6)) return; else v7 = x7;
-  if (is_void(x7)) return; else v8 = x8;
-}
 
 extern spawn;
 /* DOCUMENT process = spawn(argv, on_stdout)
@@ -5550,7 +5528,7 @@ func timer_print(label, split, ..)
 _timer_elapsed= [0.,0.,0.];
 timer, _timer_elapsed;
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(mesh) functions on mesh arrays =================================*/
 
 func area(y, x)
 /* DOCUMENT area(y, x)
@@ -5668,75 +5646,7 @@ func call(void)
  */
 { return void; }
 
-extern symbol_def;
-/* DOCUMENT symbol_def(func_name)(arglist)
-         or symbol_def(var_name)
-     invokes the function FUNC_NAME with the specified ARGLIST,
-     returning the return value.  ARGLIST may be zero or more arguments.
-     In fact, symbol_def("fname")(arg1, arg2, arg3) is equivalent to
-     fname(arg1, arg2, arg3), so that "fname" can be the name of any
-     variable for which the latter syntax is meaningful -- interpreted
-     function, built-in function, or array.
-
-     Without an argument list, symbol_def("varname") is equivalent to
-     varname, which allows you to get the value of a variable whose name
-     you must compute.
-
-     DO NOT OVERUSE THIS FUNCTION.  It works around a specific deficiency
-     of the Yorick language -- the lack of pointers to functions -- and
-     should be used for such purposes as hook lists (see openb).
-
-   SEE ALSO: symbol_set, symbol_exists
- */
-
-extern symbol_set;
-/* DOCUMENT symbol_set, var_name, value
-     is equivalent to the redefinition
-          varname= value
-     except that var_name="varname" is a string which must be computed.
-
-     DO NOT OVERUSE THIS FUNCTION.  It works around a specific deficiency
-     of the Yorick language -- the lack of pointers to functions, streams,
-     bookmarks, and other special non-array data types.
-
-   SEE ALSO: symbol_def, symbol_exists
- */
-
-extern symbol_exists;
-/* DOCUMENT symbol_exists(name)
-     Check whether variable/function named NAME exists.  This routine can be
-     used prior to symbol_def to check existence of a symbol since symbol_def
-     raise an error for non-existing symbol.
-
-   SEE ALSO: symbol_def, symbol_names, symbol_set.
-*/
-
-extern symbol_names;
-/* DOCUMENT symbol_names()
-         or symbol_names(flags)
-     Return an  array of  strings with  the names of  all symbols  of given
-     type(s) found in  global symbol table.  To select  the type of symbol,
-     FLAGS is be the bitwise-or of one or more of the following bits:
-         1 - basic array symbols
-         2 - structure instance symbols
-         4 - range symbols
-         8 - nil symbols (i.e. symbols undefined at current scope level)
-        16 - interpreted function symbols
-        32 - builtin function symbols
-        64 - structure definition symbols
-       128 - file stream symbols
-       256 - opaque symbols (other than the ones below)
-       512 - list objects
-      1024 - auto-loaded functions
-
-     The special value FLAGS = -1 can be used to get all names found in
-     global symbol table.  The default (if FLAGS is nil or omitted) is to
-     return the names of all symbols but the nil ones.  Beware that lists,
-     hash tables and auto-loaded functions are also opaque symbols (use
-     0xffffff7f to get *all* opaque symbols).
-
-   SEE ALSO: symbol_def, symbol_exists, symbol_set.
-*/
+/*= SECTION(checksum) crc, md5, sha1 checksums =============================*/
 
 extern crc_on;
 /* DOCUMENT crc = crc_on(x)
@@ -5848,7 +5758,85 @@ extern sha1;
    SEE ALSO: crc_on
  */
 
-/*--------------------------------------------------------------------------*/
+/*= SECTION(debug) debug commands ==========================================*/
+
+extern error;
+extern exit;
+/* DOCUMENT exit, msg
+            error, msg
+     Exits the current interpreted *main* program, printing the MSG.
+     (MSG can be omitted to print a default.)
+     In the case of exit, the result is equivalent to an immediate
+     return from every function in the current calling chain.
+     In the case of error, the result is the same as if an error had
+     occurred in a compiled routine.
+   SEE ALSO: print, write, batch, catch
+ */
+
+extern catch;
+/* DOCUMENT catch(category)
+     Catch errors of the specified category.  Category may be -1 to
+     catch all errors, or a bitwise or of the following bits:
+
+        0x01 math errors (SIGFPE, math library)
+        0x02 I/O errors
+        0x04 keyboard interrupts (e.g.- control C interrupt)
+        0x08 other compiled errors (YError)
+        0x10 interpreted errors (error)
+
+     Use catch by placing it in a function before the section of code
+     in which you are trying to catch errors.  When catch is called,
+     it always returns 0, but it records the virtual machine program
+     counter where it was called, and longjumps there if an error is
+     detected.  The most recent matching call to catch will catch the
+     error.  Returning from the function in which catch was called
+     pops that call off the list of catches the interpreter checks.
+
+     To use catch, place the call near the top of a function:
+
+        if (catch(category)) {
+          ...<code to execute if error is caught>...
+        }
+        ...<code "protected" by the catch>...
+
+     If an error with the specified category occurs in the "protected"
+     code, the program jumps back to the point of the catch and acts
+     as if the catch function had returned 1 (remember that when catch
+     is actually called it always returns 0).
+
+     In order to lessen the chances of infinite loops, the catch is
+     popped off the active list if it is actually used, so that a
+     second error will *not* be caught.  Often, this is only desirable
+     for the error handling code itself -- if you want to re-execute
+     the "protected" code, do this, and take care of the possibility
+     of infinite loops in your interpreted code:
+
+        while (catch(category)) {
+          ...<code to execute if error is caught>...
+        }
+        ...<code "protected" by the catch>...
+
+     After an error has been caught, the associated error message
+     (what would have been printed had it not been caught) is left
+     in the variable catch_message.
+
+     ***WARNING***
+     If the code protected by the catch contains include or require
+     calls, or function references which force autoloads, and the
+     fault occurs while yorick is interpreting an included file,
+     catch will itself fault, and the error code will not execute.
+     If a fault occurs after an include has pushed a file onto
+     the include stack for delayed parsing and you catch that fault,
+     the include stack will not unwind to its condition at the time
+     catch was called.  That is, catch is incapable of protecting
+     you completely during operations involving nested levels of
+     include files.
+
+     In some cases, after_error is a more appropriate way to recover
+     from errors.
+
+   SEE ALSO: error, after_error
+ */
 
 extern dbexit;
 extern dbcont;
@@ -5925,7 +5913,18 @@ extern dbauto;
       dbauto, 0         -- type <RETURN> after error to enter debug mode
  */
 
-/*--------------------------------------------------------------------------*/
+extern disassemble;
+/* DOCUMENT disassemble(function)
+         or disassemble, function
+     Disassembles the specified function.  If called as a function, the
+     result is returned as a vector of strings; if called as a subroutine,
+     the disassembly is printed at the terminal.  If the function is nil,
+     the current *main* program is disassembled -- you must include the
+     call to disassemble in the main program, of course, NOT on its own
+     line as a separate main program.
+ */
+
+/*= SECTION(list) list objects (deprecated, use oxy) =======================*/
 
 extern _lst;
 extern _cat;
