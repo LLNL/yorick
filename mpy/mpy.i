@@ -478,17 +478,21 @@ func _include_all_hook(dir)
 }
 if (mp_size) customize = noop;
 
+func mpy_get_cmdln(void)
+{
+  m = _mpy_cmdln;
+  _mpy_cmdln = [];
+  return m;
+}
+
 func mpy_process_argv(void)
 {
-  if (!is_void(get_command_line)) {
-    if (get_command_line==mpy_process_argv) return command_line;
-    return get_command_line();
-  }
+  extern _mpy_cmdln;
+  if (is_void(get_command_line)) _mpy_cmdln = get_argv();
+  else _mpy_cmdln = get_command_line();
 
-  get_command_line = mpy_process_argv;
-  command_line = get_argv();
-  if (numberof(command_line)>=2) {
-    command_line = command_line(2:);
+  if (numberof(_mpy_cmdln)>=2) {
+    command_line = _mpy_cmdln(2:);
     mask = (strpart(command_line, 1:2) == "-j");
     j = (command_line(0) == "-j");
     if (j) mask(0) = 0;
@@ -504,17 +508,22 @@ func mpy_process_argv(void)
       }
     }
     if (j) mask(0) = 1;
-    command_line = command_line(where(!mask));
-    q = (numberof(command_line) && anyof(command_line=="-q"));
-  } else {
-    command_line= [];
+    list = where(mask);
+    if (numberof(list)) _mpy_cmdln(list+1) = string(0);
+    _mpy_cmdln = _mpy_cmdln(where(_mpy_cmdln));
+    q = (numberof(_mpy_cmdln) && anyof(_mpy_cmdln=="-q"));
   }
+
+  if (!q) write, format="mpy initialized MPI on %ld processes\n", mp_size;
 
   n = numberof(file);
   for (i=1 ; i<=n ; ++i) mp_include, file(i);
 
-  if (!q) write, format="mpy initialized MPI on %ld processes\n", mp_size;
-  return process_argv();
+  x = get_command_line;
+  get_command_line = mpy_get_cmdln;
+  m = process_argv();
+  get_command_line = x;
+  return m;
 }
 
 func mpy_idler
