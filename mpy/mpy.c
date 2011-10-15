@@ -105,7 +105,7 @@ static mpy_push_t mpy_pusher[8]= {
 static long mpy_net = 0;   /* non-control messages sent minus received */
 
 static void mpy_take_back_signals(void);
-static void mperr_fatal(char *msg);
+static void mperr_fatal(const char *msg);
 static int mpy_recover(const char *msg, long *after);
 
 /* int mpy_get_next(int block) declared in mpy.h */
@@ -121,6 +121,8 @@ static void mperr_to_boss(char *msg);
 static void mperr_to_staff(char *msg);
 
 static void mpy_quit(void);
+static void mpy_abort(void);
+static int mpy_aborted = 0, mpy_batch = 0;
 /* The following MPI functions are used here:
   MPI_Init
   MPI_Comm_dup
@@ -220,8 +222,33 @@ Y_mpy_nfan(int argc)
 }
 
 static void
+mpy_abort(void)
+{
+  mpy_aborted = 1;
+  MPI_Abort(MPI_COMM_WORLD, 1);
+  y_error("called MPI_Abort");   /* unlikely to reach here */
+}
+
+extern int yBatchMode;
+
+static int mpy_quit_count = 0;
+static void
 mpy_quit(void)
 {
+  if (mpy_aborted) return;
+  if (mpy_quit_count++) mpy_abort();
+  if (!mpy_rank && !mpy_parallel) {
+    /* broadcast quit command */
+    long cdims[2];
+    char *c;
+    cdims[0] = 1;  cdims[1] = 7;
+    c = ypush_c(cdims);  /* VM is dead, but stack still usable */
+    mpy_batch = yBatchMode;
+    c[0] = mpy_batch? '\t' : ' ';  c[1] = '\0';
+    c[2]='q'; c[3]='u'; c[4]='i'; c[5]='t'; c[6]='\0';
+    mpy_bcast(1);  /* send quit command to all other ranks */
+    mpy_bcast(0);  /* handle their synchronization */
+  }
   /* presume that all processes are quitting together */
   MPI_Finalize();
 }
@@ -374,9 +401,13 @@ Y_mp_exec(int argc)
         long i, nq, cdims[2];
         char *c, *cc, **q = ygeta_q(0, &nq, (long*)0);
         cdims[0] = 1;
-        cdims[1] = 0;
+        cdims[1] = 2;
         for (i=0 ; i<nq ; i++) cdims[1] += 1 + (q[i]? strlen(q[i]) : 0);
         c = ypush_c(cdims);
+        /* prepend a blank line to mark batch mode (tab) or not (space) */
+        mpy_batch = yBatchMode;
+        *c++ = mpy_batch? '\t' : ' ';
+        *c++ = '\0';
         for (i=0 ; i<nq ; i++) {
           cc = q[i];
           if (cc) while (cc[0]) *c++ = *cc++;
@@ -402,6 +433,8 @@ Y_mp_exec(int argc)
     mpy_bcast(1);  /* make sure everybody has char command on stack */ 
     /* invoke interpreted include,char_array */
     if (mpy_rank) {
+      char *cmsg = (yarg_typeid(0)==Y_CHAR)? ygeta_c(0,0,0) : 0;
+      mpy_batch = cmsg? (cmsg[0]=='\t') : 0;
       mpy_parallel = 1;
       Y_include(1);
       /* synchronize after parse, before execution (see next comment) */
@@ -850,6 +883,10 @@ mpy_recover(const char *emsg, long *after)
   long id, id0, net, count=-1, nid1=0, mid1=0, frank=-1;
   MPI_Status status;
   char *msg;
+
+  if (mpy_aborted) return 1;
+  if (mpy_batch) mperr_fatal(emsg);
+
   if (staff1 >= mpy_size) staff1 = mpy_size;
 
   if (!mperr_quiet) {
@@ -1157,12 +1194,15 @@ mperr_decode(char *text, long *pn)
 }
 
 static void
-mperr_fatal(char *msg)
+mperr_fatal(const char *msg)
 {
   /* do not be clever here -- just kill all processes */
-  MPI_Abort(MPI_COMM_WORLD, 1);
-  y_warnn("Rank %ld raised fatal MPI communication error:", mpy_rank);
+  if (!mpy_batch)
+    y_warnn("Rank %ld raised fatal MPI communication error:", mpy_rank);
+  else
+    y_warnn("Rank %ld raised error in batch mode:", mpy_rank);
   y_warn(msg);
+  mpy_abort();
 }
 
 /* ------------------------------------------------------------------------ */

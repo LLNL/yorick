@@ -443,7 +443,7 @@ func _mp_connect(rank)
     extern _mp_conprompt;
     _mp_disconnect = 0n;
     /* dbexit from inside immediate include longjumps (clears stack) */
-    dbexit = _mpy_quit = mp_disconnect;
+    dbexit = quit = mp_disconnect;
     include, [mp_recv(0)], 1;
     mp_send, 0, _mp_disconnect;
     if (_mp_disconnect) mp_dbexit, 0;
@@ -595,13 +595,5 @@ func mpy_on_fault
 }
 /* set to faulting rank before mpy_on_fault called */
 local mpy_frank;
-
-if (is_void(_mpy_quit)) _mpy_quit = quit;
-func quit(..)
-{
-  if (mp_exec()) mp_exec, "_mpy_quit";
-  else _mpy_quit;
-}
-if (!mp_size) quit = _mpy_quit;
 
 /* ------------------------------------------------------------------------ */
