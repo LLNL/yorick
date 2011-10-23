@@ -769,13 +769,13 @@ extern is_pointer;
              is_stream, is_struct, is_void.
  */
 
+extern identof;
 local Y_CHAR, Y_SHORT, Y_INT, Y_LONG;
 local Y_FLOAT, Y_DOUBLE, Y_COMPLEX;
 local Y_STRING, Y_POINTER, Y_STRUCT;
 local Y_RANGE, Y_LVALUE, Y_VOID;
 local Y_FUNCTION, Y_BUILTIN;
 local Y_STRUCTDEF, Y_STREAM, Y_OPAQUE;
-extern identof;
 /* DOCUMENT identof(object)
      Returns type identifier of OBJECT as a long integer:
        0 (Y_CHAR)      for an array of char('s)
