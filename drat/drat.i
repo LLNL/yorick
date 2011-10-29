@@ -8,13 +8,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-/* ------------------------------------------------------------------------ */
-
-/* MAKE-INSTRUCTIONS
-SRCS = bound.c track.c trans.c drat.c ydrat.c
-LIB = drat
-DEPLIBS =
-*/
+/*= SECTION() 2D transport equation solver =================================*/
 
 if (!is_void(plug_in)) plug_in, "drat";
 

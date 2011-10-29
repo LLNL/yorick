@@ -62,6 +62,8 @@
        frequency as the first index. The freqfirst flag handles this.
  */
 
+/*= SECTION() multiple mesh support for drat package ======================*/
+
 func multio(filename, opac=, emiss=, srcf=, oscale=, escale=,
             gb=, gav=, gexist=, gscale=, zonelist=, zoneuse=,
             tscale=, noextrap=, freqfirst=)

@@ -8,6 +8,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() put numeric labels on contours ==============================*/
+
 func plc_label(z,y,x, levs, ndivs=, opaque=, lmgrid=, height=)
 /* DOCUMENT plc_label, z,y,x, levs, ndivs=ndivs, opaque=opaque, lmgrid=lmgrid
 

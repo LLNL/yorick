@@ -1,7 +1,7 @@
 
      The following include files contain Yorick code built from the
      basic Yorick functions.  These are part of the Yorick distribution,
-     and are located in the directory Y_SITE/include.
+     and are located in the directory Y_SITE/i.
 
    Special functions:
    ------------------

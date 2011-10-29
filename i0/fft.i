@@ -8,13 +8,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-/* ------------------------------------------------------------------------ */
-
-/* MAKE-INSTRUCTIONS
-SRCS = cfft2.c cfftb.c cfftf.c cffti.c roll2.c
-LIB = 
-DEPLIBS =
-*/
+/*= SECTION() Fast Fourier Transform functions =============================*/
 
 /* ------------------------------------------------------------------------ */
 

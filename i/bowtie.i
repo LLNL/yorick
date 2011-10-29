@@ -9,6 +9,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() detect quad mesh bowties =================================*/
+
 func bowtie(rt, zt, ireg)
 /* DOCUMENT map= bowtie(rt, zt)
          or map= bowtie(rt, zt, ireg)

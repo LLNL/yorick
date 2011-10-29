@@ -8,14 +8,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-/* ------------------------------------------------------------------------ */
-
-/* MAKE-INSTRUCTIONS
-SRCS = dlamc3.c dgyor.c dgtsv.c dgesv.c dgecon.c dgels.c dgelss.c \
-       dbdsqr.c dlasr.c dgesvd.c dgesv2.c dgblas.c
-LIB = 
-DEPLIBS =
-*/
+/*= SECTION() LAPACK linear algebra functions ==============================*/
 
 /* ------------------------------------------------------------------------ */
 

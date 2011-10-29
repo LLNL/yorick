@@ -25,6 +25,8 @@
    plray_lims     -- set limits for plray
  */
 
+/*= SECTION() create and plot ray sets for drat package ====================*/
+
 func form_rays(rays)
 /* DOCUMENT best= form_rays( [x, y, z, theta, phi] )
          or dirt= form_rays( [x, y, theta] )

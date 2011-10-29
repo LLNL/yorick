@@ -11,6 +11,8 @@
 /* if (is_void(plug_in)) plug_in, "mpy"; */
 if (!is_func(mp_send)) error, "mpy built with TGT=dll, must build TGT=exe";
 
+/*= SECTION() MPI parallel processing interface ============================*/
+
 local mp_rank;
 local mp_size;
 local mp_nfan;

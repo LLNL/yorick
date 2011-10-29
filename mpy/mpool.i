@@ -8,6 +8,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() mpy pool of tasks programming paradigm =======================*/
+
 func mpool(__a__) /* fsow, fwork, freap, use_vsave=, self=, list=, nmax= */
 /* DOCUMENT pool_stats = mpool(fsow, fwork, freap)
  *   perform a pool-of-jobs parallel calculation, in which a master

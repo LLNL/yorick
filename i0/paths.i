@@ -57,6 +57,7 @@
  * LPR_FORMAT provides a similar service for PostScript files generated
  * directly by Yorick.
  */
+/*= SECTION() file system paths =====================================*/
 
 /* ------------------------------------------------------------------------ */
 

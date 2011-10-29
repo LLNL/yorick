@@ -8,6 +8,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() mpy simple parallel test suite ===============================*/
+
 func testmp
 /* DOCUMENT testmp
  *   runs testmp2, testmp3, and testmpool

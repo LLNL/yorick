@@ -7,10 +7,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-/* MAKE-INSTRUCTIONS
-SRCS = yhex.c hex5.c hex24.c hex.c regul.c tools.c store.c hydram.c
-LIB = hex
-*/
+/*= SECTION() 3D transport equation solver =================================*/
 
 if (!is_void(plug_in)) plug_in, "hex";
 

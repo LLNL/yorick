@@ -8,6 +8,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() mpy version 1 support for backward compatibility =============*/
+
 func mp_recv1(..)
 /* DOCUMENT mp_recv1
    ***implements obsolete mpy1 mp_recv API***

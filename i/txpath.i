@@ -10,6 +10,8 @@
 
 /* ------------------------------------------------------------------------ */
 
+/*= SECTION() funky rotated text plotter ==============================*/
+
 func rotext(text, path)
 /* DOCUMENT plt, rotext(text,path), x, y
      return TEXT string as is (PATH=0), reversed (PATH=1), reversed and

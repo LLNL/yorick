@@ -9,6 +9,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() yorick package manager ======================================*/
+
 PKG_MNGR_VERSION = 0.7;
 
 if (!PKG_SETUP) PKG_SETUP = Y_HOME+"packages/pkg_setup.i";

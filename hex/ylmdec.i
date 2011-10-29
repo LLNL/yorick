@@ -31,6 +31,8 @@ and n<=12, but rapidly gets nasty for more points or more l-values.
 
  */
 
+/*= SECTION() compute Ylm coefficients using hex ray tracer ===============*/
+
 #include "plato.i"
 #include "legndr.i"
 

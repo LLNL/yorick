@@ -8,6 +8,8 @@
  * Read the accompanying LICENSE file for details.
  */
 
+/*= SECTION() support for Basis-generated pdb files ========================*/
+
 local basfix;
 /* DOCUMENT #include "basfix.i"
 
