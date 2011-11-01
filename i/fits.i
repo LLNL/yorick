@@ -181,8 +181,8 @@
  * Initial revision
  */
 
-local fits;
 fits = "$Revision: 1.34 $";
+local fits;
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided  by   this  (standalone)  package  are  aimed  at
@@ -3349,6 +3349,7 @@ func fits_map(op, src)
   return dst;
 }
 
+local fits_is_integer_scalar, fits_is_real_scalar, fits_is_string_scalar;
 /* DOCUMENT fits_is_integer_scalar(x);
          or fits_is_real_scalar(x);
          or fits_is_string_scalar(x);
@@ -3846,14 +3847,7 @@ func fits_rehash(fh)
 
 /*---------------------------------------------------------------------------*/
 
-func fits_get_bscale(fh) {
-  if ((s = structof((value = fits_get(fh, _fits_id_bscale, default=1.0))))
-      == double) return value; if (s == long) return double(value);
-  _fits_warn, "bad value type for BSCALE"; return 1.0; }
-func fits_get_bzero(fh) {
-  if ((s = structof((value = fits_get(fh, _fits_id_bzero, default=0.0))))
-      == double) return value; if (s == long) return double(value);
-  _fits_warn, "bad value type for BZERO"; return 0.0; }
+local fits_get_bscale, fits_get_bzero;
 /* DOCUMENT fits_get_bscale(fh)
          or fits_get_bzero(fh)
      Get BSCALE  and BZERO  values for FITS  handle FH.  These  parameters are
@@ -3862,19 +3856,16 @@ func fits_get_bzero(fh) {
      if the corresponding card is missing, BSCALE and BZERO default to 1.0 and
      0.0 respectively.
    SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
+func fits_get_bscale(fh) {
+  if ((s = structof((value = fits_get(fh, _fits_id_bscale, default=1.0))))
+      == double) return value; if (s == long) return double(value);
+  _fits_warn, "bad value type for BSCALE"; return 1.0; }
+func fits_get_bzero(fh) {
+  if ((s = structof((value = fits_get(fh, _fits_id_bzero, default=0.0))))
+      == double) return value; if (s == long) return double(value);
+  _fits_warn, "bad value type for BZERO"; return 0.0; }
 
-func fits_get_groups(fh) {
-  if (structof((value = fits_get(fh, _fits_id_groups, default='F')))
-      == char) return value;
-  _fits_warn, "bad value type for GROUPS"; return 'F'; }
-func fits_get_gcount(fh) {
-  if (structof((value = fits_get(fh, _fits_id_gcount, default=1)))
-      == long) return value;
-  _fits_warn, "bad value type for GCOUNT"; return 1; }
-func fits_get_pcount(fh) {
-  if (structof((value = fits_get(fh, _fits_id_pcount, default=0)))
-      == long) return value;
-  _fits_warn, "bad value type for PCOUNT"; return 0; }
+local fits_get_groups, fits_get_gcount, fits_get_pcount;
 /* DOCUMENT fits_get_groups(fh)
          or fits_get_gcount(fh)
          or fits_get_pcount(fh)
@@ -3898,7 +3889,26 @@ func fits_get_pcount(fh) {
    SEE ALSO: fits, fits_get, fits_get_bitpix,
              fits_read_array, fits_write_array.
  */
+func fits_get_groups(fh) {
+  if (structof((value = fits_get(fh, _fits_id_groups, default='F')))
+      == char) return value;
+  _fits_warn, "bad value type for GROUPS"; return 'F'; }
+func fits_get_gcount(fh) {
+  if (structof((value = fits_get(fh, _fits_id_gcount, default=1)))
+      == long) return value;
+  _fits_warn, "bad value type for GCOUNT"; return 1; }
+func fits_get_pcount(fh) {
+  if (structof((value = fits_get(fh, _fits_id_pcount, default=0)))
+      == long) return value;
+  _fits_warn, "bad value type for PCOUNT"; return 0; }
 
+local fits_get_history, fits_get_comment;
+/* DOCUMENT fits_get_history(fh)
+         or fits_get_comment(fh)
+     Get COMMENT  and HISTORY  values for  FITS handle FH.   The result  is an
+     array of string(s)  or nil if no  such cards exists in the  header of the
+     current unit.
+   SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
 func fits_get_history(fh) {
   if (structof((value = fits_get(fh, _fits_id_history))) == string
       || is_void(value)) return value;
@@ -3907,12 +3917,6 @@ func fits_get_comment(fh) {
   if (structof((value = fits_get(fh, _fits_id_comment))) == string
       || is_void(value)) return value;
   error, "bad value type for COMMENT"; }
-/* DOCUMENT fits_get_history(fh)
-         or fits_get_comment(fh)
-     Get COMMENT  and HISTORY  values for  FITS handle FH.   The result  is an
-     array of string(s)  or nil if no  such cards exists in the  header of the
-     current unit.
-   SEE ALSO: fits, fits_get, fits_read_array, fits_write_array. */
 
 
 func fits_get_list(fh, key)
