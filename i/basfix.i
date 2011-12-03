@@ -28,13 +28,13 @@ local basfix;
    SEE ALSO: obasis, baset, baget
  */
 
-func _obasis(filename, clogfile, at_open, open102=)
+func _obasis(filename, clogfile, at_open, open102=, one=)
 {
   at_pdb_open= at_open | 12;
-  return basfix_xopenb(filename, clogfile, open102=open102);
+  return basfix_xopenb(filename, clogfile, open102=open102, one=one);
 }
 
-func obasis(filename, clogfile, update, open102=)
+func obasis(filename, clogfile, update, open102=, one=)
 /* DOCUMENT file= obasis(filename)
          or file= openb(filename)
          or file= openb(filename, clogfile)
@@ -58,18 +58,27 @@ func obasis(filename, clogfile, update, open102=)
      The restore function may be used to make memory copies of data
      in the file; this will be faster than a large number of
      references to "file.var".
-
-   SEE ALSO: updateb, createb, open, cd
+     The openb function will recognize families of PDB or netCDF files
+     by their sequential names and open all files subsequent to FILENAME
+     in such a family as well as FILENAME itself.  You can use the one=1
+     keyword to suppress this behavior and open only FILENAME.
+     FILENAME may be a file handle to skip the initial open operation.
+     This feature is intended to enable in-memory files created with
+     vopen to be opened:
+       file = openb(vopen(char_array,1));
+     FILENAME may also be char_array directly, as returned by vsave.
+   SEE ALSO: updateb, createb, open, vopen, cd
              show, jt, jc, restore
              get_vars, get_times, get_ncycs, get_member, has_records
              set_blocksize, dump_clog, read_clog, recover_file
              openb_hooks, open102, close102, get_addrs,
-
              baset, baget
  */
 {
-  if (update) return basfix_xopenb(filename,clogfile,update, open102=open102);
-  else return _obasis(filename, clogfile, at_pdb_open, open102=open102);
+  if (update)
+    return basfix_xopenb(filename,clogfile,update, open102=open102,one=one);
+  else
+    return _obasis(filename, clogfile, at_pdb_open, open102=open102, one=one);
 }
 
 if (is_void(basfix_openb)) basfix_openb= openb;
@@ -121,9 +130,9 @@ func baget(file, varname)
   return get_member(file,vars(list(1)));
 }
 
-func basfix_xopenb(filename,clogfile,update, open102=)
+func basfix_xopenb(filename,clogfile,update, open102=, one=)
 {
-  f = basfix_openb(filename,clogfile,update, open102=open102);
+  f = basfix_openb(filename,clogfile,update, open102=open102, one=one);
   vars = get_vars(f);
   if (vars(1) && allof((*vars(1))!="/")) return f;
 
