@@ -303,8 +303,9 @@ func _mpool_active(_pool)
       _jobi = _mpool_create(_pool, 0);
       _jobi = _pool.vsave? vsave(_jobi) : vpack(_jobi);
       /* send shutdown like mp_handout, confirm like mp_handin */
-      staff = _mpool_staff();
-      if (!is_void(staff)) {
+      staff = _pool.list? *_pool.list : indgen(0:(mp_size?mp_size-1:0));
+      staff = (numberof(staff)>1)? staff(2:) : [];
+      if (numberof(staff)) {
         mp_send, staff, _jobi;
         /* collect timing data, confirm shutdown of all slaves */
         for (i=1 ; i<=numberof(staff) ; ++i)
@@ -317,50 +318,14 @@ func _mpool_active(_pool)
 
   } else if (_pool.state == 30) { /* shut down slave */
     _jobi = _jobo = [];
-    staff = _mpool_staff();
-    if (!is_void(staff)) {
-      _jobi = _mpool_create(_pool, 0);
-      _jobi = _pool.vsave? vsave(_jobi) : vpack(_jobi);
-      mp_send, staff, _jobi;  /* pass along shutdown message */
-      for (i=1 ; i<=numberof(staff) ; ++i)
-        _pool.twork += mp_recv(staff(i));
-    }
     /* send timing info back to boss and exit fslave */
-    mp_send, _mpool_boss(), _pool.twork;
+    mp_send, _pool.master, _pool.twork;
     return 0;
 
   } else {
     error, "pool state corrupted";
   }
   return 1;
-}
-
-func _mpool_staff(void)
-{
-  nfan = mpool_nfan? mpool_nfan : mp_nfan;
-  if (!_pool.list) {
-    staff = mp_rank*nfan + indgen(nfan);
-    staff = staff(where(staff < mp_size));
-  } else {
-    r = where(mp_rank == *_pool.list) - 1;
-    staff = r*nfan + indgen(nfan);
-    staff = staff(where(staff < numberof(*_pool.list)));
-    if (numberof(staff)) staff = (*_pool.list)(1+staff);
-  }
-  return staff;
-}
-
-func _mpool_boss(void)
-{
-  nfan = mpool_nfan? mpool_nfan : mp_nfan;
-  if (!_pool.list) {
-    if (!mp_rank) return [];
-    return (mp_rank-1)/nfan;
-  } else {
-    r = where(mp_rank == *_pool.list)(1) - 1;
-    if (!r) return [];
-    return (*_pool.list)(1 + (r-1)/nfan);
-  }
 }
 
 func _mpool_ready(_pool, block)
