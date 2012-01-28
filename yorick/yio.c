@@ -97,18 +97,19 @@ int (*YputsErr)(char *s)= &YDputsErr;
 #define MAX_LINE 16384
 #define INC_LINE 256
 
-char *Ygets(YgetsLine *getsLine, p_file *file)
+char *
+Ygets(YgetsLine *getsLine, p_file *file)
 {
-  char *prev, *line= getsLine->line;
-  int ateof, n, maxChars= getsLine->max;
+  char *line = getsLine->line;
+  int ateof, n, maxChars = getsLine->max;
 
   if (!file) YError("(BUG) file==0 to Ygets no longer legal");
 
   if (maxChars<MIN_LINE || maxChars>BIG_LINE) {
     p_free(line);
-    getsLine->line= line= p_malloc(MIN_LINE+1);
-    getsLine->max= maxChars= MIN_LINE;
-    line[maxChars]= '\0';   /* just in case... */
+    getsLine->line = line = p_malloc(MIN_LINE+1);
+    getsLine->max = maxChars = MIN_LINE;
+    line[maxChars] = '\0';   /* just in case... */
   }
 
   /* Take care not to try to read a stream that has already returned EOF.  */
@@ -116,15 +117,23 @@ char *Ygets(YgetsLine *getsLine, p_file *file)
   ateof = Yfeof(file);
   if (!ateof && Yferror(file)) goto abort;
 
-  n= strlen(line);
+  n = strlen(line);
   while (line[n-1]!='\n' && !ateof) {
     if (maxChars>=MAX_LINE) goto abort;
-    prev= line;
-    getsLine->line= line= p_malloc(maxChars+INC_LINE+1);
-    strcpy(line, prev);
-    p_free(prev);
-    getsLine->max= (maxChars+= INC_LINE);
-    line[maxChars]= '\0';   /* just in case... */
+    if (n >= maxChars-8) {
+      /* on any reasonable file system, n == maxChars here
+       * one some massively parallel file systems, however, fgets can
+       * return before end-of-line even though not at end-of-file
+       * - hence fgets should always be called in a loop until either
+       *   \n or EOF
+       */
+      char *prev = line;
+      getsLine->line = line = p_malloc(maxChars+INC_LINE+1);
+      strcpy(line, prev);
+      p_free(prev);
+      getsLine->max = (maxChars += INC_LINE);
+      line[maxChars] = '\0';   /* just in case... */
+    }
 
     /* EOF is possible, in which case Yfgets returns 0 (ignored here)
        and leaves line unmodified.  The following strlen is guaranteed
@@ -132,22 +141,22 @@ char *Ygets(YgetsLine *getsLine, p_file *file)
     Yfgets(&line[n], maxChars+1-n, file);
     ateof = Yfeof(file);
     if (!ateof && Yferror(file)) goto abort;
-    n+= strlen(&line[n]);   /* faster than n= strlen(line) */
+    n += strlen(&line[n]);   /* faster than n= strlen(line) */
   }
 
-  if (line[n-1]=='\n') line[--n]= '\0';
-  getsLine->n= n;
+  if (line[n-1]=='\n') line[--n] = '\0';
+  getsLine->n = n;
   return line;
 
  abort:
   /* If neither Yferror(file) nor Yfeof(file), then line-too-long abort.  */
   if (maxChars>MIN_LINE) {
     p_free(line);
-    getsLine->line= line= p_malloc(MIN_LINE+1);
-    getsLine->max= maxChars= MIN_LINE;
+    getsLine->line = line = p_malloc(MIN_LINE+1);
+    getsLine->max = maxChars = MIN_LINE;
   }
-  line[0]= '\0';
-  getsLine->n= 0;
+  line[0] = '\0';
+  getsLine->n = 0;
   return 0;
 }
 
