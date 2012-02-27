@@ -380,7 +380,9 @@ case "$os_name" in
     PLUG_SFX=.sl
   ;;
   Darwin)     # Apple MacOS X powerpc architecture (ignore i86 versions?)
-    PLUG_UDL=-DPLUG_MACOSX
+    # for Mac OS X 10.3 and earlier, use -DPLUG_MACOSX
+    # see https://developer.apple.com/library/mac/#qa/qa1180/_index.html
+    PLUG_UDL=-DPLUG_LIBDL
     PLUG_EXPORT=
     PLUG_LIB=
     PLUG_PIC=
