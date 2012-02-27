@@ -95,6 +95,9 @@ p_dlsym(void *handle, const char *symbol, int type, void *paddr)
 
 
 #elif defined(PLUG_MACOSX)
+/* Apple now deprecates this.  At Mac OS X 10.4 and beyond, use PLUG_LIBDL.
+ * see https://developer.apple.com/library/mac/#qa/qa1180/_index.html
+ */
 
 #define PLUG_SUFFIX ".so"
 
