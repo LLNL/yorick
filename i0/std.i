@@ -4286,6 +4286,7 @@ extern restore;
        save, use, var1, var2, ...;
        restore, use, var1, var2, ...;
          save and restore to the current context object (see help,use).
+         Normally you should use the use function, not these special forms.
 
      Each VARi may be a simple variable reference, in which case the name
      of the VARi specifies which member of the object.  (In the case of
@@ -4841,6 +4842,38 @@ local oxy;
 
      You can a invoke method function M as a subroutine as well:
        obj, m, i, j, k;
+     Inside a method function, you can invoke other methods with the
+     use_method function:
+       use_method, sibling_method, arg1, arg2;
+         or
+       x = use_method(sibling_method, arg1, arg2);
+     where sibling_method is another method in the same context as the
+     caller.  Called as a function, use_method is very nearly the same
+     as use; you could write the second line as:
+       x = use(sibling_method, arg1, arg2);
+     (See help,use for an explanation of the differences.)
+
+     The obj(method,arglist) syntax permits the method argument to be
+     an expression whose value is a function.  This allows you to
+     invoke functions which are not members of obj in the context of
+     obj.  This is useful in two situations: First, you can define
+     "friend" functions in C++ parlance, which are not a part of the
+     object, but nevertheless understand some part of its structure.
+     Second, this is the only way you can call a function in a base
+     class which you have shadowed by a virtual function in one of
+     its derived classes.  For example, suppose the base_interface
+     object contains the method functions f1, f2, f3, etc., and is
+     used to derive an object with
+       obj = save(,base_interface, data1, data2);
+       save, obj, f2;
+     where f2 is a different function than the one in base_interface.
+     Inside the function f2, you can call the one in base_interface
+     like this:
+       func f2(a, b) {
+         use, data1, data2;
+         x = use_method(base_interface(f2), a, b);
+         return x + data1 + data2; // or any other expression
+       }
 
      This stripped down facility lets you do most of the things (except
      arguably type checking) other object oriented languages feature,
@@ -4913,8 +4946,11 @@ extern is_obj;
  */
 
 extern use;
+extern use_method;
 /* DOCUMENT use, var1, var2, ...
          or use(membspec, arg1, arg2, ...)
+         or use_method, memberspec, arg1, arg2, ...
+         or use_method(memberspec, arg1, arg2, ...)
      Access the context object in an object method function (see help,oxy).
 
      In the first form, the VARi must be extern to the calling function,
@@ -4929,14 +4965,26 @@ extern use;
      where obj is the context object.  You can use this whenever you need
      only read access to membspec.
 
+     The third form permits you to call a method member of the context
+     as a subroutine (like "noop,use(memberspec,arg1,arg2,...)").
+     The fourth form is similar to the second -- use_method(...) is
+     nearly a synonym for use(...), with two exceptions:
+     1. use_method(memberspec) invokes the memberspec function with
+        zero arguments, while use(memberspec) returns the function
+        rather than invoking it.
+     2. use_method raises an error if memberspec is not a function,
+        while use does not (for example, memberspec could be an array).
+
      Alternatively, you can use the special forms of the save and
      restore function to explicitly save and restore variables from the
      context object:
        restore, use, var1, var2, ...;
        save, use, var1, var2, ...;
-     The use function is merely a shorthand for these explicit operations,
-     so you do not need to worry about multiple return points in the
-     method function or other details.
+     The use function is normally the better choice; the special forms
+     of save and restore are for slightly higher performance in unusual
+     situations.  If you mix save,use,var or restore,use,var with use,var,
+     you will very likely have trouble with different versions of var
+     overwriting each other unintentionally.
 
    SEE ALSO: oxy, save, restore, openb, createb, noop, closure
  */

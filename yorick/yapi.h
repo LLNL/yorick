@@ -602,7 +602,7 @@ struct yo_ops_t {
 /* yo_push_alloc makes obj part of data block, initialize in place
  * yo_push makes data block with pointer to obj (returning obj)
  *   yo_ops_t method functions obviously know how to distinguish
- *     - in particular, del_obj erases obj contents for yo_push_alloc,
+ *     - in particular, dealloc erases obj contents for yo_push_alloc,
  *       but must also free obj pointer for yo_push
  * yo_get returns obj and ops, making it possible to call method functions
  *   - returns 0 if iarg (on stack) not an oxy_object
@@ -615,6 +615,15 @@ PLUG_API void *yo_push_alloc(yo_ops_t *ops, unsigned long size);
 PLUG_API void *yo_push(yo_ops_t *ops, void *obj);
 PLUG_API void *yo_get(int iarg, yo_ops_t **ops);
 
+/* yo_use is the compiled equivalent of the interpreted use function
+ * you should call it before reading or writing (with ypush_global
+ * or yput_global) in order to be sure interpreted functions actually
+ * pick up changes
+ * - return value is 0 on success, 1 if index (globtab index) is not in
+ *   globtab, 2 if index is not in the context object, and 3 if there is
+ *   no context
+ */
+PLUG_API int yo_use(long index);
 /* yo_get_context returns the context object for the current function
  * iarg>=0 means get the context object for the builtin function at iarg
  *           normally called with iarg=argc, the argument to the builtin

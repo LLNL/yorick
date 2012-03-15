@@ -248,3 +248,37 @@ cl_test2;
 
 /* put back built-in closure */
 closure = closure.data;
+
+/* ---------------------- test friend and sibling calls */
+
+func test5
+{
+  use, data1;
+  data1++;
+}
+save, testoxy, test5;
+
+func test4(&x)
+{
+  use, data1;
+  x = data1;
+  use_method, test5;
+  return data1++;
+}
+
+testoxy, data1=12;
+x = testoxy(noop(test4), y);
+if (y!=12 || x!=13 || testoxy(data1)!=14) {
+    write, format="***FAILED oxy %s test\n", "friend";
+} else {
+  write, "PASSED oxy friend test";
+}
+
+save, testoxy, test4;
+testoxy, data1=12;
+x = testoxy(test4, y);
+if (y!=12 || x!=13 || testoxy(data1)!=14) {
+    write, format="***FAILED oxy %s test\n", "sibling";
+} else {
+  write, "PASSED oxy sibling test";
+}

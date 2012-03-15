@@ -19,6 +19,7 @@
 #include <string.h>
 
 extern BuiltIn Y_use, Y_save, Y_restore, Y_is_obj, Y_closure, Y_gaccess;
+extern BuiltIn Y_use_method;
 
 /* ------------------------------------------------------------------------ */
 /* oxy_object is the base class for yorick's object oriented extension
@@ -28,6 +29,7 @@ static void yo_on_free(void *uo);
 static void yo_on_print(void *uo);
 static void yo_on_extract(void *uo, char *name);
 static void yo_on_eval(void *uo, int nargs);
+static void yo_on_evalx(void *uo, int nargs, int icx, int meth);
 
 static y_userobj_t yo_uops =
   { "oxy_object", yo_on_free, yo_on_print, yo_on_eval, yo_on_extract, 0 };
@@ -121,8 +123,57 @@ yo_on_extract(void *uo, char *name)
  *   void yo_mk_context(int iarg)        replace oxy_object by oxy_context
  *   int yo_cswap(int iarg, long index)  add one use item to oxy_context
  *   void yo_cupdate(int iarg)           update oxy_object from all use items
+ *
+ * on obj(member,...) on_eval, stack begins like this:
+ *   obj  member  arg1  ...
+ * mk_context replaces obj by context:
+ *   context  member  arg1  ...
+ *      +-->obj    <context owns stack reference to obj>
+ *      +-->xlist  <context maintains list of externals>
+ * The xlist contains external values of variables shadowed by object
+ * members swapped into globtab by the use function.  Return from the
+ * (interpreted) caller of use moves those variables from globtab back
+ * into the object, and replaces the external values stored in xlist.
+ *
+ * What we really want is to replace the object itself by this context,
+ * so that anyone requesting a member gets the thing in globtab.  But
+ * this doesn't work for a general object, since its members might not
+ * be anything storable in globtab.  When the object is such a thing,
+ * however, the use function is always going to be problematic.  We also
+ * want compiled functions to "play nice" with the use function, so that
+ * instead of directly reading or writing from their context object,
+ * they use globtab for members being "use"d.
+ * Problem 1:
+ *   Functions called in an object context should be able to call sibling
+ * methods via use(sibling, ...).  This should work even if the object
+ * (or its sibling caller) has called use to work with some members in
+ * globtab.  This requires use to be smart enough to realize when a member
+ * is already in use by a function up the call chain.
+ * A related problem is that compiled methods also need to be able to
+ * detect when a "use" function has swapped object members into globtab,
+ * so it can operate on those instead of the obsolete copies in the
+ * object itself.  Do this with yo_use analogue to interpreted use.
+ * To handle the main problem, it would suffice for use to replace itself
+ * by an "indirect context" that refers back to the original context,
+ * rather than to the object.  Any interpreted returns with this modified
+ * context would not unswap globtab with object members, while any use
+ * functions would act on the original context, so that the outermost
+ * return would pick them up.
+ * --This requires that cswap be a no-op when a member is already in use,
+ *   making it somewhat difficult to handle situations in which the
+ *   context has new members added during the call.
+ * --Note that save,use and restore,use don't play nice with use.
+ *   Probably want just use instead of save,use.  The restore,use form
+ *   would undo any changes to a used variable.
+ * Problem 2:
+ *   There should be a way to invoke a "friend" method in the current
+ * context, even when the "friend" is not a member of the context
+ * object.  The primary example is a method of a derived class which
+ * needs to call the method of the same name in the base class.  This
+ * can be done easily if use(base_api(method), ...) were accepted, that
+ * is, if use accepts a non-simple variable reference.
  */
-static void yo_mk_context(int iarg);
+static void yo_mk_context(int iarg, int icx);
 static int yo_cswap(int iarg, long index);
 static void *yo_seek_context(int iarg, int *piarg, int push);
 
@@ -138,43 +189,72 @@ struct yo_symbol_t {
 
 typedef struct yo_context_t yo_context_t;
 struct yo_context_t {
+  /* obj is the actual context object
+   * ocount is the last known number of members in obj, which
+   * determines how many bits in xlist are allocated
+   * ocount<0 indicates that this is an "indirect" context generated
+   *   by the use function, with the true context at this sp[ocount]
+   *   nxlist = xlist = 0 in that case
+   */
   DataBlock *obj;
+  long ocount;
   /* xlist starts nil, grows on subroutine calls to use
    * xlist[i] is external value of item saved before loading from obj
    * xlist[i].index is member index in obj, from which global index
    *   can be retrieved
-   * - no attempt to make xlist[i].index unique
+   * - bit flags begin at xlist[nxlist], set to mark members which
+   *   currently reside in globtab; there are ocount bit flags
    * - on delete, restored in reverse order created
    */
   long nxlist;
   yo_symbol_t *xlist;
+  unsigned char *bits;  /* set indicates already swapped */
 };
 
 static void
-yo_mk_context(int iarg)
+yo_mk_context(int iarg, int icx)
 {
-  if (yget_obj(iarg,0) == yo_uops.type_name) {
+  if (icx>iarg || yget_obj(iarg,0)==yo_uops.type_name) {
     yo_context_t *uo = ypush_obj(&yo_cops, sizeof(yo_context_t));
     uo->nxlist = 0;
     uo->xlist = 0;
-    uo->obj = yget_use(++iarg);
-    yarg_swap(0, iarg);
+    uo->bits = 0;
+    if (icx > iarg) {  /* make indirect context */
+      uo->ocount = iarg - icx;  /* location of direct context */
+      uo->obj = 0;
+    } else {           /* make direct context */
+      uo->ocount = 0;
+      uo->obj = yget_use(iarg+1);
+    }
+    yarg_swap(0, iarg+1);
     yarg_drop(1);
   } else {
     y_error("(BUG) yo_mk_context expected oxy_object");
   }
 }
 
-int
+static yo_symbol_t *yo_xlistx(yo_symbol_t *s, long n,
+                              long ocount, long ncount);
+
+static int
 yo_cswap(int iarg, long index)
 {
   if (yget_obj(iarg,0) == yo_cops.type_name) {
     yo_context_t *uc = yget_obj(iarg, &yo_cops);
-    yo_data_t *uo = yget_obj_s(uc->obj);
-    yo_ops_t *ops = uo->ops;
-    void *obj = uo->obj;
-    yo_symbol_t *s = uc->xlist;
-    long m = 0, n = uc->nxlist;
+    yo_data_t *uo;
+    yo_ops_t *ops;
+    void *obj;
+    yo_symbol_t *s;
+    long m = 0, ocount, n;
+    if (uc->ocount < 0) {
+      iarg -= uc->ocount;
+      uc = (yget_obj(iarg,0)==yo_cops.type_name)? yget_obj(iarg,&yo_cops) : 0;
+      if (!uc || uc->ocount<0)
+        y_error("(BUG) yo_cswap bad indirect oxy_context");
+    }
+    uo = yget_obj_s(uc->obj);
+    ops = uo->ops;
+    obj = uo->obj;
     if (index<0 || index>=globalTable.nItems)
       return 1;  /* no such index in globtab */
     if (ops->find_mndx) {
@@ -182,8 +262,19 @@ yo_cswap(int iarg, long index)
       if (m < 1)
         return 2;  /* no member of same name in oxy_object */
     }
-    if (!(n&(n+1)) && (!n || n==4))
-      uc->xlist = s = p_realloc(s, (n?(n+n):4)*sizeof(yo_symbol_t));
+    ocount = uc->ocount;
+    s = uc->xlist;
+    n = uc->nxlist;
+    if (!n || (n>=4 && !(n&(n+1)))) {
+      long ncount = ops->count(obj);
+      uc->xlist = s = yo_xlistx(s, n, ocount, ncount);
+      uc->ocount = ocount = ncount;
+      uc->bits = (unsigned char*)(s + (n?n+n:4));
+    }
+    if (m > ocount)
+      y_error("(BUG) yo_cswap object count less than returned index");
+    if (uc->bits[((unsigned long)m-1)>>3] & (1<<(m-1)))
+      return 0;  /* this member already in global */
     /* copy globtab[index] to oxy_context xlist */
     ypush_global(index);
     s[n].m = m;
@@ -197,10 +288,25 @@ yo_cswap(int iarg, long index)
     else ops->get_q(obj, globalTable.names[index], index);
     yput_global(index, 0);
     yarg_drop(1);
+    /* mark this member */
+    uc->bits[((unsigned long)m-1)>>3] |= 1<<(m-1);
   } else {
     y_error("(BUG) yo_cswap expected oxy_context");
   }
   return 0;  /* success */
+}
+
+static yo_symbol_t *
+yo_xlistx(yo_symbol_t *s, long n, long ocount, long ncount)
+{
+  long i, nn = n? n+n : 4;
+  unsigned char *bo, *bn;
+  s = p_realloc(s, nn*sizeof(yo_symbol_t)+(ncount/8)+1);
+  bo = (unsigned char *)(s+n);
+  bn = (unsigned char *)(s+nn);
+  for (i=ncount-1 ; i>=ocount ; i--) bn[i] = 0;
+  for ( ; i>=0 ; i--) bn[i] = bo[i];
+  return s;
 }
 
 void
@@ -208,11 +314,24 @@ yo_cupdate(int iarg)
 {
   if (yget_obj(iarg,0) == yo_cops.type_name) {
     yo_context_t *uc = yget_obj(iarg, &yo_cops);
-    yo_data_t *uo = yget_obj_s(uc->obj);
-    yo_ops_t *ops = uo->ops;
-    void *obj = uo->obj;
-    yo_symbol_t *s = uc->xlist;
-    long i = uc->nxlist;
+    yo_data_t *uo;
+    yo_ops_t *ops;
+    void *obj;
+    yo_symbol_t *s;
+    long i;
+    int zap = 1;
+    if (uc->ocount < 0) {
+      iarg -= uc->ocount;
+      uc = (yget_obj(iarg,0)==yo_cops.type_name)? yget_obj(iarg,&yo_cops) : 0;
+      if (!uc || uc->ocount<0)
+        y_error("(BUG) yo_cupdate bad indirect oxy_context");
+      zap = 0;
+    }
+    uo = yget_obj_s(uc->obj);
+    ops = uo->ops;
+    obj = uo->obj;
+    s = uc->xlist;
+    i = uc->nxlist;
     /* in reverse order of yo_cswap */
     while (--i >= 0) {
       if (s[i].s.index<0 || s[i].m<0) continue;
@@ -220,7 +339,8 @@ yo_cupdate(int iarg)
       ypush_global(s[i].s.index);
       if (ops->find_mndx) ops->set_i(obj, s[i].m, 0);
       else ops->set_q(obj, globalTable.names[s[i].s.index], s[i].s.index, 0);
-      s[i].m = -1;  /* remove xlist correspondance to oxy_object member */
+      if (zap)
+        s[i].m = -1;  /* remove xlist correspondance to oxy_object member */
       yarg_drop(1);
     }
   } else {
@@ -253,11 +373,14 @@ yo_con_free(void *vuc)
       }
       uc->nxlist = 0;
       uc->xlist = 0;
+      uc->bits = 0;
       p_free(s);
     }
     /* now that xlist is gone, decrement object uses */
     uc->obj = 0;
     Unref(db);
+  } else {
+    uc->ocount = 0;
   }
 }
 
@@ -273,7 +396,14 @@ yo_seek_context(int iarg, int *piarg, int push)
   }
   if (yget_obj(iarg,0) == yo_cops.type_name) {
     yo_context_t *uc = yget_obj(iarg, &yo_cops);
-    yo_data_t *uo = yget_obj_s(uc->obj);
+    yo_data_t *uo;
+    if (uc->ocount < 0) {
+      iarg -= uc->ocount;
+      uc = (yget_obj(iarg,0)==yo_cops.type_name)? yget_obj(iarg,&yo_cops) : 0;
+      if (!uc || uc->ocount<0)
+        y_error("(BUG) yo_seek_context bad indirect oxy_context");
+    }
+    uo = yget_obj_s(uc->obj);
     if (push) {
       sp[1].ops = &dataBlockSym;
       sp[1].value.db = Ref(uc->obj);
@@ -299,10 +429,24 @@ yo_get_context(int iarg, yo_ops_t **ops, int push)
 
 /* ------------------------------------------------------------------------ */
 
+static void yo_use_guts(int argc, int meth);
+
 void
 Y_use(int argc)
 {
-  int icx, sub = yarg_subroutine();
+  yo_use_guts(argc, 0);
+}
+
+void
+Y_use_method(int argc)
+{
+  yo_use_guts(argc, 1);
+}
+
+static void
+yo_use_guts(int argc, int meth)
+{
+  int icx, sub = meth? 0 : yarg_subroutine();
   yo_data_t *obj = yo_seek_context(-1, &icx, !sub);
 
   if (sub) {
@@ -318,22 +462,30 @@ Y_use(int argc)
 
   } else if (obj) {
     /* use(arg1, arg2, ...) same as obj(arg1, arg2, ...) */
-    icx = (int)(sp-spBottom) - (argc+1);
+    long isp = (sp-spBottom) - (argc+1);
     yarg_swap(argc+1, 0);
     yarg_drop(1);
     /* context obj replaced use builtin, just invoke on_eval obj method */
-    yo_on_eval(obj, argc);
+    yo_on_evalx(obj, argc, icx, meth);
     /* ensure EvalBI gets correctly positioned stack if possible */
-    icx = (int)(sp-spBottom) - icx;
-    if (icx>0 && sp->ops!=&returnSym) {
-      yarg_swap(icx, 0);
-      yarg_drop(icx);
+    isp = (sp-spBottom) - isp;
+    if (isp>0 && sp->ops!=&returnSym) {
+      yarg_swap(isp, 0);
+      yarg_drop(isp);
     }
 
   } else {
     /* use() with no context */
     ypush_nil();
   }
+}
+
+int
+yo_use(long index)
+{
+  int icx;
+  yo_data_t *obj = yo_seek_context(-1, &icx, 0);
+  return obj? yo_cswap(icx, index) : 3;
 }
 
 typedef struct yo_membarg_t yo_membarg_t;
@@ -347,6 +499,7 @@ struct yo_membarg_t {
   long *mndxs;
   long *range;     /* points into unused part of dims */
   int special;     /* 0 not, 1 nil, 2 -, 3 *, 4 .. */
+  int frnd;
 };
 
 /* may want to publish this API... */
@@ -362,6 +515,7 @@ yo_membarg(int iarg, void *obj, yo_ops_t *ops, yo_membarg_t *ma, int flag)
   ma->names = 0;
   ma->mndxs = ma->range = 0;
   ma->special = 0;
+  ma->frnd = 0;
 
   if (ma->iname >= 0) {
     ma->name = yfind_name(ma->iname);
@@ -469,8 +623,13 @@ yo_membarg(int iarg, void *obj, yo_ops_t *ops, yo_membarg_t *ma, int flag)
       }
 
     } else {
-      if (flag&1) y_error("unrecognized member specifier argument");
-      ma->n = -1;
+      int ff = yarg_func(iarg);
+      if (ff<1 || ff>4) {
+        if (flag&1) y_error("unrecognized member specifier argument");
+        ma->n = -1;
+      } else {
+        ma->frnd = 1; /* function that will be called in context of object */
+      }
     }
   }
 
@@ -785,7 +944,7 @@ Y_save(int argc)
             ma.special = 0;    /* same as string(0) */
           }
         }
-        if (!ma.special) {   /* save a single member */
+        if (!ma.special && !ma.frnd) {   /* save a single member */
           if (ma.name) {
             if (ops->set_q(obj, ma.name, ma.iname, argc))
               y_errorq("unable to save to member %s", ma.name);
@@ -834,12 +993,18 @@ extern void FormEvalOp(int nArgs, Operand *obj);
 static void
 yo_on_eval(void *uo, int nargs)
 {
+  yo_on_evalx(uo, nargs, -1, 0);
+}
+
+static void
+yo_on_evalx(void *uo, int nargs, int icx, int meth)
+{
   yo_ops_t *ops = ((yo_data_t*)uo)->ops;
   void *obj = ((yo_data_t*)uo)->obj;
   yo_membarg_t ma;
   int iarg = nargs-1;
 
-  if (iarg>0 && !sp[-iarg].ops && yarg_subroutine()) {
+  if (!meth && iarg>0 && !sp[-iarg].ops && yarg_subroutine()) {
     /* obj, member1=expr1, member2=expr2, ... */
     for (;;) {
       ma.iname = sp[-iarg].index;
@@ -854,6 +1019,8 @@ yo_on_eval(void *uo, int nargs)
   }
 
   yo_membarg(iarg, obj, ops, &ma, 1);
+  if (meth && (ma.special || ma.n))
+    y_error("use_method requires single member specifier");
 
   if (!ma.special) {             /* obj(m) */
     if (ma.n) {  /* just extract member(s) */
@@ -891,10 +1058,12 @@ yo_on_eval(void *uo, int nargs)
       } else if (ma.mndx) {
         if (ops->get_i(obj, ma.mndx))
           y_errorn("unable to get member %ld", ma.mndx);
+      } else if (ma.frnd) {
+        ypush_use(yget_use(iarg)); /* duplicate friend to top of stack */
       } else {
         y_error("string(0) does not specify an object member");
       }
-      if (yarg_subroutine() || iarg) {
+      if (meth || yarg_subroutine() || iarg) {
         Operand obj;
         long isp;
         /* instead of simply extracting the member, eval it */
@@ -902,7 +1071,9 @@ yo_on_eval(void *uo, int nargs)
         yarg_swap(iarg+1, 0);
         yarg_drop(1); /* throw away member specifier, have thing itself */
         if (yarg_func(iarg))
-          yo_mk_context(iarg+1);
+          yo_mk_context(iarg+1, icx);
+        else if (meth)
+          y_error("use_method requires first argument to be a function");
         FormEvalOp(iarg, &obj);
         isp = sp - spBottom;
         obj.ops->Eval(&obj);
