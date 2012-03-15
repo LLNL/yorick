@@ -4801,6 +4801,9 @@ local oxy;
          return result;
          // just before return, any
          // changes to var1, var2, var3 stored back to context object
+         // if this function was called by another method by the
+         // use_method function, the store back to the context object
+         // is deferred until the outermost method returns
        }
      In this form, the arguments to the use call must be external variables
      to the function (method).  If you put the use call(s) at the top of the
@@ -4816,10 +4819,8 @@ local oxy;
      use saves their external values and arranges to replace them when the
      function returns, so they behave as if they were local to method.
 
-     You want to restrict the "use" subroutine/declarative to only those
-     object members which the method function changes.  If you merely wish
-     read access, you have two options, either call a special form of
-     restore, or call use() as a function in expressions.  For example,
+     Calling use() as a function, or using a special form of restore
+     provides a means for direct read-only access to a member.  For example,
      suppose you are going to modify var1 and var3, but merely read var2
      and var4 in the method context:
        func method(x, y, z) {
@@ -4839,6 +4840,10 @@ local oxy;
        }
      As a function, use(arg1, arg2, ...) is exactly the same as
      obj(arg1, arg2, ...), where obj is the context object for the function.
+     You have to be careful not to mix this form of read-only access with
+     the read-write access of use called as a subroutine: If you have changed
+     the value of a variable, use(var) will pick up the unchanged value
+     still stored in the context object.
 
      You can a invoke method function M as a subroutine as well:
        obj, m, i, j, k;
@@ -4975,7 +4980,23 @@ extern use_method;
      2. use_method raises an error if memberspec is not a function,
         while use does not (for example, memberspec could be an array).
 
-     Alternatively, you can use the special forms of the save and
+     When you invoke a method with use_method (or use as a function),
+     any calls to the subroutine form of use (the first form) will
+     be cumulative with calls made by the caller.  When a method invoked
+     by use_method (or use as a function) returns, the VARi from any
+     use subroutine calls it has made are *not* restored when it returns.
+     Instead, the restore and the update of the context object itself
+     are deferred until the outermost method returns -- the one that
+     was not invoked by use_method.
+
+     Therefore, you should generally use the first form for access to
+     data members of an object, and the other forms for access to
+     function (method) members of objects.  If you violate this rule,
+     your method code may have unexpected side effects, unless you can
+     guarantee that it your method will never be invoked by another
+     method by means of use_method (or use as a function).
+
+     Additionally, you can use the special forms of the save and
      restore function to explicitly save and restore variables from the
      context object:
        restore, use, var1, var2, ...;
