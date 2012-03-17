@@ -914,6 +914,7 @@ Y_save(int argc)
         ma.names = 0;
         ma.mndxs = ma.range = 0;
         ma.special = 0;
+        ma.frnd = 0;
         argc--;
       }
       if (argc <= 0)
