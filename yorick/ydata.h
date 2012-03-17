@@ -189,6 +189,7 @@ struct Function {
                              bits 1-30 set if that positional parameter
                              marked as an output */
   int errup;              /* to mark func to enter caller for dbug */
+  long isrc;              /* index of source file from RecordSource */
   Instruction code[1];    /* virtual machine instructions begin here */
   /* First 1+nPos+hasPosList+nKey+nLocal instructions are code[i].index
      for function name (in definition), positional parameters,

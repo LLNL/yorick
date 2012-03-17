@@ -1822,7 +1822,7 @@ static Function *help_worker= 0;
 void Y_help(int nArgs)
 {
   Symbol *stack= sp-nArgs+1;
-  long index, worker_arg;
+  long index, worker_arg, isrc=-1;
   int nAbove;
   p_file *file;
 
@@ -1844,6 +1844,7 @@ void Y_help(int nArgs)
       if (ops==&functionOps) {
         Function *f= (Function *)db;
         index= f->code[0].index;
+        isrc = f->isrc;
       } else if (ops==&structDefOps) {
         StructDef *base= (StructDef *)db;
         while (base->model) base= base->model;
@@ -1875,7 +1876,7 @@ void Y_help(int nArgs)
   }
 
   /* create help_file extern variable */
-  if (index>=0 && (file= OpenSource(index)))
+  if (index>=0 && (file= OpenSource(index, isrc)))
     PushDataBlock(NewTextStream(p_strcpy(ypIncludes[nYpIncludes-1].filename),
                                 file, 1, ypBeginLine-1, p_ftell(file)));
   else

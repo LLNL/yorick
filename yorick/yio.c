@@ -35,7 +35,7 @@ extern int YstdinNB(int noWait);
 
 extern char *GetRFName(RangeFunc *rfTarget);
 
-extern long ReopenSource(long index, int notExtern);
+extern long ReopenSource(long index, int notExtern, long isrc);
 extern int YpParse(void *func);
 
 /*--------------------------------------------------------------------------*/
@@ -981,7 +981,7 @@ char *YpReparse(void *function)
 {
   Function *func= function;
   long index= func? func->code[0].index : -1;
-  long position= ReopenSource(index, 1);
+  long position= ReopenSource(index, 1, (func?func->isrc:-1));
   char *msg;
   if (position>=0) {
     YpParse(func);  /* This had better not generate any new tasks... */

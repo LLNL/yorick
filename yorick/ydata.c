@@ -73,6 +73,7 @@ Function *NewFunction(Symbol *consts, long nConsts, int nPos, int nKey,
   func->nLocal= nLocal;
   func->hasPosList= hasPL;
   func->errup = 0;
+  func->isrc = -1;
   codeSize-= frameSize-1;
   /* YpFunc puts the frame variables (parameters and locals) at the end
      of the code, switch them to the beginning now.  */

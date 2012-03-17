@@ -15,7 +15,7 @@
 #include "pstdlib.h"
 #include <string.h>
 
-extern void RecordSource(long index);  /* in yio.h */
+extern long RecordSource(long index);  /* in yio.h */
 
 
 extern long YpLineNumber(void);
@@ -1551,7 +1551,7 @@ void YpFunc(int isMain, int eol)
      anything else (func or struct definitions) is recorded in
      the sourceList for the current include file (see also YpExtern).  */
   if (isMain) PushTask(parsedFunc);
-  else RecordSource(i);
+  else parsedFunc->isrc = RecordSource(i);
 }
 
 /* ------------------------------------------------------------------------ */

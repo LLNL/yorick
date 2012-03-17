@@ -152,7 +152,7 @@ PLUG_API long *lenSourceList; /* length of sourceList[i] is lenSourceList[i] */
 /* Record the given globTab index in the sourceList.  This index
    corresponds to either a func definition, a struct definition, or an
    extern statement outside of any functions.  */
-PLUG_API void RecordSource(long index);
+PLUG_API long RecordSource(long index);
 
 PLUG_API long ypBeginLine;  /* source line number at which current parse
                                began (<=0 if input from keyboard) */
@@ -162,7 +162,7 @@ PLUG_API long ypBeginLine;  /* source line number at which current parse
    struct, or variable was defined, then returns the source file,
    positioned for read at the beginning of the definition.  The
    number of that line is in ypBeginLine.  */
-PLUG_API p_file *OpenSource(long index);
+PLUG_API p_file *OpenSource(long index, long isrc);
 
 /* Given a function, YpReparse searches through the source lists to find
    the the source file in which the corresponding func or struct was

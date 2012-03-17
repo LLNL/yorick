@@ -57,7 +57,7 @@ static void ClearSourceList(const char *name);
 static int GetNextLine(p_file *file, int context);
 
 static long FindSource(long index);
-extern long ReopenSource(long index, int notExtern);
+extern long ReopenSource(long index, int notExtern, long isrc);
 
 extern int y_pending_stdin(void);
 static void y_add_line(char *line);
@@ -283,24 +283,27 @@ static void ClearSourceList(const char *name)
 /* Record the given globTab index in the sourceList.  This index
    corresponds to either a func definition, a struct definition, or an
    extern statement outside of any functions.  */
-void RecordSource(long index)
+long RecordSource(long index)
 {
+  long isrc = -1;
   if (nYpIncludes) {
     long *list, len;
     if (HashAdd(&sourceTab, ypIncludes[nYpIncludes-1].filename, 0L)) {
-      list= sourceList[hashIndex];
-      len= lenSourceList[hashIndex];
+      list = sourceList[hashIndex];
+      len = lenSourceList[hashIndex];
     } else {
       HASH_MANAGE(sourceTab, long *, sourceList);
       HASH_MANAGE(sourceTab, long, lenSourceList);
-      sourceList[hashIndex]= list= 0;
-      lenSourceList[hashIndex]= len= 0;
+      sourceList[hashIndex] = list = 0;
+      lenSourceList[hashIndex] = len = 0;
     }
     if (!(len&7))
-      sourceList[hashIndex]= list= p_realloc(list, sizeof(long)*(len+8));
-    list[len++]= index;
-    lenSourceList[hashIndex]= len;
+      sourceList[hashIndex] = list = p_realloc(list, sizeof(long)*(len+8));
+    list[len++] = index;
+    lenSourceList[hashIndex] = len;
+    isrc = hashIndex;
   }
+  return isrc;
 }
 
 void YpPush(const char *input)
@@ -705,12 +708,12 @@ static long FindSource(long index)
   return i;  /* -1 on failure */
 }
 
-long ReopenSource(long index, int notExtern)
+long ReopenSource(long index, int notExtern, long isrc)
 {
   long source, position;
   p_file *file;
 
-  source= FindSource(index);
+  source = (isrc<0)? FindSource(index) : isrc;
   if (source<0) return -1;    /* source of func unknown */
 
   file= PushInclude(sourceTab.names[source], 0);
@@ -729,9 +732,9 @@ long ReopenSource(long index, int notExtern)
   return position;
 }
 
-p_file *OpenSource(long index)
+p_file *OpenSource(long index, long isrc)
 {
-  long position= ReopenSource(index, 0);
+  long position= ReopenSource(index, 0, isrc);
   p_file *file;
   if (position>=0) {
     file= ypIncludes[nYpIncludes-1].file;
