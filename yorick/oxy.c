@@ -265,7 +265,7 @@ yo_cswap(int iarg, long index)
     ocount = uc->ocount;
     s = uc->xlist;
     n = uc->nxlist;
-    if (!n || (n>=4 && !(n&(n+1)))) {
+    if (!n || (n>=4 && !(n&(n-1)))) {
       long ncount = ops->count(obj);
       uc->xlist = s = yo_xlistx(s, n, ocount, ncount);
       uc->ocount = ocount = ncount;
@@ -273,7 +273,7 @@ yo_cswap(int iarg, long index)
     }
     if (m > ocount)
       y_error("(BUG) yo_cswap object count less than returned index");
-    if (uc->bits[((unsigned long)m-1)>>3] & (1<<(m-1)))
+    if (uc->bits[((unsigned long)m-1)>>3] & (1<<((m-1)&7)))
       return 0;  /* this member already in global */
     /* copy globtab[index] to oxy_context xlist */
     ypush_global(index);
@@ -289,7 +289,7 @@ yo_cswap(int iarg, long index)
     yput_global(index, 0);
     yarg_drop(1);
     /* mark this member */
-    uc->bits[((unsigned long)m-1)>>3] |= 1<<(m-1);
+    uc->bits[((unsigned long)m-1)>>3] |= 1<<((m-1)&7);
   } else {
     y_error("(BUG) yo_cswap expected oxy_context");
   }
@@ -301,9 +301,11 @@ yo_xlistx(yo_symbol_t *s, long n, long ocount, long ncount)
 {
   long i, nn = n? n+n : 4;
   unsigned char *bo, *bn;
-  s = p_realloc(s, nn*sizeof(yo_symbol_t)+(ncount/8)+1);
+  ncount = ((unsigned long)ncount >> 3) + 1;  /* overestimate, at least 1 */
+  s = p_realloc(s, nn*sizeof(yo_symbol_t)+ncount);
   bo = (unsigned char *)(s+n);
   bn = (unsigned char *)(s+nn);
+  ocount = (ocount>0)? ((unsigned long)(ocount-1) >> 3)+1 : 0; /* exact */
   for (i=ncount-1 ; i>=ocount ; i--) bn[i] = 0;
   for ( ; i>=0 ; i--) bn[i] = bo[i];
   return s;
