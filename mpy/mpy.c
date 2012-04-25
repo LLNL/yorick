@@ -51,7 +51,7 @@ my_mpi_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 PLUG_API void YpPush(const char *filename);      /* filename will be copied */
 
 PLUG_API ybuiltin_t Y_mp_send, Y_mp_recv, Y_mp_probe, Y_mp_exec;
-PLUG_API ybuiltin_t Y_mpy_nfan;
+PLUG_API ybuiltin_t Y_mpy_nfan, Y_mp_dbstate;
 
 /* The interpreter uses its own communicator to avoid conflicts with
  * any compiled parallel packages.
@@ -166,7 +166,8 @@ mpy_initialize(int *pargc, char **pargv[])
         || MPI_Errhandler_set(mpy_world, MPI_ERRORS_RETURN) != MPI_SUCCESS) {
       if (mpy_initdone) MPI_Finalize(); /* may be a mistake - no return? */
       mpy_world = MPI_COMM_NULL;
-      mpy_size = mpy_rank = mpy_nfan = 0;
+      mpy_size = mpy_rank = 0;
+      mpy_nfan = 1;  /* allows mp_exec to work even if no MPI */
       mpy_take_back_signals();
       /* y_error("MPI initialization sequence failed"); */
       /* at least some MPI platforms arrive here when started in serial */

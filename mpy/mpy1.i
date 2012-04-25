@@ -21,6 +21,33 @@ func mp_recv1(..)
 }
 if (is_void(mp_recv2)) mp_recv2 = mp_recv;
 
+func mp1_include(filename)
+/* DOCUMENT mp1_include, filename
+ *   MP-include FILENAME in an mpy1 environment.  FILENAME must contain
+ *   legacy version 1 MPY commands intended to be mp_included - that is,
+ *   included by all processors.  These commands may include "bare"
+ *   message passing calls, when FILENAME is being treated as the body
+ *   of a parallel function that was never declared with mp_task, so
+ *   message passing is taking place outside of any declared parallel
+ *   function.
+ *   You can achieve a similar effect on sections of an include file
+ *   with:
+ *     mp_recv = mp_recv1;
+ *     ...mpy1 message passing code...
+ *     mp_recv = mp_recv2;
+ *   If you do this, you need to be careful to restore mp_recv if an error
+ *   interrupts execution within the mpy1 section of the code.
+ * SEE ALSO: mp_include
+ */
+{
+  mp_exec, "_1include,\""+filename+"\";";
+}
+func _1include(filename)
+{
+  mp_recv = mp_recv1;
+  include, filename;
+}
+
 func mp_from(flag)
 /* DOCUMENT mp_from
    ***obsolete mpy1 function*** (see mp_probe)
