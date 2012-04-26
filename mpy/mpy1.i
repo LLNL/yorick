@@ -45,7 +45,7 @@ func mp1_include(filename)
 func _1include(filename)
 {
   mp_recv = mp_recv1;
-  include, filename;
+  include, filename, 1;
 }
 
 func mp_from(flag)
