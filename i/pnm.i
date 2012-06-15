@@ -1,6 +1,8 @@
 /*
  * $Id: pnm.i,v 1.1 2005-09-18 22:06:04 dhmunro Exp $
  *
+ * Modern reference: http://netpbm.sourceforge.net
+ *
  * Read and write PBM, PGM, or PPM image files defined by the PBMPLUS
  * package by Jef Poskanzer.  The most recent version of this package
  * (as of 16 Apr 1996) is called NetPBM and is available from:
@@ -135,11 +137,18 @@ func _pnm_rawrd(f, magic)
       sread(_pnm_token(f,addr), height)!=1 || height<=0 ||
       (!maxcol && sread(_pnm_token(f,addr), maxcol)!=1) || maxcol<=0)
     error, "bad PNM header in "+filename;
-  if (maxcol>255)
-    error, "max color > 255 in raw PNM file "+filename;
+  if (maxcol > 65535)
+    error, "max color > 65535 in raw PNM file "+filename;
   image= _pnm_image(width, height, maxcol, magic);
+  col = 0;
+  if (structof(image) != char) {
+    col = (dimsof(image)(1) == 3);
+    if (col) image = char(image)(,-:1:2,,);
+    else image = char(image)(-:1:2,,);
+    ++col;
+  }
   _read, f, addr, image;
-  return _pnm_image(image, width, height);
+  return _pnm_image(image, width, height, col);
 }
 
 func _pnm_token(f, &addr)
@@ -180,37 +189,41 @@ func _pnm_token(f, &addr)
 
 func _pnm_image(width, height, maxcol, magic)
 {
-  task= dimsof(width)(1);
+  task = dimsof(width)(1);
   if (task) {
+    if (task>1) {   /* called from _pnm_rawrd */
+      /* here, magic = 1 is 2D 2 byte, 2 is 3D 2 byte */
+      if (magic) {  /* first byte is msb */
+        if (magic > 1)
+          width = (long(width(,2,,)) & 0xff) | ((long(width(,1,,)) & 0xff)<<8);
+        else
+          width = (long(width(2,,)) & 0xff) | ((long(width(1,,)) & 0xff)<<8);
+        maxcol = max(width);
+        if (maxcol < 256) width = char(width);
+        else if (maxcol < 32768) width = short(width);
+      }
+      return width;
+    }
     /* reconstruct binary PBM from packed bits */
-    if (task>1) return width;
-    image= array(char, height, maxcol);
-    n= numberof(image);
-    rem= n%8;
-    image(1:n:8)= width>>7;
-    if (rem==1) width= width(1:-1);
-    image(2:n:8)= width>>6;
-    if (rem==2) width= width(1:-1);
-    image(3:n:8)= width>>5;
-    if (rem==3) width= width(1:-1);
-    image(4:n:8)= width>>4;
-    if (rem==4) width= width(1:-1);
-    image(5:n:8)= width>>3;
-    if (rem==5) width= width(1:-1);
-    image(6:n:8)= width>>2;
-    if (rem==6) width= width(1:-1);
-    image(7:n:8)= width>>1;
-    if (rem==7) width= width(1:-1);
-    image(8:n:8)= width;
-    width= [];
-    return image&'\1';
+    image = array(char, ((height+7)/8)*8, maxcol);
+    n = numberof(image);
+    image(1:n:8) = width>>7;
+    image(2:n:8) = width>>6;
+    image(3:n:8) = width>>5;
+    image(4:n:8) = width>>4;
+    image(5:n:8) = width>>3;
+    image(6:n:8) = width>>2;
+    image(7:n:8) = width>>1;
+    image(8:n:8) = width;
+    width = [];
+    return image(1:height,) & '\1';
   }
 
   /* construct result array - binary PBM stored as packed bits */
-  if (magic==1) return array(char, (width*height+7)/8);
-  if (maxcol<256) type= char;
-  else if (maxcol<32768) type= short;
-  else type= long;
+  if (magic==1) return array(char, (width+7)/8*height);
+  if (maxcol<256) type = char;
+  else if (maxcol<32768) type = short;
+  else type = long;
   if (magic==2) return array(type, width, height);
   return array(type, 3, width, height);
 }
@@ -310,9 +323,7 @@ func pnm_write(image, filename, noflip, text=, noscale=, bits=)
 
      If the noscale=1 keyword is supplied, the IMAGE will not be
      scaled to the range 0 to 255.  In this case, the IMAGE must
-     have an integer data type with minimum value >=0.  Note that
-     if max(image)>255, a text PGM or PPM file will be written
-     (overriding the text= keyword).  Raw PNM is char-only.
+     have an integer data type with minimum value >=0.
      If bits= is not specified, then noscale=1 forces pnm_write to
      guess the value you intended the brightest component value.
      If IMAGE is not color, the guess is bits=1 if there are only
@@ -376,7 +387,6 @@ func pnm_write(image, filename, noflip, text=, noscale=, bits=)
     if (maxcol > top)
       error, "maximum legal scaled image value is 65535 in a PNM";
   }
-  if (top>255) text= 1;
   if (!noflip) image= image(..,::-1);
 
   if (color) magic= 3;
@@ -396,13 +406,26 @@ func pnm_write(image, filename, noflip, text=, noscale=, bits=)
 
   } else {
     if (!color && top==1) {
+      /* pad width to multiple of 8 pixels */
+      img = array(structof(image), ((width+7)/8)*8, height);
+      img(1:width,) = image;  /* padding bits are all zero */
       /* pack raw PBM images 8 bits per char */
-      image= image(*);
-      rem= numberof(image)%8;
-      if (rem) image= grow(image,array(char,8-rem));
-      image= (image(1::8)<<7) | (image(2::8)<<6) | (image(3::8)<<5) |
-        (image(4::8)<<4) | (image(5::8)<<3) | (image(6::8)<<2) |
-          (image(7::8)<<4) | image(8::8);
+      img = (img(*) != 0);
+      image = char((img(1::8)<<7) | (img(2::8)<<6) | (img(3::8)<<5) |
+                   (img(4::8)<<4) | (img(5::8)<<3) | (img(6::8)<<2) |
+                   (img(7::8)<<1) | img(8::8));
+      img = [];
+    } else if (top > 255) {
+      if (color) {
+        img = char(image)(,-:1:2,,);
+        img(,1,,) = char(image>>8);
+      } else {
+        img = char(image)(-:1:2,,);
+        img(1,,) = char(image>>8);
+      }
+      image = img;   img = [];
+    } else if (structof(image) != char) {
+      image = char(image);
     }
     f= open(filename, "wb");
     _write, f, 0, (*pointer(header))(1:-1);
