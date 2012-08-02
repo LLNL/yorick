@@ -88,7 +88,7 @@ func regress(y, x, &axes, &vals, &chi2, sigy=, rcond=)
    u *= rvals;
    model = u(+) * axes(+,);
    chi2 = model(+)*x(,+) - y;
-   chi2 = sum(chi2*chi2) / (n - np);
+   chi2 = sum(chi2*chi2) / max(n - np, 1);
    return model;
 }
 
