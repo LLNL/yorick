@@ -740,8 +740,8 @@ func hex_mesh2(xyz, bounds)
     if (anyof(mask(1:5:2)!=mask(2:6:2))) error, "bad BOUNDS periodic values";
     bounds(list)= 0;
     njk= mask(1)? (nj-1)*(nk-1) : 0;
-    nki= mask(2)? (nk-1)*(ni-1) : 0;
-    nij= mask(3)? (ni-1)*(nj-1) : 0;
+    nki= mask(3)? (nk-1)*(ni-1) : 0;
+    nij= mask(5)? (ni-1)*(nj-1) : 0;
     nbnds= 2*(njk+nki+nij);
     bnds= array(HX_blkbnd, nbnds);
     bnds.block= 0;
@@ -752,23 +752,29 @@ func hex_mesh2(xyz, bounds)
     nk1= (nk-1)*nj*ni;
     if (njk) {
       cells= (indgen(ni:nj1:ni)+indgen(ni*nj:nk1:ni*nj)(-,))(*);
-      n0= nbnds+1;  nbnds+= njk;  bound(1,1,2:0,2:0)= indgen(n0:nbnds);
+      n0= nbnds+1;  nbnds+= njk;
+      bound(1,1,2:0,2:0)= reform(indgen(n0:nbnds),nj-1,nk-1);
       bnds(n0:nbnds).cell= cells + ni1;
-      n0= nbnds+1;  nbnds+= njk;  bound(1,0,2:0,2:0)= indgen(n0:nbnds);
+      n0= nbnds+1;  nbnds+= njk;
+      bound(1,0,2:0,2:0)= reform(indgen(n0:nbnds),nj-1,nk-1);
       bnds(n0:nbnds).cell= cells;
     }
     if (nki) {
-      cells= (indgen(ni*nj:nk1:ni*nj)+indgen(1:ni1)(-,))(*);
-      n0= nbnds+1;  nbnds+= njk;  bound(2,2:0,1,2:0)= indgen(n0:nbnds);
+      cells= (indgen(1:ni1)+indgen(ni*nj:nk1:ni*nj)(-,))(*);
+      n0= nbnds+1;  nbnds+= nki;
+      bound(2,2:0,1,2:0)= reform(indgen(n0:nbnds),ni-1,nk-1);
       bnds(n0:nbnds).cell= cells + nj1;
-      n0= nbnds+1;  nbnds+= njk;  bound(2,2:0,0,2:0)= indgen(n0:nbnds);
+      n0= nbnds+1;  nbnds+= nki;
+      bound(2,2:0,0,2:0)= reform(indgen(n0:nbnds),ni-1,nk-1);
       bnds(n0:nbnds).cell= cells;
     }
     if (nij) {
-      cells= (indgen(1:ni1)(-,)+indgen(ni:nj1:ni)(-,))(*);
-      n0= nbnds+1;  nbnds+= njk;  bound(3,2:0,2:0,1)= indgen(n0:nbnds);
+      cells= (indgen(1:ni1)+indgen(ni:nj1:ni)(-,))(*);
+      n0= nbnds+1;  nbnds+= nij;
+      bound(3,2:0,2:0,1)= reform(indgen(n0:nbnds),ni-1,nj-1);
       bnds(n0:nbnds).cell= cells + nk1;
-      n0= nbnds+1;  nbnds+= njk;  bound(3,2:0,2:0,0)= indgen(n0:nbnds);
+      n0= nbnds+1;  nbnds+= nij;
+      bound(3,2:0,2:0,0)= reform(indgen(n0:nbnds),ni-1,nj-1);
       bnds(n0:nbnds).cell= cells;
     }
   }
