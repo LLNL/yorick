@@ -73,7 +73,7 @@ func regress(y, x, &axes, &vals, &chi2, sigy=, rcond=)
    n = numberof(y);
    if (dims(1)!=2 || dims(2)!=n) error, "bad x dimensions";
    if (is_void(sigy)) sigy = 1. + 0.*y;
-   else sigy = 1./sigy;
+   else sigy = 1./sigy(*);
    if (is_void(rcond)) rcond = 1.e-9;
    else rcond = min(max(rcond,1.e-13),0.5);
    x *= sigy;
