@@ -1,6 +1,8 @@
 /*
  * $Id: yfnmatch.h,v 1.1 2005-09-18 22:06:21 dhmunro Exp $
  */
+/*	$OpenBSD: fnmatch.h,v 1.8 2005/12/13 00:35:22 millert Exp $	*/
+/*	$NetBSD: fnmatch.h,v 1.5 1994/10/26 00:55:53 cgd Exp $	*/
 /*-
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -13,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -34,7 +32,6 @@
  * SUCH DAMAGE.
  *
  *	@(#)fnmatch.h	8.1 (Berkeley) 6/2/93
- *	$OpenBSD: fnmatch.h,v 1.4 1997/09/22 05:25:32 millert Exp $
  */
 
 #ifndef	_FNMATCH_H_
