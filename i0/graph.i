@@ -1217,11 +1217,13 @@ local color;
 /* DOCUMENT color=   plotting keyword
      selects line or text color.  Valid values are the strings "bg", "fg",
      "black", "white", "red", "green", "blue", "cyan", "magenta", "yellow",
+     "grayd", "grayc", "grayb", graya", (grayd darkest, graya lightest)
      or a 0-origin index into the current palette.  The default is "fg".
      Negative numbers may be used instead of the strings: -1 is bg
      (background), -2 is fg (foreground), -3 is black, -4 is white,
-     -5 is red, -6 is green, -7 is blue, -8 is cyan, -9 is magenta, and
-     -10 is yellow.  (The negative numbers are actually taken modulo
+     -5 is red, -6 is green, -7 is blue, -8 is cyan, -9 is magenta,
+     -10 is yellow, -11 is grayd, -12 is grayc, -13 is grayb, and -14 is
+     graya.  (The negative numbers are actually taken modulo
      256, so -1 is also 255, -2 is 254, and so on.)
 
      A color can also be a triple [r, g, b], with values running from
@@ -1889,7 +1891,8 @@ func plmk(y,x,marker=,width=,color=,msize=)
   if (is_void(color)) color= _plmk_color;
   if (structof(color)==string) {
     n= where(color==["bg","fg","black","white",
-                     "red","green","blue","cyan","magenta","yellow"]);
+                     "red","green","blue","cyan","magenta","yellow",
+                     "grayd","grayc","grayb","graya"]);
     if (numberof(n)!=1) error, "unrecognized color name: "+color;
     color= char(-n(1));
   }
