@@ -111,6 +111,7 @@ ypush_func(char *line)
           if (line[0]) line++;
         }
         if (line[0]!='"') goto parserr;
+        line[0] = 0;
         qa = NewArray(&stringStruct, (Dimension *)0);
         qa->value.q[0] = c0 = c1 = p_strncat(0, line0, line-line0);
         line++;
