@@ -2189,7 +2189,6 @@ void Y_window_geometry(int argc)
   GpXYMap *map;
   long dims[2];
 
-  GpTransform *transform;
   double one_pixel, dpi, xbias, ybias, width, height;
 
   if (argc != 1) {
@@ -2229,7 +2228,6 @@ void Y_window_geometry(int argc)
   engine = ghDevices[win].display;
   if (engine) {
     map= &engine->map;
-    transform = &(engine->transform);
     dpi = ((XEngine *)engine)->dpi;
     one_pixel = 2.0/(map->x.scale - map->y.scale);
 #define MARGIN(SIDE) (((XEngine *)engine)->SIDE##Margin)
