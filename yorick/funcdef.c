@@ -112,7 +112,8 @@ ypush_func(char *line)
         }
         if (line[0]!='"') goto parserr;
         qa = NewArray(&stringStruct, (Dimension *)0);
-        qa->value.q[0] = c0 = c1 = p_strncat(0, line0, line-line0);
+        qa->value.q[0] = c0 = c1 =
+          p_strncat(0, (line>line0)? line0 : "", line-line0);
         line++;
         while (c1[0]) {
           if (c1[0] == '\\') c1++;
