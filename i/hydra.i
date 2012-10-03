@@ -1231,13 +1231,22 @@ func h_uparm(f, name, isstr=, isint=)
 
 func h_global(f, name, prefix=)
 /* DOCUMENT value = h_global(f, name)
+         or names = h_global(f)
      returns value of hydra Global variable NAME from file F.
+     Without NAME returns a list of all valid names.
    SEE ALSO: hydra_xyz, h_iparm
  */
 {
   { local _h_legacy; }
   f = _h_get_file(f, 1, , _h_legacy);
   if (!prefix) prefix = "/Global/";
+  if (is_void(name)) {
+    v = *get_vars(f)(1);
+    n = strlen(prefix);
+    v = v(where(strpart(v,1:n) == prefix));
+    if (numberof(v)) v = strpart(v,n+1:);
+    return v;
+  }
   return get_member(f, prefix+name);
 }
 
