@@ -564,6 +564,8 @@ ym_after_dq(int i)
   }
 }
 
+static int startup_done = 0;
+
 int
 y_on_idle(void)
 {
@@ -590,7 +592,17 @@ y_on_idle(void)
     if (nYpIncludes || nYpInputs) {
       YpParse((void *)0);
     } else {
-      pending_stdin = y_pending_stdin();
+      if (startup_done) {
+        pending_stdin = y_pending_stdin();
+      } else {
+        /* make sure idler gets called once before any stdin
+         * - without this, starting with shell here-document makes
+         *   lines passed as here-document execute before custom.i,
+         *   not what user expects
+         */
+        if (!y_idler_function) pending_stdin = y_pending_stdin();
+        startup_done = 1;
+      }
       if (!(nTasks+caughtTask || nYpIncludes || nYpInputs) &&
           y_idler_function) {
         Function *f = y_idler_function;
@@ -1910,7 +1922,7 @@ void Y_error(int nArgs)
   else YError("<interpreted error function called>");
 }
 
-/* FIXME: this shold also turn off on_stdin event handling */
+/* FIXME: this should also turn off on_stdin event handling */
 void Y_batch(int nArgs)
 {
   int flag= 2;
