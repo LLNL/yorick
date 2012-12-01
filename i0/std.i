@@ -5260,8 +5260,8 @@ func process_argv(msg)
    SEE ALSO: batch
  */
 {
+  if (get_command_line == process_argv) return command_line;
   if (is_void(get_command_line)) command_line = get_argv();
-  else if (get_command_line == process_argv) return command_line;
   else command_line = get_command_line();
   get_command_line = process_argv;  /* try to avoid infinite loops */
   if (numberof(command_line)>=2) {

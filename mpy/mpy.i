@@ -489,6 +489,7 @@ func mpy_get_cmdln(void)
 
 func mpy_process_argv(void)
 {
+  if (get_command_line == process_argv) return command_line;
   extern _mpy_cmdln;
   if (is_void(get_command_line)) _mpy_cmdln = get_argv();
   else _mpy_cmdln = get_command_line();
@@ -518,13 +519,10 @@ func mpy_process_argv(void)
 
   if (!q) write, format="mpy initialized MPI on %ld processes\n", mp_size;
 
-  n = numberof(file);
-  for (i=1 ; i<=n ; ++i) mp_include, file(i);
+  for (i=numberof(file) ; i>=1 ; --i) mp_include, file(i);
 
-  x = get_command_line;
   get_command_line = mpy_get_cmdln;
   m = process_argv();
-  get_command_line = x;
   return m;
 }
 
