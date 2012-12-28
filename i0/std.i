@@ -5915,6 +5915,7 @@ extern dbup;
 extern dbinfo;
 extern dbdis;
 extern dbauto;
+extern dbwhere;
 /* DOCUMENT Debug mode.
 
    Yorick errors fall into two general categories: Syntax errors discovered
@@ -5973,6 +5974,8 @@ extern dbauto;
                            for the next line (use the disassemble function
                            to get the entire function)
          This allows you to see exactly where in a line the error occurred.
+      dbwhere           -- returns entire calling stack as func[pc] strings
+         The dbwhere function also works outside of dbug mode.
 
    Finally,
 
