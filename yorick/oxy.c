@@ -1768,14 +1768,20 @@ yo_sr_hook(void *obj, int flags)
 {
   yo_io_t *io = obj;
   IOStream *file = io->ios;
+  IOStream *child = file->history? file->history->child : 0;
   if (flags & 1) {           /* after restore */
     ClearPointees(file, 0);
+    if (child) ClearPointees(child, 0);
   } else if (flags & 2) {    /* before save */
     io->flags = flags;
   } else {                   /* after save */
     io->flags = 0;
     ClearPointees(file, 1);
     FlushFile(file, 0);
+    if (child) {
+      ClearPointees(child, 1);
+      FlushFile(child, 0);
+    }
   }
 }
 
