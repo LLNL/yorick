@@ -1477,8 +1477,9 @@ Function *FuncContaining(Instruction *pc)
   Function *func= 0;
 
   if (!findingFunc && pc) {
-    long i= -1;
-    findingFunc= 1;
+    long i = -1;
+    if (pc>=taskCode && pc<=taskCode+4) return 0;
+    findingFunc = 1;
     for (;; i++) {
       while (pc[i].Action) i++;
       if (pc[i-1].Action==&Return) break;
@@ -1489,11 +1490,11 @@ Function *FuncContaining(Instruction *pc)
           vmCode[nextPC].index= codeSize= nPos+nKey+nLocal+ nextPC;
        (nextPC does NOT include the parameters or locals)
      */
-    i-= pc[i].index;
+    i -= pc[i].index;
     if (i<0) {
       /* see also Pointee function in ydata.c */
-      func= (Function *)((char *)(pc+i) - offsetof(Function, code));
-      findingFunc= 0;
+      func = (Function *)((char *)(pc+i) - offsetof(Function, code));
+      findingFunc = 0;
     }
   }
 
@@ -1501,7 +1502,7 @@ Function *FuncContaining(Instruction *pc)
     /* may get here after a disaster causing an interrupt above, as well
        as after scanning from a garbled initial pc */
     int no_pf = ((yerror_flags&1) != 0);
-    findingFunc= 0;
+    findingFunc = 0;
     if (!no_pf) YputsErr("(BUG) lost function produced following error:");
   }
   return func;

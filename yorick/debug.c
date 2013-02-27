@@ -1039,14 +1039,14 @@ Y_dbwhere(int nArgs)
 
   for (; stack>spBottom ; stack--) {
     if (stack->ops == &returnSym) {
+      if (stack->value.pc->Action == &YHalt)
+        continue;  /* crucial to detect and avoid task.c:taskCode */
       f = ydb_funcof(stack->value.pc);
       if (f) {
         if (f->code->index < 0) PrintFunc("*anon*");
         else PrintFunc(globalTable.names[f->code->index]);
-      } else if (stack->value.pc->Action != &YHalt) {
-        PrintFunc("*lost*");
       } else {
-        continue;
+        PrintFunc("*lost*");
       }
       /* pc[-2] must equal &Eval that created this returnSym */
       sprintf(lineBuf, "[%ld]", f? (long)(stack->value.pc-f->code)-2L : 0L);
@@ -1065,7 +1065,7 @@ ydb_funcof(Instruction *pc)
 {
   Function *f = 0;
   if (pc) {
-    long i= -1;
+    long i = -1;
     for (;; i++) {
       while (pc[i].Action) i++;
       if (pc[i-1].Action==&Return) break;
