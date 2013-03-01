@@ -47,4 +47,6 @@ autoload, "style.i", get_style, set_style, write_style;
 autoload, "textload.i", text_load, text_lines, text_cells, text_csv;
 autoload, "unsigned.i", u_gt, u_lt, u_ge, u_le, u_eq, u_ne;
 autoload, "unsigned.i", u_shr, u_div, u_mod, u_cast, s_char;
+autoload, "ylm.i", ylm, ylm_lm, ylm_fit, ylm_eval;
+autoload, "ylm.i", legpol, legint, legser, legfit, legbins, legeval;
 autoload, "zroots.i", zroots, laguerre;

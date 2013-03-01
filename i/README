@@ -19,7 +19,7 @@
    elliptic.i - elliptic functions
      Functions: elliptic, ell_am, ell_f, ell_e, dn_, ellip_k, ellip_e
    legndr.i   - Legendre polynomials, associated Legendre functions
-     Function:  legndr
+     Function:  legndr (see also ylm.i)
    fermi.i    - Fermi-Dirac integrals and their inverses
      Functions: fdm12, fd12, fd32, fd52, ifdm12, ifd12, ifd32, ifd52
    fermii.i   - incomplete Fermi-Dirac integrals
@@ -28,6 +28,9 @@
      Functions: series_s (sum a series), series_r (find ratio given
                 sum and number of terms), series_n (find number of
 		terms given sum and ratio)
+   ylm.i      - Spherical harmonics and Legendre polynomials
+     Functions: ylm, ylm_lm, ylm_fit, ylm_eval,
+                legpol, legint, legser, legfit, legbins, legeval
 
    Data fitting and interpolation:
    -------------------------------
