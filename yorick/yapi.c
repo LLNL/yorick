@@ -1030,7 +1030,7 @@ ypush_ptr(ypointer_t ptr, long *ntot)
 {
   int typeid = Y_VOID;
   Array *a = Pointee(ptr);
-  PushDataBlock(a);
+  PushDataBlock(Ref(a));
   if (a && (a != (Array*)&nilDB)) {
     yget_dims(ntot, (long*)0, &a->type);
     typeid = a->ops->typeID;
