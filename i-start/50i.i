@@ -5,6 +5,8 @@ autoload, "calendar.i", calendar, unix_time, julian_day;
 autoload, "calendar.i", datestamp, base60, tz_set;
 autoload, "cheby.i", cheby_fit, cheby_eval, cheby_integ, cheby_deriv;
 autoload, "cheby.i", cheby_poly, cheby_conv, cheby_trunc;
+autoload, "cmap.i", cmap, cmap_rd, cb_choices, cubehelix, gistct, mplct;
+autoload, "cmap.i", gplct, gmtct, idlct, idlct_rd;
 autoload, "convol.i", convol, fft_good, convoln, gaussm, boxcar;
 autoload, "dawson.i", dawson, erf, erfc;
 autoload, "digit2.i", digit2, interp2;
@@ -16,6 +18,7 @@ autoload, "fits.i", fits_check_file, fits_best_scale;
 autoload, "gamma.i", ln_gamma, lngamma, bico;  /* beta too common a name */
 autoload, "gammp.i", gammp, gammq;
 autoload, "gcd.i", gcd, lcm, factorize, is_prime;
+autoload, "hsv2rgb.i", hsv2rgb, rgb2hsv, hsl2rgb, rgb2hsl, cmyk2rgb, rgb2cmyk;
 autoload, "idlsave.i", idl_open;
 autoload, "ieee.i", ieee_test, ieee_set, as_chars;
 autoload, "legndr.i", legndr, ylm_coef;
