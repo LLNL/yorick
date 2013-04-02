@@ -112,9 +112,11 @@
      Functions: pixels, pix_window
    hsv2rgb.i  - conversions between RGB and HSV, HSL, CMYK color systems
      Functions: hsv2rgb, hsl2rgb, cmyk2rgb, rgb2hsv, rgb2hsl, rgb2cmyk
+   lab2rgb.i  - conversions between RGB and CIE XYZ, LAB, LUV color systems
+     Functions: lab2rgb, luv2rgb, xyz2rgb, rgb2lab, rgb2luv, rgb2xyz
    cmap.i     - enhancement to palette function, including dozens of
                 additional pre-defined palettes
-     Functions: cmap, cmap_rd, cb_choices, cubehelix, gistct, mplct,
+     Functions: cmap, cmap_rd, cb_choices, cubehelix, gistct, mshct, mplct,
                 gplct, gmtct, idlct, idlct_rd
    color.i    - palette adjustment, HSV<->RGB transforms
                 (study split_palette, split_bytscl in slice3.i for more

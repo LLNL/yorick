@@ -9,7 +9,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
-func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=)
+func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
 /* DOCUMENT cmap, p, n
  *       or rgb = cmap(p, n)
  *   returns a list of colors 0xrrggbb corresponding to the colormap
@@ -20,6 +20,12 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=)
  *   existing palette, enabling you to stack multiple shortened palettes.
  *   Called as a subroutine, actually sets the palette; called as a
  *   function, returns [r,g,b] as Nx3 char array.
+ *
+ *   Recommendations: Read http://www.sandia.gov/~kmorel/documents/ColorMaps/
+ *   Most color maps here are rather poor choices.  Some reasonably good ones
+ *   are: "gray", "coolwarm", "bone", "copper", and most of the ColorBrewer
+ *   maps, such as "Blues" or "PuOr".  The function cmap_test makes a
+ *   picture you can use to test palettes.
  *
  *   Keywords:
  *     hist=1  if P is a simple list of colors, creates a stepped
@@ -97,7 +103,9 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=)
  *  the ColorBrewer color maps (help, cb_choices), Matplotlib (python)
  *  color maps, and GMT (Generic Mapping Tools) color maps.  Some of the
  *  names conflict; you can use the functions gistct, mplct, and gmtct
- *  to break any conflicts (the ColorBrewer names are all unique).
+ *  to break any conflicts (the ColorBrewer names are all unique).  Also
+ *  featured are several of the diverging color maps devised by Kenneth
+ *  Moreland.  See help,mshct for more on those.
  *
  *  The Gnuplot and IDL programs use a scheme of indexed palettes; the
  *  functions gplct and idlct allow you to set those palettes.  Some of
@@ -106,8 +114,8 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=)
  *  lets you set palettes by parameters; you can get the default parameters
  *  with cmap, "cubehelix".
  *
- * SEE ALSO: gplct, mplct, gmtct, gistct, idlct, cubehelix, cb_choices,
- *           cmap_rd
+ * SEE ALSO: mshct, gplct, mplct, gmtct, gistct, idlct, cubehelix,
+ *           cb_choices, cmap_rd, cmap_test
  */
 {
   if (!is_void(lgamma)) { gamma = lgamma; lgamma = 1; }
@@ -153,6 +161,10 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=)
         n = n0;
         if (is_void(hist) && type==3) hist = 1;
       }
+    }
+    if (is_void(p)) {
+      i = mshct(name, , n0);
+      if (numberof(i)) p = transpose(i);
     }
     if (is_void(p)) {
       i = where(mpl_names == name);
@@ -249,6 +261,10 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=)
     histok = 1;
   } else {
     error, "unrecognized color map parameterization";
+  }
+  if (nmax) {
+    if (am_subroutine()) error, "too many colors to set";
+    n = 256;
   }
   x = span(0., 1., n);
   if (rev) x = 1. - x;
@@ -384,6 +400,19 @@ func hue_interp(p, x)
   return cmap_interp(p, x);
 }
 
+func cmap_test
+/* DOCUMENT cmap_test
+ *   Create a picture to help test color maps for artifacts and common
+ *   misfeatures.  After calling this, call cmap or one of the *ct
+ *   functions to change the color map.
+ * SEE ALSO: cmap, mshct, mplct, gplct, gmtct, idlct, cb_choices
+ */
+{
+  x=span(0,1,400)(,-:1:400);  y=transpose(x);
+  fma;  limits;
+  pli, (1.02-y)*sin(8*pi*x);
+}
+
 func gistct(name)
 /* DOCUMENT cm = gistct(name)
  *       or gistct, name
@@ -487,6 +516,120 @@ func cmap_rd(f, &hsv)
 }
 
 /* ------------------------------------------------------------------------ */
+/* msh colormaps, http://www.sandia.gov/~kmorel/documents/ColorMaps/
+ * devised by Kenneth Moreland
+ * The coolwarm Matplotlib map below is apparently a botched version of these.
+ * Coolwarm, blutan, and redgrn appear in Moreland's paper.  The others are
+ * random fiddling with the mshct rgb1 and rgb2.
+ */
+
+msh_names = ["coolwarm", "blutan", "ornpur", "grnred",
+             "purple", "blue", "green", "red", "brown"];
+msh_maps = [[[ 59, 76,192], [180,  4, 38]], [[ 55,133,232], [172,125, 24]],
+            [[179, 88,  6], [ 84, 39,136]], [[ 22,135, 51], [193, 54, 59]],
+            [[ 63,  0,125], [221,221,221]], [[  8, 48,107], [221,221,221]],
+            [[ 30, 90,  0], [221,221,221]], [[180,  0, 30], [221,221,221]],
+            [[103,  0, 13], [221,221,221]]]; 
+
+func mshct(rgb1, rgb2, n, wht=, msh=, cmax=)
+/* DOCUMENT cm = mshct(name)
+ *       or cm = mshct(rgb1, rgb2)
+ *       or mshct, name
+ *       or mshct, rgb1, rgb2
+ *   return diverging color map going from RGB1 to RGB2 through white.  If
+ *   either color is too close to white, produces a sequential map between
+ *   the two.  If one of RGB1 or RGB2 is nil, it is taken to be white.
+ *   If the two colors are too close in hue, also just produces a
+ *   sequential map.  The algorithm is from Kenneth Moreland,
+ *   http://www.sandia.gov/~kmorel/documents/ColorMaps/ and references
+ *   therein.  A few reasonable RGB1 and RGB2 values have been given names.
+ *   The name "coolwarm" produces Moreland's recommended color table.
+ *   Called as a subroutine, sets the current palette.
+ * SEE ALSO: cmap, mshct, gmtct, gplct, gistct, idlct
+ */
+{
+  if (structof(rgb1) == string) {
+    /* some predefined diverging and sequential maps */
+    list = where(rgb1 == msh_names);
+    if (!numberof(list)) {
+      if (!am_subroutine()) return [];
+      error, "unknown mshct name "+rgb1;
+    }
+    rgb1 = msh_maps(,1,list(1));
+    rgb2 = msh_maps(,2,list(1));
+    msh = [];
+  }
+
+  /* pushing wht higher than about 93 gives white band */
+  if (is_void(wht)) wht = 88.;
+  if (msh) {
+    msh1 = rgb1;  msh2 = rgb2;
+  } else {
+    msh1 = rgb2msh(rgb1);
+    if (!is_void(rgb2)) msh2 = rgb2msh(rgb2);
+  }
+  if (is_void(msh2)) msh2 = [max(msh1(1), wht), 0., 0.];
+  else if (is_void(msh1)) msh1 = [max(msh2(1), wht), 0., 0.];
+  if (is_void(n)) n = cmap_ncolors();
+  x = span(0., 1., n);
+  s1 = msh1(2);
+  s2 = msh2(2);
+  dh = abs(msh1(3) - msh2(3)) % (2.*pi);
+  dh = min(dh, 2.*pi-dh);
+  if (s1>0.5 && s2>0.05 && dh>pi/3.) {
+    /* if rgb1, rgb2 are saturated and distinct, put white at x=0.5
+     * (otherwise, this is just a fragment going from rgb1 to rgb2)
+     * neither recursion can take this branch
+     */
+    i = where(x < 0.5)(0);
+    rgb1 = mshct(msh1, , i, cmax=cmax, wht=wht, msh=1);
+    rgb = array(structof(rgb1), n, 3);
+    rgb(1:i,) = rgb1;
+    rgb(i+1:n,) = mshct(, msh2, n-i, cmax=cmax, wht=wht, msh=1);
+  } else {
+    /* avoid perceptual kink near white */
+    if (s1<0.5 && s2>0.05) msh1(3) = _adjust_hue(msh2, msh1(1));
+    else if (s2<0.5 && s1>0.05) msh2(3) = _adjust_hue(msh1, msh2(1));
+    /* then just interpolate polar coordinates
+     * why isn't this broken for h1, h2 separated across 0,2*pi?
+     */
+    msh = x(..,-:1:3);
+    x = x(*);
+    msh(*,) = (1.-x)*msh1(-,) + x*msh2(-,);
+    rgb = msh2rgb(msh, cmax=cmax);
+  }
+  if (!am_subroutine()) return rgb;
+  cmap, rgb;
+}
+
+func rgb2msh(rgb, g, b)
+{
+  msh = rgb2lab(rgb, g, b);
+  l = msh(..,1);  a = msh(..,2);  b = msh(..,3);  c = abs(b, a);
+  msh(..,3) = atan(b, a+!c);
+  msh(..,1) = a = abs(c, l);
+  msh(..,2) = atan(c, l+!a);
+  return msh;
+}
+
+func msh2rgb(msh, cmax=)
+{
+  s = msh(..,2);  h = msh(..,3);
+  lab = double(msh);
+  lab(..,1) = cos(s);
+  lab(..,2:3) = sin(s) * [cos(h), sin(h)];
+  return lab2rgb(msh(..,1)*lab, cmax=cmax);
+}
+
+func _adjust_hue(msh, mu)
+{ /* only needs to work for scalar m,s,h and mu */
+  m = msh(1);  s = msh(2);  h = msh(3);
+  if (m >= mu) return h;
+  hspin = s * sqrt(mu*mu - m*m) / (m * sin(s));
+  return (h > -pi/3.)? h + hspin : h - hspin;  /* -pi/3 seems odd?? */
+}
+
+/* ------------------------------------------------------------------------ */
 /* matplotlib colormaps, plus four additional names for gnuplot maps */
 
 func mplct(name)
@@ -495,7 +638,7 @@ func mplct(name)
  *   return color map (ct = "color table") specification for Matplotlib
  *   map NAME.  You may append "_r" to the name to reverse the colors.
  *   Called as a subroutine, sets the current palette.
- * SEE ALSO: cmap, gmtct, gplct, gistct, idlct
+ * SEE ALSO: cmap, mshct, gmtct, gplct, gistct, idlct
  */
 {
   local n, rev;
