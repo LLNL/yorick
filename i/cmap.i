@@ -570,8 +570,13 @@ func mshct(rgb1, rgb2, n, wht=, msh=, cmax=)
   }
   if (is_void(msh2)) msh2 = [max(msh1(1), wht), 0., 0.];
   else if (is_void(msh1)) msh1 = [max(msh2(1), wht), 0., 0.];
+  wht = max(msh1(1), msh2(1), wht);
   if (is_void(n)) n = cmap_ncolors();
-  x = span(0., 1., n);
+  x = span(0., 1., abs(n));
+  if (n < 0) {
+    if (msh == 1) x = 2.*x(where(x < 0.5));
+    else x = 2.*x(where(x >= 0.5)) - 1.;
+  }
   s1 = msh1(2);
   s2 = msh2(2);
   dh = abs(msh1(3) - msh2(3)) % (2.*pi);
@@ -581,11 +586,9 @@ func mshct(rgb1, rgb2, n, wht=, msh=, cmax=)
      * (otherwise, this is just a fragment going from rgb1 to rgb2)
      * neither recursion can take this branch
      */
-    i = where(x < 0.5)(0);
-    rgb1 = mshct(msh1, , i, cmax=cmax, wht=wht, msh=1);
-    rgb = array(structof(rgb1), n, 3);
-    rgb(1:i,) = rgb1;
-    rgb(i+1:n,) = mshct(, msh2, n-i, cmax=cmax, wht=wht, msh=1);
+    rgb1 = transpose(mshct(msh1, , -n, cmax=cmax, wht=wht, msh=1));
+    rgb2 = transpose(mshct(, msh2, -n, cmax=cmax, wht=wht, msh=2));
+    rgb = transpose(grow(rgb1, rgb2));
   } else {
     /* avoid perceptual kink near white */
     if (s1<0.5 && s2>0.05) msh1(3) = _adjust_hue(msh2, msh1(1));
