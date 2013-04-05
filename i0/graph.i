@@ -98,7 +98,7 @@ extern window;
      If invoked as a function, window(...) returns the current
      window number.
    SEE ALSO: plsys, hcp_file, fma, hcp, redraw, palette, animate, plg,
-             winkill, gridxy, no_window
+             winkill, gridxy, no_window, cmap, torgb
  */
 
 func winkill(n)
@@ -221,10 +221,9 @@ extern viewport;
 
 extern raw_style;
 /* DOCUMENT raw_style: get_style, set_style, read_style, write_style
-            #include "style.i"
      alternatives to the style= keyword of the window command which
      allow the interpreter to set or get all the details of the
-     window style.  Include "style.i" and read the help for get_style.
+     window style.  Read the help for get_style.
  */
 
 extern set_gpath;
@@ -631,10 +630,15 @@ extern palette;
          or palette, red, green, blue, query=1
          or palette, red, green, blue, gray, query=1
      sets (or retrieves with query=1) the palette for the current
-     graphics window.  The FILENAME is the name of a Gist palette file;
-     the standard palettes are "earth.gp", "stern.gp", "rainbow.gp",
-     "heat.gp", "gray.gp", and "yarg.gp".  Use the maxcolors keyword
-     in the pldefault command to put an upper limit on the number of
+     graphics window.
+
+     The cmap function provides a higher level interface, including
+     dozens more named palette choices.
+
+     The FILENAME is the name of a Gist palette file; the standard
+     palettes are "earth.gp", "stern.gp", "rainbow.gp", "heat.gp",
+     "gray.gp", and "yarg.gp".  Use the maxcolors keyword in the
+     pldefault command to put an upper limit on the number of
      colors which will be read from the palette in FILENAME.
 
      In the second form, the palette for the current window is copied
@@ -658,7 +662,7 @@ extern palette;
      See the dump= keyword for the hcp_file and window commands if you
      are having trouble getting color in your hardcopy files.
 
-   SEE ALSO: window, fma, hcp, pldefault, plg
+   SEE ALSO: cmap, window, fma, hcp, pldefault, plg
  */
 
 extern animate;
@@ -1239,8 +1243,10 @@ local color;
      palette command after the first rgb object is drawn (this is
      unnecessary on true color screens).
 
+     You can use color=torgb(name) to specify a W3C/X11 color.
+
    PLOTTING COMMANDS: plg, plm, plc, pldj, plt
-   SEE ALSO: type, width, marks, marker, mcolor, rays, closed, smooth
+   SEE ALSO: type, width, marks, marker, mcolor, rays, closed, smooth, torgb
  */
 
 local marks;
@@ -1610,7 +1616,7 @@ extern mesh_loc;
 
      For mesh_loc wrappers to duplicate the functionality of the
      digitize and interp functions in 2D, see the library file digit2.i.
-     After #include "digit2.i", type:  help,digit2
+     Read help,digit2.
 
    SEE ALSO: plmesh, moush, mouse
  */

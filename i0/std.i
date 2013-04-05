@@ -1623,9 +1623,7 @@ extern sort;
               involves a random selection of a partition element.
 
      For information on sorting with multiple keys (and on making
-     sort deterministic), type the following:
-        #include "msort.i"
-        help, msort
+     sort deterministic), type the following:  help, msort
 
    SEE ALSO: median, digitize, interp, integ, histogram
  */
@@ -3405,12 +3403,6 @@ extern require;
                    program when finished (like require)
        NOW == 2    like 0, except no error if filename does not exist
        NOW == 3    like 1, except no error if filename does not exist
-
-     Unless you are writing a startup file, or have some truly bizarre
-     technical reason for using the include function, use #include
-     instead.  The functional form of include may involve recursive
-     parsing, which you will not be able to understand without deep
-     study.  Stick with #include.
 
    SEE ALSO: set_path, Y_SITE, plug_in, autoload, include_all, funcdef
              include1

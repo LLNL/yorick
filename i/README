@@ -110,6 +110,8 @@
    pixels.i   - crude attempt to force Yorick to plot cell arrays at
                 one cell per X window pixel
      Functions: pixels, pix_window
+   torgb.i    - convert W3C/X11 color name to rgb and rgb to nearest name
+     Functions: torgb
    hsv2rgb.i  - conversions between RGB and HSV, HSL, CMYK color systems
      Functions: hsv2rgb, hsl2rgb, cmyk2rgb, rgb2hsv, rgb2hsl, rgb2cmyk
    lab2rgb.i  - conversions between RGB and CIE XYZ, LAB, LUV color systems
