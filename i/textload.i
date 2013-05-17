@@ -214,6 +214,6 @@ func text_csv(f, .., tab=,fmt=,head=)
     }
   }
   if (!is_void(f) && (structof(f)==string)) f = create(f);
-  write, f, format="%s\n", s;
+  write, f, format="%s\n", linesize=max(strlen(s))+2, s;
   return f;
 }
