@@ -271,7 +271,8 @@
 ;;    do not exist at all in emacs 19.28, so 19.29 is the earliest version
 ;;    that will work at all.
 
-(if (not (fboundp 'make-local-hook))
+(if (or (< emacs-major-version 19)
+      (and (= emacs-major-version 19) (< emacs-minor-version 29)))
     (error "You need at least emacs 19.29, preferably 19.34, for yorick.el"))
 ;; try to get rid of c-mode if it was loaded instead of cc-mode (19.29)
 ;; this may be antisocial, but cc-mode really is better
@@ -678,7 +679,11 @@ Key bindings:
       (add-hook 'comint-input-filter-functions
                 'shell-directory-tracker nil t)))
   (setq yoterm-histbuf (generate-new-buffer (concat (buffer-name) "H")))
-  (make-local-hook 'kill-buffer-hook)
+  ;; make-local-hook is obsolete since Emacs 21.1, the work is done
+  ;; automatically by add-hook
+  (if (or (< emacs-major-version 21)
+      (and (= emacs-major-version 21) (< emacs-minor-version 1)))
+      (make-local-hook 'kill-buffer-hook))
   (add-hook 'kill-buffer-hook 'yoterm-killbuf nil t)
   (let ((buf (current-buffer)))
     (save-excursion
