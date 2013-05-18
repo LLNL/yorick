@@ -1361,9 +1361,14 @@ y_uo_extract(Operand *op, char *name)
   if (uo->uo_type->uo_ops != uo->ops)
     y_error("(BUG) corrupted user object in y_uo_extract");
   if (uo->uo_type->on_extract) {
+    Symbol *stack;
     long owner = op->owner - spBottom;
     uo->uo_type->on_extract(uo->body.c, name);
     PopTo(spBottom+owner);
+    while (sp - spBottom > owner) {
+      stack = sp--; /* sp decremented BEFORE stack element is deleted */
+      if (stack->ops == &dataBlockSym) Unref(stack->value.db);
+    }
   } else {
     y_error("user object has no on_extract method");
   }
