@@ -23,6 +23,10 @@
 #include "pstdio.h"
 
 #include <unistd.h>
+/* needed for stat() call */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 char *
 u_track_link(const char *name)
@@ -65,6 +69,8 @@ u_track_link(const char *name)
   }
 }
 
+static int u_executable_file(const char *path);
+
 char *
 u_find_exe(const char *argv0)
 {
@@ -85,7 +91,7 @@ u_find_exe(const char *argv0)
         if (wkspc[j-1] == '/') s = 0;
         else s = 1, wkspc[j] = '/';
         for (; j<k+i && j<P_WKSIZ ; j++) wkspc[j+s] = argv0[j-k+1];
-        if (access(wkspc, X_OK) >= 0) break;
+        if (u_executable_file(wkspc) >= 0) break;
       }
       path += k;
       k = 0;
@@ -112,5 +118,16 @@ u_find_exe(const char *argv0)
   }
 
   wkspc[i] = '\0';
-  return (access(wkspc, X_OK) >= 0)? wkspc : 0;
+  return (u_executable_file(wkspc) >= 0)? wkspc : 0;
+}
+
+static int
+u_executable_file(const char *path)
+{
+  int err = access(path, X_OK);
+  if (err >= 0) {
+    struct stat buf;
+    if (stat(path,&buf) || !S_ISREG(buf.st_mode)) err = -2;
+  }
+  return err;
 }
