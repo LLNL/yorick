@@ -55,6 +55,8 @@
      Functions: regress, regress_cov
    levmar.i   - Non-linear least squares fitting by Levenberg-Marquardt
      Functions: levmar
+   spanarc.i  - compute evenly spaced points on a circular arc
+     Function: spanarc
 
    Numerical integration:
    ----------------------
