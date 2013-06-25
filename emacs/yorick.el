@@ -682,7 +682,7 @@ Key bindings:
   ;; make-local-hook is obsolete since Emacs 21.1, the work is done
   ;; automatically by add-hook
   (if (or (< emacs-major-version 21)
-      (and (= emacs-major-version 21) (< emacs-minor-version 1)))
+          (and (= emacs-major-version 21) (< emacs-minor-version 1)))
       (make-local-hook 'kill-buffer-hook))
   (add-hook 'kill-buffer-hook 'yoterm-killbuf nil t)
   (let ((buf (current-buffer)))
