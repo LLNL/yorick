@@ -64,37 +64,72 @@ func rgb_l2s(rgb, cmax=)
  *  different maximum color value using the cmax= keyword.  In particular,
  *  cmax=1 results in a double array normalized to lie in [0.,1.] like
  *  the input RGB_LINEAR.
- * SEE ALSO: rgb_s2l, rgb2xyz, rgb2lab, rgb2luv
+ *
+ *  The input RGB_LINEAR is clipped to the interval [0,1].  By default,
+ *  the clipping just chops any component value above 1 to 1 and below
+ *  0 to 0.  By setting the external variable l2s_clipper to a function
+ *  you can use a more sophistocated clipping algorithm.  In particular,
+ *  l2s_clipper = lrgb_clip gives you a constant hue clipper.  In any
+ *  event, rgb_l2s sets the external variable srgb_clip to be an array
+ *  with the same dimensions as LINEAR_RGB which is 1 for any clipped
+ *  color component, and 0 for unclipped components.
+ *
+ *  You can also set the external variable lrgb_gamma to use a pure
+ *  power law gamma for the conversion instead of the sRGB IEC 61966-2-1
+ *  canonical monitor function.  Finally, if you set the 1 bit of the
+ *  external variable lrgb_skip, rgb_l2s becomes a no-op.  If you set
+ *  the 2 bit of lrgb_skip, the rgb_s2l function becomes a no-op.  Do
+ *  not set lrgb_skip as a global variable; make it local to the function
+ *  requiring this non-standard behavior.
+ *
+ * SEE ALSO: rgb_s2l, rgb2xyz, rgb2lab, rgb2luv, lrgb_clip
  */
 {
+  if (lrgb_skip && (lrgb_skip&1)) return rgb;
   extern srgb_clip;
   srgb_clip = ((rgb<-0.0001) | (rgb>1.0001));
-  rgb = min(max(rgb, 0.), 1.);
-  u = 1.055*rgb^(5./12.) - 0.055;
-  v = _srgb_0/_lrgb_0 * rgb;
-  hi = double(rgb > _lrgb_0);
-  return _rgb_scale(hi*u + (1.-hi)*v, cmax)
+  rgb = is_func(l2s_clipper)? l2s_clipper(rgb) : min(max(rgb, 0.), 1.);
+  if (!lrgb_gamma) {
+    u = 1.055*rgb^(5./12.) - 0.055;
+    v = _srgb_0/_lrgb_0 * rgb;
+    hi = double(rgb > _lrgb_0);
+    return _rgb_scale(hi*u + (1.-hi)*v, cmax);
+  } else {
+    return rgb ^ lrgb_gamma;
+  }
 }
 
 func rgb_s2l(rgb, g, b, cmax=)
 /* DOCUMENT rgb_linear = rgb_s2l([r, g, b])
  *       or rgb_linear = rgb_s2l(r, g, b)
+ *
  *  Returns physically linear red-green-blue, given RGB on a canonical
  *  monitor (the IEC 61966-2-1 sRGB).
  *  Return value has same dimensions as input (in first form).
  *  If input rgb are real, they are assumed normalized to lie in [0.,1.].
  *  If input are integers, they are assumed to lie in [0,255].
  *  You can specify a different maximum color value using the cmax= keyword.
+ *
+ *  You can also set the external variable lrgb_gamma to use a pure
+ *  power law gamma for the conversion instead of the sRGB IEC 61966-2-1
+ *  canonical monitor function.  Finally, if you set the 2 bit of the
+ *  external variable lrgb_skip, rgb_s2l becomes a no-op.
+ *
  * SEE ALSO: rgb_l2s, rgb2xyz, rgb2lab, rgb2luv
  */
 {
   if (!is_void(g)) rgb = [rgb, g, b];
+  if (lrgb_skip && (lrgb_skip&2)) return rgb;
   if (is_void(cmax)) cmax = (structof(rgb+0)==long)? 255. : 1.0;
   rgb *= 1./cmax;
-  u = ((rgb + 0.055)/1.055)^2.4;
-  v = _lrgb_0/_srgb_0 * rgb;
-  hi = double(rgb > _srgb_0);
-  return hi*u + (1.-hi)*v;
+  if (!lrgb_gamma) {
+    u = ((rgb + 0.055)/1.055)^2.4;
+    v = _lrgb_0/_srgb_0 * rgb;
+    hi = double(rgb > _srgb_0);
+    return hi*u + (1.-hi)*v;
+  } else {
+    return rgb ^ (1./lrgb_gamma);
+  }
 }
 
 _srgb_0 = 5./7.*0.055;
@@ -124,6 +159,8 @@ func xyz2rgb(xyz, cmax=)
  *  external variable srgb_clip after a call to xyz2rgb to find out
  *  if any colors have been clipped; it has the same dimensions as the
  *  input and is 1 where a color is clipped, otherwise 0.
+ *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
+ *  function; see rgb_l2s for details.
  * SEE ALSO: rgb2xyz, lab2rgb, rgb2lab, rgb2luv, rgb_s2l
  */
 {
@@ -138,6 +175,8 @@ func rgb2xyz(rgb, g, b, cmax=)
  *  If input rgb are real, they are assumed normalized to lie in [0.,1.].
  *  If input are integers, they are assumed to lie in [0,255].
  *  You can specify a different maximum color value using the cmax= keyword.
+ *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
+ *  function; see rgb_l2s for details.
  * SEE ALSO: xyz2rgb, lab2rgb, rgb2lab, rgb2luv, rgb_l2s
  */
 {
@@ -175,6 +214,8 @@ func lab2rgb(lab, cmax=)
  *
  *  Notes: chroma = abs(B, A)  hue = atan(B, A)  saturation = chroma/L
  *
+ *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
+ *  function; see rgb_l2s for details.
  * SEE ALSO: rgb2lab, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_s2l
  */
 {
@@ -190,8 +231,8 @@ func lab2rgb(lab, cmax=)
 }
 
 func rgb2lab(rgb, g, b, cmax=)
-/* DOCUMENT xyz = rgb2xyz([r, g, b])
- *       or xyz = rgb2xyz(r, g, b)
+/* DOCUMENT xyz = rgb2lab([r, g, b])
+ *       or xyz = rgb2lab(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
  *  Return value has same dimensions as input (in first form).
  *  If input rgb are real, they are assumed normalized to lie in [0.,1.].
@@ -208,6 +249,8 @@ func rgb2lab(rgb, g, b, cmax=)
  *
  *  Notes: chroma = abs(B, A)  hue = atan(B, A)  saturation = chroma/L
  *
+ *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
+ *  function; see rgb_l2s for details.
  * SEE ALSO: lab2rgb, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_l2s
  */
 {
@@ -261,11 +304,25 @@ func luv2rgb(luv, cmax=)
  *  LUV colors may not be representable in rgb.  You can check the
  *  external variable srgb_clip after a call to luv2rgb to find out
  *  if any colors have been clipped; it has the same dimensions as the
- *  input and is 1 where a color is clipped, otherwise 0.
+ *  input and is 1 where a color is clipped, otherwise 0.  You can also
+ *  set the external variable l2s_clipper (to the function lrgb_clip,
+ *  for example) to get more sophistocated clipping for colors outside
+ *  the RGB gamut.  The lrgb_clip function maintains Luv luminance and
+ *  hue and desaturating the color until it fits within the gamut.
+ *
+ *  The Luv luminance (L component) is identical to the Lab L component,
+ *  and is a function only of the XYZ Y component.  The (u,v) components,
+ *  like the (a,b) components are (0,0) for gray colors, so that hue
+ *  varies with angle around (a,b).  The difference is, that the (u,v)
+ *  coordinates are chosen so that lines of constant Luv hue (slope v/u)
+ *  are straight lines in XYZ (or lRGB) space.  The lines of constant
+ *  Lab hue (slope b/a), on the other hand, are curves in XYZ space.
  *
  *  Notes: chroma = abs(V, U)  hue = atan(V, U)  saturation = chroma/L
  *
- * SEE ALSO: rgb2luv, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_s2l
+ *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
+ *  function; see rgb_l2s for details.
+ * SEE ALSO: rgb2luv, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_s2l, lrgb_clip
  */
 {
   uv = _uv_white();
@@ -291,8 +348,8 @@ func _uv_white(void)
 }
 
 func rgb2luv(rgb, g, b, cmax=)
-/* DOCUMENT xyz = rgb2xyz([r, g, b])
- *       or xyz = rgb2xyz(r, g, b)
+/* DOCUMENT xyz = rgb2luv([r, g, b])
+ *       or xyz = rgb2luv(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
  *  Return value has same dimensions as input (in first form).
  *  If input rgb are real, they are assumed normalized to lie in [0.,1.].
@@ -307,6 +364,8 @@ func rgb2luv(rgb, g, b, cmax=)
  *
  *  Notes: chroma = abs(V, U)  hue = atan(V, U)  saturation = chroma/L
  *
+ *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
+ *  function; see rgb_l2s for details.
  * SEE ALSO: luv2rgb, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_l2s
  */
 {
@@ -323,4 +382,49 @@ func rgb2luv(rgb, g, b, cmax=)
   uv = _uv_white();
   luv(..,2:3) = 13. * l * [4.*xyz(..,1)*d - uv(1), 9.*xyz(..,2)*d - uv(2)];
   return luv;
+}
+
+func lrgb_clip(rgb)
+/* DOCUMENT clipped_lrgb = lrgb_clip(lrgb)
+ *
+ *   With input LRGB = physically linear [r,g,b] as real values (final
+ *   index is length 3), clip any colors with one or more components
+ *   outside the interval [0,1] along a line from lrgb to the gray
+ *   with the same luminance.  The clipped LRGB will always have at
+ *   least one component either 0 or 1.  This procedure maintains the
+ *   CIE Luv luminance and hue, simply desaturating the color until it
+ *   fits inside the gamut.  (Note that CIE Lab hue is not maintained.)
+ *
+ *   You can set the external variable lrgb_gray to any value you want
+ *   in order to define the "gray with the same luminance" as something
+ *   other than the CIE Luv luminance.  The gray value will be
+ *   LRGB(..,+)*lrgb_gray(+)/sum(lrgb_gray).  The default is equivalent
+ *   to lrgb_gray = _xyz_rgb(2,), the CIE Y value.
+ *
+ *   You can force rgb_l2s to clip using lrgb_clip by setting the
+ *   external variable l2s_clipper = lrgb_clip.
+ *
+ * SEE ALSO: rgb_l2s, luv2rgb
+ */
+{
+  rgb0 = rgb;
+  rgb = min(max(rgb, 0.), 1.);
+  list = where((rgb0(..,max)>1.0001) | (rgb0(..,min)<-0.0001));
+  if (numberof(list)) {  /* dont bother with microscopic clips */
+    rgb = transpose(rgb, 2);
+    rgb0 = transpose(rgb0, 2)(,list);
+    if (is_void(lrgb_gray)) gray = _xyz_rgb(2,);      /* Y = default gray */
+    else gray = lrgb_gray / sum(lrgb_gray);
+    w = gray(-:1:3,+) * rgb0(+,);  /* gray level, assume gray(sum) = 1.0 */
+    /* find first point between [w,w,w] and rgb0 where one of rgb is 0 or 1 */
+    x = rgb0 - w;
+    zero = double(!x);
+    x = ((1.-zero) * [-w, 1.-w] / (x + zero));
+    x += (x<=0.)*1.e30;                   /* get rid of solutions with x<=0 */
+    rgb0 = w + (rgb0 - w)*x(-,min,..,min); /* take minimum of x>0 solutions */
+    rgb0 = min(max(rgb0, 0.), 1.);  /* happens when w<0 or w>1 */
+    rgb(,list) = rgb0;
+    rgb = transpose(rgb, 0);
+  }
+  return rgb;
 }

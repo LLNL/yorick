@@ -118,6 +118,10 @@
      Functions: hsv2rgb, hsl2rgb, cmyk2rgb, rgb2hsv, rgb2hsl, rgb2cmyk
    lab2rgb.i  - conversions between RGB and CIE XYZ, LAB, LUV color systems
      Functions: lab2rgb, luv2rgb, xyz2rgb, rgb2lab, rgb2luv, rgb2xyz
+   cie.i      - CIE 1931 standard illuminants and color matching functions
+     Functions: cie_a, cie_d, cie_xyz, cie_rgb
+   dichromat.i - transform RGB colors to what colorblind people see
+     Functions: dichromat, dichromap
    cmap.i     - enhancement to palette function, including dozens of
                 additional pre-defined palettes
      Functions: cmap, cmap_rd, cb_choices, cubehelix, gistct, mshct, mplct,
