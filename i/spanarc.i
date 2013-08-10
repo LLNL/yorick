@@ -16,7 +16,7 @@ func spanarc(a, b, c, n, cont=)
  *   result has dimensions dimsof(A,B,C)-by-N.
  *   With non-nil, non-zero cont= keyword, the points will fall along the
  *   circle from C to A continuing the arc ABC and completing the circle.
- * SEE ALSO: span, spanl
+ * SEE ALSO: span, spanl, bezier
  */
 {
   if (cont) {  /* invert b through midpoint of ac */

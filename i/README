@@ -57,6 +57,8 @@
      Functions: levmar
    spanarc.i  - compute evenly spaced points on a circular arc
      Function: spanarc
+   bezier.i  - compute points on a Bezier or rational Bezier curve
+     Function: bezier
 
    Numerical integration:
    ----------------------
