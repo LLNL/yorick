@@ -1362,10 +1362,10 @@ y_uo_extract(Operand *op, char *name)
     y_error("(BUG) corrupted user object in y_uo_extract");
   if (uo->uo_type->on_extract) {
     Symbol *stack;
-    long owner = op->owner - spBottom;
+    long owner = op->owner - spBottom, sp0 = sp - spBottom;
     uo->uo_type->on_extract(uo->body.c, name);
     PopTo(spBottom+owner);
-    while (sp - spBottom > owner) {
+    while (sp - spBottom > sp0) {
       stack = sp--; /* sp decremented BEFORE stack element is deleted */
       if (stack->ops == &dataBlockSym) Unref(stack->value.db);
     }
