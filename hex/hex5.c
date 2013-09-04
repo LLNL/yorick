@@ -140,6 +140,7 @@ int hex5_begin(HX_mesh *mesh, TK_ray *ray, long cell[],
   if (mesh->block != cell[1]) {
     mesh->block= cell[1];
     mesh->stride= mesh->blks[cell[1]].stride;
+    mesh->orient= 0;
   }
 
   /* find centroid of initial cell, store in xy[2] */
