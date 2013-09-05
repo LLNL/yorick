@@ -29,6 +29,7 @@ int hex_enter(HX_mesh *mesh, TK_ray *ray, long cell[],
   if (mesh->block != cell[1]) {
     mesh->block= cell[1];
     mesh->stride= mesh->blks[cell[1]].stride;
+    mesh->orient= 0;
   }
 
   /* initialize xy for given cell, bndy face */

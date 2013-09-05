@@ -83,6 +83,8 @@ void ray_free(TK_result *result)
 
 /* ------------------------------------------------------------------------ */
 
+static void ray_discard(TK_result *result);
+
 int
 ray_store(TK_result *result, long cell, real s, int first)
 {
@@ -126,10 +128,9 @@ ray_store(TK_result *result, long cell, real s, int first)
           loopflag = (++result->nback > 10);
           if (loopflag) {
             /* discarding better than returning bogus track? */
-            ray_reset(result);
-            i = result->n++;
-            result->cell0 = &result->block->cell[i];
-            result->cell0[0] = 1;
+            ray_discard(result);
+            i = result->n - 1 - (result->nmax - TK_BLKSZ);
+            s = -1.e35;
           }
         }
       }
@@ -137,6 +138,43 @@ ray_store(TK_result *result, long cell, real s, int first)
     result->block->s[i] = result->sprev = s;
   }
   return loopflag;
+}
+
+static void
+ray_discard(TK_result *result)
+{
+  if (result && result->cell0) {
+    TK_block *block = &result->block0, *next;
+    long i, nmax = TK_BLKSZ;
+    real *s;
+    while (block) {
+      i = result->cell0 - block->cell;
+      if (i>=0 && i<TK_BLKSZ) break;
+      nmax += TK_BLKSZ;
+      block = block->next;
+    }
+    if (block) {
+      /* back up to block containing cell0 for this ray chunk */
+      result->block = block;
+      if (result->cell0[0]>0) result->cell0[0] = 1;
+      else                    result->cell0[0] = -1;
+      result->n = nmax-TK_BLKSZ + i + 1;
+      result->nmax = nmax;
+      next = block->next;
+      block->next = 0;
+      while (next) {  /* remove any subsequent blocks */
+        block = next;
+        next = block->next;
+        block->next = 0;
+        s = block->s;
+        block->s = 0;
+        p_free(s);
+        p_free(block);
+      }
+    } else {
+      /* else serious problem, not clear what to do, s reset in caller */
+    }
+  }
 }
 
 long ray_collect(TK_result *result, long *cell, real *s, long orig)
