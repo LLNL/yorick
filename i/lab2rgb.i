@@ -219,7 +219,7 @@ func lab2rgb(lab, cmax=)
  * SEE ALSO: rgb2lab, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_s2l
  */
 {
-  xyz = lab;
+  xyz = double(lab);
   xyz(*,) *= 1./[116., -500., -200.](-,);
   l = xyz(..,1) + 16./116.;
   xyz(..,3) += l;
