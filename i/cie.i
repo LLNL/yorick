@@ -18,6 +18,7 @@ func cie_a(lambda)
 /* DOCUMENT cie_a(lambda)
  *   Return CIE A illuminant (incandescent lighting) as a function of
  *   wavelength LAMBDA in nm.  (2856 K Plankian)
+ *   Chromaticity coordinates are xy = [0.44758, 0.40745].
  * SEE ALSO: cie_d
  */
 {
@@ -51,11 +52,15 @@ func cie_d(lambda, x, y)
  *       or cie_d(lambda, T)
  *       or cie_d(lambda, xD, yD)
  *       or cie_d(lambda, xyD)
+ *       or cie_d(, T)
  *   Return CIE D illuminant (daylight) as a function of wavelength LAMBDA
  *   in nm.  In the first form, return the D65 illuminant (noon daylight).
  *   In the second form, T is the temperature in K (roughly 6500 for D65).
+ *   T must be >=4000 and <=25000, except as special cases you may pass
+ *   T = 50, 55, 65, or 75 to get D50, D55, D65, or D75, respectively.
  *   In the third and fourth forms, (xD,yD) or xyD=[xD,yD] are chromaticity
  *   coordinates (roughly [0.31271,0.32902] for D65).
+ *   In the fifth form, return the xyD chromaticity coordinates.
  *
  *   This function implements the formulas given in
  *     http://en.wikipedia.org/wiki/Standard_illuminant
@@ -74,12 +79,21 @@ func cie_d(lambda, x, y)
     if (numberof(x) == 2) {
       y = x(2);
       x = x(1);
+    } else if (x == 50) {
+      x = 0.34567;  y = 0.35850;
+    } else if (x == 55) {
+      x = 0.33242;  y = 0.34743;
+    } else if (x == 65) {
+      x = 0.31271;  y = 0.32902;
+    } else if (x == 75) {
+      x = 0.29902;  y = 0.31485;
     } else {
       if (x<4000 || x>25000) error, "D temperature outside 4000 to 25000 K";
       if (x<=7000) x = poly(1000./x, 0.244063, 0.09911, 2.9678, -4.6070);
       else         x = poly(1000./x, 0.237040, 0.24748, 1.9018, -2.0064);
       y = poly(x, -0.275, 2.870, -3.000);
     }
+    if (is_void(lambda)) return [x, y];
   }
   m1 = m2 = 1./(0.0241 + 0.2562*x - 0.7341*y);
   m1 *= -1.3515 -  1.7703*x +  5.9114*y;
