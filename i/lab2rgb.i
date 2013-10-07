@@ -207,6 +207,8 @@ func lab2rgb(lab, cmax=)
  *  for yellow.  Euclidean distance in 3D LAB space represents the
  *  perceptual difference between two colors.
  *
+ *  For D50 reference white, use d50_lab2rgb instead.
+ *
  *  LAB colors may not be representable in rgb.  You can check the
  *  external variable srgb_clip after a call to lab2rgb to find out
  *  if any colors have been clipped; it has the same dimensions as the
@@ -246,6 +248,8 @@ func rgb2lab(rgb, g, b, cmax=)
  *  while the blue-yellow component B is negative for blue and positive
  *  for yellow.  Euclidean distance in 3D LAB space represents the
  *  perceptual difference between two colors.
+ *
+ *  For D50 reference white, use d50_rgb2lab instead.
  *
  *  Notes: chroma = abs(B, A)  hue = atan(B, A)  saturation = chroma/L
  *
@@ -300,6 +304,8 @@ func luv2rgb(luv, cmax=)
  *  perceptual luminance, abs(v,u) is perceptual chroma, and atan(v,u)
  *  is perceptual hue.  Euclidean distance in LUV is perceived color
  *  color difference.
+ *
+ *  For D50 reference white, use d50_luv2rgb instead.
  *
  *  LUV colors may not be representable in rgb.  You can check the
  *  external variable srgb_clip after a call to luv2rgb to find out
@@ -361,6 +367,8 @@ func rgb2luv(rgb, g, b, cmax=)
  *  perceptual luminance, abs(v,u) is perceptual chroma, and atan(v,u)
  *  is perceptual hue.  Euclidean distance in LUV is perceived color
  *  color difference.
+ *
+ *  For D50 reference white, use d50_rgb2luv instead.
  *
  *  Notes: chroma = abs(V, U)  hue = atan(V, U)  saturation = chroma/L
  *
@@ -427,4 +435,37 @@ func lrgb_clip(rgb)
     rgb = transpose(rgb, 0);
   }
   return rgb;
+}
+
+/* http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+ * Bradford-adapted D50 matrices:
+ */
+d50_white = [0.96422, 1.00000, 0.82521];  /* [0.34567, 0.35850, 0.29583] */
+d50_xyz_rgb = [[0.4360747, 0.2225045, 0.0139322],
+               [0.3850649, 0.7168786, 0.0971045],
+               [0.1430804, 0.0606169, 0.7141733]];
+d50_rgb_xyz = LUsolve(d50_xyz_rgb);
+
+func d50_rgb2lab(rgb, g, b, cmax=) {
+  xyz_white = d50_white;
+  _xyz_rgb = d50_xyz_rgb;
+  return rgb2lab(rgb, g, b, cmax=cmax);
+}
+
+func d50_lab2rgb(lab, cmax=) {
+  xyz_white = d50_white;
+  _rgb_xyz = d50_rgb_xyz;
+  return lab2rgb(lab, cmax=cmax);
+}
+
+func d50_rgb2luv(rgb, g, b, cmax=) {
+  xyz_white = d50_white;
+  _xyz_rgb = d50_xyz_rgb;
+  return rgb2luv(rgb, g, b, cmax=cmax);
+}
+
+func d50_luv2rgb(luv, cmax=) {
+  xyz_white = d50_white;
+  _rgb_xyz = d50_rgb_xyz;
+  return luv2rgb(luv, cmax=cmax);
 }
