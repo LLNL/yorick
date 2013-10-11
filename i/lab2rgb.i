@@ -147,7 +147,7 @@ func _rgb_scale(rgb, cmax)
   return rgb;
 }
 
-func xyz2rgb(xyz, cmax=)
+func xyz2rgb(xyz, cmax=, white=)
 /* DOCUMENT srgb = xyz2rgb(xyz)
  *  Returns sRGB, the IEC 61966-2-1 is RGB on a canonical monitor, given
  *  the CIEXYZ.  By default, xyz2rgb returns a char [r,g,b] (of the same
@@ -164,10 +164,12 @@ func xyz2rgb(xyz, cmax=)
  * SEE ALSO: rgb2xyz, lab2rgb, rgb2lab, rgb2luv, rgb_s2l
  */
 {
-  return rgb_l2s(xyz(..,+) * _rgb_xyz(,+), cmax=cmax);
+  local x2r;
+  white = reference_white(white, , x2r);
+  return rgb_l2s(xyz(..,+) * x2r(,+), cmax=cmax);
 }
 
-func rgb2xyz(rgb, g, b, cmax=)
+func rgb2xyz(rgb, g, b, cmax=, white=)
 /* DOCUMENT xyz = rgb2xyz([r, g, b])
  *       or xyz = rgb2xyz(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
@@ -182,7 +184,9 @@ func rgb2xyz(rgb, g, b, cmax=)
 {
   if (!is_void(g)) rgb = [rgb, g, b];
   if (structof(rgb+0) == long) rgb *= 1./255.;
-  return rgb_s2l(rgb, cmax=cmax)(..,+) * _xyz_rgb(,+);
+  local r2x;
+  white = reference_white(white, r2x);
+  return rgb_s2l(rgb, cmax=cmax)(..,+) * r2x(,+);
 }
 
 _xyz_rgb = [[0.4124, 0.2126, 0.0193],
@@ -190,7 +194,7 @@ _xyz_rgb = [[0.4124, 0.2126, 0.0193],
             [0.1805, 0.0722, 0.9505]];
 _rgb_xyz = LUsolve(_xyz_rgb);
 
-func lab2rgb(lab, cmax=)
+func lab2rgb(lab, cmax=, white=)
 /* DOCUMENT srgb = lab2rgb(lab)
  *  Returns sRGB, the IEC 61966-2-1 is RGB on a canonical monitor, given
  *  the CIELAB.  By default, lab2rgb returns a char [r,g,b] (of the same
@@ -207,7 +211,12 @@ func lab2rgb(lab, cmax=)
  *  for yellow.  Euclidean distance in 3D LAB space represents the
  *  perceptual difference between two colors.
  *
- *  For D50 reference white, use d50_lab2rgb instead.
+ *  With the white= keyword, you can use a reference white other than D65.
+ *  In addition to shifting the reference white, white= also performs a
+ *  von Kries transform to make rgb=[1.,1.,1.] correspond to the specified
+ *  white.  White can be the CIE xy chromaticity, or a CIE XYZ color (which
+ *  will be scaled to Y=1), or one of the numbers 50, 55, 65, or 75 to get
+ *  the CIE D50, D55, C65, or D75 white point.
  *
  *  LAB colors may not be representable in rgb.  You can check the
  *  external variable srgb_clip after a call to lab2rgb to find out
@@ -218,7 +227,8 @@ func lab2rgb(lab, cmax=)
  *
  *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
  *  function; see rgb_l2s for details.
- * SEE ALSO: rgb2lab, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_s2l
+ * SEE ALSO: rgb2lab, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_s2l,
+ *           reference_white
  */
 {
   xyz = double(lab);
@@ -228,11 +238,13 @@ func lab2rgb(lab, cmax=)
   xyz(..,1) = l - xyz(..,2);
   xyz(..,2) = l;
   xyz = _f_bal(xyz);
-  xyz(*,) *= xyz_white(-,);
-  return rgb_l2s(xyz(..,+) * _rgb_xyz(,+), cmax=cmax);
+  local x2r;
+  white = reference_white(white, , x2r);
+  xyz(*,) *= white(-,);
+  return rgb_l2s(xyz(..,+) * x2r(,+), cmax=cmax);
 }
 
-func rgb2lab(rgb, g, b, cmax=)
+func rgb2lab(rgb, g, b, cmax=, white=)
 /* DOCUMENT xyz = rgb2lab([r, g, b])
  *       or xyz = rgb2lab(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
@@ -249,19 +261,27 @@ func rgb2lab(rgb, g, b, cmax=)
  *  for yellow.  Euclidean distance in 3D LAB space represents the
  *  perceptual difference between two colors.
  *
- *  For D50 reference white, use d50_rgb2lab instead.
+ *  With the white= keyword, you can use a reference white other than D65.
+ *  In addition to shifting the reference white, white= also performs a
+ *  von Kries transform to make rgb=[1.,1.,1.] correspond to the specified
+ *  white.  White can be the CIE xy chromaticity, or a CIE XYZ color (which
+ *  will be scaled to Y=1), or one of the numbers 50, 55, 65, or 75 to get
+ *  the CIE D50, D55, C65, or D75 white point.
  *
  *  Notes: chroma = abs(B, A)  hue = atan(B, A)  saturation = chroma/L
  *
  *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
  *  function; see rgb_l2s for details.
- * SEE ALSO: lab2rgb, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_l2s
+ * SEE ALSO: lab2rgb, rgb2xyz, xyz2rgb, rgb2luv, luv2rgb, rgb_l2s,
+ *           reference_white
  */
 {
   if (!is_void(g)) rgb = [rgb, g, b];
   if (structof(rgb+0) == long) rgb *= 1./255.;
-  xyz = rgb_s2l(rgb, cmax=cmax)(..,+) * _xyz_rgb(,+);
-  xyz(*,) *= 1./xyz_white(-,);
+  local r2x;
+  white = reference_white(white, r2x);
+  xyz = rgb_s2l(rgb, cmax=cmax)(..,+) * r2x(,+);
+  xyz(*,) *= 1./white(-,);
   lab = _f_lab(xyz);
   l = lab(..,2);
   lab(..,2:3) -= lab(..,1:2);
@@ -290,7 +310,7 @@ func _f_bal(x) {
   return hi*x*x*x + 3.*(6./29.)^2*(1.-hi)*(x - 4./29.);
 }
 
-func luv2rgb(luv, cmax=)
+func luv2rgb(luv, cmax=, white=)
 /* DOCUMENT srgb = luv2rgb(luv)
  *  Returns sRGB, the IEC 61966-2-1 is RGB on a canonical monitor, given
  *  the CIELUV.  By default, luv2rgb returns a char [r,g,b] (of the same
@@ -305,7 +325,12 @@ func luv2rgb(luv, cmax=)
  *  is perceptual hue.  Euclidean distance in LUV is perceived color
  *  color difference.
  *
- *  For D50 reference white, use d50_luv2rgb instead.
+ *  With the white= keyword, you can use a reference white other than D65.
+ *  In addition to shifting the reference white, white= also performs a
+ *  von Kries transform to make rgb=[1.,1.,1.] correspond to the specified
+ *  white.  White can be the CIE xy chromaticity, or a CIE XYZ color (which
+ *  will be scaled to Y=1), or one of the numbers 50, 55, 65, or 75 to get
+ *  the CIE D50, D55, C65, or D75 white point.
  *
  *  LUV colors may not be representable in rgb.  You can check the
  *  external variable srgb_clip after a call to luv2rgb to find out
@@ -328,10 +353,13 @@ func luv2rgb(luv, cmax=)
  *
  *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
  *  function; see rgb_l2s for details.
- * SEE ALSO: rgb2luv, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_s2l, lrgb_clip
+ * SEE ALSO: rgb2luv, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_s2l, lrgb_clip,
+ *           reference_white
  */
 {
-  uv = _uv_white();
+  local x2r;
+  white = reference_white(white, , x2r);
+  uv = _uv_white(white);
   l = luv(..,1);
   zero = double(!l);
   d = 1./(13.*l+zero);
@@ -339,21 +367,22 @@ func luv2rgb(luv, cmax=)
   v = uv(2) + luv(..,3)*d;
   xyz = double(luv);
   hi = double(l > 8.);
-  xyz(..,2) = y = xyz_white(2) * (hi*((l+16.)/116.)^3 + (3./29.)^3*(1.-hi)*l);
+  xyz(..,2) = y = white(2) * (hi*((l+16.)/116.)^3 + (3./29.)^3*(1.-hi)*l);
   zero = double(!v);
   d = 0.25*(1.-zero)/(v+zero);
   xyz(..,1) = 9.*u*d * y;
   xyz(..,3) = (12.-3.*u-20.*v)*d * y;
-  return rgb_l2s(xyz(..,+) * _rgb_xyz(,+), cmax=cmax);
+  return rgb_l2s(xyz(..,+) * x2r(,+), cmax=cmax);
 }
 
-func _uv_white(void)
+func _uv_white(white)
 {
-  d = xyz_white(+) * [1.,15.,3.](+);
-  return [4.*xyz_white(1), 9.*xyz_white(2)] / d;
+  if (is_void(white)) white = xyz_white;
+  d = white(+) * [1.,15.,3.](+);
+  return [4.*white(1), 9.*white(2)] / d;
 }
 
-func rgb2luv(rgb, g, b, cmax=)
+func rgb2luv(rgb, g, b, cmax=, white=)
 /* DOCUMENT xyz = rgb2luv([r, g, b])
  *       or xyz = rgb2luv(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
@@ -368,18 +397,26 @@ func rgb2luv(rgb, g, b, cmax=)
  *  is perceptual hue.  Euclidean distance in LUV is perceived color
  *  color difference.
  *
- *  For D50 reference white, use d50_rgb2luv instead.
+ *  With the white= keyword, you can use a reference white other than D65.
+ *  In addition to shifting the reference white, white= also performs a
+ *  von Kries transform to make rgb=[1.,1.,1.] correspond to the specified
+ *  white.  White can be the CIE xy chromaticity, or a CIE XYZ color (which
+ *  will be scaled to Y=1), or one of the numbers 50, 55, 65, or 75 to get
+ *  the CIE D50, D55, C65, or D75 white point.
  *
  *  Notes: chroma = abs(V, U)  hue = atan(V, U)  saturation = chroma/L
  *
  *  External variables lrgb_skip, lrgb_gamma, or lrgb_clipper affect this
  *  function; see rgb_l2s for details.
- * SEE ALSO: luv2rgb, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_l2s
+ * SEE ALSO: luv2rgb, rgb2xyz, xyz2rgb, rgb2lab, lab2rgb, rgb_l2s,
+ *           reference_white
  */
 {
   if (!is_void(g)) rgb = [rgb, g, b];
   if (structof(rgb+0) == long) rgb *= 1./255.;
-  xyz = rgb_s2l(rgb, cmax=cmax)(..,+) * _xyz_rgb(,+);
+  local r2x;
+  white = reference_white(white, r2x);
+  xyz = rgb_s2l(rgb, cmax=cmax)(..,+) * r2x(,+);
   y = xyz(..,2) / xyz_white(2);
   hi = double(y > (6./29.)^3);
   luv = double(xyz);
@@ -387,7 +424,7 @@ func rgb2luv(rgb, g, b, cmax=)
   d = xyz(..,+) * [1., 15., 3.](+);
   zero = double(!d);
   d = (1.-zero)/(d+zero);
-  uv = _uv_white();
+  uv = _uv_white(white);
   luv(..,2:3) = 13. * l * [4.*xyz(..,1)*d - uv(1), 9.*xyz(..,2)*d - uv(2)];
   return luv;
 }
@@ -469,3 +506,115 @@ func d50_luv2rgb(luv, cmax=) {
   _rgb_xyz = d50_rgb_xyz;
   return luv2rgb(luv, cmax=cmax);
 }
+
+/* LMS transforms normalized to CIE E illuminant, white_xyz=[1,1,1]
+ * except for _xyz2lms_hpe0
+ * to normalize to xyz_white:
+ *   xyz2lms --> xyz2lms / (xyz2lms(+,) * xyz_white(+))(-,)
+ *
+ * chromatic adpatation (color balancing):
+ *   xyz = P rgb   (rgb is lRGB)
+ *   lms = M xyz
+ *   lmsB = lms/lms_white = 1/lms_white lms = 1/lms_white M P rgb
+ * since we start in a space in which rgb = [1,1,1] is D65 white (not E),
+ * we must use M normalized to lms = [1,1,1] for D65 white (not E)
+ *   xyzB = 1/M 1/lms_white M P rgb
+ *        = PB rgb
+ *   rgbB = 1/P 1/M 1/lms_white M P rgb
+ * want rgbB = [1,1,1] --> xyz_white
+ *        lms_white = M xyz_white
+ *        rgbB = 1/P 1/M 111  but 111 = M P 111
+ *    xyz = 1/M 1*lms_white M P rgbB
+ *
+ *   xyz = _xyz_rgb(,+) * rgb(+)
+ *   lms = _xyz2lms(+,) * xyz(+)
+ *   M_P = _xyz2lms(+,) * _xyz_rgb(,+)
+ */
+
+func reference_white(xyz, &r2x, &x2r, m=)
+/* DOCUMENT white = reference_white(xyz, r2x, x2r)
+ *       or reference_white, xyz
+ *   Compute the lRGB --> XYZ and XYZ --> lRGB transformation matrices
+ *   R2X and X2R which place the color XYZ at lRGB=[1.,1.,1.].  The
+ *   XYZ argument can be a CIE XYZ color, which will be rescaled so that
+ *   Y=1, or it can be a CIE xy chromaticity [x,y], or it can be one of
+ *   the numbers 50, 55, 65, or 75 to use the CIE D50, D55, D65, or D75
+ *   illuminant.  If XYZ is [] nil, use CIE D65, which is the reference
+ *   for which the sRGB standard was defined.
+ *   Called as a function, sets the external variables xyz_white, _xyz_rgb,
+ *   and _rgb_xyz, which causes all subsequent calls to xyz2rgb, rgb2xyz,
+ *   lab2rgb, rgb2lab, luv2rgb, and rgb2luv to use this reference white.
+ *   You should strongly consider using the white= keyword to these
+ *   conversion functions instead of setting the external variables.
+ *   The algorithm is a von Kries transform to perform a chromatic
+ *   adaptation from the D65 white of the sRGB standard to the specified
+ *   XYZ color.  By default, reference_white uses the Bradford matrix
+ *   from the CMCCAT97 standard.  Using the m= keyword, you may specify
+ *   an alternate transformation matrix, where lms = m(+,)*xyz(+).  The
+ *   matrix m must be normalized to the CIE E illuminant, that is,
+ *   m(sum,) = [1,1,1].  Several alternate chromatic adpatation matrices
+ *   are predefined as the variables:
+ *     cam_bradford   Bradford CMCCAT97 (default)
+ *     cam_hpe        Hunt-Pointer-Estevez RLAB
+ *     cam_sbradford  spectrally-sharpened Bradford CAT97s
+ *     cam_cat02      CIECAM02
+ * SEE ALSO: xyz2rgb, lab2rgb, luv2rgb
+ */
+{
+  if (numberof(xyz) == 1) {
+    if (xyz == 50) xyz = cie_d50;
+    else if (xyz == 55) xyz = cie_d55;
+    else if (xyz == 65) xyz = [];
+    else if (xyz == 75) xyz = cie_d75;
+    else error, "unknown white specified";
+  }
+  if (numberof(xyz) == 2) xyz = [xyz(1), xyz(2), 1.-sum(xyz)];
+  if (numberof(xyz)) {
+    xyz /= xyz(2);
+    w = d65_xyz_rgb(,sum);
+    if (is_void(x2l)) x2l = cam_bradford;
+    x2l /= x2l(+,-,) * w(+);
+    r2x = x2l * (x2l(+,-,) * xyz(+));
+    r2x = (LUsolve(x2l)(+,) * r2x(,+))(,+) * d65_xyz_rgb(+,);
+  } else {
+    r2x = d65_xyz_rgb;
+    xyz = r2x(,sum);
+  }
+  x2r = LUsolve(r2x);
+  if (am_subroutine()) {
+    extern xyz_white, _rgb_xyz, _xyz_rgb;
+    xyz_white = xyz;
+    _xyz_rgb = r2x;
+    _rgb_xyz = x2r;
+  }
+  return xyz;
+}
+d65_xyz_rgb = _xyz_rgb;
+
+/* from http://en.wikipedia.org/wiki/Standard_illuminant */
+cie_d50 = [0.34567, 0.35850];
+cie_d55 = [0.33242, 0.34743];
+cie_d65 = [0.31271, 0.32902];
+cie_d75 = [0.29902, 0.31485];
+cie_axy = [0.44757, 0.40745];  /* CIE A illuminant = incandescent lighting */
+
+cam_bradford = [[ 0.8951,  0.2664, -0.1614],
+                [-0.7502,  1.7135,  0.0367],
+                [ 0.0389, -0.0685,  1.0296]];
+cam_hpe = [[ 0.38971,  0.68898, -0.07868],
+           [-0.22981,  1.18340,  0.04641],
+           [ 0.,       0.,       1.00000]];
+cam_sbradford = [[ 0.8951,  0.2264, -0.1614],
+                 [-0.7502,  1.7135,  0.0367],
+                 [ 0.0389, -0.0685,  1.0296]];
+cam_cat02 = [[ 0.8951,  0.2264, -0.1614],
+             [-0.7502,  1.7135,  0.0367],
+             [ 0.0389, -0.0685,  1.0296]];
+/* wildly unnormalized transforms used in dichromatic vision simulation
+cam_meyer = [[ 0.1150, 0.9364, -0.0203],
+             [-0.4227, 1.1723,  0.0911],
+             [ 0.,     0.,      0.5609]];
+cam_vischeck = [[0.05059983,  0.08585369,  0.00952420],
+                [0.01893033,  0.08925308,  0.01370054],
+                [0.00292202,  0.00975732,  0.07145979]];
+*/
