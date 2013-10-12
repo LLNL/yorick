@@ -147,7 +147,7 @@ func _rgb_scale(rgb, cmax)
   return rgb;
 }
 
-func xyz2rgb(xyz, cmax=, white=)
+func xyz2rgb(xyz, cmax=, white=, m=)
 /* DOCUMENT srgb = xyz2rgb(xyz)
  *  Returns sRGB, the IEC 61966-2-1 is RGB on a canonical monitor, given
  *  the CIEXYZ.  By default, xyz2rgb returns a char [r,g,b] (of the same
@@ -165,11 +165,11 @@ func xyz2rgb(xyz, cmax=, white=)
  */
 {
   local x2r;
-  white = reference_white(white, , x2r);
+  white = reference_white(white, , x2r, m=m);
   return rgb_l2s(xyz(..,+) * x2r(,+), cmax=cmax);
 }
 
-func rgb2xyz(rgb, g, b, cmax=, white=)
+func rgb2xyz(rgb, g, b, cmax=, white=, m=)
 /* DOCUMENT xyz = rgb2xyz([r, g, b])
  *       or xyz = rgb2xyz(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
@@ -185,7 +185,7 @@ func rgb2xyz(rgb, g, b, cmax=, white=)
   if (!is_void(g)) rgb = [rgb, g, b];
   if (structof(rgb+0) == long) rgb *= 1./255.;
   local r2x;
-  white = reference_white(white, r2x);
+  white = reference_white(white, r2x, m=m);
   return rgb_s2l(rgb, cmax=cmax)(..,+) * r2x(,+);
 }
 
@@ -194,7 +194,7 @@ _xyz_rgb = [[0.4124, 0.2126, 0.0193],
             [0.1805, 0.0722, 0.9505]];
 _rgb_xyz = LUsolve(_xyz_rgb);
 
-func lab2rgb(lab, cmax=, white=)
+func lab2rgb(lab, cmax=, white=, m=)
 /* DOCUMENT srgb = lab2rgb(lab)
  *  Returns sRGB, the IEC 61966-2-1 is RGB on a canonical monitor, given
  *  the CIELAB.  By default, lab2rgb returns a char [r,g,b] (of the same
@@ -239,12 +239,12 @@ func lab2rgb(lab, cmax=, white=)
   xyz(..,2) = l;
   xyz = _f_bal(xyz);
   local x2r;
-  white = reference_white(white, , x2r);
+  white = reference_white(white, , x2r, m=m);
   xyz(*,) *= white(-,);
   return rgb_l2s(xyz(..,+) * x2r(,+), cmax=cmax);
 }
 
-func rgb2lab(rgb, g, b, cmax=, white=)
+func rgb2lab(rgb, g, b, cmax=, white=, m=)
 /* DOCUMENT xyz = rgb2lab([r, g, b])
  *       or xyz = rgb2lab(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
@@ -279,7 +279,7 @@ func rgb2lab(rgb, g, b, cmax=, white=)
   if (!is_void(g)) rgb = [rgb, g, b];
   if (structof(rgb+0) == long) rgb *= 1./255.;
   local r2x;
-  white = reference_white(white, r2x);
+  white = reference_white(white, r2x, m=m);
   xyz = rgb_s2l(rgb, cmax=cmax)(..,+) * r2x(,+);
   xyz(*,) *= 1./white(-,);
   lab = _f_lab(xyz);
@@ -310,7 +310,7 @@ func _f_bal(x) {
   return hi*x*x*x + 3.*(6./29.)^2*(1.-hi)*(x - 4./29.);
 }
 
-func luv2rgb(luv, cmax=, white=)
+func luv2rgb(luv, cmax=, white=, m=)
 /* DOCUMENT srgb = luv2rgb(luv)
  *  Returns sRGB, the IEC 61966-2-1 is RGB on a canonical monitor, given
  *  the CIELUV.  By default, luv2rgb returns a char [r,g,b] (of the same
@@ -358,7 +358,7 @@ func luv2rgb(luv, cmax=, white=)
  */
 {
   local x2r;
-  white = reference_white(white, , x2r);
+  white = reference_white(white, , x2r, m=m);
   uv = _uv_white(white);
   l = luv(..,1);
   zero = double(!l);
@@ -382,7 +382,7 @@ func _uv_white(white)
   return [4.*white(1), 9.*white(2)] / d;
 }
 
-func rgb2luv(rgb, g, b, cmax=, white=)
+func rgb2luv(rgb, g, b, cmax=, white=, m=)
 /* DOCUMENT xyz = rgb2luv([r, g, b])
  *       or xyz = rgb2luv(r, g, b)
  *  Returns CIEXYZ, given RGB on a canonical monitor (the IEC 61966-2-1 sRGB).
@@ -415,7 +415,7 @@ func rgb2luv(rgb, g, b, cmax=, white=)
   if (!is_void(g)) rgb = [rgb, g, b];
   if (structof(rgb+0) == long) rgb *= 1./255.;
   local r2x;
-  white = reference_white(white, r2x);
+  white = reference_white(white, r2x, m=m);
   xyz = rgb_s2l(rgb, cmax=cmax)(..,+) * r2x(,+);
   y = xyz(..,2) / xyz_white(2);
   hi = double(y > (6./29.)^3);
@@ -476,36 +476,12 @@ func lrgb_clip(rgb)
 
 /* http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
  * Bradford-adapted D50 matrices:
- */
-d50_white = [0.96422, 1.00000, 0.82521];  /* [0.34567, 0.35850, 0.29583] */
+d50_white = [0.96422, 1.00000, 0.82521];  /* [0.34567, 0.35850, 0.29583]
 d50_xyz_rgb = [[0.4360747, 0.2225045, 0.0139322],
                [0.3850649, 0.7168786, 0.0971045],
                [0.1430804, 0.0606169, 0.7141733]];
 d50_rgb_xyz = LUsolve(d50_xyz_rgb);
-
-func d50_rgb2lab(rgb, g, b, cmax=) {
-  xyz_white = d50_white;
-  _xyz_rgb = d50_xyz_rgb;
-  return rgb2lab(rgb, g, b, cmax=cmax);
-}
-
-func d50_lab2rgb(lab, cmax=) {
-  xyz_white = d50_white;
-  _rgb_xyz = d50_rgb_xyz;
-  return lab2rgb(lab, cmax=cmax);
-}
-
-func d50_rgb2luv(rgb, g, b, cmax=) {
-  xyz_white = d50_white;
-  _xyz_rgb = d50_xyz_rgb;
-  return rgb2luv(rgb, g, b, cmax=cmax);
-}
-
-func d50_luv2rgb(luv, cmax=) {
-  xyz_white = d50_white;
-  _rgb_xyz = d50_rgb_xyz;
-  return luv2rgb(luv, cmax=cmax);
-}
+ */
 
 /* LMS transforms normalized to CIE E illuminant, white_xyz=[1,1,1]
  * except for _xyz2lms_hpe0
@@ -572,10 +548,10 @@ func reference_white(xyz, &r2x, &x2r, m=)
   if (numberof(xyz)) {
     xyz /= xyz(2);
     w = d65_xyz_rgb(,sum);
-    if (is_void(x2l)) x2l = cam_bradford;
-    x2l /= x2l(+,-,) * w(+);
-    r2x = x2l * (x2l(+,-,) * xyz(+));
-    r2x = (LUsolve(x2l)(+,) * r2x(,+))(,+) * d65_xyz_rgb(+,);
+    if (is_void(m)) m = cam_bradford;
+    m /= m(+,-,) * w(+);
+    r2x = m * (m(+,-,) * xyz(+));
+    r2x = (LUsolve(m)(+,) * r2x(,+))(,+) * d65_xyz_rgb(+,);
   } else {
     r2x = d65_xyz_rgb;
     xyz = r2x(,sum);
