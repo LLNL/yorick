@@ -95,7 +95,7 @@ func rgb_l2s(rgb, cmax=)
     hi = double(rgb > _lrgb_0);
     return _rgb_scale(hi*u + (1.-hi)*v, cmax);
   } else {
-    return rgb ^ lrgb_gamma;
+    return _rgb_scale(rgb ^ lrgb_gamma, cmax);
   }
 }
 

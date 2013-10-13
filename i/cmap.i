@@ -25,7 +25,9 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
  *   Most color maps here are rather poor choices.  Some reasonably good ones
  *   are: "gray", "coolwarm", "bone", "copper", and most of the ColorBrewer
  *   maps, such as "Blues" or "PuOr".  The function cmap_test makes a
- *   picture you can use to test palettes.
+ *   picture you can use to test palettes.  The "dblue", "dred", and "dgreen"
+ *   maps are a matched set designed to be distinguishable by colorblind
+ *   people.  Use them if you need multiple maps in one picture.
  *
  *   Keywords:
  *     hist=1  if P is a simple list of colors, creates a stepped
@@ -105,7 +107,8 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
  *  names conflict; you can use the functions gistct, mplct, and gmtct
  *  to break any conflicts (the ColorBrewer names are all unique).  Also
  *  featured are several of the diverging color maps devised by Kenneth
- *  Moreland.  See help,mshct for more on those.
+ *  Moreland.  See help,mshct for more on those.  Finally, a sequential
+ *  map design tool I invented, seqct, is available.
  *
  *  The Gnuplot and IDL programs use a scheme of indexed palettes; the
  *  functions gplct and idlct allow you to set those palettes.  Some of
@@ -114,7 +117,7 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
  *  lets you set palettes by parameters; you can get the default parameters
  *  with cmap, "cubehelix".
  *
- * SEE ALSO: mshct, gplct, mplct, gmtct, gistct, idlct, cubehelix,
+ * SEE ALSO: mshct, seqct, gplct, mplct, gmtct, gistct, idlct, cubehelix,
  *           cb_choices, cmap_rd, cmap_test
  */
 {
@@ -164,6 +167,10 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
     }
     if (is_void(p)) {
       i = mshct(name, , n0);
+      if (numberof(i)) p = transpose(i);
+    }
+    if (is_void(p)) {
+      i = seqct(name, n0);
       if (numberof(i)) p = transpose(i);
     }
     if (is_void(p)) {
@@ -405,7 +412,7 @@ func cmap_test
  *   Create a picture to help test color maps for artifacts and common
  *   misfeatures.  After calling this, call cmap or one of the *ct
  *   functions to change the color map.
- * SEE ALSO: cmap, mshct, mplct, gplct, gmtct, idlct, cb_choices
+ * SEE ALSO: cmap, mshct, seqct, mplct, gplct, gmtct, idlct, cb_choices
  */
 {
   x=span(0,1,400)(,-:1:400);  y=transpose(x);
@@ -545,7 +552,7 @@ func mshct(rgb1, rgb2, n, wht=, msh=, cmax=)
  *   therein.  A few reasonable RGB1 and RGB2 values have been given names.
  *   The name "coolwarm" produces Moreland's recommended color table.
  *   Called as a subroutine, sets the current palette.
- * SEE ALSO: cmap, mshct, gmtct, gplct, gistct, idlct
+ * SEE ALSO: cmap, seqct, gmtct, gplct, gistct, idlct
  */
 {
   if (structof(rgb1) == string) {
@@ -633,6 +640,172 @@ func _adjust_hue(msh, mu)
 }
 
 /* ------------------------------------------------------------------------ */
+/* Sequential colormaps built on similar principles to Moreland */
+
+/* named cm_seq map parameters are h (degrees), l1 (bright L), l2 (dark L)
+ * where the L values can be a negative integer to use -L as the index
+ * into seq_params of another named map for the L and saturation
+ *
+ * dblue, dred, dgreen are three matched maps carefully designed to
+ *   be distinguishable to dichromats (colorblind people)
+ */
+seq_names = ["dblue", "dred", "dgreen"];
+seq_params = [[228, -2, -3], [345, 90, -3], [65, -2, 20]];
+
+/* lRGB hues in degrees, r=0, g=120, b=240
+ * LMS color directions:
+ *   Vischeck L=351.23, M=156.73, S=253.69   (180+156.73 = 336.73)
+ *   Meyer    L=355.21, M=344.47, S=255.34   (344.47-180 = 164.47)
+ * Dichromat simulator primaries:
+ *                Vischeck         Meyer
+ *   protan    227.99  49.13   228.92  47.02
+ *   deuteran  227.99  49.13   221.03  34.76
+ *   tritan    202.14 352.67   184.16   0.36
+ */
+
+func seqct(h, n, l1, l2, cmax=)
+/* DOCUMENT cm = seqct(name)
+ *       or cm = seqct(h, n, l1, l2)
+ *       or seqct, h
+ *   Return a sequential colormap based on hue H, running from lighter
+ *   shades to darker shades in equal steps of luminance.  A few good
+ *   choices of hue have names; you can also pass such a NAME.  The
+ *   remaining arguments are optional: N is the number of colors to
+ *   return, which defaults to the number in the currently installed
+ *   colormap (usually 200).  L1 is the luminance for the lightest (first)
+ *   shade, which defaults to 90, and L2 is the luminance of the darkest
+ *   (last) shade, which defaults to 20.  L1 or L2 may also be RGB triples,
+ *   which causes both the endpoint luminance and chroma to match that
+ *   given color.  The hue H may be specified as an RGB triple, or as an
+ *   angle in degrees in lRGB color space, with r=0, g=120, and b=240.
+ *   The returned map is based on Luv luminance and hue; all points will
+ *   have the same (u,v) hue, and therefore the same lRGB hue.  By default,
+ *   the color will be maximally saturated at the endpoints, but you can
+ *   desaturate it by specifying unsaturated RGB triples for L1 or L2.
+ *   Typically, you pick L1 or L2 to be the endpoint of another seqct
+ *   map you wish to match, or rgb_saturate on another hue.
+ *   The colormap follows a second degree Bezier curve in lRGB space,
+ *   with the control point between the endpoints located on the fully
+ *   saturated edge of the RGB color cube, at the point with the given hue,
+ *   guaranteeing the whole curve lies inside the cube.  The points are
+ *   evenly spaced in luminance along this curve.
+ *
+ *   The named seqct maps are "dblue", "dred", and "dgreen".  These maps
+ *   are matched to have equal luminance and comparable saturation, so that
+ *   you can use them for situations in which you use all three maps
+ *   in the same figure.  Furthermore, the three hues are carefully chosen
+ *   to be distinguishable by dichromats (colorblind people).
+ * SEE ALSO: cmap, mshct, gmtct, gplct, gistct, idlct
+ */
+{
+  if (is_void(n)) n = cmap_ncolors();
+  if (structof(h) == string) {
+    list = where(h == seq_names);
+    if (!numberof(list)) {
+      if (!am_subroutine()) return [];
+      error, "unknown seqct name "+h;
+    }
+    h = seq_params(,list(1));
+    if (h(2) >= 0.) l1 = h(2);
+    else l1 = rgb_saturate(seq_params(1,-h(2)), seq_params(2,-h(2)), cmax=1);
+    if (h(3) >= 0.) l2 = h(3);
+    else l2 = rgb_saturate(seq_params(1,-h(3)), seq_params(3,-h(3)), cmax=1);
+    h = h(1);
+  }
+  rgb = _lrgbsat(cm_hue2lrgb(h))
+  lmid = _lrgb2luv(rgb)(1);
+  gmid = _luv2lrgb([lmid,0.,0.])(1);  /* lrgb gray of same luminance as rgb */
+
+  s1 = _cm_get_sat(l1, 90.);
+  s2 = _cm_get_sat(l2, 20.);
+  if (l1<0 || l2>100 || abs(l1-l2)<20) error, "bad endpoint luminances";
+  /* select gray levels with equal luminance steps */
+  g = _luv2lrgb([span(l1, l2, n),0.,0.])(,1);
+  g1 = g(1);  g2 = g(0);
+  /* move endpoints to fully saturated colors of given hue */
+  rgb1 = (g1<=gmid)? rgb*g1/gmid : 1.-(1.-rgb)*(1.-g1)/(1.-gmid);
+  rgb2 = (g2<=gmid)? rgb*g2/gmid : 1.-(1.-rgb)*(1.-g2)/(1.-gmid);
+  /* desaturate endpoints if requested */
+  if (numberof(s2)) rgb2 = _cm_desat(rgb2, s2);
+  if (numberof(s1)) rgb1 = _cm_desat(rgb1, s1);
+  /* move midpoint to mean of endpoint luminances or lrgb grays
+   * get brighter colors with mean gray if gmid not between g1 and g2,
+   * otherwise with mean luminance
+   * -- this switch leads to slight discontinuity as function of hue
+   */
+  if ((g1-gmid)*(gmid-g2)<0.) gm = 0.5*(g1 + g2);
+  else gm = _luv2lrgb([0.5*(l1+l2),0.,0.])(1);
+  mask = double(gmid >= gm);
+  rgb = mask*gm/gmid*rgb + (1.-mask)*(1. - (1.-rgb)*(1.-gm)/(1.-gmid));
+  gmid = gm;
+
+  /* [g,g,g] is gray value for points in colormap
+   * colormap is order 2 Bezier curve [rgb1,rgb,rgb2]
+   * first find s Bezier parameter which gives yl
+   */
+  s = (g - g1) / (g2 - g1);
+  sm = (gmid - g1) / (g2 - g1);
+  s /= sm + sqrt(sm*sm + (1.-sm-sm)*s);
+  s = s(-:1:3,);  t = 1. - s;
+  rgb = rgb1*t*t + rgb*2.*t*s + rgb2*s*s;
+  rgb = transpose(rgb_l2s(rgb, cmax=cmax));
+  if (!am_subroutine()) return rgb;
+  cmap, rgb;
+}
+
+func _lrgb2luv(rgb) { lrgb_skip=3; return rgb2luv(rgb); }
+func _luv2lrgb(luv) { lrgb_skip=3; return luv2rgb(luv); }
+func _lrgbsat(rgb) {
+  rgb -= rgb(min);
+  g = rgb(max);
+  return rgb / (g + !g); /* on maximal saturation edge of cube */
+}
+func _cm_get_sat(&l, l0) {
+  if (is_void(l)) l = l0;
+  if (numberof(l) == 3) { s = rgb_s2l(l); l = rgb2luv(l)(1); }
+  return s;
+}
+func _cm_desat(rgb, s) {
+  luv = _lrgb2luv(rgb);  c0 = abs(luv(2), luv(3));
+  s = _lrgb2luv(s);      s = abs(s(2), s(3));
+  if (s > 1.01*c0) error, "L1 or L2 more saturated than max for this hue";
+  else if (s >= c0) return rgb;
+  return _luv2lrgb(luv * [c0,s,s]/c0);
+}
+
+func cm_hue2lrgb(h)
+{
+  if (numberof(h) == 3) {
+    return rgb_s2l(h);
+  } else {
+    h *= pi/180.;  /* h is lRGB hue */
+    return [2.,-1.,-1.]/sqrt(6.)*cos(h) + [0.,1.,-1.]/sqrt(2.)*sin(h);
+  }
+}
+
+func rgb_saturate(rgb, l, &uvc, cmax=)
+/* DOCUMENT rgbsat = rgb_saturate(rgb, l, uv)
+ *          rgbsat = rgb_saturate(hue, l, uv)
+ *   Return [r,g,b] with same Luv hue as RGB, saturated at luminosity L.
+ *   Optionally return the uv chroma, sqrt(u^2+v^2) for this color.
+ *   In the second form, HUE is the lRGB hue in degrees, lRGB=rgb_s2l(rgb),
+ *   the angle in the lRGB color cube of the plane determined by lRGB
+ *   and the gray diagonal of the cube.
+ *   With the cmax= keyword, rgbsat is normalized to cmax.
+ * SEE ALSO: seqct
+ */
+{
+  gl = _luv2lrgb([l,0.,0.])(1);      /* lrgb gray of luminance l */
+  rgb = _lrgbsat(cm_hue2lrgb(rgb));  /* hue of input rgb on edge of cube */
+  g = _luv2lrgb([_lrgb2luv(rgb)(1),0.,0.])(1);
+  mask = double(gl <= g);  /* luminance l below rgb */
+  rgb = mask*gl/g*rgb + (1.-mask)*(1. - (1.-rgb)*(1.-gl)/(1.-g));
+  luv = _lrgb2luv(rgb);
+  uvc = abs(luv(2), luv(3));
+  return rgb_l2s(rgb, cmax=cmax);
+}
+
+/* ------------------------------------------------------------------------ */
 /* matplotlib colormaps, plus four additional names for gnuplot maps */
 
 func mplct(name)
@@ -641,7 +814,7 @@ func mplct(name)
  *   return color map (ct = "color table") specification for Matplotlib
  *   map NAME.  You may append "_r" to the name to reverse the colors.
  *   Called as a subroutine, sets the current palette.
- * SEE ALSO: cmap, mshct, gmtct, gplct, gistct, idlct
+ * SEE ALSO: cmap, mshct, seqct, gmtct, gplct, gistct, idlct
  */
 {
   local n, rev;
