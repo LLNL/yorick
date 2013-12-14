@@ -59,6 +59,7 @@ md5_block(md_state *ctx, void *data, unsigned long nbytes)
   unsigned char *ptr = data;
   md_uint32 a, b, c, d, a0, b0, c0, d0;
   md_uint32 wkspc[16];  /* set by SETLE macro in first round */
+  if (!nbytes) return ptr;
   a = ctx->a;
   b = ctx->b;
   c = ctx->c;
@@ -160,6 +161,7 @@ sha1_block(md_state *ctx, void *data, unsigned long nbytes)
   unsigned char *ptr = data;
   md_uint32 a, b, c, d, e, a0, b0, c0, d0, e0;
   md_uint32 wkspc[16];  /* set in first round by R0 macro */
+  if (!nbytes) return ptr;
   a = ctx->a;
   b = ctx->b;
   c = ctx->c;

@@ -232,7 +232,7 @@ func mp_boss(void)
 }
 
 func mp_staff(void)
-/* DOCUMENT staff = mp_boss()
+/* DOCUMENT staff = mp_staff()
  *   get the list of ranks of the "staff" for this process, or nil [] if
  *   this is a leaf process.  The staff are the processes to which fanout
  *   messages are sent by this process.
