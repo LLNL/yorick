@@ -1117,7 +1117,6 @@ void Y_random_seed(int nArgs)
     YError("random_seed takes exactly zero or one arguments");
   }
   InitRandom(seed);
-  Drop(nArgs);
 }
 
 /* Algorithm from Press and Teukolsky, Computers in Physics, 6, #5,
