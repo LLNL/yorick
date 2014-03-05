@@ -375,7 +375,7 @@ func hydra_xyz(f, ublk, i0, j0, k0, face)
              hydra_aux_data, hydra_mix_data
  */
 {
-  { local mdims, mlens, bnum, _h_legacy, gmap; }
+  { local mdims, mlens, bnum, _h_legacy, ndims, gmap; }
   nblk = h_blocks(f, mdims, mlens, _h_legacy, ndims, gmap);
   dim2 = dim3 = call(2:0);
   if (ndims < 3) {
@@ -469,7 +469,7 @@ func hydra_xyz(f, ublk, i0, j0, k0, face)
     /* collect any requested auxilliary data in hydra_aux_data */
     if (naux) _h_data_internal, aux_names, hydra_aux_data;
     /* collect any requested mix data in qdata, ncmix, cmix, lmix */
-    if (nmix) _h_mix_internal, aux_names;
+    if (nmix) _h_mix_internal, mix_names;
   }
 
   if (nmix) {
