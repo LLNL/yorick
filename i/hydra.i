@@ -800,8 +800,8 @@ func h_mix(f, &matlist, name, &mixdat)
 
   if (is_void(name) || dims(1)) {
     /* may as well collect matlist as long as we have to read it */
-    if (nblk>1) matlist = array(0., sum(mlens));
-    else        matlist = array(0., grow([ndims],mdims(,1)));
+    if (nblk>1) matlist = array(0, sum(mlens));
+    else        matlist = array(0, grow([ndims],mdims(,1)));
 
     if (!is_void(name)) {
       name = _h_xtranslate(name);
