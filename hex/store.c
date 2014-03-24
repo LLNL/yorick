@@ -85,10 +85,21 @@ void ray_free(TK_result *result)
 
 static void ray_discard(TK_result *result);
 
+/* maximum number of steps to make forward progress */
+static int loop_nmax = 200;
+
 int
 ray_store(TK_result *result, long cell, real s, int first)
 {
   int loopflag = 0;
+  static long loop_s;
+  static int loop_n;
+  if (first || s>loop_s) {
+    loop_s = s;
+    loop_n = 0;
+  } else {
+    loopflag = (++loop_n >= loop_nmax);
+  }
   if (result) {
     long i = result->n++;
     int check_back = 1;
@@ -125,7 +136,7 @@ ray_store(TK_result *result, long cell, real s, int first)
           result->nback = 0;   /* made some backward progress */
           result->smin = s;
         } else {
-          loopflag = (++result->nback > 10);
+          if (!loopflag) loopflag = (++result->nback > 10);
           if (loopflag) {
             /* discarding better than returning bogus track? */
             ray_discard(result);
