@@ -92,7 +92,7 @@ int
 ray_store(TK_result *result, long cell, real s, int first)
 {
   int loopflag = 0;
-  static long loop_s;
+  static double loop_s;
   static int loop_n;
   if (first || s>loop_s) {
     loop_s = s;
