@@ -169,14 +169,14 @@ static int orientpt[24][8] = {
 static int orient_compose(int second, int first);
 static int orient_compose(int second, int first)
 {
-  int *o1= orientations[first];
-  int *o2= orientations[second];
+  int *o1 = orientations[first];
+  int *o2 = orientations[second];
   /* destination of face 0 determines row in orientations array,
    *   when regarded as 6 rows of 4 columns
    * low order two bits determined by destination of face 2 */
-  int f0= o2[o1[0]];
-  int lo= o2[o1[2]] ^ ((f0&4)? f0-4 : f0+2);
-  if (lo&4) lo^= 6;  /* set 2 bit, not 4 bit */
+  int f0 = o2[o1[0]];
+  int lo = o2[o1[2]] ^ ((f0&4)? f0-4 : f0+2);
+  if (lo&6) lo = 2 | (lo&1);  /* set 2 bit, not 4 bit */
   return (f0<<2) | lo;
 }
 

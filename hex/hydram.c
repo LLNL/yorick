@@ -423,8 +423,8 @@ static int orient_compute(long bnds[], long bndr[], long *p2dp, long *p2dq,
   }
 
   /* return orientation */
-  f2^= ((f0&4)? f0-4 : f0+2);
-  if (f2&4) f2^= 6;
+  f2 ^= ((f0&4)? f0-4 : f0+2);
+  if (f2&6) f2 = 2 | (f2&1);
   return (f0<<2) | f2;
 }
 
