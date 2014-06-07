@@ -143,6 +143,9 @@ static int mpy_aborted = 0, mpy_batch = 0;
   MPI_Abort
  */
 
+PLUG_API int yerror_flags;  /* see yinput.c */
+static int y0error_flags = 0;
+
 static int mpy_initdone = 0;
 static char *mpy_batscript = 0;
 
@@ -183,6 +186,7 @@ mpy_initialize(int *pargc, char **pargv[])
       mpy_batscript = pargv[0][2];
 
     y_errhook = mpy_recover;
+    if (mpy_rank) yerror_flags |= 1;  /* mpy_recover can override this */
   }
 }
 
@@ -431,7 +435,8 @@ Y_mp_exec(int argc)
         return;
       }
     }
-    mpy_bcast(1);  /* make sure everybody has char command on stack */ 
+    if (mpy_size > 1)
+      mpy_bcast(1);  /* make sure everybody has char command on stack */ 
     /* invoke interpreted include,char_array */
     if (mpy_rank) {
       char *cmsg = (yarg_typeid(0)==Y_CHAR)? ygeta_c(0,0,0) : 0;
@@ -449,7 +454,7 @@ Y_mp_exec(int argc)
        *   immediate inside Y_include on rank 0, and it will be
        *   a parallel task with other message passing
        */
-      mpy_bcast(0);
+      if (mpy_size > 1) mpy_bcast(0);
       Y_include(2);
       mpy_exec0(0);
     }
@@ -458,9 +463,6 @@ Y_mp_exec(int argc)
     ypush_int(!mpy_parallel && !mpy_rank);
   }
 }
-
-PLUG_API int yerror_flags;  /* see yinput.c */
-static int y0error_flags = 0;
 
 static long mpy_after0 = -1, mpy_after1 = -1;
 static long mpy_after2 = -1, mpy_after3 = -1;
@@ -474,17 +476,19 @@ mpy_exec0(int on)
     mpy_after3 = yget_global("mpy_frank", 0);
   }
   mpy_parallel = on;
-  if (on) {  /* after_error = mpy_after_error */
-    y0error_flags = yerror_flags;
-    yerror_flags |= 1;
-    ypush_global(mpy_after1);
-    yput_global(mpy_after0, 0);
-    yarg_drop(1);
-  } else {   /* after_error = [] */
-    yerror_flags = y0error_flags;
-    ypush_nil();
-    yput_global(mpy_after0, 0);
-    yarg_drop(1);
+  if (mpy_size > 1) {
+    if (on) {  /* after_error = mpy_after_error */
+      y0error_flags = yerror_flags;
+      yerror_flags |= 1;
+      ypush_global(mpy_after1);
+      yput_global(mpy_after0, 0);
+      yarg_drop(1);
+    } else {   /* after_error = [] */
+      yerror_flags = y0error_flags;
+      ypush_nil();
+      yput_global(mpy_after0, 0);
+      yarg_drop(1);
+    }
   }
 }
 

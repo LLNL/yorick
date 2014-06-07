@@ -265,6 +265,7 @@ func mp_handout(args)
  * SEE ALSO: mp_handin, mp_nfan, mp_send, mp_recv
  */
 {
+  if (!mp_size || mp_size<2) return;
   if (numberof(args(-))) error, "unrecognized keyword";
   n = args(0);
   if (!n) error, "requires at least one argument to hand out";
@@ -290,9 +291,13 @@ func mp_handout(args)
 }
 wrap_args, mp_handout;
 
-func mp_handin(part)
+func mp_handin(part, reduce)
 /* DOCUMENT mp_handin
  *       or result = mp_handin(part)
+ *       or result = mp_handin(part, reduce)
+ *       or result = mp_handin(part, min)
+ *       or result = mp_handin(part, max)
+ *       or result = mp_handin(part, sum)
  *   acknowledge completion to rank 0.  The mp_handin function must be
  *   called on all ranks; it uses the same logarithmic fanout as mp_handout,
  *   but in the reverse direction, with messages beginning at the leaf ranks
@@ -300,19 +305,40 @@ func mp_handin(part)
  *   In the second form, PART can be any numeric array; RESULT will be
  *   the sum of PART for this rank and all its staff.  The PART array,
  *   if present, must have the same dimensions on every rank.
+ *   You may supply a REDUCE argument to get a reduction function other than
+ *   REDUCE may be either one of the index range functions min, max, or
+ *   sum (the default), or an interpreted function REDUCE(a,b) returning
+ *   the combination of a and b you wish to return.  The default, sum,
+ *   returns a+b.  REDUCE must be commutative and associative.
  * SEE ALSO: mp_handout, mp_send, mp_recv
  */
 {
+  if (!mp_size || mp_size<2) return;
   if (is_void(part)) part = 0;
+  if (is_void(reduce)) {
+    reduce = _sum_reduce;
+  } else if (is_range(reduce)) {
+    reduce = print(reduce)(1);
+    if (reduce == "min::") reduce = _min_reduce;
+    else if (reduce == "max::") reduce = _max_reduce;
+    else if (reduce == "sum::") reduce = _sum_reduce;
+    else error, "illegal reduction function "+reduce;
+  }
   staff = mp_staff();
   for (i=1 ; i<=numberof(staff) ; ++i) {
-    if (dimsof(part)(1)) part(*) += mp_recv(staff(i));
-    else part += mp_recv(staff(i));
+    p = reduce(part, mp_recv(staff(i)));
+    if (dimsof(part)(1)) part(*) = p;
+    else part = p;
   }
   boss = mp_boss();
   if (!is_void(boss)) mp_send, boss, part;
   return part;
 }
+
+func _min_reduce(a, b) { return min(a, b); }
+func _max_reduce(a, b) { return max(a, b); }
+func _sum_reduce(a, b) { return a + b; }
+errs2caller, _min_reduce, _max_reduce, _sum_reduce;
 
 func mp_require(filename)
 /* DOCUMENT mp_require, filename
