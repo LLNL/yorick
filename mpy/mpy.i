@@ -313,7 +313,7 @@ func mp_handin(part, reduce)
  * SEE ALSO: mp_handout, mp_send, mp_recv
  */
 {
-  if (!mp_size || mp_size<2) return;
+  if (!mp_size || mp_size<2) return part;
   if (is_void(part)) part = 0;
   if (is_void(reduce)) {
     reduce = _sum_reduce;
