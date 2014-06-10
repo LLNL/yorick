@@ -1202,12 +1202,16 @@ static void
 mperr_fatal(const char *msg)
 {
   /* do not be clever here -- just kill all processes */
-  if (!mpy_batch)
-    y_warnn("Rank %ld raised fatal MPI communication error:", mpy_rank);
-  else
-    y_warnn("Rank %ld raised error in batch mode:", mpy_rank);
-  y_warn(msg);
+  if (mpy_rank <= 16) {
+    if (!mpy_batch)
+      y_warnn("Rank %ld raised fatal MPI communication error:", mpy_rank);
+    else
+      y_warnn("Rank %ld raised error in batch mode:", mpy_rank);
+    y_warn(msg);
+  }
   mpy_abort();
+  if (!mpy_rank)
+    y_warn("MPI crashed and aborted: only rank<=16 allowed to print errors");
 }
 
 /* ------------------------------------------------------------------------ */
