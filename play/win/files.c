@@ -78,9 +78,22 @@ p_popen(const char *command, const char *mode)
   if (f) {
     f->ops = &w_file_ops;
     f->fp = fp;
-    f->fd = fileno(fp);
+    f->fd = _fileno(fp);
     for (; mode[0] ; mode++) if (mode[0]=='b') break;
     f->binary = (mode[0]=='b') | 2;
+  }
+  return f;
+}
+
+p_file *
+p_fd_raw(int fd)
+{
+  p_file *f = p_malloc(sizeof(p_file));
+  if (f) {
+    f->ops = &w_file_ops;
+    f->fp = 0;
+    f->fd = fd;
+    f->binary = 5;
   }
   return f;
 }
@@ -88,7 +101,9 @@ p_popen(const char *command, const char *mode)
 static int
 pv_fclose(p_file *file)
 {
-  int flag = (file->binary&2)? _pclose(file->fp) : fclose(file->fp);
+  int flag;
+  if (!file->fp) flag = _close(file->fd);
+  else flag = (file->binary&2)? _pclose(file->fp) : fclose(file->fp);
   p_free(file);
   return flag;
 }
@@ -133,8 +148,7 @@ static unsigned long
 pv_fread(p_file *file, void *buf, unsigned long nbytes)
 {
   if (file->binary&1) {
-    int fd = fileno(file->fp);
-    return _read(fd, buf, nbytes);
+    return _read(file->fd, buf, nbytes);
   } else {
     return fread(buf, 1, nbytes, file->fp);
   }
@@ -144,8 +158,7 @@ static unsigned long
 pv_fwrite(p_file *file, const void *buf, unsigned long nbytes)
 {
   if (file->binary&1) {
-    int fd = fileno(file->fp);
-    return _write(fd, buf, nbytes);
+    return _write(file->fd, buf, nbytes);
   } else {
     return fwrite(buf, 1, nbytes, file->fp);
   }

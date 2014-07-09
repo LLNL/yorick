@@ -4636,6 +4636,22 @@ extern _write;
    SEE ALSO: openb, createb, updateb, save, restore, sizeof
  */
 
+extern fd_read;
+extern fd_write;
+extern fd_close;
+/* DOCUMENT fd_read, fd, variable
+            fd_write, fd, expression
+            fd_close, fd
+     read or write array data (pointer, string, or struct instance not
+     allowed) directly to fiel descriptor FD.  With fd_close, you may
+     close a file descriptor.  There is no way to open a file descriptor;
+     it must have been opened by yorick's parent process.  These are
+     intended for communicating binary data with the parent process,
+     which must somehow arrange for yorick to know the values of FD.
+     Yorick limits the number of open descriptors to 16 (although FD may
+     have any value permitted by the system).
+ */
+
 extern add_member;
 /* DOCUMENT add_member, file, struct_name, offset, name, type, dimlist
      adds a member to a data type in the file FILE.  The data type name

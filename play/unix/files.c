@@ -98,6 +98,20 @@ p_popen(const char *command, const char *mode)
 #endif
 }
 
+p_file *
+p_fd_raw(int fd)
+{
+  p_file *f = p_malloc(sizeof(p_file));
+  if (f) {
+    f->ops = &u_file_ops;
+    f->fp = 0;
+    f->fd = fd;
+    f->binary = 5;
+    u_fdwatch(f->fd, 1);
+  }
+  return f;
+}
+
 static int
 pv_fclose(p_file *file)
 {

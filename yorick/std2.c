@@ -787,6 +787,85 @@ void Y__write(int nArgs)
   PushDataBlock(RefNC(&nilDB));
 }
 
+static struct yfd_file { int fd; p_file *f; } yfd_list[16];
+static int yfd_find(int fd, int flag);
+static int
+yfd_find(int fd, int flag)
+{
+  int i;
+  for (i=0 ; i<16 && yfd_list[i].f ; i++) if (yfd_list[i].fd == fd) break;
+  if (i >= 16) {
+    if (flag) y_error("only 16 in-use fd allowed, call fd_close");
+    i = -1;
+  } else if (!yfd_list[i].f) {
+    if (flag) {
+      yfd_list[i].fd = fd;
+      yfd_list[i].f = p_fd_raw(fd);
+      if (!yfd_list[i].f) y_error("p_fd_raw failed to open fd");
+    } else {
+      i = -1;
+    }
+  }
+  return i;
+}
+
+void
+Y_fd_close(int argc)
+{
+  if (argc == 1) {
+    int i = yfd_find(ygets_l(0), 0);
+    if (i >= 0) {
+      p_file *f = yfd_list[i].f;
+      yfd_list[i].f = 0;
+      for (i++ ; i<16 && yfd_list[i].f ; i++) {
+        yfd_list[i-1].fd = yfd_list[i].fd;
+        yfd_list[i-1].f = yfd_list[i].f;
+        yfd_list[i].f = 0;
+      }
+    }
+  } else {
+    y_error("fd_close expects exactly one argument");
+  }
+}
+
+static long yfd_sizes[10] = {sizeof(char), sizeof(short), sizeof(int),
+                             sizeof(long), sizeof(float), sizeof(double),
+                             2*sizeof(double), 0, 0, 0};
+
+void
+Y_fd_read(int argc)
+{
+  if (argc == 2) {
+    int tid, i = yfd_find(ygets_l(1), 1);
+    long len;
+    void *buf = ygeta_any(0, &len, 0, &tid);
+    if (tid<0 || tid>Y_STRUCT || !yfd_sizes[tid])
+      y_error("string, pointer, or struct instance data illegal for fd_read");
+    len *= yfd_sizes[tid];
+    if (p_fread(yfd_list[i].f, buf, len) != len) y_error("fd_read failed");
+  } else {
+    y_error("fd_read expects exactly two arguments");
+  }
+  /* leave array that was read on top of stack as return value */
+}
+
+void
+Y_fd_write(int argc)
+{
+  if (argc == 2) {
+    int tid, i = yfd_find(ygets_l(1), 1);
+    long len;
+    void *buf = ygeta_any(0, &len, 0, &tid);
+    if (tid<0 || tid>Y_STRUCT || !yfd_sizes[tid])
+      y_error("string, pointer, or struct instance data illegal for fd_write");
+    len *= yfd_sizes[tid];
+    if (p_fwrite(yfd_list[i].f, buf, len) != len) y_error("fd_write failed");
+  } else {
+    y_error("fd_write expects exactly two arguments");
+  }
+  /* leave array that was written on top of stack as return value */
+}
+
 /*--------------------------------------------------------------------------*/
 
 void Y_add_member(int nArgs)

@@ -47,6 +47,7 @@ struct p_file_ops {
 
 PLUG_API p_file *p_fopen(const char *unix_name, const char *mode);
 PLUG_API p_file *p_popen(const char *command, const char *mode);
+PLUG_API p_file *p_fd_raw(int fd);
 
 PLUG_API unsigned long p_fsize(p_file *file);
 PLUG_API unsigned long p_ftell(p_file *file);
