@@ -21,7 +21,7 @@
 extern VMaction Print;
 
 extern UnaryOp EvalFN, EvalBI, eval_auto;   /* required by Print */
-extern BuiltIn Y_print, Y_print_format;
+extern BuiltIn Y_print, Y_print_format, Y_rangeof;
 
 /* required by print() called as function */
 extern Array *GrowArray(Array *array, long extra);
@@ -733,11 +733,61 @@ static char *rfNames[]= { "avg:","cum:","dif:","max:","min:","mnx:","mxx:",
 static RangeFunc *RFs[]= { &RFavg,&RFcum,&RFdif,&RFmax,&RFmin,&RFmnx,&RFmxx,
                     &RFpcen,&RFpsum,&RFptp,&RFrms,&RFsum,&RFuncp,&RFzcen,0 };
 
+static int rfindex[] = { 9,18,14,6,5,11,12,16,13,7,10,8,17,15, 19 };
+static int rfxedni[] = { 4, 3, 9, 11, 0, 10, 5, 6, 8, 2, 13, 7, 12, 1, -1 };
+
 char *GetRFName(RangeFunc *rfTarget)
 {
   RangeFunc **rf= RFs;
   while (*rf && *rf!=rfTarget) rf++;
   return rfNames[rf-RFs];
+}
+
+void
+Y_rangeof(int argc)
+{
+  Range *rng = (sp->ops==&dataBlockSym && sp->value.db->ops==&rangeOps)?
+    (Range *)sp->value.db : 0;
+  Dimension *dims;
+  long *nrng = rng? 0 : YGet_L(sp, 0, &dims);
+  if (argc!=1 || (!rng && (!nrng || !dims || dims->number!=4 || dims->next)))
+    YError("rangeof expecting index range or array of 4 longs");
+  if (rng) {  /* convert rf:min:max:step to [flag, min, max, step] */
+    int i = 0, j = 0, k = 0;
+    if (rng->rf) {
+      for (i=0 ; i<14 ; i++) if (RFs[i] == rng->rf) break;
+      i = rfindex[i];
+    }
+    if (rng->nilFlags & R_PSEUDO) j = (rng->nilFlags & R_RUBBER)? 3 : 1;
+    else if (rng->nilFlags & R_RUBBER) j = 2;
+    else if (rng->nilFlags & R_NULLER) j = 4;
+    k = ((rng->nilFlags & R_MINNIL)!=0) | (((rng->nilFlags & R_MAXNIL)!=0)<<1);
+    dims = tmpDims;  tmpDims = 0;  FreeDimension(dims);
+    tmpDims = NewDimension(4L, 1L, 0);
+    nrng = ((Array*)PushDataBlock(NewArray(&longStruct, tmpDims)))->value.l;
+    nrng[0] = rng->min;
+    nrng[1] = rng->max;
+    nrng[2] = rng->inc;
+    nrng[3] = k | ((j + ((!j)? i : 0))<<2);
+  } else {    /* convert [flag, min, max, step] to rf:min:max:step */
+    long inc = nrng[2]? nrng[2] : 1;
+    int flags = ((nrng[3]&1)? R_MINNIL : 0) | ((nrng[3]&2)? R_MAXNIL : 0);
+    long f = (nrng[3] >> 2);
+    if (f == 1) flags |= R_PSEUDO;
+    else if (f == 2) flags |= R_RUBBER;
+    else if (f == 3) flags |= R_RUBBER | R_PSEUDO;
+    else if (f == 4) flags |= R_NULLER;
+    rng = PushDataBlock(NewRange(nrng[0], nrng[1], inc, flags));
+    if (f > 4) {
+      f = rfxedni[((f<20)?f:19)-5];
+      if (f < 0) {  /* make illegal range */
+        rng->min = 2;  rng->max = 1;  rng->inc = 1;  rng->nilFlags = 0;
+        f = 0;
+      } else {
+        rng->rf = RFs[f];
+      }
+    }
+  }
 }
 
 void PrintR(Operand *op)

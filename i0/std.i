@@ -709,7 +709,21 @@ extern is_range;
 /* DOCUMENT is_range(object)
      returns 1 if OBJECT is an index range (e.g.-  3:5 or 11:31:2),
      else 0.
-  SEE ALSO: is_array, is_func, is_void, is_struct, is_stream
+  SEE ALSO: rangeof, is_array, is_func, is_void, is_struct, is_stream
+ */
+
+extern rangeof;
+/* DOCUMENT rangeof(range)
+            rangeof(list)
+     converts index range RANGE into array of 4 longs, or array of 4 longs
+     LIST into an index range.  The LIST is:
+       [min, max, inc, flags]
+       flags: 1-bit min nil, 2-bit max nil,
+              plus 4 times:
+              1-4    - .. * where(0)
+              5-12   min max ptp sum avg rms mnx mxx
+              13-18  psum dif zcen pcen uncp cum
+  SEE ALSO: is_range
  */
 
 extern is_struct;
