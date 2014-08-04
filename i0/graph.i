@@ -356,7 +356,8 @@ func hcps(name)
      writes the picture in the current graphics window to the
      PostScript file NAME+".ps" (i.e.- the suffix .ps is added to NAME).
      Legends are not written, but the palette is always dumped.
-   SEE ALSO: hcps, window, fma, hcp, hcp_finish, plg, no_window
+     This is mostly for internal use; see png, svg, eps, or jpeg.
+   SEE ALSO: png, window, fma, hcp, hcp_finish, plg, no_window
  */
 {
   if (strpart(name,-2:0)!=".ps") name+= ".ps";
@@ -398,7 +399,11 @@ func eps(name, pdf=)
      dumping is turned on for the current window.
      The external variable EPSGS_CMD contains the command to start
      ghostscript.
-   SEE ALSO: pdf, png, jpeg, epsi, hcps, window, fma, hcp, no_window, plg
+
+     See help,pdf for advice about hairline artifacts between filled
+     polygons in plf or plfc output.
+
+   SEE ALSO: pdf, png, svg, jpeg, epsi, hcps, window, fma, hcp, no_window, plg
  */
 {
   if (strpart(name, -3:0) == ".eps") name = strpart(name,1:-4);
@@ -503,7 +508,18 @@ func pdf(name)
      dumping is turned on for the current window.
      The external variable EPSGS_CMD contains the command to start
      ghostscript.
-   SEE ALSO: eps, png, jpeg, hcps, window, fma, hcp, no_window, plg
+
+     You may have problems with hairline artifacts in plf or plfc output.
+     This turns out to be caused by anti-aliasing; the files are correct,
+     but modern rendering engines create the artifacts by trying to
+     soften pixelated edges.  If you can figure out how to turn off
+     antialiasing in your rendering software, you can generally get
+     rid of the hairlines.  The downside is, that text an diagonal lines
+     will have jagged edges and look worse.  What you want is a very
+     high resolution display, and turn off anti-aliasing (since it isn't
+     so necessary).
+
+   SEE ALSO: png, svg, jpeg, eps, hcps, window, fma, hcp, no_window, plg
  */
 {
   if (strpart(name, -3:0) == ".pdf") name = strpart(name,1:-4);
@@ -540,10 +556,11 @@ func png(name, dpi=, gray=, smooth=)
      to 4, which produce increasing levels of anti-aliasing.  With
      smooth=1 or smooth=2, you can probably get away with lower dpi.
      The default is smooth=0.  (Arguably, smooth=2 and dpi=72 or 100
-     should be the defaults.)
+     should be the defaults.  But this can cause hairline artifacts in
+     plf or plfc output; see help,pdf.)
      The default values of the keywords can be changed by setting
      the corresponding extern variable png_dpi, png_gray, or png_smooth.
-   SEE ALSO: eps, pdf, jpeg, hcps, window, plg, no_window
+   SEE ALSO: pdf, svg, jpeg, eps, hcps, window, plg, no_window
  */
 {
   if (strpart(name, -3:0) == ".png") name = strpart(name,1:-4);
@@ -578,7 +595,7 @@ func jpeg(name, dpi=, gray=)
      The default yorick graphics window is 6 inches square, and by
      default jpeg produces 72 dpi (dot per inch) output.  You can change
      this with the dpi= keyword; dpi=300 is extremely high resolution.
-   SEE ALSO: eps, png, pdf, hcps, window, plg, no_window
+   SEE ALSO: svg, png, pdf, eps, hcps, window, plg, no_window
  */
 {
   if (strpart(name, -3:0) == ".jpg") name = strpart(name,1:-4);
@@ -590,6 +607,43 @@ func jpeg(name, dpi=, gray=)
   dpi = dpi? "-r"+print(dpi)(1) : "";
   system, swrite(format=gscmd, dev, dpi, name+".jpg", psname);
   remove, psname;
+}
+
+func svg(name)
+/* DOCUMENT svg, name
+     writes the picture in the current graphics window to the SVG
+     file NAME+".svg" (i.e.- the suffix .svg is added to NAME).  The
+     svg file can be inserted into html and interpreted by most Web
+     browsers.  This function starts ghostscript using the EPSGS_CMD
+     variable.
+
+     You may have problems with hairline artifacts in plf or plfc output
+     (they also show up occasionally in pdf or postscript output).
+     This turns out to be caused by anti-aliasing (for pdf or ps as well);
+     the files are correct, but modern rendering engines create the
+     artifacts by trying to soften pixelated edges.
+
+     In SVG, the solution is to set the shape-rendering property to
+     shape-rendering='crispEdges' or shape-rendering='optimizeSpeed'
+     which can be done either globally in the leading <svg> tag, or
+     in each group <g> tag ghostscript uses to represent a filled polygon.
+     I don't know how to make ghostscript do that for you.  Oddly
+     enough, shapeRendering='geometricPrecision" apparently means
+     anti-aliasing is turned on; the fuzzy edges causes the hairlines
+     you see, since each polygon fuzzes its own edges without paying
+     any attention to the adjacent polygon's color.
+   SEE ALSO: png, pdf, jpeg, eps, hcps, window, plg, no_window
+ */
+{
+  if (strpart(name, -3:0) == ".svg") name = strpart(name,1:-4);
+  /* first run ghostscript to produce an eps translated to (0,0) */
+  svgname = eps(name+".svg", pdf=1);
+  /* second run ghostscript to produce the svg */
+  gscmd = EPSGS_CMD+" -sDEVICE=%s %s -sOutputFile=\"%s\" \"%s\"";
+  dev = "svg";
+  opt = "";
+  system, swrite(format=gscmd, dev, opt, name+".svg", svgname);
+  remove, svgname;
 }
 
 extern fma;
