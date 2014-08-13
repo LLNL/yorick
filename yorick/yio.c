@@ -746,10 +746,13 @@ char *GetRFName(RangeFunc *rfTarget)
 void
 Y_rangeof(int argc)
 {
-  Range *rng = (sp->ops==&dataBlockSym && sp->value.db->ops==&rangeOps)?
-    (Range *)sp->value.db : 0;
+  Range *rng;
   Dimension *dims;
-  long *nrng = rng? 0 : YGet_L(sp, 0, &dims);
+  long *nrng;
+  if (sp->ops==&referenceSym) ReplaceRef(sp);
+  rng = (sp->ops==&dataBlockSym
+         && sp->value.db->ops==&rangeOps)? (Range *)sp->value.db : 0;
+  nrng = rng? 0 : YGet_L(sp, 0, &dims);
   if (argc!=1 || (!rng && (!nrng || !dims || dims->number!=4 || dims->next)))
     YError("rangeof expecting index range or array of 4 longs");
   if (rng) {  /* convert rf:min:max:step to [flag, min, max, step] */
