@@ -1034,12 +1034,16 @@ func pltitle(title)
      Plot TITLE centered above the coordinate system for any of the
      standard Gist styles.  You may want to customize this for other
      plot styles.
+     The external variables pltitle_height, pltitle_font, pltitle_xadj,
+     and pltitle_yadj determine the font and position of the title,
+     if you want to change those.
    SEE ALSO: plt, xytitles
  */
 {
-  port= viewport();
-  plt, title, port(zcen:1:2)(1), port(4)+0.02,
-    font=pltitle_font, justify="CB", height=pltitle_height;
+  port = viewport();
+  x = port(zcen:1:2)(1) + pltitle_xadj;
+  y = port(4) + pltitle_yadj;
+  plt, title, x, y, font=pltitle_font, justify="CB", height=pltitle_height;
 }
 
 func xytitles(xtitle, ytitle, adjust)
@@ -1051,24 +1055,37 @@ func xytitles(xtitle, ytitle, adjust)
      displace the labels.  (Especially for the y title, the adjustment
      may depend on how many digits the numbers on your scale actually
      have.)  Note that DELTAX moves YTITLE and DELTAY moves XTITLE.
+     The external variables pltitle_height, pltitle_font, xtitle_xadj,
+     xtitle_yadj, ytitle_xadj, and ytitle_yadj determine the font and
+     unadjusted position of the titles, if you want to change those.
      WARNING: There is no easy way to ensure that this type of title
               will not interfere with the tick numbering.  Interference
               may make the numbers or the title or both illegible.
    SEE ALSO: plt, pltitle
  */
 {
-  if (is_void(adjust)) adjust= [0.,0.];
-  port= viewport();
+  if (is_void(adjust)) adjust = [0., 0.];
+  port = viewport();
+  x = port(zcen:1:2)(1) + xtitle_xadj;
+  y = port(3) + xtitle_yadj + adjust(2);
   if (xtitle && strlen(xtitle))
-    plt, xtitle, port(zcen:1:2)(1), port(3)-0.050+adjust(2),
-      font=pltitle_font, justify="CT", height=pltitle_height;
+    plt, xtitle, x, y, font=pltitle_font, justify="CT", height=pltitle_height;
+  x = port(1) + ytitle_xadj + adjust(1);
+  y = port(zcen:3:4)(1) + ytitle_yadj;
   if (ytitle && strlen(ytitle))
-    plt, ytitle, port(1)-0.050+adjust(1), port(zcen:3:4)(1),
+    plt, ytitle, x, y,
       font=pltitle_font, justify="CB", height=pltitle_height, orient=1;
 }
 
 pltitle_height= 18;
 pltitle_font= "helvetica";
+/* default title center locations relative to midpoint of viewport edge */
+pltitle_xadj = 0.;
+pltitle_yadj = 0.02;
+xtitle_xadj = 0.;
+xtitle_yadj = -0.05;
+ytitle_xadj = -0.05;
+ytitle_yadj = 0.;
 
 /*= SECTION(plotlim) plot limits and axis scaling ==========================*/
 
