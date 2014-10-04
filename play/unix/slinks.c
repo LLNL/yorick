@@ -85,17 +85,27 @@ u_find_exe(const char *argv0)
     char c = path? path[0] : 0;
     int s, j, k=0;
     while (c) {
-      while (c && c!=':') c = path[k++];
-      if (k > 1) {
-        for (j=0 ; j<k-1 && j<P_WKSIZ ; j++) wkspc[j] = path[j];
-        if (wkspc[j-1] == '/') s = 0;
-        else s = 1, wkspc[j] = '/';
-        for (; j<k+i && j<P_WKSIZ ; j++) wkspc[j+s] = argv0[j-k+1];
-        if (u_executable_file(wkspc) >= 0) break;
+      while (c==':' || c=='.') {
+        if (c=='.' && path[k+1] && path[k+1]!=':') break;
+        c = path[++k];
       }
-      path += k;
+      if (k) {   /* any run of ::.:... treated as a single . */
+        path += k;
+        wkspc = p_getcwd();
+        for (j=0 ; wkspc[j] ; j++);
+        k = j;
+      } else {
+        while (c && c!=':') c = path[++k];  /* at least one pass */
+        for (j=0 ; j<k && j<P_WKSIZ ; j++) wkspc[j] = path[j];
+        path += c? k+1 : k;   /* skip trailing : */
+      }
+      if (wkspc[j-1] == '/') s = 0;
+      else s = 1, wkspc[j] = '/';
+      for (; j<k+i && j+s<P_WKSIZ ; j++) wkspc[j+s] = argv0[j-k];
+      if (u_executable_file(wkspc) >= 0) break;
       k = 0;
       c = path[0];
+      wkspc = p_wkspc.c;
     }
     return k? wkspc : 0;
   }
