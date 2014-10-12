@@ -333,12 +333,13 @@ ywrap_a_eval(void *obj, int argc)
         }
         if (s->ops == &dataBlockSym) {
           arg->value.db = Ref(s->value.db);
+          arg->ops = &dataBlockSym;
           if (arg->value.db->ops == &lvalueOps)
             FetchLValue(arg->value.db, arg);
         } else {
           arg->value = s->value;
+          arg->ops = s->ops;
         }
-        arg->ops = s->ops;
       }
       if (!yarg_subroutine()) ypush_nil();
     }
