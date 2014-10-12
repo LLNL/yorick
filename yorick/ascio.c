@@ -16,6 +16,7 @@
 #include "pstdlib.h"
 #include "play.h"
 #include <string.h>
+#include <errno.h>
 
 extern BuiltIn Y_open, Y_close, Y_read, Y_write, Y_sread, Y_swrite;
 extern BuiltIn Y_rdline, Y_bookmark, Y_backup, Y_popen, Y_fflush;
@@ -1205,11 +1206,18 @@ static int NilScanner(Operand *op, char *format, char **text)
  * Hopefully, a significant performance penalty accrues only if
  * the text you are reading contains things like "1.234e-21dumb".
  * However, a file full of "1.234D-21" style numbers will take
- * twice as long to read as one with ANSI C acceptable formats.  */
+ * twice as long to read as one with ANSI C acceptable formats.
+ *
+ * New problem: Strings which overflow, e.g.- "1.e1000", insert Inf
+ * and potentially mess with SIGFPE trap masking.  According to C9x
+ * draft, this is supposed to set errno to ERANGE
+ */
 static int
 retry_sscanf(char *text, char *format, double *pv, int *pn)
 {
-  int i = sscanf(text, format, pv, pn);
+  int i;
+  errno = 0;
+  i = sscanf(text, format, pv, pn);
   if (i == 1) {
     int n = *pn;
     char c = text[n];
@@ -1217,9 +1225,18 @@ retry_sscanf(char *text, char *format, double *pv, int *pn)
       /* this may represent only limited success if the scan
        * stopped at a "d" or "D" character */
       text[n] = 'e';
+      errno = 0;
       i = sscanf(text, format, pv, pn);
       text[n] = c;
     }
+  }
+  if (errno) {  /* treat e.g. 1e1000 like non-numeric sequence */
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+    extern void u_fpu_setup(int when);  /* playu.h */
+    u_fpu_setup(-1);  /* on some Linux platforms resets SIGFPE trap mask */
+#endif
+    i = 0;
+    *pv = 0.;
   }
   return i;
 }

@@ -10,6 +10,7 @@
 
 #include "pstdlib.h"
 #include "ydata.h"
+#include <errno.h>
 
 extern BuiltIn Y_funcdef;
 
@@ -150,7 +151,12 @@ ypush_func(char *line)
         /* now that line is properly past the end of number, convert it */
         if (real) {
           tmp->ctab[nc].ops = &doubleScalar;
+          errno = 0;
           tmp->ctab[nc].value.d = strtod(line0, 0);
+          if (errno) {
+            tmp->ctab[nc].value.d = 0.;
+            goto parserr;
+          }
           tmp->code[pc++].Action = &PushDouble;
           tmp->code[pc++].index = nc++;
         } else {

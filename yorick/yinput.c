@@ -61,7 +61,7 @@ extern long ReopenSource(long index, int notExtern, long isrc);
 
 extern int y_pending_stdin(void);
 static void y_add_line(char *line);
-static void y_remove_line(void);
+static void y_remove_line(int reset);
 typedef struct y_line_t y_line_t;
 struct y_line_t {
   y_line_t *next;
@@ -268,7 +268,7 @@ void YpClearIncludes(void)
   else nYpInputs= 0;
 
   /* also clear pending stdin lines */
-  while (y_lhead) y_remove_line();
+  y_remove_line(1);
 }
 
 static void ClearSourceList(const char *name)
@@ -411,12 +411,14 @@ y_add_line(char *line)
 }
 
 static void
-y_remove_line(void)
+y_remove_line(int reset)
 {
-  if (y_lhead) {
-    y_line_t *yline = y_lhead;
-    y_line_t *next = yline->next;
-    char *line = yline->line;
+  y_line_t *yline, *next;
+  char *line;
+  while (y_lhead) {
+    yline = y_lhead;
+    next = yline->next;
+    line = yline->line;
     y_lhead = next;
     if (next)
       yline->next = 0;
@@ -425,6 +427,7 @@ y_remove_line(void)
     yline->line = 0;
     p_free(yline);
     if (line) p_free(line);
+    if (!reset) break;
   }
 }
 
@@ -473,7 +476,7 @@ y_pending_stdin(void)
       flag = yp_chk_hash(0, yp_continue, y_lhead->line);
       flag = yp_parse_keybd((flag&1)? 0 : y_lhead->line, !yp_continue);
       yp_continue = (flag!=0 && flag!=1);
-      y_remove_line();
+      y_remove_line(0);
     } while (y_lhead && yp_continue);
     return (y_lhead!=0);
   } else {

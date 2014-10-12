@@ -1661,11 +1661,10 @@ YError(const char *msg)
     char *tmp= includeFile;
     includeFile= 0;
     p_free(tmp);
-    if (nYpIncludes) {
+    if (nYpIncludes)
       includeFile= p_strcpy(ypIncludes[nYpIncludes-1].filename);
-      YpClearIncludes();
-    }
-  } else if (nYpIncludes) YpClearIncludes();
+  }
+  YpClearIncludes();
 
   /* Clean up any Array temporaries (used for data format conversions).  */
   if (recursing<2) ClearTmpArray();

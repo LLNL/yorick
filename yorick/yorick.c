@@ -15,6 +15,7 @@
 #include "pstdlib.h"
 #include "play.h"
 #include <string.h>
+#include <errno.h>
 
 /* Sun Fortran formatted I/O stupidly uses a yacc parser which uses
  * the names yyparse and yylex.  Sheesh.  */
@@ -1607,7 +1608,8 @@ static int NumberValue(void)
   }
 
   if (isReal) {
-    yylval.d= strtod(begin, &nextChar);
+    errno = 0;
+    yylval.d = strtod(begin, &nextChar);
 
     if (nextChar==begin) {
       /* avert MetroWerks disaster described above */
@@ -1618,14 +1620,16 @@ static int NumberValue(void)
 
     if (*nextChar=='f' || *nextChar=='F') {
       nextChar++;
-      return FLOAT;
+      if (!errno) return FLOAT;
     } else if (*nextChar=='i' || *nextChar=='I') {
       /* alternative suggestion: 1j for imaginary, 1i for int */
       nextChar++;
-      return IMAGINARY;
-    } else {
-      return DOUBLE;
+      if (!errno) return IMAGINARY;
+    } else if (!errno) {
+      if (!errno) return DOUBLE;
     }
+    yylval.d = 0.;
+    return '0';   /* treat Inf like illegal token (0 only legal in number) */
 
   } else {
     yylval.l= trialValue;

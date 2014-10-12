@@ -12,6 +12,7 @@
 #include "pstdio.h"
 #include "pstdlib.h"
 #include "play.h"
+#include <errno.h>
 
 extern void GdKillSystems(void);  /* defined in draw.c */
 
@@ -458,8 +459,10 @@ static char *RealRead(char *input, GpReal *dest)
   char *suffix;
 
   input= WhiteSkip(input);  /* may be on a new line */
+  errno = 0;
   value= (GpReal)strtod(input, &suffix);
-  if (suffix==input) return 0;
+  if (errno || suffix==input)
+    return 0;
 
   *dest= value;
   return suffix;

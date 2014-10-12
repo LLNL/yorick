@@ -17,6 +17,7 @@
 #include "yio.h"
 #include "pstdlib.h"
 #include <string.h>
+#include <errno.h>
 
 /* ------------------------------------------------------------------------ */
 
@@ -554,9 +555,12 @@ static int CLnextToken(CLbuffer *clBuffer)
            (nextByte[i+1]>='0' && nextByte[i+1]<='9'))) {
         /* floating point constants must contain a decimal point
            with at least one digit on either side */
-        tokType= TOK_REAL;
-        clBuffer->tok.d= strtod((char *)nextByte, &stopByte);
-        nextByte= (unsigned char *)stopByte;
+        tokType = TOK_REAL;
+        errno = 0;
+        clBuffer->tok.d = strtod((char *)nextByte, &stopByte);
+        nextByte = (unsigned char *)stopByte;
+        if (errno)
+          clBuffer->tok.d = 0., tokType = '?';
 
       } else if (i>i0) {
         /* integer constants must have at least one digit */
