@@ -3373,7 +3373,11 @@ extern require;
      The SOURCE argument can be a scalar string, interpreted as a
      filename like "yorick_source.i", the text in a char array, or
      the text in a 1D array of strings (as returned by a two argument
-     call to rdline).
+     call to rdline).  This is the low level interface for executing
+     text as yorick code.  Use the exec function for a higher level
+     interface.  In particular, with NOW=1, a function with a catch
+     call in the call tree of SOURCE will not work properly with
+     include, but it will work with exec.
 
      #include is a parser directive, not a Yorick statement.  Use it
      to read Yorick source code which you have saved in a file; the
@@ -3419,7 +3423,7 @@ extern require;
        NOW == 3    like 1, except no error if filename does not exist
 
    SEE ALSO: set_path, Y_SITE, plug_in, autoload, include_all, funcdef
-             include1
+             include1, exec
  */
 
 extern include1;
@@ -3435,6 +3439,28 @@ extern include1;
 
    SEE ALSO: include, funcdef
  */
+
+func exec(_exec_code_)
+/* DOCUMENT exec, yorick_code
+         or value = exec(yorick_expr)
+     Parse and execute the string or string array YORICK_CODE.  If a
+     string or string array YORICK_EXPR represents a single yorick
+     expression, and exec is invoked as a function, it will return the
+     value of the expression.
+   SEE ALSO: include
+ */
+{
+  local _exec_func_;
+  if (am_subroutine()) {  /* invoke code as subroutine */
+    include, grow("func _exec_func_ {", _exec_code_, "}"), 1;
+    _exec_func_;
+  } else {  /* evaluate code as an expression, returning its value */
+    _exec_code_ = _exec_code_;
+    _exec_code_(1) = "return " + _exec_code_(1);
+    include, grow("func _exec_func_(_exec_code_) {", _exec_code_, "}"), 1;
+    return _exec_func_();
+  }
+}
 
 extern current_include;
 /* DOCUMENT current_include()
