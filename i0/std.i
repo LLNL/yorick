@@ -3446,7 +3446,8 @@ func exec(_exec_code_)
      Parse and execute the string or string array YORICK_CODE.  If a
      string or string array YORICK_EXPR represents a single yorick
      expression, and exec is invoked as a function, it will return the
-     value of the expression.
+     value of the expression.  If YORICK_EXPR does not contain the
+     pattern "return", "return " will be prepended.
    SEE ALSO: include
  */
 {
@@ -3456,7 +3457,8 @@ func exec(_exec_code_)
     _exec_func_;
   } else {  /* evaluate code as an expression, returning its value */
     _exec_code_ = _exec_code_;
-    _exec_code_(1) = "return " + _exec_code_(1);
+    if (noneof(strmatch(_exec_code_, "return")))
+      _exec_code_(1) = "return " + _exec_code_(1);
     include, grow("func _exec_func_(_exec_code_) {", _exec_code_, "}"), 1;
     return _exec_func_();
   }
