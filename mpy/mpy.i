@@ -20,8 +20,7 @@ local mp_nfan;
  *   MPI rank of this process and total number of processes.
  *     0 <= mp_rank <= mp_size-1
  *   The variables are set at startup.  DO NOT CHANGE THESE VALUES!
- *   Both mp_rank and mp_size will be nil if multiple processes are
- *   not present (mp_size==1 is impossible).
+ *   If multiple processes are not present, mp_size==1 and mp_rank=0.
  *   mp_nfan is the fanout used to broadcast messages by the mp_exec,
  *   mp_handout, and mp_handin functions.  See mpy_nfan.
  *
@@ -195,6 +194,7 @@ extern mpy_nfan;
  * SEE ALSO: mp_exec, mp_boss, mp_staff, mp_handout
  */
 mpy_nfan;  /* special call finishes initializing mpy */
+if (mp_size && mp_size<1) { mp_size=1;  mp_rank=0; }
 
 /* ------------------------------------------------------------------------ */
 
@@ -239,6 +239,7 @@ func mp_staff(void)
  * SEE ALSO: mp_boss, mp_nfan, mp_handout
  */
 {
+  if (!mp_nfan || mp_size<2) return [];
   staff = mp_rank*mp_nfan + indgen(mp_nfan);
   return staff(where(staff < mp_size));
 }
@@ -325,14 +326,12 @@ func mp_handin(part, reduce)
     else error, "illegal reduction function "+reduce;
   }
   staff = mp_staff();
-  for (i=1 ; i<=numberof(staff) ; ++i) {
-    p = reduce(part, mp_recv(staff(i)));
-    if (dimsof(part)(1)) part(*) = p;
-    else part = p;
-  }
+  dims = dimsof(part);
+  part = part(*);
+  for (i=1 ; i<=numberof(staff) ; ++i) part = reduce(part, mp_recv(staff(i)));
   boss = mp_boss();
   if (!is_void(boss)) mp_send, boss, part;
-  return part;
+  return reform(part, dims);
 }
 
 func _min_reduce(a, b) { return min(a, b); }

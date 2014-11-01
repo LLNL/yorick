@@ -1582,10 +1582,11 @@ func accum_dimlist(&dims, d)
       error, "only min:max ranges allowed in dimension list";
     d = mx - mn + 1;
   }
-  if (!dimsof(d)(1)) d = [1, d];
+  r = dimsof(d)(1);
+  if (!r) d = [1, d];
   if (is_void(dims)) {
     dims = d;
-  } else {
+  } else if (r && d(1)) {
     grow, dims, d(2:1+d(1));
     dims(1) += d(1);
   }
