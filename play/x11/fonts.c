@@ -105,7 +105,6 @@ x_font(x_display *xdpy, int font, int pixsize)
       tmp_fonts = XListFonts(xdpy->dpy, nm, 4, &n);
       if (n<=0) return xdpy->font;  /* should never happen (X server bug) */
       strcpy(nm, tmp_fonts[0]);
-      XFreeFontNames(tmp_fonts);
       tmp_free();
       name = nm;
     }
