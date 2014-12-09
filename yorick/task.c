@@ -867,7 +867,7 @@ typedef struct y_vopen_t y_vopen_t;
 struct y_vopen_t {
   p_file_ops *ops;
   Array *array;
-  long addr, maxaddr;
+  long addr, maxaddr, offset;
   int binary;
 };
 
@@ -877,7 +877,7 @@ ynew_vopen(Array *array, int binary)
   y_vopen_t *file = p_malloc(sizeof(y_vopen_t));
   file->ops = &y_vopen_ops;
   file->array = Ref(array);
-  file->addr = 0;
+  file->addr = file->offset = 0;
   file->maxaddr = (binary&2)? 0 : ((y_vopen_t *)file)->array->type.number;
   file->binary = binary;
   return (p_file *)file;
@@ -1017,6 +1017,7 @@ yv_fseek(p_file *file, unsigned long addr)
   }
   if (addr<0 || addr>len) return -1;
   ((y_vopen_t *)file)->addr = addr;
+  ((y_vopen_t *)file)->offset = 0;
   if (addr > ((y_vopen_t *)file)->maxaddr)
     ((y_vopen_t *)file)->maxaddr = addr;
   return 0;
@@ -1034,6 +1035,7 @@ yv_fgets(p_file *file, char *buf, int buflen)
     jeof = ((y_vopen_t *)file)->array->type.number - ((y_vopen_t *)file)->addr;
   } else {
     txt = ((y_vopen_t *)file)->array->value.q[((y_vopen_t *)file)->addr];
+    txt += ((y_vopen_t *)file)->offset;
     jeof = 0L;
   }
   if (buflen <= 0) return 0;
@@ -1050,8 +1052,15 @@ yv_fgets(p_file *file, char *buf, int buflen)
     buf[i] = c;
   }
   buf[i] = '\0';
-  if (!strng) ((y_vopen_t *)file)->addr += j;
-  else ((y_vopen_t *)file)->addr++;
+  if (!strng) {
+    ((y_vopen_t *)file)->addr += j;
+  } else if (i>=buflen-1 && txt && txt[j] && j>0) {
+    /* handle case where fgets stopped because buflen too short to hold line */
+    ((y_vopen_t *)file)->offset += j;
+  } else {
+    ((y_vopen_t *)file)->addr++;
+    ((y_vopen_t *)file)->offset = 0;
+  }
   return buf;
 }
 
