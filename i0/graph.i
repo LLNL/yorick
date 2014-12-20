@@ -260,7 +260,7 @@ extern hcp_finish;
      If N is specified, closes the hcp file associated with window N
      and returns its name; use hcp_finish(-1) to close the default
      hardcopy file.
-   SEE ALSO: window, fma, hcp, hcp_out, plg
+   SEE ALSO: pdf_finish, window, fma, hcp, hcp_out, plg
  */
 
 func hcp_out(n,keep=)
@@ -274,7 +274,7 @@ func hcp_out(n,keep=)
    SEE ALSO: window, fma, hcp, hcp_finish, plg
  */
 {
-  filename= hcp_finish();
+  filename= hcp_finish(n);
   if (filename) {
     if (strpart(filename,-2:0)==".ps")
       system, swrite(format=LPR_FORMAT, filename);
@@ -519,7 +519,8 @@ func pdf(name)
      high resolution display, and turn off anti-aliasing (since it isn't
      so necessary).
 
-   SEE ALSO: png, svg, jpeg, eps, hcps, window, fma, hcp, no_window, plg
+   SEE ALSO: png, svg, jpeg, eps, hcps, window, fma, hcp, no_window, plg,
+             pdf_finish
  */
 {
   if (strpart(name, -3:0) == ".pdf") name = strpart(name,1:-4);
@@ -529,6 +530,31 @@ func pdf(name)
   gscmd = EPSGS_CMD+" -sDEVICE=pdfwrite -sOutputFile=\"%s\" \"%s\"";
   system, swrite(format=gscmd, name+".pdf", psname);
   remove, psname;
+}
+
+func pdf_finish(n)
+/* DOCUMENT pdf_finish
+         or pdf_finish, n
+         or pdf_finish(n)
+     closes the current hardcopy file and converts it to pdf format.
+     If N is specified, closes the hcp file associated with window N
+     and converts it; use pdf_finish,-1 to close the default
+     hardcopy file.  Called as a function, pdf_finish returns the name
+     of the pdf file created.
+     The pdf_finish function only works if the hcp file is a Postscript
+     file, with a name ending in ".ps".  The pdf file will have the same
+     name, except ending in ".pdf".
+   SEE ALSO: pdf, hcp_finish
+ */
+{
+  psname = hcp_finish(n);
+  if (!psname || strpart(psname, -2:0)!=".ps")
+    error, "pdf_finish only works with postscipt hcp files";
+  name = strpart(psname, 1:-3) + ".pdf";
+  gscmd = EPSGS_CMD+" -sDEVICE=pdfwrite -sOutputFile=\"%s\" \"%s\"";
+  system, swrite(format=gscmd, name, psname);
+  remove, psname;
+  return name;
 }
 
 local png_dpi;
