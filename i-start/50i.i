@@ -26,7 +26,7 @@ autoload, "ieee.i", ieee_test, ieee_set, as_chars;
 autoload, "lab2rgb.i", lab2rgb, luv2rgb, xyz2rgb, rgb2lab, rgb2luv, rgb2xyz;
 autoload, "lab2rgb.i", rgb_l2s, rgb_s2l, lrgb_clip;
 autoload, "legndr.i", legndr, ylm_coef;
-autoload, "levmar.i", levmar;
+autoload, "levmar.i", levmar, levmar0, levmar1;
 autoload, "make.i", make;
 autoload, "mkdoc.i", mkdoc;
 autoload, "movie.i", movie;

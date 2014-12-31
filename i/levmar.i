@@ -33,7 +33,7 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=, lu=)
  *
  *   You may be able to improve the performance of levmar by supplying
  *   analytic derivatives.  To support this improvement, levmar permits
- *   three different "prototypes" for the function F:
+ *   two different "prototypes" for the function F:
  *     func F(x, a)
  *       if you cannot compute analytic dfda
  *       approximate dfda will be computed by levmar_partial (see help)
@@ -41,10 +41,17 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=, lu=)
  *       if you can return analytic dfda
  *       if levmar will use dfda, dfda=1 on input
  *       if levmar will not use dfda, dfda=[] on input
+ *     An obsolete third prototype is for backward compatibility with
+ *     the old lmfit function.  Do not use it in new code:
  *     func F(x, a, &dfda, deriv=)
  *       if levmar will use dfda, it sets deriv=1, else deriv=0
  *       (this form is for backward compatibility with original lmfit)
- *   The levmar function automatically detects the prototype of F. (!!)
+ *   When F is an interpreted function, levmar automatically detects
+ *   which of these prototypes F matches.  Otherwise (if F is a closure
+ *   or a built-in function, for example), levmar assumes the second
+ *   prototype, F(x, a, &dfda).  Use the levmar0 function if you want
+ *   to skip automatic prototype detection and assumes the F(x,a) form.
+ *   Similarly, levmar1 skips autodetection and assumes F(x,a,&dfda).
  *   In all cases, dfda is defined as:
  *     dfda(i,j) = partial[Y(i)] / partial[A(j)]
  *   Note that the external variable fit (the fit= keyword to levmar)
@@ -80,20 +87,26 @@ func levmar(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=, lu=)
  *      LUsolve will be faster, which will only be an issue if the
  *      number of parameters is large
  *
- *  SEE ALSO: regress, levmar_partial
+ *  SEE ALSO: regress, levmar_partial, levmar0, levmar1
  */
 {
   /* automatically detect input function prototype */
-  if (is_func(f) != 1) error, "levmar needs interpreted function F";
-  args = strtok(print(f)(1),"(");  delim = " ,)";
-  keyd = strmatch(args(2), "deriv=");
-  for (i=1;i<=3;++i) args = strtok(args(2),delim);
-  hasd = strpart(args(1),1:1) == "&";
-  if (keyd) {
-    if (!hasd) error, "deriv= prototype needs third argument to be output";
-    args = strtok(args(2),delim);
+  if (is_func(f)==1 && is_void(_levmar01_flags)) {
+    args = strtok(print(f)(1),"(");  delim = " ,)";
+    keyd = strmatch(args(2), "deriv=");
+    for (i=1;i<=3;++i) args = strtok(args(2),delim);
+    hasd = strpart(args(1),1:1) == "&";
+    if (keyd) {
+      if (!hasd) error, "deriv= prototype needs third argument to be output";
+      args = strtok(args(2),delim);
+    }
+    if (args(2)) error, "unrecognized fitting function prototype";
+  } else {
+    keyd = 0;
+    hasd = is_void(_levmar01_flags)? 1 : (_levmar01_flags & 1);
+    /* make _levmar01_flags use deprecated prototype */
+    if (hasd && _levmar01_flags && (_levmar01_flags & 2)) keyd = 1;
   }
-  if (args(2)) error, "unrecognized fitting function prototype";
   if (!hasd) ff = _levmar_f;
   else if (keyd) ff = _levmar_g;
   else ff = f;
@@ -177,6 +190,30 @@ levmar_lambdax = 1.e12; /* maximum permitted value of lambda */
 levmar_gain = 10.;      /* factor by which to change lambda */
 levmar_itmax = 100;     /* maximum number of gradient recalculations */
 levmar_tol = 1.e-7;     /* stop when chi2 changes by less than this */
+
+func levmar0(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=, lu=)
+/* DOCUMENT a = levmar0(y, x, f, a0, avar, acovar)
+ *   Same as levmar, except assumes F(x,a) prototype.
+ *   See help for levmar_partial for important information about how the
+ *   unsupplied partial derivatives dfda will be estimated.
+ * SEE ALSO: levmar, levmar_partial
+ */
+{
+  _levmar01_flags = 0;
+  return levmar(y, x, f, a0, avar, acovar, wgt=wgt, fit=fit,
+                amin=amin, amax=amax, lu=lu);
+}
+
+func levmar1(y, x, f, a0, &avar, &acovar, wgt=, fit=, amin=, amax=, lu=)
+/* DOCUMENT a = levmar1(y, x, f, a0, avar, acovar)
+ *   Same as levmar, except assumes F(x,a,&dfda) prototype.
+ * SEE ALSO: levmar, levmar_partial
+ */
+{
+  _levmar01_flags = 1;
+  return levmar(y, x, f, a0, avar, acovar, wgt=wgt, fit=fit,
+                amin=amin, amax=amax, lu=lu);
+}
 
 func _levmar_g(x, a, &dfda) { return f(x, a, dfda, deriv=!is_void(dfda)); }
 func _levmar_f(x, a, &dfda) {
