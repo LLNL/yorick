@@ -1583,7 +1583,7 @@ func accum_dimlist(&dims, d)
     d = mx - mn + 1;
   }
   r = dimsof(d)(1);
-  if (!r) d = [1, d];
+  if (!r) d = [++r, d];
   if (is_void(dims)) {
     dims = d;
   } else if (r && d(1)) {
