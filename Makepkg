@@ -128,6 +128,13 @@ SYS_LIBS=$(X11LIB) $(FPELIB) $(MATHLIB) $(PLUG_LIB)
 GCCOPTS=-g -O2 -ansi -pedantic -Wall $(GCCPROTO)
 GCCPROTO=-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
 
+# -- trm extras ---
+FFLAGS= $(Y_FFLAGS) $(CFLAGS)
+
+%.o: %.f90
+	$(FC) -c $(FFLAGS) $<
+# --- end trm ----
+
 #------------------------------------------------------------------------
 # standard targets
 # macros in target names or dependency lists must be defined above here

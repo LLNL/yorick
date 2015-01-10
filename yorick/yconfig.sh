@@ -110,13 +110,17 @@ echo "NO_EXP10=$NO_EXP10" >>../Make.cfg
 
 if test -z "$FC" && make echofc >/dev/null 2>&1; then
   FC=`cat cfg.tmp`
-  if test -z "$FC"; then FC=g77; fi
+  if test -z "$FC"; then FC=gfortran; fi
 fi
 rm -f cfg.tmp
-FC=f77
-FORTRAN_LIBS=
-FORTRAN_LINKAGE=-Df_linkage_
+
+FC=gfortran
+Y_FFLAGS= -std=f2003
+FORTRAN_LIBS=-lm
+FORTRAN_LINKAGE=-Df_linkage
 CXX=CC
+echo "FC=$FC" >>../Make.cfg
+echo "Y_FFLAGS=$Y_FFLAGS" >>../Make.cfg
 echo "FORTRAN_LINKAGE=$FORTRAN_LINKAGE" >>../Make.cfg
 
 #----------------------------------------------------------------------

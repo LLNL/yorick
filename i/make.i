@@ -235,7 +235,9 @@ func make(path, template=)
   }
 
   h = files(where(strglob("*.h", files)));
-  o = strpart(c,1:-1) + "o";
+  if (!is_void(c))
+      o = strpart(c,1:-1) + "o";
+
   if (numberof(cxx_list)) {
     for (i=1 ; i<=numberof(_make_hxx_exts) ; i++) {
       list = where(strglob("*"+_make_hxx_exts(i), files));
@@ -284,13 +286,17 @@ func make(path, template=)
   }
 
   if (!no_fort) {
-    fort = files(where(strglob("*.[fFm]", files)));
+    // fort = files(where(strglob("*.[fFm]", files)));
+    fort= files(where(strgrepm("\\.([fF](90|95|03|08|pp)*|g95)$", files)));
     if (numberof(fort) && !fortran_supported) {
       write, format="***WARNING*** fortran source not fully supported%s","\n";
-      grow, exts, strpart(fort, -1:0);
+      fx= strgrep("\\.[fFg][p03589]*$",fort);
+      grow,o,strpart(fort,1:fx(1))+".o";
+      grow,exts,strpart(fort,fx+[1,0]);
       grow, c, fort;
     }
   }
+
   if (!numberof(c))
     error,
       "***FATAL*** no C, C++, or Fortran source files in this directory";
