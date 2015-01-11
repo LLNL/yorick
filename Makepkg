@@ -150,7 +150,7 @@ $(PKG_DEF):
 	sed -e "s/.*/\0 = `basename $(Y_EXE)`.\0/" <$(Y_LIBEXE)/yorapi.def >>$@
 
 ywrap.c: Makefile $(CODGER_DEP) $(PKG_I_DEPS)
-	$(CODGER) w $(PKG_NAME) $(PKG_I_DIR) $(PKG_I)
+	$(CODGER) w $(PKG_NAME) -f $(PKG_I_DIR) $(PKG_I)
 
 yinit.c: Makefile $(CODGER_DEP)
 	$(CODGER) i "$(Y_CFG_HOME)" "$(Y_CFG_SITE)" $(EXTRA_PKGS) $(PKG_NAME)
