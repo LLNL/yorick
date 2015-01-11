@@ -128,6 +128,13 @@ SYS_LIBS=$(X11LIB) $(FPELIB) $(MATHLIB) $(PLUG_LIB)
 GCCOPTS=-g -O2 -ansi -pedantic -Wall $(GCCPROTO)
 GCCPROTO=-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
 
+# -- trm extras ---
+FFLAGS= $(Y_FFLAGS) $(CFLAGS)
+
+%.o: %.f90
+	$(FC) -c $(FFLAGS) $<
+# --- end trm ----
+
 #------------------------------------------------------------------------
 # standard targets
 # macros in target names or dependency lists must be defined above here
@@ -143,7 +150,7 @@ $(PKG_DEF):
 	sed -e "s/.*/\0 = `basename $(Y_EXE)`.\0/" <$(Y_LIBEXE)/yorapi.def >>$@
 
 ywrap.c: Makefile $(CODGER_DEP) $(PKG_I_DEPS)
-	$(CODGER) w $(PKG_NAME) $(PKG_I_DIR) $(PKG_I)
+	$(CODGER) w $(PKG_NAME) -f $(PKG_I_DIR) $(PKG_I)
 
 yinit.c: Makefile $(CODGER_DEP)
 	$(CODGER) i "$(Y_CFG_HOME)" "$(Y_CFG_SITE)" $(EXTRA_PKGS) $(PKG_NAME)
