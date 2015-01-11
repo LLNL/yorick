@@ -115,7 +115,9 @@ fi
 rm -f cfg.tmp
 FC=f77
 FORTRAN_LIBS=
-FORTRAN_LINKAGE=-Df_linkage_
+if test -z "$FORTRAN_LINKAGE"; then
+  FORTRAN_LINKAGE=-Df_linkage_
+fi
 CXX=CC
 echo "FORTRAN_LINKAGE=$FORTRAN_LINKAGE" >>../Make.cfg
 

@@ -61,8 +61,7 @@
 #ifdef F_LINKAGE_
 #define FORTNAME(x, x_, X, X_) X_
 #else
-This horrendous syntax error is caused by your failure to define a
-FORTRAN linkage I have been trained to understand.
+#error <no known fortran linkage macro defined>
 #endif
 #endif
 #endif

@@ -37,7 +37,7 @@ MAKE=make
 # LD_DLL, DLL_LIBS
 # LD_EXE, Y_MAIN_O, EXE_LIBS, PKG_DEPLIBS (to make .dep file)
 # AR, ARFLAGS, RANLIB
-# CODGER, PKG_NAME, PKG_I, PKG_I_DIR, EXTRA_PKGS
+# CODGER, PKG_NAME, PKG_I, PKG_I_DIR, EXTRA_PKGS, CODGER_OPT
 # Y_EXE, Y_SITE, Y_HOME
 # PKG_CLEAN, Y_BINDIR
 # DESTDIR, DEST_Y_SITE, DEST_Y_HOME, DEST_Y_BINDIR
@@ -101,6 +101,7 @@ Y_INCLUDE=$(Y_EXE_HOME)/include
 
 CODGER=$(Y_LIBEXE)/codger$(EXE_SFX)
 LIBDEP=$(Y_LIBEXE)/libdep.sh
+CODGER_OPT=
 
 # might want to override these on make command line
 Y_IDIR=-I$(Y_INCLUDE)
@@ -143,7 +144,7 @@ $(PKG_DEF):
 	sed -e "s/.*/\0 = `basename $(Y_EXE)`.\0/" <$(Y_LIBEXE)/yorapi.def >>$@
 
 ywrap.c: Makefile $(CODGER_DEP) $(PKG_I_DEPS)
-	$(CODGER) w $(PKG_NAME) $(PKG_I_DIR) $(PKG_I)
+	$(CODGER) w $(PKG_NAME) $(CODGER_OPT) $(PKG_I_DIR) $(PKG_I)
 
 yinit.c: Makefile $(CODGER_DEP)
 	$(CODGER) i "$(Y_CFG_HOME)" "$(Y_CFG_SITE)" $(EXTRA_PKGS) $(PKG_NAME)

@@ -193,11 +193,11 @@ deescape(char *path)
   return path;
 }
 
-#if defined(f)
+#if defined(f_linkage)
 # define F_LINK 1
-#elif defined(F_)
+#elif defined(F_LINKAGE_)
 # define F_LINK 2
-#elif defined(F)
+#elif defined(F_LINKAGE)
 # define F_LINK 3
 #else
 # define F_LINK 0
