@@ -1378,7 +1378,7 @@ Y_plug_in(int nArgs)
   int i;
   if (nArgs!=1) YError("plug_in function takes exactly one argument");
   pkgname = YGetString(sp-nArgs+1);
-  if (!pkgname || !pkgname[0]) 
+  if (!pkgname || !pkgname[0])
     YError("plug_in: package name argument is null");
   for (i=1 ; pkgname[i] ; i++);
   for (pname=pkgname+i-1 ; pname>pkgname ; pname--)
@@ -1529,9 +1529,64 @@ void ResetStack(int hard)
 
 static int y_do_not_abort = 0;
 
+/*
+ * Code to suspend interrupts uses the following variables:
+ *
+ *   suspend_interrupts - Counter, incremented by y_suspend_interrupts(),
+ *                        decremented by y_resume_interrupts(); 0 means that
+ *                        signals are handled normally.
+ *   any_pending_signal - Flag indicating whether there are any pending signal.
+ *   pending_signal     - First delayed signal while interrupts were suspended.
+ *   pending_errmsg     - First delayed error message while interrupts were
+ *                        suspended.
+ */
+
+static int suspend_interrupts = 0;
+static int any_pending_signal = 0;
+static int pending_signal = PSIG_NONE;
+static char pending_errmsg[256];
+
+void
+y_suspend_interrupts()
+{
+  if (suspend_interrupts <= 0) {
+    any_pending_signal = 0;
+    suspend_interrupts = 1;
+  } else {
+    ++suspend_interrupts;
+  }
+}
+
+void
+y_resume_interrupts()
+{
+  if (--suspend_interrupts <= 0) {
+    suspend_interrupts = 0;
+    if (any_pending_signal) {
+      any_pending_signal = 0;
+      y_on_exception(pending_signal, pending_errmsg);
+    }
+  }
+}
+
 void
 y_on_exception(int signal, char *errmsg)
 {
+  if (suspend_interrupts > 0) {
+    /* interrupts are suspended, just remember the first signal */
+    if (! any_pending_signal) {
+      pending_signal = signal;
+      if (errmsg && errmsg[0]) {
+        strncpy(pending_errmsg, errmsg, sizeof(pending_errmsg));
+        pending_errmsg[sizeof(pending_errmsg)-1] = 0;
+      } else {
+        pending_errmsg[0] = 0;
+      }
+      any_pending_signal = 1;
+    }
+    return;
+  }
+
   /* signal==PSIG_SOFT for call to p_abort, otherwise this is real signal */
   if (signal != PSIG_SOFT) {
     y_do_not_abort = 1;
