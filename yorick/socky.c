@@ -277,9 +277,9 @@ ys_callback(psckt_t *sock, void *ctx)
   ykeep_use(s->use);
   yput_global(ys_isocket, 0);
   yarg_drop(1);
-  /* push _socket_caller onto task stack as next *main* */
+  /* run _socket_caller - must run immediately to avoid event looping */
   ypush_global(ys_icaller);
-  ytask_push(0);
+  ytask_run(0);
 }
 
 /* ------------------------------------------------------------------------ */

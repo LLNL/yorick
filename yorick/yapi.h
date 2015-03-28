@@ -665,8 +665,10 @@ PLUG_API int yo_is_closure(int iarg);
 PLUG_API void yexec_after(double secs, long fndx, int farg, long dndx, int darg);
 /* compiled interface to interpreted include function */
 PLUG_API void yexec_include(int iarg, int now);
-/* push interpreted function onto task stack as *main*, for event callbacks */
+/* push interpreted function onto task stack as *main* */
 PLUG_API void ytask_push(int iarg);
+/* run interpreted function as *main* immediately, for event callbacks */
+PLUG_API void ytask_run(int iarg);
 
 /* ------------------------------------------------------------------------ */
 

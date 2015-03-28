@@ -8,6 +8,7 @@
  * Read the accompanying LICENSE file for details.
  */
 
+#include "yapi.h"
 #include "ydata.h"
 #include "yio.h"
 #include "pstdlib.h"
@@ -785,6 +786,17 @@ ytask_push(int iarg)
   if (iarg>=0 && yarg_func(iarg)==1) {
     Function *f = (Function *)sp[-iarg].value.db;
     PushTask(Ref(f));
+  } else {
+    YError("can only run interpreted functions as tasks");
+  }
+}
+
+void
+ytask_run(int iarg)
+{
+  if (iarg>=0 && yarg_func(iarg)==1) {
+    Function *f = (Function *)sp[-iarg].value.db;
+    RunTaskNow(f);
   } else {
     YError("can only push interpreted functions onto task stack");
   }

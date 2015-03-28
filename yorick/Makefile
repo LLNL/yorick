@@ -150,7 +150,7 @@ std0.o: std0.c bcast.h yio.h defmem.h $(PLAYALL)   ydata.h binio.h $(HSH)
 std1.o: $(YDATA_HP) $(PSPLAY)
 std2.o: mdigest.h $(YDATA_HP) yio.h $(PLAYALL)
 style.o: style.c $(YDATA_HP) $(PSLIB) $(HGIST) ../gist/draw.h
-task.o: $(YDATA_HP) yio.h $(PLAYALL)
+task.o: $(YDATA_HP) yio.h yapi.h $(PLAYALL)
 yapi.o: $(YDATA_HP) yio.h bcast.h $(PSLIB)
 ydata.o: bcast.h defmem.h $(PSLIB)   $(YDATA_HP)
 yinput.o: yio.h parse.h $(HSH) $(PLAYALL)

@@ -4773,11 +4773,15 @@ extern sockrecv;
  *  a sockrecv is complete, it may return 0<=nbytes<sizeof(data), but
  *  socksend always returns either -1 or sizeof(nbytes).
  *
- *  The listener() and send.recv() calls block.  If you want to use them
+ *  The listener() and sock.recv() calls block.  If you want to use them
  *  in an event-driven program which handles other events while waiting,
  *  you can create the listener or sock with a callback, which can be either
  *  a function or a closure, and will be called as noted when input is
- *  ready (or a connection request has been received).
+ *  ready (or a connection request has been received).  If the callback
+ *  function fails to accept the connection or receive the data, it will
+ *  immediately be called again -- do not put more than the bare minimum
+ *  of code in such a callback; it can easily go into an infinite loop.
+ *  Closing the socket is the only way to break out of such a loop.
  *
  *  Destroying the last reference to listener or sock frees it, but you
  *  may explicitly a socket with the close function.
@@ -4785,8 +4789,9 @@ extern sockrecv;
  *  SEE ALSO: open, fd_read
  */
 func _socket_caller {
-  _socket_callback, _socket_socket;
+  c = _socket_callback;  s = _socket_socket;
   _socket_callback = _socket_socket = [];
+  c, s;
 }
 
 extern add_member;
