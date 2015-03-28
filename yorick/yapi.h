@@ -525,9 +525,10 @@ PLUG_API void y_warnq(const char *msg_format, const char *q);
 PLUG_API int (*y_errhook)(const char *fullmsg, long *after);
 
 /* Critical code which must not be interrupted should be bracketted by
- * calls to y_suspend_interrupts() and y_resume_interrupts().  The former
- * suspend interrupts while the latter restore the default behavior and
- * raise the first signal caught while interrupts were suspended, if any.
+ * calls to `y_suspend_interrupts()` and `y_resume_interrupts()`.  The
+ * former suspends interrupts while the latter restores the default
+ * behavior and, if any signals were caught while interrupts were
+ * suspended, raises the first of these signals.
  */
 PLUG_API void y_suspend_interrupts();
 PLUG_API void y_resume_interrupts();
