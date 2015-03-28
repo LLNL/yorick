@@ -780,6 +780,17 @@ yexec_include(int iarg, int now)
 }
 
 void
+ytask_push(int iarg)
+{
+  if (iarg>=0 && yarg_func(iarg)==1) {
+    Function *f = (Function *)sp[-iarg].value.db;
+    PushTask(Ref(f));
+  } else {
+    YError("can only push interpreted functions onto task stack");
+  }
+}
+
+void
 Y_include1(int nArgs)
 {
   int i0 = nYpIncludes;

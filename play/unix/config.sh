@@ -212,6 +212,21 @@ else
   echo "D_UEVENT=-DUSE_SELECT -DNO_POLLING" >>../../Make.cfg
 fi
 
+if test -z "$NO_SOCKETS"; then
+  args="-DTEST_SOCKETS $commonargs"
+  if $CC $args >cfg.10 2>&1; then
+    echo "using BSD sockets"
+    echo "D_NO_SOCKETS=" >>../../Make.cfg
+    if test $debug = no; then rm -f cfg.10; fi
+  else
+    echo "missing BSD sockets, socket interface disabled"
+    echo "D_NO_SOCKETS=-DNO_SOCKETS" >>../../Make.cfg
+  fi
+else
+  echo "skipping sockets, socket interface disabled"
+  echo "D_NO_SOCKETS=-DNO_SOCKETS" >>../../Make.cfg
+fi
+
 #----------------------------------------------------------------------
 # try to figure out how to get SIGFPE delivered
 #----------------------------------------------------------------------

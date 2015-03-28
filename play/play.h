@@ -70,13 +70,38 @@ PLUG_API void (*p_on_connect)(int dis, int fd);
 
 /* asynchronous subprocesses using callbacks (see also p_popen, p_system) */
 typedef struct p_spawn_t p_spawn_t;
-extern p_spawn_t *p_spawn(char *name, char **argv,
+PLUG_API p_spawn_t *p_spawn(char *name, char **argv,
                           void (*callback)(void *ctx, int err),
                           void *ctx, int err);
-extern long p_recv(p_spawn_t *proc, char *msg, long len);
+PLUG_API long p_recv(p_spawn_t *proc, char *msg, long len);
 /* in p_send msg=0, len<0 sends signal -len */
-extern int p_send(p_spawn_t *proc, char *msg, long len);
-extern void p_spawf(p_spawn_t *proc, int nocallback);
+PLUG_API int p_send(p_spawn_t *proc, char *msg, long len);
+PLUG_API void p_spawf(p_spawn_t *proc, int nocallback);
+
+/* socket interface */
+typedef struct psckt_t psckt_t;
+typedef int psckt_cb_t(psckt_t *sock, void *ctx);
+/* two kinds of sockets -- listener and data
+ *   - sock argument to accept must be a listener socket
+ *   - sock argument to send, recv must be a data socket
+ *   - listen returns listener socket, which waits for incoming connections
+ *   - accept and connect return data socket
+ * listen: sets *pport to actual port if *pport == 0 on input
+ *   - non-zero callback to listen in background (callback calls accept)
+ * accept: wait for listening socket, return connection socket and addr
+ * connect: connect to remote listener
+ *   - non-zero callback to wait for data in background (callback calls recv)
+ * recv, send: use the socket
+ * close: free all resources for socket, close(0) closes all sockets (on_quit)
+ */
+PLUG_API psckt_t *psckt_listen(int *pport, void *ctx, psckt_cb_t *callback);
+PLUG_API psckt_t *psckt_accept(psckt_t *listener, char **ppeer, void *ctx,
+                               psckt_cb_t *callback);
+PLUG_API psckt_t *psckt_connect(const char *addr, int port, void *ctx,
+                                psckt_cb_t *callback);
+PLUG_API long psckt_recv(psckt_t *sock, void *msg, long len);
+PLUG_API int psckt_send(psckt_t *sock, const void *msg, long len);
+PLUG_API void psckt_close(psckt_t *sock);
 
 /* screen graphics connection */
 PLUG_API p_scr *p_connect(char *server_name);  /* server_name 0 gets default */
