@@ -33,6 +33,12 @@ static int w_qclearing = 0;
 
 static int w_poll(UINT timeout);
 
+static struct w_prepoll_item {
+  void (*on_prepoll)(void *);
+  void *context;
+  struct w_prepoll_item *next;
+} *w_pre_items = 0;
+
 void
 w_initialize(HINSTANCE i, HWND w, void (*wquit)(void),
              int (*wstdinit)(void(**)(char*,long), void(**)(char*,long)),
@@ -90,8 +96,14 @@ w_work_idle(void)
 static int
 w_poll(UINT timeout)
 {
-  int status = MsgWaitForMultipleObjects(w_nputs, w_inputs, 0, timeout,
-                                         QS_ALLINPUT);
+  int status;
+  struct w_prepoll_item *pre = w_pre_items;
+  while (pre) {
+    pre->on_prepoll(pre->context);
+    pre = pre->next;
+  }
+  status = MsgWaitForMultipleObjects(w_nputs, w_inputs, 0, timeout,
+                                     QS_ALLINPUT);
   if (status>=(int)WAIT_OBJECT_0 && status<(int)WAIT_OBJECT_0+w_nputs) {
     status -= WAIT_OBJECT_0;
     w_in_items[status].on_input(w_in_items[status].context);
@@ -198,5 +210,31 @@ w_app_msg(MSG *msg)
     return 1;
   } else {
     return 0;
+  }
+}
+
+void
+w_prepoll(void (*on_prepoll)(void *), void *context, int remove)
+{
+  if (remove) {
+    struct w_prepoll_item *pre = w_pre_items;
+    struct w_prepoll_item **prev = &w_pre_items;
+    while (pre) {
+      if (on_prepoll==pre->on_prepoll && context==pre->context) {
+        *prev = pre->next;
+        break;
+      }
+      prev = &pre->next;
+      pre = pre->next;
+    }
+    if (pre) HeapFree(GetProcessHeap(), 0, pre);
+  } else if (on_prepoll) {
+    struct w_prepoll_item *pre =
+      HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS,
+                sizeof(struct w_prepoll_item *));
+    pre->on_prepoll = on_prepoll;
+    pre->context = context;
+    pre->next = w_pre_items;
+    w_pre_items = pre;
   }
 }
