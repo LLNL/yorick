@@ -190,9 +190,12 @@ mfc_goto::mfc_goto(mfc_edit_view *v) : CDialog(IDD_GOTO_LINE)
 void
 mfc_goto::OnOK()
 {
+  USES_CONVERSION;
   CEdit *ce = (CEdit *)GetDlgItem(IDC_GOTO_LINE);
-  char line[16];
-  int n = ce->GetLine(0, line, 12);
+  TCHAR wline[16];
+  char *line;
+  int n = ce->GetLine(0, wline, 12);
+  line = T2A(wline);
   if (n>0) {
     line[n] = '\0';
     n = atoi(line)-1;
@@ -292,7 +295,7 @@ mfc_edit_doc::mfc_edit_doc(CMultiDocTemplate *mdt, int hist)
   context.m_pNewDocTemplate = mdt;
   frame->LoadFrame(IDR_EDITFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE,
                    0, &context);
-  SetTitle(hist? "*history*" : "*terminal*");
+  SetTitle(hist? _T("*history*") : _T("*terminal*"));
   OnNewDocument();
   if (!hist)
     ((mfc_term_view *)GetView())->is_term = 1;
@@ -531,7 +534,7 @@ mfc_term_view::grab_line(int offset) const
       return (const char *)0;
   }
   int len = GetRichEditCtrl().LineLength(GetRichEditCtrl().LineIndex(line));
-  LPSTR s = (char*)_alloca((len + 2)*2);   // copied from MFC GetSelText
+  LPTSTR s = (LPTSTR)_alloca((len + 2)*2);   // copied from MFC GetSelText
   GetRichEditCtrl().GetLine(line, s, len+2);
   s[len] = '\0';
   return s;
@@ -546,20 +549,22 @@ mfc_term_view::select_lines(int off1, int off2)
 void
 mfc_term_view::save_line(const char *txt)    // to end of hist_view
 {
+  USES_CONVERSION;
   long mn0, mx0;
   GetRichEditCtrl().GetSel(mn0, mx0);
   long i = eob(1);
   if (mx0 > i) mn0 = mx0 = i;
   GetRichEditCtrl().SetSel(i, eob(0));
-  GetRichEditCtrl().ReplaceSel(txt);
+  GetRichEditCtrl().ReplaceSel(A2T(txt));
   GetRichEditCtrl().SetSel(mn0, mx0);
 }
 
 void
 mfc_term_view::set_command(const char *txt)  // at end of term_view
 {
+  USES_CONVERSION;
   GetRichEditCtrl().SetSel(mark, eob(0));
-  GetRichEditCtrl().ReplaceSel(txt);
+  GetRichEditCtrl().ReplaceSel(A2T(txt));
   long mn, mx;
   GetRichEditCtrl().GetSel(mn, mx);
   GetRichEditCtrl().SetSel(mx, mx);
@@ -568,11 +573,12 @@ mfc_term_view::set_command(const char *txt)  // at end of term_view
 void
 mfc_term_view::add_output(const char *txt)   // at end of term_view
 {
+  USES_CONVERSION;
   if (::IsWindow(m_hWnd)) {
     long mn0, mx0, i, m = mark;
     GetRichEditCtrl().GetSel(mn0, mx0);
     GetRichEditCtrl().SetSel(mark, mark);
-    GetRichEditCtrl().ReplaceSel(txt);
+    GetRichEditCtrl().ReplaceSel(A2T(txt));
     GetRichEditCtrl().GetSel(i, mark);
     if (mx0>m || (mx0==m && mn0==mx0)) {
       if (mn0 < m) mn0 = mx0;
@@ -585,6 +591,7 @@ mfc_term_view::add_output(const char *txt)   // at end of term_view
 void
 mfc_term_view::send_or_copy()  // bound to Enter in term_view
 {
+  USES_CONVERSION;
   long i, m;
   GetRichEditCtrl().GetSel(i, m);
   m = GetRichEditCtrl().LineIndex(GetRichEditCtrl().LineFromChar(mark));
@@ -592,26 +599,28 @@ mfc_term_view::send_or_copy()  // bound to Enter in term_view
     m = eob();
     //if (GetRichEditCtrl().LineLength(m)) {
       GetRichEditCtrl().SetSel(m, m);
-      GetRichEditCtrl().ReplaceSel("\r\n");
+      GetRichEditCtrl().ReplaceSel(_T("\r\n"));
       GetRichEditCtrl().GetSel(i, m);
     //}
     GetRichEditCtrl().SetSel(mark, m);
     CString txt = GetRichEditCtrl().GetSelText();
-    if (mfc_deliver(txt, txt.GetLength())) {
-      hist_view->save_line(txt);
+	char *ttxt = T2A(txt);
+    if (mfc_deliver(ttxt, txt.GetLength())) {
+      hist_view->save_line(ttxt);
       mark = m;
     }
     GetRichEditCtrl().SetSel(m, m);
 
   } else {       // copy current line as pending new command line
     CString txt = grab_line();
-    set_command(w_deprompt((char *)(const char *)txt));
+    set_command(w_deprompt(T2A(txt)));
   }
 }
 
 void
 mfc_term_view::recall_prev()   // bound to VK_UP in term_view
 {
+  USES_CONVERSION;
   long i;
   if (!recalling) {
     i = hist_view->eob(1);
@@ -623,7 +632,7 @@ mfc_term_view::recall_prev()   // bound to VK_UP in term_view
   if (j < i) {
     hist_view->GetRichEditCtrl().SetSel(j, j);
     CString txt = hist_view->grab_line();
-    set_command(txt);
+    set_command(T2A(txt));
   } else {
     MessageBeep(MB_OK);
   }
@@ -632,11 +641,12 @@ mfc_term_view::recall_prev()   // bound to VK_UP in term_view
 void
 mfc_term_view::recall_next()   // bound to VK_DOWN in term_view
 {
+  USES_CONVERSION;
   long i = hist_view->bol(1);
   if (i < hist_view->eob(1)) {
     hist_view->GetRichEditCtrl().SetSel(i, i);
     CString txt = hist_view->grab_line();
-    set_command(txt);
+    set_command(T2A(txt));
   } else {
     MessageBeep(MB_OK);
   }
@@ -657,8 +667,9 @@ mfc_term_view::home_mark()     // after VK_HOME in term_view
 void
 mfc_term_view::recall_line()   // bound to Enter in hist_view
 {
+  USES_CONVERSION;
   CString txt = grab_line();
-  term_view->set_command(txt);
+  term_view->set_command(T2A(txt));
   long i = bol(0);     // get first char of current line
   if (i == bol(1)) {  // this line typed at end: send it
     term_view->send_or_copy();
@@ -756,7 +767,7 @@ mfc_edit_view::on_choose_file()
 {
   CFileDialog dlg(1);
   CString name;
-  dlg.m_ofn.lpstrTitle = "Insert Filename";
+  dlg.m_ofn.lpstrTitle = _T("Insert Filename");
   dlg.m_ofn.lpstrFile = name.GetBuffer(1025);
   if (dlg.DoModal() == IDOK)
     GetRichEditCtrl().ReplaceSel(name);
@@ -766,14 +777,17 @@ mfc_edit_view::on_choose_file()
 void
 mfc_edit_view::on_goto_out()
 {
+  USES_CONVERSION;
   int len;
-  char s[80];
+  TCHAR ws[80];
+  char *s;
   long line = GetRichEditCtrl().LineFromChar(-1);
   for (line-- ; line>0 ; line--) {
     len = GetRichEditCtrl().LineLength(GetRichEditCtrl().LineIndex(line));
     if (len>78) len = 78;
-    GetRichEditCtrl().GetLine(line, s, len);
-    s[len] = '\0';
+    GetRichEditCtrl().GetLine(line, ws, len);
+    ws[len] = '\0';
+	s = T2A(ws);
     if (w_deprompt(s) != s) break;
   }
   line = GetRichEditCtrl().LineIndex(line+1);
@@ -783,8 +797,10 @@ mfc_edit_view::on_goto_out()
 void
 mfc_edit_view::on_select_out()
 {
+  USES_CONVERSION;
   int len;
-  char s[80];
+  TCHAR ws[80];
+  char *s;
   long line = GetRichEditCtrl().LineFromChar(-1);
   long linemx = GetRichEditCtrl().GetLineCount();
   long line0 = line;
@@ -792,16 +808,18 @@ mfc_edit_view::on_select_out()
   for (line-- ; line>=0 ; line--) {
     len = GetRichEditCtrl().LineLength(GetRichEditCtrl().LineIndex(line));
     if (len>78) len = 78;
-    GetRichEditCtrl().GetLine(line, s, len);
-    s[len] = '\0';
+    GetRichEditCtrl().GetLine(line, ws, len);
+	ws[len] = '\0';
+	s = T2A(ws);
     if (w_deprompt(s) != s) break;
   }
   i = GetRichEditCtrl().LineIndex(line+1);
   for (line=line0 ; line<linemx ; line++) {
     len = GetRichEditCtrl().LineLength(GetRichEditCtrl().LineIndex(line));
     if (len>78) len = 78;
-    GetRichEditCtrl().GetLine(line, s, len);
-    s[len] = '\0';
+    GetRichEditCtrl().GetLine(line, ws, len);
+	ws[len] = '\0';
+	s = T2A(ws);
     if (w_deprompt(s) != s) break;
   }
   j = GetRichEditCtrl().LineIndex(line);
@@ -811,14 +829,17 @@ mfc_edit_view::on_select_out()
 void
 mfc_edit_view::on_open_line()
 {
+  USES_CONVERSION;
   int len, i, n, oline=0;
-  char s[1076];
+  TCHAR ws[1076];
+  char *s;
   long line = GetRichEditCtrl().LineFromChar(-1);
   for (n=0 ; n<10 ; n++,line--) {
     len = GetRichEditCtrl().LineLength(GetRichEditCtrl().LineIndex(line));
     if (len>1075) len = 1075;
-    GetRichEditCtrl().GetLine(line, s, len);
-    s[len] = '\0';
+    GetRichEditCtrl().GetLine(line, ws, len);
+    ws[len] = '\0';
+	s = T2A(ws);
     for (i=4 ; i<len-8 ; i++) {
       if (s[i]==':' &&
           s[i-1]=='E' && s[i-2]=='N' && s[i-3]=='I' && s[i-4]=='L') {
@@ -831,7 +852,7 @@ mfc_edit_view::on_open_line()
             if (i < len) {
               /* document name s line number oline */
               mfc_edit_doc *doc=
-                (mfc_edit_doc *)the_boss.OpenDocumentFile(&s[i]);
+                (mfc_edit_doc *)the_boss.OpenDocumentFile(A2T(&s[i]));
               if (doc) {
                 mfc_edit_view *view = (mfc_edit_view *)doc->GetView();
                 long ll = view->GetRichEditCtrl().LineIndex(oline-1);
