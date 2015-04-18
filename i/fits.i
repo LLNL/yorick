@@ -343,11 +343,13 @@ local fits;
        fits_read           - simple driver to read "IMAGE" or "BINTABLE" data
        fits_write          - simple driver to write "IMAGE" data
        fits_new_image      - creates a new "IMAGE" HDU
+       fits_is_image       - check whether current HDU is an "IMAGE"
        fits_read_array     - read array data from current HDU
        fits_write_array    - write array data in current HDU
        fits_read_group     - read random group data from current HDU
 
      Binary tables:
+       fits_is_bintable    - check whether current HDU is a binary table
        fits_new_bintable   - creates a new "BINTABLE" HDU
        fits_read_bintable  - read binary table from current HDU
        fits_write_bintable - write binary table in current HDU
@@ -544,13 +546,15 @@ func fits_read(filename, &fh, hdu=, which=, rescale=, pack=, select=)
   fh = fits_open(filename, 'r');
   if (is_void(hdu)) hdu = 1;
   else if (hdu != 1) fits_goto_hdu, fh, hdu;
-  if (hdu == 1 || (xtension = fits_get_xtension(fh)) == "IMAGE")
+  if (hdu == 1 || (xtension = fits_get_xtension(fh)) == "IMAGE") {
     return fits_read_array(fh, which=which, rescale=rescale);
-  if (xtension == "BINTABLE")
+  } else if (fits_is_bintable(fh)) {
     return fits_read_bintable(fh, pack=pack, select=select);
-  if (structof(xtension) == string)
+  } else if (structof(xtension) == string) {
     error, "FITS extension \""+xtension+"\" not supported";
-  error, "invalid FITS file (missing/bad XTENSION card)";
+  } else {
+    error, "invalid FITS file (missing/bad XTENSION card)";
+  }
 }
 
 func fits_write(filename, data, overwrite=,
@@ -2293,10 +2297,11 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
    SEE ALSO: fits, fits_new_bintable, fits_read_bintable. */
 {
   /* Minimal checking. */
-  if (fits_get_xtension(fh) != "BINTABLE")
-    error, "current HDU is not a FITS BINTABLE";
+  if (! fits_is_bintable(fh)) {
+    error, "current HDU is not a valid FITS BINTABLE";
+  }
   if (structof(ptr) == pointer) {
-    ptr = ptr; /* force private copy */
+    ptr = ptr; /* force private copy for conversions */
   } else if (is_array(ptr)) {
     /* will save as binary table with a single field */
     ptr = &ptr;
@@ -2311,16 +2316,17 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   mult = size = array(long, tfields);
   nrows = -1;
   for (i = 1; i <= tfields; ++i) {
-    local a; eq_nocopy, a, *ptr(i);
-    if (is_void(a)) {
+    local arr;
+    eq_nocopy, arr, *ptr(i);
+    if (is_void(arr)) {
       dims = [];
       ndims = 0;
       ncells = 0;
       first_dim = 0;
       other_dims = [];
     } else {
-      if (! is_array(a)) error, "unexpected non-array field for BINTABLE";
-      dimlist = dimsof(a);
+      if (! is_array(arr)) error, "unexpected non-array field for BINTABLE";
+      dimlist = dimsof(arr);
       ndims = dimlist(1);
       if (ndims == 0) {
         /* fix for scalars */
@@ -2339,9 +2345,9 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
       } else if (first_dim != nrows) {
         error, "all fields of a BINTABLE must have the same number of rows";
       }
-      ncells = numberof(a)/nrows;
+      ncells = numberof(arr)/nrows;
     }
-    type = structof(a);
+    type = structof(arr);
 
     /* Parse TFORMn card or guess format specification form the current
        column data.  T is the type code in the TFORMn card, M is the repeat
@@ -2362,8 +2368,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
       if (ncells == 0) {
         s = 0;
         if (m != 0) {
-          error, ("repeat count must be 0 for empty "
-                  + fits_nth(i) + " column");
+          error, ("repeat count must be 0 for empty " + fits_nth(i) + " column");
         }
       } else if (t == 'A') {
         if (type != string) {
@@ -2373,7 +2378,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
         if (m < ncells || m%ncells != 0) {
           error, ("string array cannot fit in " + fits_nth(i) + " column");
         }
-        length = strlen(a);
+        length = strlen(arr);
         maxlen = m/ncells;
         if (max(length) > maxlen) {
           _fits_warn, ("truncation of input string(s) to fit into "
@@ -2387,94 +2392,94 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           j3 = 1 + (index - 1)/nrows;
           for (k = numberof(index); k >= 1; --k) {
             range = 1 : length(k);
-            tmp(j1(k), range, j3(k)) = strchar(a(index(k)))(range);
+            tmp(j1(k), range, j3(k)) = strchar(arr(index(k)))(range);
           }
         }
         other_dims = grow(maxlen, other_dims);
         ++ndims;
         ptr(i) = &tmp;
-        a = [];
+        arr = [];
       } else if (m != ncells) {
         error, ("bad number of elements for "  + fits_nth(i) + " column");
       } else if (t == 'B' && (type == long || type == int ||
                               type == short || type == char)) {
         s = 1;
-        if (min(a) < 0 || max(a) > 255) {
+        if (min(arr) < 0 || max(arr) > 255) {
           _fits_warn, ("truncation of input values in "
                        + fits_nth(i) + " column");
         }
         if (type != char) {
-          ptr(i) = &char(a);
-          a = [];
+          ptr(i) = &char(arr);
+          arr = [];
         }
       } else if (t == 'I' && (type == long || type == int ||
                               type == short || type == char)) {
         s = 2;
-        if (min(a) < -32768 || max(a) > 32767) {
+        if (min(arr) < -32768 || max(arr) > 32767) {
           _fits_warn, ("truncation of input values in "
                        + fits_nth(i) + " column");
         }
         if (type != short) {
-          ptr(i) = &short(a);
-          a = [];
+          ptr(i) = &short(arr);
+          arr = [];
         }
       } else if (t == 'J' && (type == long || type == int ||
                               type == short || type == char)) {
         s = 4;
-        if (min(a) < -2147483648.0 || max(a) > 2147483647.0) {
+        if (min(arr) < -2147483648.0 || max(arr) > 2147483647.0) {
           _fits_warn, ("truncation of input values in "
                        + fits_nth(i) + " column");
         }
         if (type != long || type != int) {
-          ptr(i) = &long(a);
-          a = [];
+          ptr(i) = &long(arr);
+          arr = [];
         }
       } else if (t == 'E' && (type == double || type == float ||
                               type == long || type == int ||
                               type == short || type == char)) {
         s = 4;
         if (type != float) {
-          ptr(i) = &float(a);
-          a = [];
+          ptr(i) = &float(arr);
+          arr = [];
         }
       } else if (t == 'D' && (type == double || type == float ||
                               type == long || type == int ||
                               type == short || type == char)) {
         s = 8;
         if (type != double) {
-          ptr(i) = &double(a);
-          a = [];
+          ptr(i) = &double(arr);
+          arr = [];
         }
       } else if (t == 'C' && (type == complex || type == double ||
                               type == float || type == long || type == int ||
                               type == short || type == char)) {
         s = 8;
         tmp = array(float, nrows, 2, other_dims);
-        tmp(,1,) = float(a);
-        if (type == complex) tmp(,2,) = a.im;
+        tmp(,1,) = float(arr);
+        if (type == complex) tmp(,2,) = arr.im;
         ptr(i) = &tmp;
-        a = [];
+        arr = [];
       } else if (t == 'M' && (type == complex || type == double ||
                               type == float || type == long || type == int ||
                               type == short || type == char)) {
         s = 16;
         if (type != complex) {
-          ptr(i) = &complex(a);
-          a = [];
+          ptr(i) = &complex(arr);
+          arr = [];
         }
       } else if (t == 'L' && (type == long || type == int ||
                               type == short || type == char)) {
         s = 1;
         if (type != char) {
           tmp = array('T', nrows, ncells);
-          if (is_array((a = where(! a)))) tmp(a) = 'F';
+          if (is_array((arr = where(! arr)))) tmp(arr) = 'F';
           ptr(i) = &tmp;
-          a = [];
+          arr = [];
         }
       } else if (t == 'X') {
         error, "bit array in FITS binary table not yet implemented";
-      } else if (t == 'P') {
-        error, "pointer array in FITS binary table not yet implemented";
+      } else if (t == 'P' || t == 'Q') {
+        error, "variable sized array in FITS binary table not yet implemented";
       } else {
         error, ("illegal data type conversion in " + fits_nth(i) + " column");
       }
@@ -2498,14 +2503,14 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           if (logical == 2) {
             /* Treats strictly negative values as "bad" values and strictly
                positive values as "true" values. */
-            if (is_array((j = where(a < 0)))) tmp(j) = '\0';
-            if (is_array((j = where(a > 0)))) tmp(j) = 'T';
+            if (is_array((j = where(arr < 0)))) tmp(j) = '\0';
+            if (is_array((j = where(arr > 0)))) tmp(j) = 'T';
           } else {
             /* Treats non-zero values as "true" values. */
-            if (is_array((j = where(a)))) tmp(j) = 'T';
+            if (is_array((j = where(arr)))) tmp(j) = 'T';
           }
           ptr(i) = &tmp; /* only affect local (private) copy */
-          a = [];
+          arr = [];
         } else {
           t = 'J';
           s = 4;
@@ -2525,7 +2530,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
       } else if (type == string) {
         t = 'A';
         s = 1;
-        length = strlen(a);
+        length = strlen(arr);
         maxlen = max(length);
         m = maxlen*ncells;
         tmp = array(char, nrows, maxlen, ncells);
@@ -2536,13 +2541,13 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           j3 = 1 + (index - 1)/nrows;
           for (k = numberof(index); k >= 1; --k) {
             range = 1 : length(k);
-            tmp(j1(k), range, j3(k)) = strchar(a(index(k)))(range);
+            tmp(j1(k), range, j3(k)) = strchar(arr(index(k)))(range);
           }
         }
         other_dims = grow(maxlen, other_dims);
         ++ndims;
         ptr(i) = &tmp;
-        a = [];
+        arr = [];
       } else if (type == pointer) {
         error, "pointer fields not yet implemented in BINTABLE";
       } else {
@@ -2674,7 +2679,10 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
    SEE ALSO: fits, fits_write_bintable, fits_pack_bintable. */
 {
   /* Minimal checking. */
-  if (fits_get_xtension(fh) != "BINTABLE" || fits_get_naxis(fh) != 2) {
+  xtension = fits_get_xtension(fh);
+  if ((xtension != "BINTABLE" &&
+       xtension != "3DTABLE" &&
+       xtension != "A3DTABLE") || fits_get_naxis(fh) != 2) {
     error, "current HDU is not a valid FITS BINTABLE";
   }
   pitch = fits_get(fh, "NAXIS1"); /* bytes per row */
@@ -3024,14 +3032,13 @@ func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
 func fits_pack_bintable(ptr, list)
 /* DOCUMENT fits_pack_bintable(ptr)
          or fits_pack_bintable(ptr, list)
-     Packs binary table  PTR into a single array; PTR must  be a pointer array
-     (e.g.  as the  one  returned by  fits_read_bintable  which see).   Second
-     argument LIST can be specified to select or re-order some fields: LIST is
-     a vector of indices of selected and re-ordered fields, the result will be
-     as  if PTR(LIST) was  given as  unique argument.   The returned  array is
-     NROWS-by-NCOLS where  NROWS is the  first dimension of all  fields (which
-     must be  the same) and NCOLS  is the sum  of the second dimension  of all
-     fields.
+     This function packs binary table  data into a single array.  Argument PTR
+     must be a pointer array (e.g., as the one returned by fits_read_bintable,
+     which see).  Second argument LIST  can be specified to select or re-order
+     some columns:  the result  will be  as if PTR(LIST)  was given  as unique
+     argument.  The returned array is  NROWS-by-NCOLS where NROWS is the first
+     dimension of all fields (which must be  the same) and NCOLS is the sum of
+     the other dimensions of all columns.
 
    SEE ALSO: fits_read_bintable. */
 {
@@ -3088,15 +3095,15 @@ func fits_pack_bintable(ptr, list)
 }
 
 /* PRIVATE */ func _fits_bintable_header(fh, nbytes, nrows, tfields)
-/* DOCUMENT _fits_bintable_header(fh, nbytes, nrows, tfields)
+/* DOCUMENT pcount = _fits_bintable_header(fh, nbytes, nrows, tfields)
      Set/update  header information  in  FITS  handle FH  for  a binary  table
      extension.  NBYTES is the number of  bytes per row of the table, NROWS is
-     the number of table rows and  TFIELDS is the number of fields (columns in
-     the  table).  FITS  card "XTENSION"  with value  "BINTABLE"  must already
-     exists  in  the header  (this  is  not  checked).  FITS  cards  "BITPIX",
-     "NAXIS",  "NAXIS1",  "NAXIS2",  "PCOUNT",  "GCOUNT",  and  "TFIELDS"  get
-     created/updated by this routine.  The  value of PCOUNT is computed by the
-     routine and returned to the caller.
+     the number  of table  rows and TFIELDS  is the  number of columns  in the
+     table.  FITS card "XTENSION" with value "BINTABLE" must already exists in
+     the  header  (this  is  not  checked).   FITS  cards  "BITPIX",  "NAXIS",
+     "NAXIS1", "NAXIS2", "PCOUNT", "GCOUNT", and "TFIELDS" get created/updated
+     by this  routine.  The  value of  PCOUNT is computed  by the  routine and
+     returned to the caller.
 
    SEE ALSO: fits, fits_new_bintable, fits_write_bintable. */
 {
@@ -3122,14 +3129,14 @@ func fits_read_bintable_as_hashtable(fh, h, format=,
      FH and make  it into a hash  table.  If optional argument H  is given, it
      must be an  existing hash table to be augmented with  the contents of the
      binary table.  The (augmented) hash table is returned.  This function can
-     only be used with the hash table extension.
+     only be used with the hash tables provided by the "Yeti" extension.
 
-     The members of  the hash table get named after the  value of the 'TTYPEn'
+     The members of  the hash table get named after the  value of the "TTYPEn"
      card converted to  lowercase (where n is the  field number).  For missing
-     'TTYPEn' cards, the value of keyword  FORMAT is used to define the member
+     "TTYPEn" cards, the value of keyword  FORMAT is used to define the member
      name as swrite(format=FORMAT,n).  The  default value for FORMAT is "_%d".
      If FORMAT is specified, it must contain exactly one directive to write an
-     integer and no  other format directives.  If a  card 'TUNITn' exists, its
+     integer and no  other format directives.  If a  card "TUNITn" exists, its
      value is stored  into member with "_units" appended  to the corresponding
      field name.
 
@@ -3191,7 +3198,7 @@ func fits_index_of_table_field(fh, name)
   if (structof(name) != string) error, "expecting table column name(s)";
   tfields = fits_get(fh, "TFIELDS");
   ttype = array(string, tfields);
-  for (i=1 ; i<=tfields ; ++i) {
+  for (i = 1; i <= tfields; ++i) {
     s = fits_get(fh, swrite(format="TTYPE%d", i));
     if (structof(s) == string && strlen(s)) {
       ttype(i) = fits_tolower(s);
@@ -3199,7 +3206,7 @@ func fits_index_of_table_field(fh, name)
   }
   n = numberof(name);
   index = array(long, dimsof(name)); // result will have same geometry
-  for (i=1 ; i<=n ; ++i) {
+  for (i = 1; i <= n; ++i) {
     j = where(fits_tolower(fits_trimright(name(i))) == ttype);
     if (numberof(j) != 1) {
       if (is_array(j)) error, "more than one field match \""+name(i)+"\"";
@@ -3697,8 +3704,9 @@ func fits_check_bitpix(bitpix)
      Test if FITS bits-per-pixel value BITPIX is valid.
    SEE ALSO: fits, fits_bitpix_of, fits_bitpix_type, fits_bitpix_info. */
 {
-  return ((bitpix > 0 && (bitpix == 8 || bitpix == 16 || bitpix == 32)) ||
-          bitpix == -32 || bitpix == -64);
+  return (bitpix > 8
+          ? (bitpix == 16 || bitpix ==  32 || bitpix ==  64)
+          : (bitpix ==  8 || bitpix == -32 || bitpix == -64));
 }
 
 func fits_bitpix_info(bitpix)
@@ -3706,19 +3714,39 @@ func fits_bitpix_info(bitpix)
      Return string information about FITS bits-per-pixel value.
    SEE ALSO: fits, fits_bitpix_of, fits_bitpix_type, fits_check_bitpix. */
 {
-  if (bitpix ==   8) return "8-bit twos complement binary unsigned integer";
-  if (bitpix ==  16) return "16-bit twos complement binary integer";
-  if (bitpix ==  32) return "32-bit twos complement binary integer";
-  if (bitpix == -32) return "IEEE single precision floating point";
-  if (bitpix == -64) return "IEEE double precision floating point";
+  if (bitpix > 8) {
+    if (bitpix ==  16) return "16-bit twos complement binary integer";
+    if (bitpix ==  32) return "32-bit twos complement binary integer";
+    if (bitpix ==  64) return "64-bit twos complement binary integer";
+  } else {
+    if (bitpix ==   8) return "8-bit twos complement binary unsigned integer";
+    if (bitpix == -32) return "IEEE single precision floating point";
+    if (bitpix == -64) return "IEEE double precision floating point";
+  }
   error, "invalid BITPIX value";
 }
 
 func fits_bitpix_type(bitpix, native=)
 /* DOCUMENT fits_bitpix_type(bitpix)
-         or fits_bitpix_type(bitpix, native=1)
-     Returns Yorick data  type given by FITS bits-per-pixel  value BITPIX.  If
-     keyword NATIVE is true, return the native data type matching BITPIX.
+         or fits_bitpix_type(bitpix, native=)
+     The function fits_bitpix_type returns Yorick  data type given by the fits
+     bits-per-pixel value BITPIX according to the following table:
+
+         +----------------------------------------------------------------+
+         | Bitpix  Type    Description (in FITS file)                     |
+         +----------------------------------------------------------------+
+         |      8  char     8-bit twos complement binary unsigned integer |
+         |     16  short   16-bit twos complement binary integer          |
+         |     32  int     32-bit twos complement binary integer          |
+         |     64  long    64-bit twos complement binary integer          |
+         |    -32  float   IEEE 32-bit floating point                     |
+         |    -64  double  IEEE 64-bit floating point                     |
+         +----------------------------------------------------------------+
+
+      If  keyword NATIVE  is  true, then  the  functions tries  to return  the
+      closest data Yorick type (with no loss of accuracy).
+
+
    SEE ALSO: fits, fits_bitpix_of, fits_bitpix_info, fits_check_bitpix. */
 {
   if (native) {
@@ -3734,11 +3762,15 @@ func fits_bitpix_type(bitpix, native=)
     }
   } else {
     /* Assume XDR type. */
-    if (bitpix ==   8) return char;
-    if (bitpix ==  16) return short;
-    if (bitpix ==  32) return long;
-    if (bitpix == -32) return float;
-    if (bitpix == -64) return double;
+    if (bitpix > 8) {
+      if (bitpix ==  16) return short;
+      if (bitpix ==  32) return int;
+      if (bitpix ==  64) return long;
+    } else {
+      if (bitpix ==   8) return char;
+      if (bitpix == -32) return float;
+      if (bitpix == -64) return double;
+    }
   }
   error, "invalid/unsupported BITPIX value";
 }
@@ -3763,22 +3795,49 @@ func fits_bitpix_of(x, native=)
   if (native) {
     /* Compute BITPIX. */
     bpb = 8; /* assume 8 bits per byte */
-    if (x==char || x==short || x==int || x==long) {
+    if (x == char || x == short || x == int || x == long) {
       bitpix = bpb*sizeof(x);
-      if (bitpix == 8 || bitpix == 16 || bitpix == 32) return bitpix;
+      if (bitpix == 8 || bitpix == 16 || bitpix == 32 || bitpix == 64) {
+        return bitpix;
+      }
     } else if (x == float || x == double) {
       bitpix = -bpb*sizeof(x);
-      if (bitpix == -32 || bitpix == -64) return bitpix;
+      if (bitpix == -32 || bitpix == -64) {
+        return bitpix;
+      }
     }
   } else {
     /* Assume data will be read/written as XDR. */
-    if (x == char) return 8;
-    if (x == short) return 16;
-    if (x == int || x == long) return 32;
-    if (x == float) return -32;
+    if (x == char)   return   8;
+    if (x == short)  return  16;
+    if (x == int)    return  32;
+    if (x == long)   return  64;
+    if (x == float)  return -32;
     if (x == double) return -64;
   }
   error, "unsupported data type \""+nameof(x)+"\"";
+}
+
+local fits_is_image, fits_is_bintable;
+/* DOCUMENT fits_is_image(fh);
+         or fits_is_bintable(fh);
+
+     Check whether current HDU  in FITS handle FH is a FITS  image or a binary
+     table.
+
+   SEE ALSO: fits_read_array, fits_read_bintable.
+ */
+
+func fits_is_image(fh)
+{
+  return (fits_current_hdu(fh) == 1 || fits_get_xtension(fh) == "IMAGE");
+}
+
+func fits_is_bintable(fh)
+{
+  xtension = fits_get_xtension(fh);
+  return ((xtension == "BINTABLE" /* FIXME: || xtension == "A3DTABLE" */ ||
+           xtension == "3DTABLE") && fits_get_naxis(fh) == 2);
 }
 
 /*---------------------------------------------------------------------------*/
