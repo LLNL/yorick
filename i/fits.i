@@ -544,16 +544,22 @@ func fits_read(filename, &fh, hdu=, which=, rescale=, pack=, select=)
              fits_read_array, fits_read_bintable. */
 {
   fh = fits_open(filename, 'r');
-  if (is_void(hdu)) hdu = 1;
-  else if (hdu != 1) fits_goto_hdu, fh, hdu;
-  if (hdu == 1 || (xtension = fits_get_xtension(fh)) == "IMAGE") {
+  if (is_void(hdu)) {
+    hdu = 1;
+  } else if (hdu != 1) {
+    fits_goto_hdu, fh, hdu;
+  }
+  if (fits_is_image(fh)) {
     return fits_read_array(fh, which=which, rescale=rescale);
   } else if (fits_is_bintable(fh)) {
     return fits_read_bintable(fh, pack=pack, select=select);
-  } else if (structof(xtension) == string) {
-    error, "FITS extension \""+xtension+"\" not supported";
   } else {
-    error, "invalid FITS file (missing/bad XTENSION card)";
+    xtension = fits_get_xtension(fh);
+    if (is_string(xtension)) {
+      error, "FITS extension \""+xtension+"\" not supported";
+    } else {
+      error, "invalid FITS file (missing/bad XTENSION card)";
+    }
   }
 }
 
@@ -3836,7 +3842,7 @@ func fits_is_image(fh)
 func fits_is_bintable(fh)
 {
   xtension = fits_get_xtension(fh);
-  return ((xtension == "BINTABLE" /* FIXME: || xtension == "A3DTABLE" */ ||
+  return ((xtension == "BINTABLE" || xtension == "A3DTABLE" ||
            xtension == "3DTABLE") && fits_get_naxis(fh) == 2);
 }
 
