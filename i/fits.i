@@ -5,7 +5,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- * Copyright (C) 2000-2010, Eric Thiébaut <thiebaut@obs.univ-lyon1.fr>
+ * Copyright (C) 2000-2015, Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>
  *
  * This file is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License version 2 as published by the
@@ -181,16 +181,16 @@
  * Initial revision
  */
 
-fits = "$Revision: 1.34 $";
+fits = "Version: 2.0";
 local fits;
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
      The  routines  provided  by   this  (standalone)  package  are  aimed  at
      reading/writing  FITS  (Flexible Image  Transport  System) files  from/to
-     Yorick.  These routines attempt to follow the FITS standard (version 1.1)
-     as defined  in NOST report  [1].  Nevertheless the  user may be  aware of
-     some limitations  (some of which  are unavoidable with such  a "flexible"
-     format as FITS):
+     Yorick.   These routines  attempt to  follow the  FITS  standard (version
+     2.1b) as  defined by IAU FITS  Working Group [2].   Nevertheless the user
+     may be aware of some limitations (some of which are unavoidable with such
+     a "flexible" format as FITS):
 
       - It is still possible to  produce a non-standard FITS file because (for
         obvious  efficiency reasons)  routines  in this  package cannot  check
@@ -247,17 +247,17 @@ local fits;
      demontrates how  to write a moderately  complex FITS file  with the basic
      routines (assuming DATA1 is a 2-dimensional array):
 
-       fh = fits_open(name, 'w');      // create new file
+       fh = fits_open(name, 'w');        // create new file
        fits_set, fh, "SIMPLE", 'T',    "true FITS file";
        fits_set, fh, "BITPIX", bitpix, "bits per pixel";
        fits_set, fh, "NAXIS",  naxis,  "number of dimensions";
        fits_set, fh, "NAXIS1", dim1,   "length of 1st dimension";
        fits_set, fh, "NAXIS2", dim2,   "length of 2nd dimension";
        fits_set, fh, "EXTEND", 'T', "this file may contain FITS extensions";
-       fits_set, fh, ...               // set any number of other cards with
-       ...                             // several calls to fits_set
-       fits_write_header, fh;          // write header part of current HDU
-       fits_write_array, fh, data1;    // write data part of current HDU
+       fits_set, fh, ...                 // set any number of other cards with
+       ...                               // several calls to fits_set
+       fits_write_header, fh;            // write header part of current HDU
+       fits_write_array, fh, data1;      // write data part of current HDU
 
        fits_new_hdu, fh, "IMAGE";        // append new "IMAGE" extension
        fits_set, fh, "BITPIX", bitpix, "bits per pixel";
@@ -442,10 +442,14 @@ local fits;
    REFERENCES:
 
      [1] "Definition of Flexible Image Transport System (FITS)", NASA/Science
-         Office of Standards and Technology, report NOST 100-1.1, September 29,
-         1995.
+         Office of Standards and Technology, report NOST 100-1.1, September
+         29, 1995.
 
-     [2] "A User's Guide for the Flexible Image Transport System (FITS)"
+     [2] "Definition of the Flexible Image Transport System (FITS)", IAU FITS
+         Working Group <http://fits.gsfc.nasa.gov/iaufwg/>, Version 2.1b,
+         December 2005.
+
+     [3] "A User's Guide for the Flexible Image Transport System (FITS)"
          http://archive.stsci.edu/fits/users_guide/
 */
 
@@ -493,7 +497,12 @@ func fits_info(fh, hdu)
   if (ncards) {
     local offset; eq_nocopy, offset, _car(fh,3);
     write, format="********  HDU - %3d  ***********************************************************\n", offset(1);
-    for (i=1; i<=ncards ; ++i) write, format="%s\n", cards(i);
+    prev_len = 1; /* used to only print a single consecutive blank line */
+    for (i = 1; i <= ncards ; ++i) {
+      s = strtrim(cards(i), 2);
+      if (prev_len > 0) write, format="%s\n", s;
+      prev_len = strlen(s);
+    }
   } else {
     write, format="******** %s ***********************************************************\n", "END OF FILE";
   }
@@ -4124,7 +4133,7 @@ func fits_init(sloopy=, allow=, blank=)
 /* Initializes FITS internals (must be last statement of this file).  The
    following allows for non-standard keyword characters usually found in
    FITS files produced by IRAF... */
-if (is_void(_fits_alphabet)) fits_init, allow="/."; /*  */
+if (is_void(_fits_alphabet)) fits_init, allow="/."; /* deal with IRAF */
 
 /*---------------------------------------------------------------------------*/
 /* SUPPORT FOR OBSOLETE API */
@@ -4294,12 +4303,12 @@ fitsOldHeaderKeywords = fits_toupper(fitsOldHeaderMembers);
   return r(1:i);
 }
 
-/*---------------------------------------------------------------------------*
- * Local Variables:                                                          *
- * mode: Yorick                                                              *
- * tab-width: 8                                                              *
- * fill-column: 78                                                           *
- * c-basic-offset: 2                                                         *
- * coding: latin-1                                                           *
- * End:                                                                      *
- *---------------------------------------------------------------------------*/
+/*
+ * Local Variables:
+ * mode: Yorick
+ * tab-width: 8
+ * fill-column: 78
+ * c-basic-offset: 2
+ * coding: latin-1
+ * End:
+ */
