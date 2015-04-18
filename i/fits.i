@@ -1374,7 +1374,7 @@ func fits_write_header(fh)
     s = cards(k);
     if ((l = strlen(s)) >= 1) {
       rng = 1:min(l, 80);
-      hdr(rng, k) = (*pointer(s))(rng);
+      hdr(rng, k) = strchar(s)(rng);
     }
   }
   hdr(1, last) = 'E';
@@ -1917,7 +1917,7 @@ func fits_set(fh, key, value, comment)
   /* Replace every quote character (ASCII 0x27) in VALUE by two quotes and
      make sure the result is not longer than 68 characters. */
   len = strlen(value);
-  src = *pointer(value);
+  src = strchar(value);
   dst = array(char, 2*len + 1);
   i = j = 0;
   n = min(34, len);
@@ -2376,7 +2376,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
       } else if (sread(format=tform3, tform, m, s, nil) != 2 || m < 0) {
         error, ("bad format specification in FITS card \"" + key + "\"");
       }
-      t = (*pointer(s))(1);
+      t = strchar(s)(1);
       if (ncells == 0) {
         s = 0;
         if (m != 0) {
@@ -2405,7 +2405,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           j3 = 1 + (index - 1)/nrows;
           for (k = numberof(index); k >= 1; --k) {
             range = 1 : length(k);
-            tmp(j1(k), range, j3(k)) = (*pointer(a(index(k))))(range);
+            tmp(j1(k), range, j3(k)) = strchar(a(index(k)))(range);
           }
         }
         other_dims = grow(maxlen, other_dims);
@@ -2554,7 +2554,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           j3 = 1 + (index - 1)/nrows;
           for (k = numberof(index); k >= 1; --k) {
             range = 1 : length(k);
-            tmp(j1(k), range, j3(k)) = (*pointer(a(index(k))))(range);
+            tmp(j1(k), range, j3(k)) = strchar(a(index(k)))(range);
           }
         }
         other_dims = grow(maxlen, other_dims);
@@ -3582,7 +3582,7 @@ func fits_parse(card, id, safe=)
     } while ((s=p2) && !(n%2));
     if (! sread(s, format="%1s %[^\a]", q, _fits_parse_comment) || q=="/") {
       /* discard trailing spaces which are not significant in FITS */
-      i = numberof((c = *pointer(value)));
+      i = numberof((c = strchar(value)));
       while (--i) { if (c(i) != ' ') return string(&c(1:i)); }
       return "";
     }
@@ -3773,7 +3773,7 @@ func fits_id(card)
    SEE ALSO: fits, fits_key, fits_rehash. */
 {
   extern _fits_digitize, _fits_multiplier;
-  if ((len = numberof((c = *pointer(card)))) <= 1) return 0.0;
+  if ((len = numberof((c = strchar(card)))) <= 1) return 0.0;
   len = min(8, len - 1);
   digit = _fits_digitize(1 + c(1:len));
   if (min(digit) < 0  || min((!digit)(dif)) < 0) error, _fits_bad_keyword(c);
@@ -3944,7 +3944,7 @@ func fits_get_list(fh, key)
     error, "unexpected data type for FITS card \"" + key + "\"";
   }
   str = strtrim(str, 3);
-  c = *pointer(str);
+  c = strchar(str);
   n = numberof(c);
   if (n >= 3 && c(1) == '(' && c(n-1) == ')' && sum(c == ')') == 1) {
     number = sum(c == ',') + 1;
@@ -4069,7 +4069,7 @@ func fits_init(sloopy=, allow=, blank=)
   if (! is_void(allow)) {
     /* Add more allowed characters for FITS keywords. */
     if ((s = structof(allow)) == string && ! dimsof(allow)(1)) {
-      allow = *pointer(allow);
+      allow = strchar(allow);
     } else if (s != char) {
       error, "value of keyword ALLOW must be a string or an array of char's";
     }
@@ -4091,7 +4091,7 @@ func fits_init(sloopy=, allow=, blank=)
   _fits_digitize(1 + ' ') = space;
   if (! is_void(blank)) {
     if ((s = structof(blank)) == string && ! dimsof(blank)(1)) {
-      blank = *pointer(blank);
+      blank = strchar(blank);
     } else if (s != char) {
       error, "value of keyword BLANK must be a string or an array of char's";
     }
