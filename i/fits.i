@@ -901,7 +901,7 @@ func fits_read_header(fh)
 
     /* Check 1st card of 1st header block. */
     if (nblocks == 1) {
-      if (block_id(1) < 0.0) error, _fits_bad_keyword(block(1:8, 1));
+      if (block_id(1) < 0) error, _fits_bad_keyword(block(1:8, 1));
       id = block_id(1);
       card = string(&block(,1));
       value = fits_parse(card, id, safe=1);
@@ -916,9 +916,9 @@ func fits_read_header(fh)
     }
 
     /* Now we can check the validity of FITS keywords. */
-    if (min(block_id) < 0.0) {
+    if (min(block_id) < 0) {
       /* Bad keyword detected: report first one. */
-      error, _fits_bad_keyword(block(1:8, where(block_id < 0.0)(1)));
+      error, _fits_bad_keyword(block(1:8, where(block_id < 0)(1)));
     }
 
     /* Search for the END keyword. */
@@ -1713,7 +1713,9 @@ func fits_set(fh, key, value, comment)
       if (op != _fits_format_integer || value < 0)
         error, swrite(format=errfmt, key);
       location = 3;
-    } else if (id == _fits_id_comment || id == _fits_id_history || id == 0.0) {
+    } else if (id == _fits_id_comment ||
+               id == _fits_id_history ||
+               id == _fits_id_null) {
       if (! is_void(comment))
         error, "too many arguments for commentary FITS card";
       if (op != _fits_format_string) error, swrite(format=errfmt, key);
@@ -3811,11 +3813,11 @@ func fits_parse(card, id, safe=)
    SEE ALSO: fits, fits_get, fits_id. */
 {
   extern _fits_parse_comment;
-  extern _fits_id_comment, _fits_id_history, _fits_id_hierarch;
+  extern _fits_id_comment, _fits_id_history, _fits_id_null, _fits_id_hierarch;
 
   if (is_void(id)) id = fits_id(card);
 
-  if (id == 0.0 || id == _fits_id_comment || id == _fits_id_history) {
+  if (id == _fits_id_null || id == _fits_id_comment || id == _fits_id_history) {
     /* Deal with commentary card. */
     _fits_parse_comment = [];
     return strpart(card, 9:);
@@ -3993,9 +3995,9 @@ func fits_match(fh, pattern)
 
    SEE ALSO: fits, fits_get_cards, fits_rehash. */
 {
-  extern _fits_multiplier, _fits_match_id;
+  extern _fits_multiplier, _fits_match, _id_fits_idtype;
   if (! is_array(_car(fh,1))) return;
-  if ((s = structof(pattern)) == double) {
+  if ((s = structof(pattern)) == _fits_idtype) {
     return (_car(fh,2) == (_fits_match_id = pattern));
   } else if (s != string) {
     error, "PATTERN must be a scalar string or a numerical identifier";
@@ -4075,11 +4077,11 @@ func fits_id(card)
 
    SEE ALSO: fits, fits_key, fits_rehash. */
 {
-  extern _fits_digitize, _fits_multiplier;
-  if ((len = numberof((c = strchar(card)))) <= 1) return 0.0;
+  extern _fits_digitize, _fits_multiplier, _fits_id_null;
+  if ((len = numberof((c = strchar(card)))) <= 1) return _fits_id_null;
   len = min(8, len - 1);
-  digit = _fits_digitize(1 + c(1:len));
-  if (min(digit) < 0  || min((!digit)(dif)) < 0) error, _fits_bad_keyword(c);
+  digit = _fits_digitize(1 + (c(1:len) & 0xFF));
+  if (min(digit) < 0 || min((!digit)(dif)) < 0) error, _fits_bad_keyword(c);
   return sum(_fits_multiplier(1:len)*digit);
 }
 
@@ -4090,7 +4092,7 @@ func fits_id(card)
    SEE ALSO: fits_id, fits_read_header. */
 {
   if ((n = min(8, numberof(c)))) {
-    digit = _fits_digitize(1 + c(1:n));
+    digit = _fits_digitize(1 + (c(1:n) & 0xFF));
     do {
       if (digit(n)) {
         key = string(&c(1:n));
@@ -4113,10 +4115,10 @@ func fits_id(card)
      set to -1.
    SEE ALSO: fits, fits_id, fits_key, fits_rehash. */
 {
-  digit = _fits_digitize(1 + hdr(1:8,));
+  digit = _fits_digitize(1 + (hdr(1:8,) & 0xFF));
   id = _fits_multiplier(+)*digit(+,);
   if (anyof((bad = (digit(min,) < 0) | ((! digit)(dif,)(min,) < 0))))
-    id(where(bad)) = -1.0;
+    id(where(bad)) = -1;
   return id;
 }
 
@@ -4126,9 +4128,10 @@ func fits_key(id)
      string FITS keyword(s) without trailing spaces.
    SEE ALSO: fits, fits_id. */
 {
-  extern _fits_max_id;
-  if (min(id) < 0.0 || max(id) > _fits_max_id || max(id%1.0) > 0.0)
-    error, "invalid FITS floating point identifier";
+  if (min(id) < 0 || max(id) > _fits_max_id ||
+      (is_real(id) && max(id%1) > 0)) {
+    error, "invalid FITS numerical identifier";
+  }
   return fits_map(_fits_key, id);
 }
 
@@ -4139,11 +4142,20 @@ func fits_key(id)
    SEE ALSO: fits_key. */
 {
   extern _fits_multiplier, _fits_alphabet;
-  c = array(double, 8);
+  c = array(long, 8);
   basis = _fits_multiplier(2);
   r = id;
-  for (i=1 ; i<=8 ; ++i) r = (r - (c(i) = r%basis))/basis;
-  return string(&_fits_alphabet(1 + long(c)));
+  /* begin of unrolled loop */
+  r = (r - (c(1) = r%basis))/basis;
+  r = (r - (c(2) = r%basis))/basis;
+  r = (r - (c(3) = r%basis))/basis;
+  r = (r - (c(4) = r%basis))/basis;
+  r = (r - (c(5) = r%basis))/basis;
+  r = (r - (c(6) = r%basis))/basis;
+  r = (r - (c(7) = r%basis))/basis;
+  r = (r - (c(8) = r%basis))/basis;
+  /* end of unrolled loop */
+  return string(&_fits_alphabet(1 + c)); /* FIXME: strchar() does not work here */
 }
 
 func fits_rehash(fh)
@@ -4153,7 +4165,7 @@ func fits_rehash(fh)
 
    SEE ALSO: fits, fits_id. */
 {
-  if (min(_car(fh,2,fits_ids(_car(fh,1)))) >= 0.0) return fh;
+  if (min(_car(fh,2,fits_ids(_car(fh,1)))) >= 0) return fh;
   error, "corrupted FITS header data";
 }
 
@@ -4316,6 +4328,7 @@ _fits_false = 'F';
      your FITS handles: see fits_rehash).
    SEE ALSO: fits, fits_init, fits_rehash, fits_id, fits_key. */
 
+/* PRIVATE */ local _fits_min_id, _fits_max_id, _fits_id_null, _fits_idtype;
 /* PRIVATE */ local _fits_id_simple, _fits_id_bitpix, _fits_id_naxis, _fits_id_end;
 /* PRIVATE */ local _fits_id_comment, _fits_id_history, _fits_id_xtension, _fits_id_bscale;
 /* PRIVATE */ local _fits_id_bzero, _fits_id_gcount, _fits_id_pcount, _fits_id_hierarch;
@@ -4382,10 +4395,10 @@ func fits_init(sloopy=, allow=, blank=)
 
    SEE ALSO: fits, fits_rehash. */
 {
-  extern _fits_digitize,    _fits_multiplier;
-  extern _fits_alphabet,    _fits_max_id;
+  extern _fits_digitize,    _fits_multiplier, _fits_alphabet;
+  extern _fits_min_id,      _fits_max_id,     _fits_idtype;
   extern _fits_id_simple,   _fits_id_bitpix;
-  extern _fits_id_naxis,    _fits_id_end;
+  extern _fits_id_naxis,    _fits_id_end,     _fits_id_null;
   extern _fits_id_comment,  _fits_id_history, _fits_id_hierarch;
   extern _fits_id_xtension, _fits_id_extname, _fits_id_special;
   extern _fits_id_bscale,   _fits_id_bzero;
@@ -4397,25 +4410,32 @@ func fits_init(sloopy=, allow=, blank=)
   _fits_strict = (strict = (! sloopy && is_void(allow)));
 
   /* Prepare key<->id conversion arrays. */
-  _fits_alphabet = _(, '\0', '-', '_', char(indgen('0':'9')),
-                                       char(indgen('A':'Z')));
+  _fits_alphabet = _('\0', '-', '_', char(indgen('0':'9')), char(indgen('A':'Z')));
   if (! is_void(allow)) {
     /* Add more allowed characters for FITS keywords. */
-    if ((s = structof(allow)) == string && ! dimsof(allow)(1)) {
+    if (is_string(allow) && is_scalar(allow)) {
       allow = strchar(allow);
-    } else if (s != char) {
-      error, "value of keyword ALLOW must be a string or an array of char's";
+    } else if (structof(allow) != char) {
+      error, "value of keyword ALLOW must be a scalar string or an array of char's";
     }
     n = numberof(allow);
     for (i=1 ; i<=n ; ++i) {
-      if (noneof(allow(i) == _fits_alphabet)) grow, _fits_alphabet, allow(i);
+      if (noneof(allow(i) == _fits_alphabet)) {
+        grow, _fits_alphabet, allow(i);
+      }
     }
   }
   basis = numberof(_fits_alphabet);
-  _fits_multiplier = double(basis)^indgen(0:7);
-  _fits_max_id = sum(_fits_multiplier * (basis-1.0));
+  if (sizeof(long) >= 8) {
+    _fits_idtype = long;
+  } else {
+    _fits_idtype = double;
+  }
+  _fits_multiplier = _fits_idtype(basis)^indgen(0:7);
+  _fits_max_id = sum(_fits_multiplier*(basis - 1));
+  _fits_min_id = _fits_idtype(0);
   _fits_digitize = array(-1, 256);
-  _fits_digitize(1 + _fits_alphabet) = indgen(0:basis-1);
+  _fits_digitize(1 + (_fits_alphabet & 0xFF)) = indgen(0 : basis - 1);
 
   /* Deal with "blanck/space" characters (spaces and '\0' _must_ all have
      their digitize value equal to 0). */
@@ -4423,12 +4443,12 @@ func fits_init(sloopy=, allow=, blank=)
     error, "digitize value of spaces must be zero (BUG)";
   _fits_digitize(1 + ' ') = space;
   if (! is_void(blank)) {
-    if ((s = structof(blank)) == string && ! dimsof(blank)(1)) {
+    if (is_string(blank) && is_scalar(blank)) {
       blank = strchar(blank);
-    } else if (s != char) {
+    } else if (structof(blank) != char) {
       error, "value of keyword BLANK must be a string or an array of char's";
     }
-    _fits_digitize(1 + blank) = space;
+    _fits_digitize(1 + (blank & 0xFF)) = space;
   }
 
   if (! strict) {
@@ -4455,9 +4475,10 @@ func fits_init(sloopy=, allow=, blank=)
   _fits_id_gcount   = fits_id("GCOUNT");
   _fits_id_groups   = fits_id("GROUPS");
   //_fits_id_extend = fits_id("EXTEND");
+  _fits_id_null     = _fits_min_id;
   _fits_id_special  = [_fits_id_simple, _fits_id_bitpix, _fits_id_naxis,
-                       _fits_id_end, 0.0, _fits_id_comment, _fits_id_history,
-                       _fits_id_xtension];
+                       _fits_id_end, _fits_id_null, _fits_id_comment,
+                       _fits_id_history, _fits_id_xtension];
 }
 
 /*---------------------------------------------------------------------------*/
