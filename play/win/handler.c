@@ -24,7 +24,8 @@
 #define _EM_ZERODIVIDE 0x00000008
 #define _EM_INVALID    0x00000010
 extern void _fpreset(void);
-extern unsigned int _controlfp(unsigned int unNew, unsigned int unMask);
+extern unsigned int _controlfp_s(unsigned int *unOld, unsigned int unNew,
+                                 unsigned int unMask);
 #endif
 
 #define W_SIGINT_DELAY 1000
@@ -77,9 +78,10 @@ w_handle_exception(MSG *msg)
 void
 w_fpu_setup(void)
 {
+  unsigned int old;
   _fpreset();
-  _controlfp(_MCW_EM &
-             ~(_EM_ZERODIVIDE | _EM_OVERFLOW | _EM_INVALID), _MCW_EM);
+  _controlfp_s(&old, _MCW_EM &
+               ~(_EM_ZERODIVIDE | _EM_OVERFLOW | _EM_INVALID), _MCW_EM);
 }
 
 int

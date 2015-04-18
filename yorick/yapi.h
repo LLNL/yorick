@@ -645,8 +645,8 @@ PLUG_API void *yo_new_group(yo_ops_t **ops);
 /* create a closure on top of stack from function at farg, data at darg
  * returns 0 on success, 1 if farg is not a function or darg is not data
  */
-extern int yo_closure(int farg, int darg);
-extern int yo_is_closure(int iarg);
+PLUG_API int yo_closure(int farg, int darg);
+PLUG_API int yo_is_closure(int iarg);
 
 /* ------------------------------------------------------------------------ */
 
@@ -662,9 +662,13 @@ extern int yo_is_closure(int iarg);
  *      = -2 to pass no argument to function
  * darg = iarg stack position of data for farg/fndx (unused if dndx!=-1)
  */
-extern void yexec_after(double secs, long fndx, int farg, long dndx, int darg);
+PLUG_API void yexec_after(double secs, long fndx, int farg, long dndx, int darg);
 /* compiled interface to interpreted include function */
-extern void yexec_include(int iarg, int now);
+PLUG_API void yexec_include(int iarg, int now);
+/* push interpreted function onto task stack as *main* */
+PLUG_API void ytask_push(int iarg);
+/* run interpreted function as *main* immediately, for event callbacks */
+PLUG_API void ytask_run(int iarg);
 
 /* ------------------------------------------------------------------------ */
 

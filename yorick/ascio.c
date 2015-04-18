@@ -234,15 +234,18 @@ void Y_open(int nArgs)
   return;
 }
 
+PLUG_API int psckt_0close(void);  /* from socky.c */
+
 void Y_close(int nArgs)
 {
   DataBlock *db;
   IOStream *binary= 0;
+  long index = -1;
   if (nArgs!=1) YError("close function takes exactly one argument");
 
   /* If argument is a simple variable reference, nil the variable.  */
   if (sp->ops==&referenceSym) {
-    Symbol *s= &globTab[sp->index];
+    Symbol *s= &globTab[(index = sp->index)];
     ReplaceRef(sp);
     if (s->ops==&dataBlockSym &&
         (s->value.db->ops==&textOps || s->value.db->ops==&streamOps)) {
@@ -264,7 +267,16 @@ void Y_close(int nArgs)
        itself is not freed by the Drop() below.  */
     if (db->references) binary= (IOStream *)db;
   } else if (db->ops!=&voidOps) {
-    YError("bad argument type to close function");
+    if (psckt_0close())
+      YError("bad argument type to close function");
+    if (index >= 0) {
+      ypush_nil();
+      yput_global(index, 0);
+      yarg_drop(1);
+    }
+    yarg_drop(1);
+    ypush_nil();
+    return;
   }
 
   if (db->references && db->ops!=&voidOps) {
@@ -299,6 +311,7 @@ void Y_close(int nArgs)
     binary->stream = 0;
     if (binary->contentsLog) FreeClogFile(binary);
   }
+  ypush_nil();
 }
 
 void Y_filepath(int argc)

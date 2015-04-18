@@ -35,6 +35,7 @@ extern int w_app_msg(MSG *msg);
 extern int (*w_msg_hook)(MSG *msg);
 extern int w_add_input(HANDLE wait_obj, void (*on_input)(void *),
                        void *context);
+extern void w_prepoll(void (*on_prepoll)(void *), void *context, int remove);
 
 extern int w_no_mdi;
 extern int con_stdinit(void(**)(char*,long), void(**)(char*,long));

@@ -9,7 +9,7 @@ COPTIONS=$(COPT) $(Y_CFLAGS)
 LDOPTIONS=$(COPT) $(Y_LDFLAGS)
 
 OBJS=dir.o files.o fpuset.o handler.o pathnm.o slinks.o stdinit.o timeu.o \
-  timew.o udl.o uevent.o ugetc.o uinbg.o usernm.o umain.o uspawn.o
+  timew.o udl.o uevent.o ugetc.o uinbg.o usernm.o umain.o uspawn.o usock.o
 
 all: libplay
 
@@ -59,6 +59,8 @@ usernm.o: config.h ../play.h usernm.c $(PLUGEXT)
 umain.o: config.h ../play.h playu.h ../pstdlib.h $(PLUGEXT)
 uspawn.o: config.h ../pstdio.h ../pstdlib.h ../play.h playu.h uspawn.c $(PLUGEXT)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_PROCS) -c uspawn.c
+usock.o: config.h ../pstdlib.h ../play.h playu.h usock.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_SOCKETS) -c usock.c
 
 # this is the DL config test used in config.sh
 YORICK_EXE=./cfg

@@ -2409,7 +2409,7 @@ extern open;
      F as if it were a data structure instance (e.g.- f.x refers to
      variable x in the binary file f).
   SEE ALSO: create, close, read, write, rdline, bookmark, backup, popen
-            vopen, rename, remove, save, restore
+            vopen, rename, remove, save, restore, socket, fd_read
  */
 
 extern vopen;
@@ -4693,7 +4693,106 @@ extern fd_close;
      which must somehow arrange for yorick to know the values of FD.
      Yorick limits the number of open descriptors to 16 (although FD may
      have any value permitted by the system).
+
+   SEE ALSO: open, socket
  */
+
+extern socket;
+extern socksend;
+extern sockrecv;
+/* DOCUMENT listener = socket(port)    or  socket(port, callback)
+ *          sock = socket(addr, port)  or  socket(addr, port, callback)
+ *          sock = listener()          or  listener(callback)
+ *          nbytes = socksend(sock, data)
+ *          nbytes = sockrecv(sock, data)
+ *          close, listener
+ *          close, sock
+ *          listener.port
+ *          sock.peer
+ *          callback, listener;
+ *            - callback must call listener()
+ *          callback, sock;
+ *            - callback must call sockrecv(sock, data)
+ *
+ *  Create IP socket objects, which can be used to connect to other
+ *  processes.  The final data transfer socket, sock, is a two-way pipe
+ *  for sending messages between the two processes.  In order to make the
+ *  connection, one of the two processes must act as a server, which
+ *  listens for the second process to attempt to connect to it.  The
+ *  listener itself is a special socket, which listens for connections
+ *  on a specific port, which can be any number less than 2^16 (65536).
+ *  Port numbers below 1024 are reserved for registered system services,
+ *  such as port 80, which is used for http connections, or port 22,
+ *  which is for ssh connections.
+ *
+ *  While socket(port) creates a listener for a specific port, you are
+ *  only guaranteed not to collide with another program if you omit the
+ *  port, socket(), or pass port 0, socket(0), which means that you want
+ *  the operating system to choose an unused port number for you.  After
+ *  socket(0) returns the listener, you can find the actual port number
+ *  which the system chose with listener.port.
+ *
+ *  The second process must actively seek the connection, so it needs
+ *  to pass both the machine address addr (like "www.example.com") of
+ *  the listening process, as well as the port number on which it is
+ *  listening.  Usually, the connecting process will be running on the
+ *  same machine as the listening process (your firewall should probably
+ *  block inter-machine traffic on a random port number).  To connect on
+ *  to a listener on the same machine, pass the pseudo-index - as the addr,
+ *  socket(-, port).
+ *
+ *  You call the listener object as a function listener() in order to
+ *  wait for a connection request.  When the connection request arrives,
+ *  listener() returns a data transfer socket, sock, which will be
+ *  connected with the data transfer socket on the requestor's end.
+ *  The system puts this socket on a different port from the listener,
+ *  which can continue to listen for connections from other processes.
+ *  If you don't want to accept any more connections, you can close the
+ *  listener immediately after it returns sock.  You can find out the
+ *  machine address where the accepted connection originated with
+ *  sock.peer.
+ *
+ *  Once you have a data transfer socket, either from a listener accepting
+ *  a connection, or from having requested a conection yourself, the two
+ *  ends of the socket are completely symmetric.  You send and receive
+ *  data with:
+ *    socksend, sock, data;
+ *    sockrecv, sock, data;
+ *  The data can be any numeric array -- but not strings (use strchar),
+ *  strct instances, pointers, or any other datatype.  You must arrange
+ *  a protocol so that you know the exact type and number of items
+ *  being sent in each message.  Currently, yorick makes no attempt to
+ *  switch byte order or make any other allowance for the possibility
+ *  that the binary formats might be different between the two ends of
+ *  the socket.  Both send and recv block until the requested number
+ *  of bytes has been sent or received, raising an error if a
+ *  complete transfer does not occur.  If you do not want an error,
+ *  you may invoke either socksend or sockrecv as a function, which will
+ *  return the number of bytes sent or received, normally sizeof(data),
+ *  or -1 on error.  If the other side of the socket closes before
+ *  a sockrecv is complete, it may return 0<=nbytes<sizeof(data), but
+ *  socksend always returns either -1 or sizeof(nbytes).
+ *
+ *  The listener() and sock.recv() calls block.  If you want to use them
+ *  in an event-driven program which handles other events while waiting,
+ *  you can create the listener or sock with a callback, which can be either
+ *  a function or a closure, and will be called as noted when input is
+ *  ready (or a connection request has been received).  If the callback
+ *  function fails to accept the connection or receive the data, it will
+ *  immediately be called again -- do not put more than the bare minimum
+ *  of code in such a callback; it can easily go into an infinite loop.
+ *  Closing the socket is the only way to break out of such a loop.
+ *
+ *  Destroying the last reference to listener or sock frees it, but you
+ *  may explicitly a socket with the close function.
+ *
+ *  SEE ALSO: open, fd_read
+ */
+func _socket_caller {
+  c = _socket_callback;  s = _socket_socket;
+  _socket_callback = _socket_socket = [];
+  c, s;
+}
 
 extern add_member;
 /* DOCUMENT add_member, file, struct_name, offset, name, type, dimlist
