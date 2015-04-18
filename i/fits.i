@@ -513,8 +513,7 @@ func fits_info(fh, hdu)
 /*---------------------------------------------------------------------------*/
 /* SIMPLIFIED DRIVERS */
 
-func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
-               pack=, select=)
+func fits_read(filename, &fh, hdu=, which=, rescale=, pack=, select=)
 /* DOCUMENT           a = fits_read(filename)
          or local fh; a = fits_read(filename, fh)
 
@@ -530,8 +529,6 @@ func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
      binary  table  extension,  the  result  is  a  vector  of  pointers  (see
      fits_read_bintable).
 
-     Keyword ENCODING has the same meaning as in fits_open (which see).
-
      Keywords WHICH  and RESCALE have  the same meaning as  in fits_read_array
      (which see).   These keywords are ignored  if HDU to read  is not primary
      HDU nor an "image" extension.
@@ -543,7 +540,7 @@ func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
    SEE ALSO: fits, fits_write, fits_open,
              fits_read_array, fits_read_bintable. */
 {
-  fh = fits_open(filename, 'r', encoding=encoding);
+  fh = fits_open(filename, 'r');
   if (is_void(hdu)) hdu = 1;
   else if (hdu != 1) fits_goto_hdu, fh, hdu;
   if (hdu == 1 || (xtension = fits_get_xtension(fh)) == "IMAGE")
@@ -555,7 +552,7 @@ func fits_read(filename, &fh, encoding=, hdu=, which=, rescale=,
   error, "invalid FITS file (missing/bad XTENSION card)";
 }
 
-func fits_write(filename, data, encoding=, overwrite=,
+func fits_write(filename, data, overwrite=,
                 bitpix=, extend=, bscale=, bzero=,
                 template=, history=, comment=)
 /* DOCUMENT fits_write, filename, data;
@@ -567,8 +564,8 @@ func fits_write(filename, data, encoding=, overwrite=,
      FITS  "bits-per-pixel" can  be  specified by  keyword BITPIX;  otherwise,
      BITPIX is automatically guessed from the data type (see fits_bitpix_of).
 
-     Keywords EXTEND,  TEMPLATE, HISTORY COMMENT, BSCALE,  BZERO, ENCODING and
-     OVERWRITE have the same meaning as in fits_create (to see).
+     Keywords EXTEND,  TEMPLATE, HISTORY COMMENT, BSCALE,  BZERO and OVERWRITE
+     have the same meaning as in fits_create (to see).
 
      If BITPIX  is explicitely  specified and corresponds  to an  integer file
      type (8,  16 or 32) and  neither BSCALE nor BZERO  are specified, optimal
@@ -588,7 +585,7 @@ func fits_write(filename, data, encoding=, overwrite=,
     bscale = scale(1);
     bzero = scale(2);
   }
-  fh = fits_create(filename, encoding=encoding, overwrite=overwrite,
+  fh = fits_create(filename, overwrite=overwrite,
                    bitpix=bitpix, bzero=bzero, bscale=bscale,
                    dimlist=dimsof(data), extend=extend,
                    template=template, history=history, comment=comment);
@@ -644,8 +641,9 @@ func fits_best_scale(bitpix, cmin, cmax, debug=)
 }
 
 /*---------------------------------------------------------------------------*/
+/* FILE ACCESS ROUTINES */
 
-func fits_open(filename, filemode, encoding=, overwrite=)
+func fits_open(filename, filemode, overwrite=)
 /* DOCUMENT fits_open(filename)
          or fits_open(filename, filemode)
      Opens the FITS  file FILENAME according to FILEMODE.   The returned value
@@ -657,18 +655,6 @@ func fits_open(filename, filemode, encoding=, overwrite=)
        "a" or 'a' - append  mode, stream  get positionned  at last HDU, the
                     header of the last HDU get read and parsed.
      The default FILEMODE is "r" -- open an existing FITS file for reading.
-
-     Keyword ENCODING can be used to change the data encoding of the FITS file
-     which  is  "xdr"  for  a  regular  FITS file  (XDR  means  eXternal  Data
-     Representation, which is  natively used by all IEEE  compliant big endian
-     machine).  The value of the keyword is a string like:
-       "xdr", "sun"    - eXternal Data Representation (the default)
-       "native"        - native data representation (i.e. no conversion)
-       "i86", "pc"     - IEEE little endian machines
-       ...
-     see documentation  for "__sun"  for a list  of supported  encodings. Note
-     that using an  encoding different from IEEE big  endian (or XDR) violates
-     FITS standard.
 
      Keyword OVERWRITE  can be used to  force overwriting of  an existing file
      (otherwise it is an error to create a file that already exists).
@@ -697,13 +683,7 @@ func fits_open(filename, filemode, encoding=, overwrite=)
   }
 
   /* Set data primitives. */
-  if (is_void(encoding)) encoding= "xdr";
-  if (encoding != "native") {
-    set_encoding = symbol_def(encoding+"_primitives");
-    if (is_func(set_encoding) != 1) error, "bad encoding \""+encoding+"\"";
-    set_encoding, stream;
-  }
-  save, stream, complex; /* make stream aware of the definition of a complex */
+  _fits_set_primitives, stream;
 
   /* Create handle. */
   fh = _lst([], [], [1, 0, 0, 0, filemode], stream);
@@ -733,7 +713,7 @@ func fits_close(fh)
   return fh;
 }
 
-func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
+func fits_create(filename, overwrite=, bitpix=, dimlist=, extend=,
                  template=, history=, comment=, bzero=, bscale=)
 /* DOCUMENT fits_create(filename)
      Creates a new FITS file FILENAME and returns a FITS handle with mandatory
@@ -764,8 +744,7 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
      Keywords HISTORY and  COMMENT can be set to add some  comments in the new
      handle.  The values of these keywords may be array of strings.
 
-     Keywords ENCODING  and OVERWRITE  have the same  meaning as  in fits_open
-     routine (to see).
+     Keyword OVERWRITE has the same meaning as in fits_open() routine.
 
 
    SEE ALSO: fits, fits_open, fits_set, fits_set_dims. */
@@ -789,7 +768,7 @@ func fits_create(filename, encoding=, overwrite=, bitpix=, dimlist=, extend=,
   scale_comment = "data_value = BZERO + BSCALE*file_value";
 
   /* Create new file and set minimal header. */
-  fh = fits_open(filename, 'w', encoding=encoding, overwrite=overwrite);
+  fh = fits_open(filename, 'w', overwrite=overwrite);
   fits_set, fh, "SIMPLE", 'T',   "true FITS file created by Yorick";
   fits_set, fh, "BITPIX", bitpix, fits_bitpix_info(bitpix);
   fits_set_dims, fh, dimlist;
@@ -3960,6 +3939,36 @@ func fits_get_list(fh, key)
   }
   error, "syntax error in value of FITS card \"" + key + "\"";
 }
+
+/*---------------------------------------------------------------------------*/
+/* READING/WRITING OF BINARY DATA */
+
+local _FITS_XDR64, _FITS_INTEL32, _FITS_INTEL64;
+func _fits_set_primitives(stream)
+/* DOCUMENT _fits_set_primitives, stream;
+     Set binary format of data stream to XDR (eXternal Data Representation)
+     which is the same as IEEE format with 32-bits (int) and 64-bits (long)
+     integers and big-endian byte order.
+   SEE ALSO: open, set_primitives, fits_open, _fits_vopen.
+ */
+{
+  set_primitives, stream, _FITS_XDR64;
+  save, stream, complex; /* make stream aware of the definition of a complex */
+}
+
+/* XDR64 = eXternal Data Representation (IEEE standard with 32-bit int and
+   64-bit long integers and big endian byte order) */
+/*                         size   alignment   byte order */
+_FITS_XDR64 = [/*   char */   1,         1,         1,
+               /*  short */   2,         2,         1,
+               /*    int */   4,         4,         1,
+               /*   long */   8,         8,         1,
+               /*  float */   4,         4,         1,
+               /* double */   8,         8,         1,
+               /*           sign  exp   exp   man   man   man   exp
+                *           addr  addr  len   addr  len   norm  bias
+                *  float */   0,    1,    8,    9,   23,    0,  0x7f,
+               /* double */   0,    1,   11,   12,   52,    0,  0x3ff];
 
 /*---------------------------------------------------------------------------*/
 /* INITIALIZATION OF PRIVATE DATA */
