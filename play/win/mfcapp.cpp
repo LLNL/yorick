@@ -24,7 +24,7 @@ static void on_view(mfc_term_view *view);
 static void on_update_view(mfc_term_view *view, CCmdUI *ui);
 static int mfc_showing = 0;
 static void mfc_show();
-static char *mfc_cpy(HANDLE heap, const char *text, long len);
+static char *mfc_cpy(HANDLE heap, const LPTSTR text, long len);
 static int mfc_run_hack();
 static int (*w_on_launch)(int, char **)= 0;
 
@@ -246,20 +246,23 @@ mfc_worker::mfc_worker()
 BOOL
 mfc_worker::InitInstance()
 {
+  USES_CONVERSION;
   w_initialize(the_boss.m_hInstance, the_boss.m_pMainWnd->m_hWnd,
                mfc_quit, mfc_stdinit, mfc_parent);
 
   /* crack command line into argc, argv */
   HANDLE heap = GetProcessHeap();
-  LPSTR cmd_line = the_boss.m_lpCmdLine;
-  char module_name[1028];
-  DWORD len = GetModuleFileName((HMODULE)0, module_name, 1024);
-  module_name[len] = '\0';
+  LPTSTR cmd_line = the_boss.m_lpCmdLine;
+  TCHAR wmodule_name[1028];
+  char *module_name;
+  DWORD len = GetModuleFileName((HMODULE)0, wmodule_name, 1024);
+  wmodule_name[len] = '\0';
+  module_name = T2A(wmodule_name);
   w_argc = 0;
   w_argv = (char**)HeapAlloc(heap, HEAP_GENERATE_EXCEPTIONS, sizeof(char *)*9);
-  w_argv[w_argc++] = mfc_cpy(heap, w_unixpath(module_name), len);
+  w_argv[w_argc++] = mfc_cpy(heap, A2T(w_unixpath(module_name)), len);
   if (cmd_line) {
-    char *c = cmd_line;
+    LPTSTR c = cmd_line;
     char delim;
     for (;;) {
       while (c[0]==' ' || c[0]=='\t' || c[0]=='\r' || c[0]=='\n') c++;
@@ -293,8 +296,10 @@ mfc_worker::InitInstance()
 }
 
 static char *
-mfc_cpy(HANDLE heap, const char *text, long len)
+mfc_cpy(HANDLE heap, const LPTSTR wtext, long len)
 {
+  USES_CONVERSION;
+  char *text = T2A(wtext);
   if (!len) while (text[len]) len++;
   char *buf = (char *)HeapAlloc(heap, HEAP_GENERATE_EXCEPTIONS, len+1);
   char *buffer = buf;
@@ -437,12 +442,13 @@ mfc_parent(int width, int height, char *title, int hints)
 static void
 mfc_window(struct w_parent_args *args)
 {
+  USES_CONVERSION;
   mfc_child *gw = new mfc_child;
   gw->width = args->width;
   gw->height = args->height;
   gw->hints = args->hints;
   gw->child = 0;
-  gw->Create(0, args->title);
+  gw->Create(0, A2T(args->title));
   args->handle = gw->m_hWnd;
 }
 

@@ -9,6 +9,10 @@
 
 #ifndef NO_SOCKETS
 
+/* must include these BEFORE windows.h, else it includes winsock version 1! */
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 #include "config.h"
 #include "pstdlib.h"
 #include "playw.h"
@@ -92,8 +96,6 @@
  * possible race conditions?
  *
  */
-#include <winsock2.h>
-#include <ws2tcpip.h>
 
 /* NI_MAXHOST, NI_MAXSERVE not part of POSIX 1003.1 standard
  * see linux getnameinfo manpage, these values apparently "universal"
@@ -124,7 +126,7 @@ struct psckt_t {
 static psckt_t *psckt_list = 0;  /* for on_quit */
 
 static psckt_t *psckt_setup(psckt_t *sock, void *ctx, psckt_cb_t *callback);
-static void psckt_stop_thread(pskct_t *sock);
+static void psckt_stop_thread(psckt_t *sock);
 static int psckt_shutdown(psckt_t *sock);
 static void psckt_cb_manager(void *vsock);
 static void psckt_prepoller(void *vsock);
@@ -132,20 +134,19 @@ static struct addrinfo *psckt_get_ailist(const char *addr, int port,
                                          int passive);
 static int psckt_initialized = 0;
 
-static DWORD psckt_wait_thread(LPVOID lpvThreadParam);
+static DWORD __stdcall psckt_wait_thread(LPVOID lpvThreadParam);
 
 static psckt_t *
 psckt_setup(psckt_t *sock, void *ctx, psckt_cb_t *callback)
 {
   sock->callback = callback;
   sock->ctx = ctx;
-  sock->ready = sock->released = sock->thread = INVALID_SOCKET_HANDLE;
+  sock->ready = sock->released = sock->thread = INVALID_HANDLE_VALUE;
   sock->finished = sock->waiting = 0;
   sock->next = psckt_list;
   psckt_list = sock;
   if (callback) {
     DWORD thread_id;
-    HANDLE ht;
     sock->ready = CreateEvent(0, 1, 0, 0);     /* manual reset */
     sock->released = CreateEvent(0, 0, 0, 0);  /* auto reset */
     sock->thread = CreateThread(NULL, 0, psckt_wait_thread, (LPVOID)sock,
@@ -163,7 +164,7 @@ psckt_setup(psckt_t *sock, void *ctx, psckt_cb_t *callback)
 }
 
 static void
-psckt_stop_thread(pskct_t *sock)
+psckt_stop_thread(psckt_t *sock)
 {
   sock->finished = 1;
   if (sock->ready != INVALID_HANDLE_VALUE) {
@@ -220,7 +221,7 @@ psckt_shutdown(psckt_t *sock)
 }
 
 static void
-psckt_prepoller(void *vsock);
+psckt_prepoller(void *vsock)
 {
   psckt_t *sock = vsock;
   if (!sock->waiting) {
@@ -242,7 +243,7 @@ psckt_cb_manager(void *vsock)
   }
 }
 
-static DWORD
+static DWORD __stdcall
 psckt_wait_thread(LPVOID lpvThreadParam)
 {
   psckt_t *sock = lpvThreadParam;
@@ -329,7 +330,7 @@ psckt_listen(int *pport, void *ctx, psckt_cb_t *callback)
       p_free(listener);
       return 0;
     }
-    pport[0] = port = strtod(sport, 0);
+    pport[0] = port = strtol(sport, 0, 10);
   }
 
   if (listen(lfd, 10)) {
