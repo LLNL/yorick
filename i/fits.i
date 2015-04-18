@@ -579,8 +579,8 @@ func fits_write(filename, data, overwrite=,
      have the same meaning as in fits_create (to see).
 
      If BITPIX  is explicitely  specified and corresponds  to an  integer file
-     type (8,  16 or 32) and  neither BSCALE nor BZERO  are specified, optimal
-     BSCALE  and  BZERO  values  will  be  automatically  computed  thanks  to
+     type  (8, 16,  32 or  64)  and neither  BSCALE nor  BZERO are  specified,
+     optimal BSCALE and BZERO values  will be automatically computed thanks to
      fits_best_scale (which see).
 
 
@@ -610,25 +610,22 @@ func fits_write(filename, data, overwrite=,
 }
 
 func fits_best_scale(bitpix, cmin, cmax, debug=)
-/* DOCUMENT fits_best_scale(bitpix, data)
-         or fits_best_scale(bitpix, cmin, cmax)
-     Returns  [BSCALE,BZERO] where  BSCALE and  BZERO are  optimal  values for
+/* DOCUMENT fits_best_scale(bitpix, data);
+         or fits_best_scale(bitpix, cmin, cmax);
+     Returns  [BSCALE,BZERO] where  BSCALE and  BZERO are  optimal values  for
      rescaling to BITPIX file type.  BITPIX must correspond to an integer type
-     (BITPIX = 8, 16 or 32).   The array DATA contains all the physical values
-     to save  to the file; alternatively,  CMIN and CMAX give  the minimal and
-     maximal values in physical data.
+     (BITPIX =  8, 16, 32  or 64).  The array  DATA contains all  the physical
+     values to save to the file; alternatively, CMIN and CMAX give the minimal
+     and maximal values in physical data.
 
    SEE ALSO: fits, fits_write. */
 {
   if (bitpix == 8) {
-    fmin = 0;
-    fmax = 255;
-  } else if (bitpix == 16) {
-    fmin = -32768;
-    fmax =  32767;
-  } else if (bitpix == 32) {
-    fmin = -2147483648;
-    fmax =  2147483647;
+    fmin =   0.0;
+    fmax = 255.0;
+  } else if (bitpix == 16 || bitpix == 32 || bitpix == 64) {
+    fmin = -(2.0^(bitpix - 1));
+    fmax = -1.0 - fmin;
   } else {
     error, "expecting BITPIX for integer file type";
   }
@@ -1998,27 +1995,31 @@ func fits_read_array(fh, which=, rescale=)
   bitpix = fits_get_bitpix(fh, 1);
   if (bitpix == 8) {
     data_type = char;
-    data_size = 1;
+    elem_size = 1;
   } else if (bitpix == 16) {
     data_type = short;
-    data_size = 2;
+    elem_size = 2;
   } else if (bitpix == 32) {
+    data_type = int;
+    elem_size = 4;
+  } else if (bitpix == 64) {
     data_type = long;
-    data_size = 4;
+    elem_size = 8;
   } else if (bitpix == -32) {
     data_type = float;
-    data_size = 4;
+    elem_size = 4;
   } else if (bitpix == -64) {
     data_type = double;
-    data_size = 8;
+    elem_size = 8;
   } else {
-    error, "congratulations: you have found a BUG!";
+    error, "bad BITPIX value";
   }
   data = array(data_type, dims);
   address = offset(3);
-  if (which > 1) address += (which - 1)*numberof(data)*data_size;
-  if (_read(_car(fh,4), address, data) != numberof(data))
-    error, "cannot read data";
+  if (which > 1) address += (which - 1)*numberof(data)*elem_size;
+  if (_read(_car(fh,4), address, data) != numberof(data)) {
+    error, "short FITS file";
+  }
 
   /* Possibly rescale pixel values. */
   if (is_void(rescale) || rescale) {
@@ -2122,17 +2123,26 @@ func fits_write_array(fh, data, which=, rescale=)
       data_type = structof(data); /* should be "double" now */
     }
     if (bitpix == 8) {
+      elem_size = 1;
       file_type = char;
       file_min = 0;
       file_max = 255;
     } else if (bitpix == 16) {
+      elem_size = 2;
       file_type = short;
-      file_min = -32768;
-      file_max =  32767;
+      file_min = -1 - (file_max = 0x7FFF);
     } else if (bitpix == 32) {
+      elem_size = 4;
+      file_type = int;
+      file_min = -1 - (file_max = 0x7FFFFFFF);
+    } else if (bitpix == 64) {
+      elem_size = 8;
       file_type = long;
-      file_min = -2147483648;
-      file_max =  2147483647;
+      if (sizeof(file_type) >= 8) {
+        file_min = -1 - (file_max = 0x7FFFFFFFFFFFFFFF);
+      } else {
+        file_min = -1 - (file_max = 2.0^63.0 - 1.0);
+      }
     } else {
       error, "bad BITPIX value in FITS header";
     }
@@ -2148,9 +2158,15 @@ func fits_write_array(fh, data, which=, rescale=)
   } else {
     /* Floating point type. */
     if (bitpix == -32) {
-      if (data_type != float) data = float(data);
+      elem_size = 4;
+      if (data_type != float) {
+        data = float(data);
+      }
     } else if (bitpix == -64) {
-      if (data_type != double) data = double(data);
+      elem_size = 8;
+      if (data_type != double) {
+        data = double(data);
+      }
     } else {
       error, "bad BITPIX value in FITS header";
     }
@@ -2158,15 +2174,17 @@ func fits_write_array(fh, data, which=, rescale=)
 
   /* Write data and update offsets (note: the padding to a multiple of 2880
      bytes will be done when creating next HDU with fits_new_hdu). */
-  data_size = sizeof(data);
+  nbytes = elem_size*numberof(data); /* as written in file */
   address = offset(3);
   if (which != 1) {
-    address += (which - 1)*data_size;
-    if (address > offset(4)) /* pad file with null's */
+    address += (which - 1)*nbytes;
+    if (address > offset(4)) {
+      /* pad file with null's */
       _write, stream, offset(4), array(char, address - offset(4));
+    }
   }
   _write, stream, address, data;
-  offset(4) = max(offset(4), address + data_size);
+  offset(4) = max(offset(4), address + nbytes);
   return fh;
 }
 
