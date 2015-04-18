@@ -345,6 +345,7 @@ local fits;
        fits_new_image      - creates a new "IMAGE" HDU
        fits_read_array     - read array data from current HDU
        fits_write_array    - write array data in current HDU
+       fits_read_group     - read random group data from current HDU
 
      Binary tables:
        fits_new_bintable   - creates a new "BINTABLE" HDU
@@ -3285,6 +3286,329 @@ _fits_bintable_setup, 'A', _FITS_TFORM_STRING, char, 1;
 _fits_bintable_setup, 'P', _FITS_TFORM_POINTER, long, 8; /* read as 2 long's */
 _fits_bintable_setup, 'X', _FITS_TFORM_BIT;
 _fits_bintable_setup = []; /* destroy the helper function */
+
+/*---------------------------------------------------------------------------*/
+/* RANDOM GROUP */
+
+func fits_read_group(fh, fix)
+/* DOCUMENT ptr = fits_read_group(fh)
+
+     Reads data from random group in current HDU of FITS handle FH.
+     The output is a pointer array, say PTR, such that:
+
+     *PTR(1) = PARAM array of PCOUNT-by-GCOUNT parameter values
+     *PTR(2) = DATA array of data (with NDIMS = NAXIS - 1 dimensions)
+     *PTR(3) = PTYPE array of PCOUNT strings
+     *PTR(4) = PUNIT array of PCOUNT strings (non-standard)
+     *PTR(5) = CTYPE array of NDIMS strings: axis name
+     *PTR(6) = CUNIT array of NDIMS strings: with axis units
+     *PTR(7) = CRPIX array of NDIMS reals: 1-based index of reference point
+     *PTR(8) = CRVAL array of NDIMS reals: coordinate value of reference point
+     *PTR(9) = CDELT array od NDIMS reals: coordinate step along this axis
+     *PTR(10)= CROTA array od NDIMS reals: coordinate rotation angle
+
+
+   SEE ALSO: fits_open, fits_read.
+ */
+{
+  hdu = fits_current_hdu(fh);
+  if (fits_get_groups(fh) != _fits_true) {
+    error, swrite(format="HDU %d has no random group", hdu);
+  }
+  naxis = fits_get_naxis(fh, fix);
+  if (naxis < 1) {
+    error, swrite(format="bad NAXIS value for random group in HDU %d", hdu);
+  }
+  fmt = "NAXIS%d";
+  dimlist = array(long, naxis);
+  for (k = 1; k <= naxis; ++k) {
+    key = swrite(format=fmt, k);
+    id = fits_id(key);
+    value = fits_get_special(fh, key, id, 3 + k, fix);
+    if (structof(value) != long || value < 0) {
+      error, "bad "+key+" value";
+    }
+    dimlist(k) = value;
+  }
+  if (dimlist(1) != 0L) {
+    error, swrite(format="NAXIS1 must be 0 for random group in HDU %d", hdu);
+  }
+  if (naxis > 1) {
+    dimlist(1) = naxis - 1;
+    ndata = dimlist(2);
+    for (k = 3; k <= naxis; ++k) {
+      ndata *= dimlist(k);
+    }
+  } else {
+    ndata = 0L;
+  }
+
+  gcount = fits_get_gcount(fh);
+  pcount = fits_get_pcount(fh);
+  number = gcount*(pcount + ndata);
+  ptr = array(pointer, 10);
+  if (number <= 0) {
+    return ptr;
+  }
+
+  /* Read all the values (parameters and group data). */
+  bitpix = fits_get_bitpix(fh, fix);
+  type = fits_bitpix_type(bitpix, native=0);
+  buffer = array(type, pcount + ndata, gcount);
+  address = _car(fh, 3)(3);
+  stream = _car(fh, 4);
+  if (type != char) {
+    _read, stream, address, buffer;
+  } else if (_read(stream, address, buffer) != number) {
+    error, swrite(format="short file while reading random group data in HDU %d",
+                  hdu);
+  }
+
+  /* Local variable to query values and error message format. */
+  local value;
+  fmt = "bad data type for keyword %s in HDU %d";
+
+  /* Get parameters and properly scale their values. */
+  type = fits_bitpix_type(bitpix, native=1);
+  if (pcount >= 1) {
+    param = type(buffer(1:pcount, ..));
+    ptype = array(string, pcount);
+    punit = array(string, pcount);
+    nth = swrite(format="%d", indgen(pcount));
+    for (k = 1; k <= pcount; ++k) {
+
+      key = "PTYPE" + nth(k);
+      if (_fits_get_string(value, fh, key)) {
+        if (! is_void(value)) _fits_warn, swrite(format=fmt, key, hdu);
+        value = key;
+      }
+      ptype(k) = value;
+
+      key = "PUNIT" + nth(k);
+      if (_fits_get_string(value, fh, key)) {
+        if (! is_void(value)) _fits_warn, swrite(format=fmt, key, hdu);
+      } else {
+        punit(k) = value;
+      }
+
+      key = "PZERO" + nth(k);
+      if (_fits_get_real(value, fh, key)) {
+        if (! is_void(value)) _fits_warn, swrite(format=fmt, key, hdu);
+        value = 0.0;
+      }
+      pzero = value;
+
+      key = "PSCAL" + nth(k);
+      if (_fits_get_real(value, fh, key)) {
+        if (! is_void(value)) _fits_warn, swrite(format=fmt, key, hdu);
+        value = 1.0;
+      }
+      pscal = value;
+
+      if (pzero != 0.0 || pscal != 1.0) {
+        param(k, ..) = pscal*param(k, ..) + pzero;
+      }
+    }
+    ptype = fits_toupper(ptype);
+
+    /* Account for multi-word precision: add (after scaling)
+       parameters with same PTYPE. */
+    select = array(1n, pcount);
+    flag = 0n;
+    for (j = 1; j <= pcount; ++j) {
+      for (k = j + 1; k <= pcount; ++k) {
+        if (ptype(j) == ptype(k)) {
+          param(j, ..) += param(k, ..);
+          select(k) = 0n;
+          flag = 1n;
+        }
+      }
+    }
+    if (flag) {
+      j = where(select);
+      param = param(j, ..);
+      ptype = ptype(j, ..);
+      punit = punit(j, ..);
+    }
+  } else {
+    param = [];
+    ptype = [];
+    punit = [];
+  }
+
+  /* Get data values and information. */
+  if (ndata >= 1) {
+    if (gcount > 1) {
+      data = array(type, dimlist, gcount);
+    } else {
+      data = array(type, dimlist);
+    }
+    data(*) = buffer(pcount + 1 : 0, ..)(*);
+    buffer = [];
+    bscale = fits_get_bscale(fh);
+    bzero = fits_get_bzero(fh);
+    if (bscale != 1.0 || bzero != 0.0) {
+      data = bscale*data + bzero;
+    }
+    ncols = naxis - 1;
+    ctype = array(string, ncols);
+    cunit = array(string, ncols);
+    crpix = array(double, ncols);
+    crval = array(double, ncols);
+    cdelt = array(double, ncols);
+    crota = array(double, ncols);
+    nth = swrite(format="%d", indgen(2 : naxis));
+    for (k = 1; k < naxis; ++k) {
+
+      key = "CTYPE" + nth(k);
+      if (_fits_get_string(value, fh, key)) {
+        if (! is_void(value)) _fits_warn, swrite(format=fmt, key, hdu);
+        value = key;
+      }
+      ctype(k) = value;
+
+      key = "CUNIT" + nth(k);
+      if (_fits_get_string(value, fh, key)) {
+        if (! is_void(value)) _fits_warn, swrite(format=fmt, key, hdu);
+      } else {
+        cunit(k) = value;
+      }
+
+      key = "CRPIX" + nth(k);
+      def = 1.0;
+      if (_fits_get_real(value, fh, key, def) == 2) {
+        _fits_warn, swrite(format=fmt, key, hdu);
+        value = def;
+      }
+      crpix(k) = value;
+
+      key = "CRVAL" + nth(k);
+      def = 1.0;
+      if (_fits_get_real(value, fh, key, def) == 2) {
+        _fits_warn, swrite(format=fmt, key, hdu);
+        value = def;
+      }
+      crval(k) = value;
+
+      key = "CDELT" + nth(k);
+      def = 1.0;
+      if (_fits_get_real(value, fh, key, def) == 2) {
+        _fits_warn, swrite(format=fmt, key, hdu);
+        value = def;
+      }
+      cdelt(k) = value;
+
+      crota(k) = value;
+      key = "CROTA" + nth(k);
+      def = 0.0;
+      if (_fits_get_real(value, fh, key, def) == 2) {
+        _fits_warn, swrite(format=fmt, key, hdu);
+        value = def;
+      }
+      crota(k) = value;
+    }
+    ctype = fits_toupper(ctype);
+
+  } else {
+    data = [];
+    ctype = [];
+    cunit = [];
+    crpix = [];
+    crval = [];
+    cdelt = [];
+    crota = [];
+  }
+
+  /* Build up result. */
+  ptr( 1) = &param;
+  ptr( 2) = &data;
+  ptr( 3) = &ptype;
+  ptr( 4) = &punit;
+  ptr( 5) = &ctype;
+  ptr( 6) = &cunit;
+  ptr( 7) = &crpix;
+  ptr( 8) = &crval;
+  ptr( 9) = &cdelt;
+  ptr(10) = &crota;
+
+  return ptr;
+}
+
+local _fits_get_logical, _fits_get_integer, _fits_get_string;
+local _fits_get_real, _fits_get_complex;
+/* DOCUMENT _fits_get_integer(variable, fh, key [, def]);
+         or _fits_get_real(variable, fh, key [, def]);
+         or _fits_get_complex(variable, fh, key [, def]);
+         or _fits_get_string(variable, fh, key [, def]);
+         or _fits_get_logical(variable, fh, key [, def]);
+
+     Get the value of FITS keyword KEY with a given type.  The value is stored
+     into VARIABLE (a local symbol  for the caller) after proper conversion if
+     required.  Optional  argument DEF provides  a default value.   The result
+     is: 0 to indicate success, 1 to  indicate that no such card was found, or
+     2 to indicate that the card has invalid type.
+
+   SEE ALSO: fits_get.
+ */
+func _fits_get_logical(&value, fh, key, def)
+{
+  value = fits_get(fh, key);
+  if (is_void(value)) {
+    if (is_void(def)) return 1;
+    value = def;
+  }
+  return (structof(value) == char ? 0 : 2);
+}
+func _fits_get_integer(&value, fh, key, def)
+{
+  value = fits_get(fh, key);
+  if (is_void(value)) {
+    if (is_void(def)) return 1;
+    value = def;
+  }
+  return (structof(value) == long ? 0 : 2);
+}
+func _fits_get_real(&value, fh, key, def)
+{
+  value = fits_get(fh, key);
+  if (is_void(value)) {
+    if (is_void(def)) return 1;
+    value = def;
+  }
+  if ((s = structof(value)) == double) {
+    return 0;
+  }
+  if (s == long) {
+    value = double(value);
+    return 0;
+  }
+  return 2;
+}
+func _fits_get_complex(&value, fh, key, def)
+{
+  value = fits_get(fh, key);
+  if (is_void(value)) {
+    if (is_void(def)) return 1;
+    value = def;
+  }
+  if ((s = structof(value)) == complex) {
+    return 0;
+  }
+  if (s == double || s == long) {
+    value = complex(value);
+    return 0;
+  }
+  return 2;
+}
+func _fits_get_string(&value, fh, key, def)
+{
+  value = fits_get(fh, key);
+  if (is_void(value)) {
+    if (is_void(def)) return 1;
+    value = def;
+  }
+  return (structof(value) == string ? 0 : 2);
+}
 
 /*---------------------------------------------------------------------------*/
 /* MISCELLANEOUS */
