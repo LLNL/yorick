@@ -4061,61 +4061,121 @@ func fits_get(fh, pattern, &comment, default=, promote=)
 
 /* PRIVATE */ local _fits_match_id;
 func fits_match(fh, pattern)
-/* DOCUMENT fits_match(fh, pattern)
-     Return array  of int's which are  non-zero where FITS card  names in FITS
-     handle FH match PATTERN.  PATTERN must  be a scalar string or a numerical
-     identifier.   As a special  case, if  PATTERN is  of the  form "KEYWORD#"
-     (i.e.   last character  of PATTERN  is a  '#'), then  any  human readable
-     integer  will  match the  '#',  e.g.  "NAXIS#"  will match  "NAXIS3"  and
-     "NAXIS11" but not "NAXIS" nor "QNAXIS4.
+/* DOCUMENT fits_match(fh, pattern);
+
+     The function  fits_match() returns an  array of int's which  are non-zero
+     where FITS card names in FITS handle FH match PATTERN.  PATTERN must be a
+     scalar string or a numerical identifier.
+
+     For string patterns,  the last character of PATTERN may be  a hash '#' to
+     match any  human readable integer  (in decimal notation), or  an asterisk
+     '*' to  match anything.  For  instance, "NAXIS#" will match  "NAXIS3" and
+     "NAXIS11" but not "NAXIS" nor "QNAXIS4".
 
      Global/extern   variable  _fits_match_id  is   set  with   the  numerical
-     identifier of PATTERN (without last '#' if any).
+     identifier of PATTERN (without last '#' or '*' if any).
 
-     "HIERARCH"  cards  are  supported.   The  '#' special  character  is  not
-     supported on them, though.
+     "HIERARCH" cards are supported.  The '#' special character is not
+     supported on them, though.  For instance, using PATTERN
+
+         "HIERARCH ESO ISS TEL2 RA"
+
+     will match the FITS cards  starting with PATTERN (without considering the
+     case of letters), then any number of spaces, then an equal sign, .  Using
+     PATTERN
+
+         "HIERARCH ESO *"
+
+     will match "HIERARCH ESO ISS TEL2 RA" and "HIERARCH ESO ISS TEL2 DEC" but
+     not "HIERARCH ESOTEL RA".
 
 
    SEE ALSO: fits, fits_get_cards, fits_rehash. */
 {
-  extern _fits_multiplier, _fits_match, _id_fits_idtype;
-  if (! is_array(_car(fh,1))) return;
-  if ((s = structof(pattern)) == _fits_idtype) {
-    return (_car(fh,2) == (_fits_match_id = pattern));
-  } else if (s != string) {
+  extern _fits_match_id;
+
+  /* Minimal checking of the arguments. */
+  arg_type = 0;
+  if (is_scalar(pattern)) {
+    if (is_string(pattern)) {
+      arg_type = 1;
+    } else if (_fits_check_idtype(pattern)) {
+      arg_type = 2;
+    }
+  }
+  if (arg_type == 0) {
     error, "PATTERN must be a scalar string or a numerical identifier";
   }
-  if (strpart(pattern, 1:8) == "HIERARCH") {
-    test = (_car(fh,2) == (_fits_match_id = _fits_id_hierarch));
-    if (anyof(test)) {
-      index = where(test);
-      test(index) = (fits_trimright(strtok(_car(fh,1)(index), "=")(1,))
-                     == fits_trimright(pattern));
+
+  /* Search the matching cards in current HDU. */
+  if (! is_array(_car(fh,1))) {
+    _fits_match_id = [];
+    return; /* no cards */
+  }
+  if (arg_type == 2) {
+    return (_car(fh,2) == (_fits_match_id = _fits_idtype(pattern)));
+  }
+  if ((last = strpart(pattern, 0:0)) == "#") {
+    /* Match a keyword with any number appended. */
+    if ((len = strlen(pattern)) > 7) {
+      _fits_match_id = -1; // means something wrong
+      return array(0n, numberof(_car(fh,2)));
     }
-    return test;
-  }
-  if (strpart(pattern, 0:0) != "#") {
-    return (_car(fh,2) == (_fits_match_id = fits_id(pattern)));
-  }
-  if ((len = strlen(pattern)) > 7) {
-    _fits_match_id = -1.0; // means something wrong
-    return array(0n, numberof(_car(fh,2)));
-  }
-  if (len <= 1) {
-    _fits_match_id = 0.0;
-    ok = array(1n, numberof(_car(fh,2)));
+    if (len <= 1) {
+      _fits_match_id = _fits_id_null;
+      test = array(1n, numberof(_car(fh,2)));
+    } else {
+      _fits_match_id = fits_id(strpart(pattern, 1:-1));
+      test = (_car(fh,2) % _fits_multiplier(len)) == _fits_match_id;
+    }
+    if (is_array((i = where(test)))) {
+      u = v = string(0);
+      n = numberof((w = strpart(_car(fh,1)(i), len:8)));
+      for (j = 1; j <= n; ++j) {
+        if (sread(format="%[0-9]%s", w(j), u, v) != 1) {
+          test(i(j)) = 0n;
+        }
+      }
+    }
+  } else if (last == "*") {
+    /* Match a keyword with anything appended. */
+    if ((len = strlen(pattern)) <= 1) {
+      /* All cards do match. */
+      _fits_match_id = _fits_id_null;
+      test = array(1n, numberof(_car(fh,2)));
+    } else {
+      _fits_match_id = fits_id(strpart(pattern, 1:-1));
+      if (_fits_match_id == _fits_id_hierarch) {
+        /* Slow search. */
+        test = strglob(pattern, _car(fh,1), case=0, esc=0);
+      } else {
+        /* Fast search based on numerical identifiers. */
+       test = (_car(fh,2) % _fits_multiplier(len)) == _fits_match_id;
+      }
+    }
   } else {
-    _fits_match_id = fits_id(strpart(pattern, 1:-1));
-    ok = (_car(fh,2) % _fits_multiplier(len)) == _fits_match_id;
-  }
-  if (is_array((i = where(ok)))) {
-    u = v = string(0);
-    n = numberof((w = strpart(_car(fh,1)(i), len:8)));
-    for (j=1 ; j<=n ; ++j) {
-      if (sread(format="%[0-9]%s", w(j), u, v) != 1) ok(i(j)) = 0n;
+    _fits_match_id = fits_id(pattern);
+    test = (_car(fh,2) == _fits_match_id);
+    if (_fits_match_id == _fits_id_hierarch && anyof(test)) {
+      /* Unfortunately, strgrep() cannot be used to match because, the case of
+         letters is significant and because it would break if PATTERN has some
+         special characters. */
+      index = where(test);
+      test = array(0n, dimsof(test)); /* reset the result of the test */
+      tmp = _car(fh,1)(index); /* all cards starting with "HIERARCH " */
+      sel = strfind("=", tmp); /* locate the 1st '=' in these cards */
+      sel(1,..) = 0; /* will extract starting from first character ... */
+      --sel(2, ..); /* ... to the character just before the 1st '='; cards
+                       with no '=' will be extracted as empty strings */
+      sel = where(strcase(1, fits_trimright(pattern)) ==
+                  strcase(1, fits_trimright(strpart(tmp, sel))));
+      if (is_array(sel)) {
+        test(index(sel)) = 1n;
+      }
     }
   }
-  return ok;
+
+  return test;
 }
 
 func fits_get_cards(fh, pattern)
@@ -4441,7 +4501,7 @@ _fits_false = 'F';
      your FITS handles: see fits_rehash).
    SEE ALSO: fits, fits_init, fits_rehash, fits_id, fits_key. */
 
-/* PRIVATE */ local _fits_min_id, _fits_max_id, _fits_id_null, _fits_idtype;
+/* PRIVATE */ local _fits_min_id, _fits_max_id, _fits_id_null, _fits_idtype, _fits_check_idtype;
 /* PRIVATE */ local _fits_id_simple, _fits_id_bitpix, _fits_id_naxis, _fits_id_end;
 /* PRIVATE */ local _fits_id_comment, _fits_id_history, _fits_id_xtension, _fits_id_bscale;
 /* PRIVATE */ local _fits_id_bzero, _fits_id_gcount, _fits_id_pcount, _fits_id_hierarch;
@@ -4509,7 +4569,7 @@ func fits_init(sloopy=, allow=, blank=)
    SEE ALSO: fits, fits_rehash. */
 {
   extern _fits_digitize,    _fits_multiplier, _fits_alphabet;
-  extern _fits_min_id,      _fits_max_id,     _fits_idtype;
+  extern _fits_min_id,      _fits_max_id,     _fits_idtype, _fits_check_idtype;
   extern _fits_id_simple,   _fits_id_bitpix;
   extern _fits_id_naxis,    _fits_id_end,     _fits_id_null;
   extern _fits_id_comment,  _fits_id_history, _fits_id_hierarch;
@@ -4541,8 +4601,10 @@ func fits_init(sloopy=, allow=, blank=)
   basis = numberof(_fits_alphabet);
   if (sizeof(long) >= 8) {
     _fits_idtype = long;
+    _fits_check_idtype = is_integer;
   } else {
     _fits_idtype = double;
+    _fits_check_idtype = is_real;
   }
   _fits_multiplier = _fits_idtype(basis)^indgen(0:7);
   _fits_max_id = sum(_fits_multiplier*(basis - 1));
