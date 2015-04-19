@@ -2336,10 +2336,10 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   /* Find the format. */
   tform3 = "%d%1[LXBIJAEDCMP]%s";
   tform2 =   "%1[LXBIJAEDCMP]%s";
-  tfields = numberof(ptr);
-  mult = size = array(long, tfields);
+  ncols = numberof(ptr);
+  mult = size = array(long, ncols);
   nrows = -1;
-  for (i = 1; i <= tfields; ++i) {
+  for (i = 1; i <= ncols; ++i) {
     local arr;
     eq_nocopy, arr, *ptr(i);
     if (is_void(arr)) {
@@ -2617,7 +2617,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   /* Update header information then write header. */
   size *= mult; /* number of bytes per rows for each field */
   nbytes = sum(size);
-  pcount = _fits_bintable_header(fh, nbytes, nrows, tfields);
+  pcount = _fits_bintable_header(fh, nbytes, nrows, ncols);
   fits_write_header, fh;
 
   /* Write data. */
@@ -4327,34 +4327,64 @@ func fits_get_comment(fh) {
 
 
 func fits_get_list(fh, key)
-/* DOCUMENT fits_get_list(fh, key)
+/* DOCUMENT fits_get_list(fh, key);
       Get value of FITS card KEY in FH and returns it as a vector of integers.
       This function  is intended  to parse, e.g.  the TDIM# cards  in BINTABLE
       extensions.  The syntax of the card must be a string of the form:
         '(ARG1,ARG2,...)'
-      where ARG1, etc are human readable integer values.
+      where ARG1, etc. are human readable integer values.
    SEE ALSO: fits_get.
  */
 {
   str = fits_get(fh, key);
-  if (is_void(str)) return;
-  if (structof(str) != string) {
-    error, "unexpected data type for FITS card \"" + key + "\"";
-  }
-  str = strtrim(str, 3);
-  c = strchar(str);
-  n = numberof(c);
-  if (n >= 3 && c(1) == '(' && c(n-1) == ')' && sum(c == ')') == 1) {
-    number = sum(c == ',') + 1;
-    result = array(long, number);
-    format_first = "(%d %[^\a]";
-    format_other = ", %d %[^\a]";
-    value = 0L;
-    k = 0;
-    while (sread(str, format=(k ? format_other : format_first), value, str) == 2) {
-      result(++k) = value;
-      if (k >= number) return result;
+  if (is_string(str) && is_scalar(str)) {
+    /* Variables: o = open, v= value, c = close, s = string, t = tail,
+     *            n = number of matches.
+     */
+    o = c = s = t = string();
+    v = 0L;
+
+    /* Parse first value (if any). */
+    n = sread(str, format=" %1[(]%d %1[,)] %[^\a]", o, v, c, t);
+    if (n == 3) {
+      if (c == ")") {
+        /* A single integer. */
+        return [v];
+      }
+    } else if (n == 4) {
+      if (c == ",") {
+        /* A list of integers. */
+        list = array(long, (strlen(str) - 1)/2);
+        list(1) = v;
+        j = 1;
+        f = " %d %1[,)] %[^\a]";
+        for (;;) {
+          n = sread(t, format=f, v, s, t);
+          if (n == 3 && s == c) {
+            list(++j) = v;
+          } else if (n == 2 && s == ")") {
+            list(++j) = v;
+            return list(1:j);
+          } else {
+            break;
+          }
+        }
+      }
+    } else if (n == 1) {
+      /* Check that string matches "()" with any number of spaces. */
+      if (sread(str, format=" %1[(] %1[)] %[^\a]", o, s, t) == 2) {
+        return;
+      }
+    } else if (n == 0) {
+      /* Check that string is empty (with any number of spaces). */
+      if (sread(str, format=" %[^\a]", t) == 0) {
+        return;
+      }
     }
+  } else if (is_void(str)) {
+    return;
+  } else if (! is_string(str)) {
+    error, "unexpected data type for FITS card \"" + key + "\"";
   }
   error, "syntax error in value of FITS card \"" + key + "\"";
 }
