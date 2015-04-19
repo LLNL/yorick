@@ -388,7 +388,9 @@ YgetColor(Symbol *stack)
     int *color = YGet_I(stack, 0, &dims);
     if (dims && (dims->next || dims->number!=3))
       YError("color must be integer scalar or triple (rgb)");
-    return dims? P_RGB(color[0],color[1],color[2]) : (color[0]&0xff);
+    if (dims) return P_RGB(color[0],color[1],color[2]);
+    if (color[0] < 256) return (color[0]&0xff); /* indexed color */
+    return ((color[0]&0xffffff) | 0x01000000);  /* reform packed RGB color */
   }
 }
 
