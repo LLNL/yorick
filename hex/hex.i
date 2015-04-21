@@ -270,14 +270,12 @@ func bi_dir(tracker, mesh, rays, slimits, &c, &s)
   /* track in positive direction, then in negative direction flipped */
   local sp, sm;
   cp = tracker(mesh, rays, sp);
-  np = track_reduce(cp, sp, rays, slimits);
+  if (is_void(slimits)) slimits = [-1.e35, 1.e35];
+  np = track_reduce(cp, sp, rays, max(slimits, 0.));
   rays(..,2) = -rays(..,2);
-  if (!is_void(slimits)) {
-    slimits += 0.;
-    slimits = -slimits(2:1:-1,..);
-  }
+  slimits = -slimits(2:1:-1,..);
   cm = tracker(mesh, rays, sm);
-  nm = track_reduce(cm, sm, rays, slimits, flip=1);
+  nm = track_reduce(cm, sm, rays, max(slimits, 0.), flip=1);
 
   return track_combine(nm,cm,sm, np,cp,sp, c, s);
 }
