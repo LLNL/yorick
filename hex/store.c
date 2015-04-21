@@ -219,28 +219,28 @@ long ray_reduce(long len, long *cell, real *s, long *nlist,
                 real slims[][2])
 {
   long n, i, c;
-  int flip= len<0;
-  if (flip) len= -len;
+  int flip = len<0;
+  if (flip) len = -len;
 
   if (!nlist) {
     for (n=i=0 ; i<len ; i+=c) {
-      c= cell[i];
-      if (!c || (!i && c<0)) c= 1;  /* illegal, garbage out */
-      if (c<0) c= -c;
+      c = cell[i];
+      if (!c || (!i && c<0)) c = 1;  /* illegal, garbage out */
+      if (c<0) c = -c;
       else n++;
     }
 
   } else if (!slims) {
     long j;
     for (n=i=j=0 ; i<len ; ) {
-      c= cell[i];
-      if (!c || (!i && c<0)) c= 1;
-      if (i+c > len) c= len-i;
-      if (c<0) { c= -c;  nlist[n]+= c-1; }
-      else     { nlist[n++]= c-1; }
+      c = cell[i];
+      if (!c || (!i && c<0)) c = 1;
+      if (i+c > len) c = len-i;
+      if (c<0) { c = -c;  nlist[n] += c-1; }
+      else     { nlist[n++] = c-1; }
       for (i++ ; --c ; i++,j++) {
-        cell[j]= cell[i];
-        s[j]= s[i]-s[i-1];
+        cell[j] = cell[i];
+        s[j] = s[i]-s[i-1];
       }
     }
 
@@ -248,29 +248,29 @@ long ray_reduce(long len, long *cell, real *s, long *nlist,
     long j;
     real sn=0., sx=0., s0, s1;
     for (n=i=j=0 ; i<len ; ) {
-      c= cell[i];
-      if (!c || (!i && c<0)) c= 1;
-      if (i+c > len) c= len-i;
-      if (c<0) { c= -c;  nlist[n]+= c-1; }
-      else     { sn= slims[n][0];  sx= slims[n][1];  nlist[n++]= c-1; }
-      for (i++,s1=s[i] ; --c ; i++,s1=s0) {
-        s0= s[i];
+      c = cell[i];
+      if (!c || (!i && c<0)) c = 1;
+      if (i+c > len) c = len-i;
+      if (c<0) { c = -c;  nlist[n] += c-1; }
+      else     { sn = slims[n][0];  sx = slims[n][1];  nlist[n++] = c-1; }
+      for (s0=s[i++] ; --c ; i++,s0=s1) {
+        s1 = s[i];
         if (s0<sn) {
           if (s1<=sn) {
             nlist[n-1]--;
             continue;
           }
-          s0= sn;
+          s0 = sn;
         }
-        if (s0>sx) {
-          if (s1>=sx) {
+        if (s1>sx) {
+          if (s0>=sx) {
             nlist[n-1]--;
             continue;
           }
-          s0= sx;
+          s1 = sx;
         }
-        cell[j]= cell[i];
-        s[j]= s0-s1;
+        cell[j] = cell[i];
+        s[j] = s1-s0;
         j++;
       }
     }
