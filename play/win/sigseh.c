@@ -60,7 +60,9 @@ w_catch(int code)
            code==EXCEPTION_FLT_UNDERFLOW ||
            code==EXCEPTION_FLT_INEXACT_RESULT ||
            code==EXCEPTION_FLT_DENORMAL_OPERAND ||
-           code==EXCEPTION_FLT_STACK_CHECK)       code = PSIG_FPE;
+           code==EXCEPTION_FLT_STACK_CHECK ||
+           code==STATUS_FLOAT_MULTIPLE_FAULTS ||
+           code==STATUS_FLOAT_MULTIPLE_TRAPS)       code = PSIG_FPE;
   else if (code==EXCEPTION_ACCESS_VIOLATION ||
            code==EXCEPTION_IN_PAGE_ERROR ||
            code==EXCEPTION_ARRAY_BOUNDS_EXCEEDED) code = PSIG_SEGV;
