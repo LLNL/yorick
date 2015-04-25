@@ -1,0 +1,512 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|Win32">
+      <Configuration>Template</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|x64">
+      <Configuration>Template</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <Keyword>MFCProj</Keyword>
+    <ProjectGuid>{C0523648-3F4A-4E0B-8902-4BE9D61F20CE}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\Release\</OutDir>
+    <IntDir>.\..\Release\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\Debug\</OutDir>
+    <IntDir>.\..\Debug\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>..\play;..\play\win;..\gist;..\yorick;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\Release\yflat.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\Release\</ProgramDataBaseFileName>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\..\Release\yflat.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\Release\yflat.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\..\Release\yflat.exe</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>..\play;..\play\win;..\gist;..\yorick;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\Release\yflat.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\Release\</ProgramDataBaseFileName>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\..\Release\yflat.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\Release\yflat.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\..\Release\yflat.exe</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\play;..\play\win;..\gist;..\yorick;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\Debug\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\Debug\yflat.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\Debug\</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\..\Debug\yflat.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\Debug\yflat.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\..\Debug\yflat.exe</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\play;..\play\win;..\gist;..\yorick;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\..\Debug\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\..\Debug\yflat.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\..\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\Debug\</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\..\Debug\yflat.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\Debug\yflat.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\..\Debug\yflat.exe</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\drat\bound.c" />
+    <ClCompile Include="..\drat\drat.c" />
+    <ClCompile Include="..\drat\track.c" />
+    <ClCompile Include="..\drat\trans.c" />
+    <ClCompile Include="..\drat\ydrat.c" />
+    <ClCompile Include="..\fft\cfft2.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Disabled</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\fft\cfftb.c" />
+    <ClCompile Include="..\fft\cfftf.c" />
+    <ClCompile Include="..\fft\cffti.c" />
+    <ClCompile Include="..\fft\roll2.c" />
+    <ClCompile Include="..\gist\cgm.c" />
+    <ClCompile Include="..\gist\clip.c" />
+    <ClCompile Include="..\gist\draw.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\gist\draw0.c" />
+    <ClCompile Include="..\gist\engine.c" />
+    <ClCompile Include="..\gist\gcntr.c" />
+    <ClCompile Include="..\gist\gist.c" />
+    <ClCompile Include="..\gist\gread.c" />
+    <ClCompile Include="..\gist\gtext.c" />
+    <ClCompile Include="..\gist\hlevel.c" />
+    <ClCompile Include="..\gist\ps.c" />
+    <ClCompile Include="..\gist\tick.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\gist\tick60.c" />
+    <ClCompile Include="..\gist\xbasic.c" />
+    <ClCompile Include="..\gist\xfancy.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NO_EXP10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\hex\hex.c" />
+    <ClCompile Include="..\hex\hex24.c" />
+    <ClCompile Include="..\hex\hex5.c" />
+    <ClCompile Include="..\hex\hydram.c" />
+    <ClCompile Include="..\hex\regul.c" />
+    <ClCompile Include="..\hex\store.c" />
+    <ClCompile Include="..\hex\tools.c" />
+    <ClCompile Include="..\hex\yhex.c" />
+    <ClCompile Include="..\matrix\cblasy.c" />
+    <ClCompile Include="..\matrix\cxerbla.c" />
+    <ClCompile Include="..\matrix\dbdsqr.c" />
+    <ClCompile Include="..\matrix\dgecon.c" />
+    <ClCompile Include="..\matrix\dgels.c" />
+    <ClCompile Include="..\matrix\dgelss.c" />
+    <ClCompile Include="..\matrix\dgesv.c" />
+    <ClCompile Include="..\matrix\dgesv2.c" />
+    <ClCompile Include="..\matrix\dgesvd.c" />
+    <ClCompile Include="..\matrix\dgtsv.c" />
+    <ClCompile Include="..\matrix\dgyor.c" />
+    <ClCompile Include="..\matrix\dlamc3.c" />
+    <ClCompile Include="..\matrix\dlasr.c" />
+    <ClCompile Include="..\play\all\alarms.c" />
+    <ClCompile Include="..\play\all\bitlrot.c" />
+    <ClCompile Include="..\play\all\bitmrot.c" />
+    <ClCompile Include="..\play\all\bitrev.c" />
+    <ClCompile Include="..\play\all\hash.c" />
+    <ClCompile Include="..\play\all\hash0.c" />
+    <ClCompile Include="..\play\all\hashctx.c" />
+    <ClCompile Include="..\play\all\hashid.c" />
+    <ClCompile Include="..\play\all\mm.c" />
+    <ClCompile Include="..\play\all\mminit.c" />
+    <ClCompile Include="..\play\all\p595.c" />
+    <ClCompile Include="..\play\all\pmemcpy.c" />
+    <ClCompile Include="..\play\all\pstrcpy.c" />
+    <ClCompile Include="..\play\all\pstrncat.c" />
+    <ClCompile Include="..\play\win\clips.c" />
+    <ClCompile Include="..\play\win\conterm.c" />
+    <ClCompile Include="..\play\win\cursors.c" />
+    <ClCompile Include="..\play\win\dir.c" />
+    <ClCompile Include="..\play\win\ellipse.c" />
+    <ClCompile Include="..\play\win\feep.c" />
+    <ClCompile Include="..\play\win\files.c" />
+    <ClCompile Include="..\play\win\getdc.c" />
+    <ClCompile Include="..\play\win\handler.c" />
+    <ClCompile Include="..\play\win\mfcapp.cpp" />
+    <ClCompile Include="..\play\win\mfcmain.cpp" />
+    <ClCompile Include="..\play\win\mfcterm.cpp" />
+    <ClCompile Include="..\play\win\pals.c" />
+    <ClCompile Include="..\play\win\pathnm.c" />
+    <ClCompile Include="..\play\win\pcell.c" />
+    <ClCompile Include="..\play\win\pfill.c" />
+    <ClCompile Include="..\play\win\plines.c" />
+    <ClCompile Include="..\play\win\points.c" />
+    <ClCompile Include="..\play\win\prect.c" />
+    <ClCompile Include="..\play\win\pscr.c" />
+    <ClCompile Include="..\play\win\ptext.c" />
+    <ClCompile Include="..\play\win\pwin.c" />
+    <ClCompile Include="..\play\win\sigseh.c" />
+    <ClCompile Include="..\play\win\timeu.c" />
+    <ClCompile Include="..\play\win\timew.c" />
+    <ClCompile Include="..\play\win\usernm.c" />
+    <ClCompile Include="..\play\win\wpoll.c" />
+    <ClCompile Include="..\play\win\wstdio.c" />
+    <ClCompile Include="..\regexp\yfnmatch.c" />
+    <ClCompile Include="..\regexp\yregexp.c" />
+    <ClCompile Include="..\yorick\array.c" />
+    <ClCompile Include="..\yorick\ascio.c" />
+    <ClCompile Include="..\yorick\autold.c" />
+    <ClCompile Include="..\yorick\bcast.c" />
+    <ClCompile Include="..\yorick\binio.c" />
+    <ClCompile Include="..\yorick\binobj.c" />
+    <ClCompile Include="..\yorick\binpdb.c" />
+    <ClCompile Include="..\yorick\binstd.c" />
+    <ClCompile Include="..\yorick\cache.c" />
+    <ClCompile Include="..\yorick\clog.c" />
+    <ClCompile Include="..\yorick\convrt.c" />
+    <ClCompile Include="..\yorick\debug.c" />
+    <ClCompile Include="..\yorick\defmem.c" />
+    <ClCompile Include="..\yorick\dlsym.c" />
+    <ClCompile Include="..\yorick\fnctn.c" />
+    <ClCompile Include="..\yorick\graph.c" />
+    <ClCompile Include="..\yorick\graph0.c" />
+    <ClCompile Include="..\yorick\list.c" />
+    <ClCompile Include="..\yorick\nonc.c" />
+    <ClCompile Include="..\yorick\ops.c" />
+    <ClCompile Include="..\yorick\ops0.c" />
+    <ClCompile Include="..\yorick\ops1.c" />
+    <ClCompile Include="..\yorick\ops2.c" />
+    <ClCompile Include="..\yorick\ops3.c" />
+    <ClCompile Include="..\yorick\opsv.c" />
+    <ClCompile Include="..\yorick\parse.c" />
+    <ClCompile Include="..\yorick\pathfun.c" />
+    <ClCompile Include="..\yorick\range.c" />
+    <ClCompile Include="..\yorick\std0.c" />
+    <ClCompile Include="..\yorick\std1.c" />
+    <ClCompile Include="..\yorick\std2.c" />
+    <ClCompile Include="..\yorick\style.c" />
+    <ClCompile Include="..\yorick\task.c" />
+    <ClCompile Include="..\yorick\ydata.c" />
+    <ClCompile Include="..\yorick\yhash.c" />
+    <ClCompile Include="..\yorick\yinput.c" />
+    <ClCompile Include="..\yorick\yio.c" />
+    <ClCompile Include="..\yorick\yorick.c" />
+    <ClCompile Include="..\yorick\yrdwr.c" />
+    <ClCompile Include="..\yorick\ystr.c" />
+    <ClCompile Include="yinit.c" />
+    <ClCompile Include="ywrap.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="yorick.rc">
+      <Culture Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">0x0409</Culture>
+      <Culture Condition="'$(Configuration)|$(Platform)'=='Release|x64'">0x0409</Culture>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\play\win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\play\win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Culture Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">0x0409</Culture>
+      <Culture Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">0x0409</Culture>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\play\win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\play\win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\drat\bound.h" />
+    <ClInclude Include="..\drat\drat.h" />
+    <ClInclude Include="..\drat\track.h" />
+    <ClInclude Include="..\drat\trans.h" />
+    <ClInclude Include="..\gist\cgm.h" />
+    <ClInclude Include="..\gist\clip.h" />
+    <ClInclude Include="..\gist\draw.h" />
+    <ClInclude Include="..\gist\engine.h" />
+    <ClInclude Include="..\gist\gist.h" />
+    <ClInclude Include="..\gist\gtext.h" />
+    <ClInclude Include="..\gist\hlevel.h" />
+    <ClInclude Include="..\gist\ps.h" />
+    <ClInclude Include="..\gist\xbasic.h" />
+    <ClInclude Include="..\gist\xfancy.h" />
+    <ClInclude Include="..\hex\hex.h" />
+    <ClInclude Include="..\hex\hydram.h" />
+    <ClInclude Include="..\hex\regul.h" />
+    <ClInclude Include="..\hex\tools.h" />
+    <ClInclude Include="..\matrix\cblasy.h" />
+    <ClInclude Include="..\matrix\dg.h" />
+    <ClInclude Include="..\play\phash.h" />
+    <ClInclude Include="..\play\play.h" />
+    <ClInclude Include="..\play\plugin.h" />
+    <ClInclude Include="..\play\pmin.h" />
+    <ClInclude Include="..\play\pstdio.h" />
+    <ClInclude Include="..\play\pstdlib.h" />
+    <ClInclude Include="..\play\win\config.h" />
+    <ClInclude Include="..\play\win\mfcapp.h" />
+    <ClInclude Include="..\play\win\mfcres.h" />
+    <ClInclude Include="..\play\win\mfcterm.h" />
+    <ClInclude Include="..\play\win\playw.h" />
+    <ClInclude Include="..\play\yversion.h" />
+    <ClInclude Include="..\regexp\yfnmatch.h" />
+    <ClInclude Include="..\regexp\yregexp.h" />
+    <ClInclude Include="..\yorick\bcast.h" />
+    <CustomBuild Include="..\yorick\binio.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)numfmt numfmt.h 
+move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)numfmt numfmt.h 
+move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)numfmt numfmt.h 
+move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)numfmt numfmt.h 
+move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="..\yorick\defmem.h" />
+    <ClInclude Include="..\yorick\hash.h" />
+    <ClInclude Include="..\yorick\parse.h" />
+    <ClInclude Include="..\yorick\prmtyp.h" />
+    <ClInclude Include="..\yorick\yasync.h" />
+    <ClInclude Include="..\yorick\ydata.h" />
+    <ClInclude Include="..\yorick\yio.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="yorick.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="makeinit.bat">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)makeinit.bat $(OutDir)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)makeinit.bat $(OutDir)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)yinit.c;$(ProjectDir)ywrap.c;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)yinit.c;$(ProjectDir)ywrap.c;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)makeinit.bat $(OutDir)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)makeinit.bat $(OutDir)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)yinit.c;$(ProjectDir)ywrap.c;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)yinit.c;$(ProjectDir)ywrap.c;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="README" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="codger.vcxproj">
+      <Project>{cb340131-1d09-45eb-8a1c-f2803f5309c0}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="numfmt.vcxproj">
+      <Project>{16ed75f2-791b-490e-9082-0e8d2ffb6c16}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
