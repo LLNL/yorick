@@ -5518,7 +5518,26 @@ extern maybe_prompt;
      stops to wait for keyboard input, it will never prompt in this
      situation, even though it would accept keyboard input if it
      were typed.
-   SEE ALSO: set_idler
+   SEE ALSO: set_idler, prompt_marker
+*/
+
+extern prompt_marker;
+/* DOCUMENT prompt_marker, marker
+         or prompt_marker
+     set prompt marker string to MARKER.  Omit MARKER or pass MARKER
+     as string(0) or "" to remove any prompt marker.
+     Yorick emits the prompt marker string immediately after any actual
+     prompt and just before it blocks waiting for input.  This is useful
+     for writing programs in other languages designed to control yorick.
+     For example,
+       prompt_marker, "\5\5"
+     will emit two ASCII ENQ characters.  A controller can assume anything
+     between the last newline and this marker is the true yorick prompt.
+     More importantly, if it hasn't read the prompt marker, the controller
+     knows yorick is still running, not waiting for input, so it is safe
+     to block reading yorick's stdout, knowing that eventually the marker
+     will arrive.
+   SEE ALSO: maybe_prompt
 */
 
 extern spawn;

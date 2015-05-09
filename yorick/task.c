@@ -38,6 +38,8 @@ extern BuiltIn Y_current_include, Y_get_includes;
 extern BuiltIn Y_plug_in, Y_plug_dir, Y_maybe_prompt, Y_suspend, Y_resume;
 extern BuiltIn Y_after, Y__after_func, Y_include1, Y_vopen, Y_vclose;
 
+extern ybuiltin_t Y_prompt_marker;
+
 extern void YRun(void);
 extern void YHalt(void);
 
@@ -293,6 +295,23 @@ int yBatchMode= 0;
 
 static int y_was_idle= 0;
 
+/* prompt marker after prompts simplifies writing yorick controllers */
+static char *prompt_marker = 0;
+void
+Y_prompt_marker(int argc)
+{
+  char *marker = (argc==1)? ygets_q(0) : 0;
+  if (argc > 1) y_error("prompt_marker expecting single string argument");
+  if (marker && !marker[0]) marker = 0;
+  if (prompt_marker) {
+    char *old = prompt_marker;
+    prompt_marker = 0;
+    p_free(old);
+  }
+  if (marker)
+    prompt_marker = p_strcpy(marker);
+}
+
 static void ym_prompter(void);
 extern char *y_read_prompt;     /* ascio.c */
 /* yp_did_prompt reset by y_on_stdin */
@@ -306,12 +325,14 @@ ym_prompter(void)
     if (y_read_prompt) {
       if (y_read_prompt[0]) {
         p_stdout(y_read_prompt);
+        if (prompt_marker) p_stdout(prompt_marker);
         yp_did_prompt = 1;
       }
     } else {
       extern void y_do_prompt(void);  /* yorick.c */
       if (!yg_blocking) {
         y_do_prompt();
+        if (prompt_marker) p_stdout(prompt_marker);
         yp_did_prompt = 1;
       }
     }
