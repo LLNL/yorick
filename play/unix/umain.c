@@ -30,6 +30,7 @@ int
 u_main_loop(int (*on_launch)(int,char**), int argc, char **argv)
 {
   u_fpu_setup(-1);
+  p_fpehandling(2);
   if (setjmp(u_mainloop)) u_fpu_setup(0);
   if (!u_quitting && !u_launched) {
     int result;

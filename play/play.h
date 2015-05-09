@@ -33,6 +33,26 @@ PLUG_API char *p_getuser(void);
 /* dont do anything critical if this is set -- call p_abort */
 PLUG_API volatile int p_signalling;
 
+/* turn off SIGFPE handling (for libraries which require that, like OpenGL)
+ * p_fpehandling(0) masks SIGFPE, p_fpehandling(1) restores SIGFPE handling
+ * multiple succesive calls to p_fpehandling(1) require an equal number of
+ *   calls p_fpehandling(1) restore
+ * p_fpehandling(2) restores SIGFPE handling no matter how many calls
+ *   to p_fpehandling(1) have been made
+ * requires fenv.h
+ */
+PLUG_API void p_fpehandling(int on);
+/* partial support for floating point exceptions in FPU_IGNORE environments
+ * p_softfpe() raises SIGFPE if fpu exception bits are set
+ * requires fenv.h
+ */
+#ifdef USE_SOFTFPE
+#define P_SOFTFPE_TEST p_softfpe()
+#else
+#define P_SOFTFPE_TEST
+#endif
+PLUG_API void p_softfpe(void);
+
 /* data structures (required for screen graphics only)
  * - p_scr represents a screen (plus keyboard and mouse)
  * - p_win represents a window on a screen

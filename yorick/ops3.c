@@ -14,6 +14,7 @@
 
 #include "bcast.h"
 #include "pstdlib.h"
+#include "play.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -80,6 +81,8 @@ void Assign(void)
   Symbol *spl= sp-1;
   LValue *lvalue= (LValue *)spl->value.db;
 
+  P_SOFTFPE_TEST;
+
   /* guard against x(...)= expr, where x turns out to be a function */
   if (spl->ops!=&dataBlockSym || lvalue->ops!=&lvalueOps)
     YError("LHS of assignment not an l-value (scalar double, long, int?)");
@@ -139,6 +142,7 @@ void AssignX(Operand *l, Operand *r)
 void Define(void)
 {
   Symbol *glob= &globTab[(pc++)->index];
+  P_SOFTFPE_TEST;
   if (glob->ops==&dataBlockSym) {
     DataBlock *db= glob->value.db;
     if (db->ops==&lvalueOps) {

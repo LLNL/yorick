@@ -9,7 +9,7 @@ CCLOAD=$(CC) $(COPT) $(Y_LDFLAGS)
 
 OBJS=hash.o hash0.o hashctx.o hashid.o mm.o mminit.o \
   alarms.o pmemcpy.o pstrcpy.o pstrncat.o p595.o \
-  bitrev.o bitlrot.o bitmrot.o pstdio.o
+  bitrev.o bitlrot.o bitmrot.o pstdio.o psoftfpe.o
 
 all: libplay
 
@@ -61,6 +61,9 @@ bitmrot.o: $(PLAY_CFG)/config.h ../play.h $(PLUGEXT)
 p595.o: ../play.h $(PLUGEXT)
 
 pstdio.o: $(PLAY_CFG)/config.h ../pstdio.h $(PLUGEXT)
+
+psoftfpe.o: $(PLAY_CFG)/config.h ../play.h $(PLUGEXT)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_HAS_FENV_H) -c psoftfpe.c
 
 test2d.o: ../play.h ../pstdlib.h ../pstdio.h $(PLUGEXT)
 hashtest.o: ../phash.h ../pstdlib.h ../pstdio.h $(PLUGEXT)

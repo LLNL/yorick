@@ -218,6 +218,7 @@ u_fpu_detect(void)
 }
 
 /* interrupt mask bits for x87 and sse (xmm) fpu's */
+/* typical initial values: fctrl=0x037f  mxcsr=0x1f80 */
 #define U_FPU_X87CW 0x1372
 #define U_FPU_MXCSR 0x9940
 /*   bit meaning         x87      sse      yes=mask=1, no=deliver=0
@@ -232,12 +233,20 @@ u_fpu_detect(void)
  * denormal op mask     0x0002   0x0100       yes
  * invalid op mask      0x0001   0x0080       no
  * denormals are zero     --     0x0040       yes
+ *   sse exception bits 0x003f correspond to mask bits 0x1f80  (>>7)
  */
 void
 u_fpu_setup(int when)
 {
+  if (u_fpu_features == 0x8000)
+    u_fpu_features = u_fpu_detect();
 # if defined(__CYGWIN__)
-  __asm__ ("fclex" : : );
+  __asm__ ("fclex" : : );  /* clear i87 fp exception bits */
+  if (u_mxcsr_mask) {
+    /* clear sse fp exception bits as a side-effect */
+    unsigned int mxcsr = U_FPU_MXCSR & u_mxcsr_mask;
+    __asm__ ("ldmxcsr %0" : : "m" (mxcsr));
+  }
   if (when<0) {
 # elif defined(__NeXT)
   if (when<=0) {
@@ -245,13 +254,14 @@ u_fpu_setup(int when)
   if (when) {
 # endif
     unsigned int fpucw = U_FPU_X87CW;
-    if (u_fpu_features == 0x8000)
-      u_fpu_features = u_fpu_detect();
     __asm__ ("fldcw %0" : : "m" (fpucw));
+# if ! defined(__CYGWIN__)
     if (u_mxcsr_mask) {
       unsigned int mxcsr = U_FPU_MXCSR & u_mxcsr_mask;
       __asm__ ("ldmxcsr %0" : : "m" (mxcsr));
+      /* get mxscr: __asm__ ("stmxcsr %0" : : "m" (mxcsr)); */
     }
+# endif
   }
 }
 

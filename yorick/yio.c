@@ -256,6 +256,7 @@ void y_setup_func_hack(Operand *op)
 void Print(void)
 {
   Operand op;
+  P_SOFTFPE_TEST;
   sp->ops->FormOperand(sp, &op);
   if (op.ops->Setup == &y_setup_func_hack) {
     /* put operand into bogus form expected by Eval (see Eval in ops3.c) */

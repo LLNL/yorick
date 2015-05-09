@@ -11,6 +11,7 @@
 
 #include "bcast.h"
 #include "pstdlib.h"
+#include "play.h"
 #include <string.h>
 
 /* ------------------------------------------------------------------------ */
@@ -258,6 +259,7 @@ void AndOrLogical(void)
 
 void BranchFalse(void)
 {
+  P_SOFTFPE_TEST;
   True();        /* test branch condition */
   if (sp->ops!=&intScalar) YError("non-scalar operand to BranchFalse");
   if (!sp->value.i) pc+= pc->displace;
@@ -267,6 +269,7 @@ void BranchFalse(void)
 
 void BranchTrue(void)
 {
+  P_SOFTFPE_TEST;
   True();        /* test branch condition */
   if (sp->ops!=&intScalar) YError("non-scalar operand to BranchTrue");
   if (sp->value.i) pc+= pc->displace;
@@ -276,6 +279,7 @@ void BranchTrue(void)
 
 void Branch(void)
 {
+  P_SOFTFPE_TEST;
   pc+= pc->displace;
 }
 

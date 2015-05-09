@@ -47,6 +47,7 @@
 
  */
 
+#include "play.h"
 #include "ydata.h"
 
 /*--------------------------------------------------------------------------*/
@@ -272,6 +273,8 @@ void EvalFN(Operand *op)
   int actual, dummy, index, nExtra;
   Symbol *spnow, *extraPos, *key;
 
+  P_SOFTFPE_TEST;
+
   /* Be sure the stack is long enough for a worst-case invocation of this
      function.  nReq= nPos + (hasPosList&1) + nKey + nLoc + (deepest stack
                       required for expression evaluation) + 10
@@ -435,7 +438,9 @@ void EvalBI(Operand *op)
   BIFunction *bif= op->value;
 
   /* Invoke built-in function */
+  P_SOFTFPE_TEST;
   bif->function(n);
+  P_SOFTFPE_TEST;
 
   /* Adjust remembered stack to allow for the stack being moved -- this
      can happen in Y_require and Y_include, and there is no other way
@@ -464,6 +469,8 @@ void Return(void)
   Symbol *spnow, *extrn;
   OpTable *opsX;
   SymbolValue valueX;
+
+  P_SOFTFPE_TEST;
 
   /* Pop off any pending catch calls.  */
   if ((sp-1-spBottom)<=ispCatch) YCatchDrop(sp-1-spBottom);

@@ -343,6 +343,23 @@ if test -n "$fpedef"; then
 fi
 rm -f fputest
 
+# check if fenv.h present
+softfpe=
+args="-DTEST_FENV_H $commonargs"
+if $CC $args $MATHLIB >cfg.11 2>&1; then
+  echo "found fenv.h header"
+  echo "D_HAS_FENV_H=-DHAS_FENV_H" >>../../Make.cfg
+  if test "$fpedef" = "-DFPU_IGNORE"; then
+    echo "...activating software SIGFPE support"
+    softfpe=-DUSE_SOFTFPE
+  fi
+  if test $debug = no; then rm -f cfg.11; fi
+else
+  echo "WARNING fenv.h missing, no floating point environment control"
+  echo "D_HAS_FENV_H=" >>../../Make.cfg
+fi
+echo "D_USE_SOFTFPE=$softfpe" >>../../Make.cfg
+
 #----------------------------------------------------------------------
 # try to figure out how dynamic linking for plugins works
 #----------------------------------------------------------------------

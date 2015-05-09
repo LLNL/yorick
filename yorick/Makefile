@@ -123,7 +123,8 @@ clog.o: $(YDATA_HP) yio.h $(PSLIO)
 convrt.o: binio.h $(PSLIB)   $(HSH)
 debug.o: $(YDATA_HP) yio.h $(PLAYALL)
 defmem.o: defmem.h   $(PSLIB)
-fnctn.o: $(YDATA_H)
+fnctn.o: $(YDATA_H) $(PLAYONLY)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USE_SOFTFPE) -o $@ -c fnctn.c
 fortrn.o: fortrn.c yasync.h $(PSLIB)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(FORTRAN_LINKAGE) -o $@ -c fortrn.c
 graph.o: graph.c $(YDATA_HP) yio.h   $(PLAYALL) $(HGIST)
@@ -133,11 +134,13 @@ list.o: $(YDATA_H) defmem.h
 mdigest.o: mdigest.h
 nonc.o: nonc.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(NO_HYPOT) -o $@ -c nonc.c
-ops.o: bcast.h $(PSLIB)   ydata.h binio.h $(HSH)
+ops.o: bcast.h $(PSPLAY)   ydata.h binio.h $(HSH)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USE_SOFTFPE) -o $@ -c ops.c
 ops0.o: $(YDATA_H)
 ops1.o: $(YDATA_H)
 ops2.o: $(YDATA_HP)   $(PSLIB)
-ops3.o: bcast.h $(PSLIB)   $(YDATA_HP)
+ops3.o: bcast.h $(PSPLAY)   $(YDATA_HP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USE_SOFTFPE) -o $@ -c ops3.c
 opsv.o: $(YDATA_HP) $(PSLIB) prmtyp.h
 oxy.o: $(YDATA_HP) $(PSLIB) ../play/phash.h
 parse.o: parse.h $(YDATA_HP) $(PSLIB)
@@ -151,10 +154,12 @@ std1.o: $(YDATA_HP) $(PSPLAY)
 std2.o: mdigest.h $(YDATA_HP) yio.h $(PLAYALL)
 style.o: style.c $(YDATA_HP) $(PSLIB) $(HGIST) ../gist/draw.h
 task.o: $(YDATA_HP) yio.h yapi.h $(PLAYALL)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USE_SOFTFPE) -o $@ -c task.c
 yapi.o: $(YDATA_HP) yio.h bcast.h $(PSLIB)
 ydata.o: bcast.h defmem.h $(PSLIB)   $(YDATA_HP)
 yinput.o: yio.h parse.h $(HSH) $(PLAYALL)
 yio.o: yio.h defmem.h $(YDATA_HP) $(PLAYALL)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_USE_SOFTFPE) -o $@ -c yio.c
 yorick.o: yorick.c parse.h $(PSPLAY)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(D_NO_STRTOUL) -o $@ -c yorick.c
 yrdwr.o: bcast.h $(PSLIB)   $(YDATA_HP)

@@ -124,6 +124,8 @@ YRun(void)
   ym_state |= Y_RUNNING;
   ym_dbenter = 0;
 
+  P_SOFTFPE_TEST;
+
   while (!p_signalling) {
     Action = (pc++)->Action;
     Action();
@@ -133,6 +135,8 @@ YRun(void)
 
   /* reset Y_RUNNING to value on entry -- allows YRun to recurse */
   ym_state = (ym_state & ~Y_RUNNING) | run_state;
+
+  P_SOFTFPE_TEST;
 
   if (p_signalling)
     p_abort();             /* p_signalling set by real signal */
@@ -581,6 +585,8 @@ y_on_idle(void)
     taskCode[3].index = 0;
     taskCodeInit = 1;
   }
+
+  p_fpehandling(2);  /* be sure yorick FPE handling set properly */
 
   if (ym_state & Y_QUITTING) {
   die_now:

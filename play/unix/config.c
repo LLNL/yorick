@@ -144,3 +144,17 @@ MAIN_DECLARE {
   }
   MAIN_RETURN(0); }
 #endif
+
+#ifdef TEST_FENV_H
+#include <fenv.h>
+#include <signal.h>
+MAIN_DECLARE {
+  int except = FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW;
+  fenv_t env;
+  if (fetestexcept(except)) {
+    feclearexcept(except);
+  }
+  fegetenv(&env);
+  fesetenv(FE_DFL_ENV);
+  MAIN_RETURN(0); }
+#endif
