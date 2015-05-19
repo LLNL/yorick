@@ -1,1 +1,1 @@
-#define Y_VERSION "2.2.04x"
+#define Y_VERSION "2.2.04"
