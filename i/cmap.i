@@ -32,7 +32,7 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
  *   people.  Use them if you need multiple maps in one picture.
  *
  *   See also http://bids.github.io/colormap/ for a discussion of colormap
- *   design.  The excellent "viridis", "optiona", "optionb", and "optionc"
+ *   design.  The excellent "viridis", "magma", "inferno", and "plasma"
  *   colormaps are available with cmap.  Besides "gray", these are the best
  *   choices for sequential colormaps; "coolwarm" is the best choice for a
  *   diverging colormap.  All of these are colorblind-friendly, perceptually
