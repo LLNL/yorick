@@ -8,6 +8,8 @@
  * This file is part of yorick (http://yorick.sourceforge.net).
  * Read the accompanying LICENSE file for details.
  */
+require, "hsv2rgb.i";
+require, "lab2rgb.i";
 
 func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
 /* DOCUMENT cmap, p, n
@@ -28,6 +30,14 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
  *   picture you can use to test palettes.  The "dblue", "dred", and "dgreen"
  *   maps are a matched set designed to be distinguishable by colorblind
  *   people.  Use them if you need multiple maps in one picture.
+ *
+ *   See also http://bids.github.io/colormap/ for a discussion of colormap
+ *   design.  The excellent "viridis", "optiona", "optionb", and "optionc"
+ *   colormaps are available with cmap.  Besides "gray", these are the best
+ *   choices for sequential colormaps; "coolwarm" is the best choice for a
+ *   diverging colormap.  All of these are colorblind-friendly, perceptually
+ *   uniform, and the sequential maps are also uniform in brightness (good
+ *   for being reproduced in gray scale).
  *
  *   Keywords:
  *     hist=1  if P is a simple list of colors, creates a stepped
@@ -192,6 +202,9 @@ func cmap(p, n, hist=, hsv=, hsl=, rev=, gamma=, lgamma=, usehue=, nmax=)
         p = *gist_maps(i(1));
         if (name == "earth") hsv = 1;
       }
+    }
+    if (is_void(p)) {
+      p = _cmap_gist_scan(name)
     }
     if (is_void(p)) error, "unrecognized palette name "+name;
   }
@@ -1544,4 +1557,35 @@ func idlct(n, ncols)
     if (!am_subroutine()) return ct;
     cmap, ct, ncols;
   }
+}
+
+/* look for .gp file on gist path */
+func _cmap_gist_scan(name)
+{
+  if (strpart(name,-2:0) != ".gp") name += ".gp";
+  if (numberof(_cmap_gist_cache)) {
+    i = where(_cmap_gist_cache == name);
+    if (numberof(i)) return *_cmap_gist_cache_p(i(1));
+  }
+  if (open(name, "r", 1)) {
+    fname = name;
+  } else {
+    require, "pathfun.i";
+    gpath = pathsplit(set_gpath());
+    list = where(strpart(gpath, 0:0) != "/");
+    if (numberof(list)) gpath(list) += "/";  /* need to repair gpath */
+    fname = find_in_path(name, takefirst=1, path=pathform(gpath));
+    if (!fname) return [];
+  }
+  f = open(fname);
+  r = g = b = array(char, 1024);
+  for (;;) {
+    n = read(f, r, g, b);
+    if (n) break;
+  }
+  if (n%3 || !n) return [];
+  rgb = transpose([r,g,b](1:n/3,));
+  grow, _cmap_gist_cache, [name];
+  grow, _cmap_gist_cache_p, [&rgb];
+  return rgb;
 }
