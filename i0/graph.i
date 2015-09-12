@@ -716,7 +716,8 @@ extern palette;
      dozens more named palette choices.
 
      The FILENAME is the name of a Gist palette file; the standard
-     palettes are "earth.gp", "stern.gp", "rainbow.gp", "heat.gp",
+     palettes are "viridis.gp", "magma.gp", "inferno.gp", "plasma.gp",
+     "coolwarm.gp", "earth.gp", "stern.gp", "rainbow.gp", "heat.gp",
      "gray.gp", and "yarg.gp".  Use the maxcolors keyword in the
      pldefault command to put an upper limit on the number of
      colors which will be read from the palette in FILENAME.
@@ -2108,7 +2109,7 @@ func plfc(z, y, x, ireg, levs=, colors=, region=, triangle=)
   palette, query=1, nc, yc, xc;
   nc= numberof(nc);
   if (nc<3) {
-    palette, "earth.gp";
+    palette, "viridis.gp";
     palette, query=1, nc, yc, xc;
     nc= numberof(nc);
   }

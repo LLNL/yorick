@@ -64,7 +64,7 @@ func demo2(which, time_limit)
   dt= 0.375*sqrt(min(abs(xdz*yzd - xzd*ydz)));
 
   window, 0, wait=1, style="nobox.gs";
-  palette, "heat.gp";
+  palette, "inferno.gp";
   limits, -1, 1, -1, 1;
 
   /* roll the filled mesh movie */

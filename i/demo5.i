@@ -119,8 +119,8 @@ func demo5(itest)
     timer_print,"slicing time",elapsed-elapsed0;
 
     fma;
-    write, "split_palette,\"earth.gp\" -- generate palette for pl3tree";
-    split_palette, "earth.gp";
+    write, "split_palette,\"viridis.gp\" -- generate palette for pl3tree";
+    split_palette, "viridis.gp";
     write, "gnomon -- turn on gnomon";
     gnomon, 1;
 

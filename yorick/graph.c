@@ -1909,7 +1909,7 @@ static void CheckDefaultPalette(void)
 {
   GpColorCell *palette;
   GhGetPalette(-1, &palette);
-  if (!palette) GhReadPalette(-1, defaultPalette? defaultPalette : "earth.gp",
+  if (!palette) GhReadPalette(-1, defaultPalette? defaultPalette : "viridis.gp",
                               &palette, maxColors);
 }
 

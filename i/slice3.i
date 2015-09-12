@@ -1238,7 +1238,7 @@ func split_palette(name)
   palette,query=1, r,g,b;
   n= numberof(r);
   if (n<100) {
-    palette, "earth.gp";
+    palette, "viridis.gp";
     palette,query=1, r,g,b;
     n= numberof(r);
   }
