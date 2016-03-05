@@ -72,7 +72,7 @@ func is_prime(x)
  */
 {
   x= long(abs(x));
-  if (x<2) return x==1;
+  if (x<4) return x>0;
   /* make a list of factors which includes 2, 3, and all larger
      odd numbers not divisible by 3 less or equal to sqrt(x) */
   top= min(long((sqrt(x)+8.)/3.+0.5), 20000);
