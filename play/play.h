@@ -100,7 +100,7 @@ PLUG_API void p_spawf(p_spawn_t *proc, int nocallback);
 
 /* socket interface */
 typedef struct psckt_t psckt_t;
-typedef int psckt_cb_t(psckt_t *sock, void *ctx);
+typedef void psckt_cb_t(psckt_t *sock, void *ctx);
 /* two kinds of sockets -- listener and data
  *   - sock argument to accept must be a listener socket
  *   - sock argument to send, recv must be a data socket
