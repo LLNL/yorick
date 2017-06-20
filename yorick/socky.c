@@ -22,7 +22,7 @@ extern ybuiltin_t Y_socket, Y_socksend, Y_sockrecv;
 
 static void ys_on_quit(void);
 static void ys_socksr(int sending, int argc);
-static int ys_callback(psckt_t *sock, void *ctx);
+static void ys_callback(psckt_t *sock, void *ctx);
 
 /* ------------------------------------------------------------------------ */
 /* socket objects */
@@ -262,7 +262,7 @@ ys_socksr(int sending, int argc)
 
 static long ys_icallback=-1L, ys_isocket=-1L, ys_icaller=-1L;
 
-static int
+static void
 ys_callback(psckt_t *sock, void *ctx)
 {
   ys_data_t *s = ctx;
