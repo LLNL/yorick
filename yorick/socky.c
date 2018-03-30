@@ -216,7 +216,6 @@ static void
 ys_on_extract(void *uo, char *name)
 {
   ys_data_t *s = uo;
-  void *cb = 0;
   if (!strcmp(name, "port")) {
     ypush_long(s->port);
   } else if (!strcmp(name, "peer")) {
@@ -266,7 +265,6 @@ static void
 ys_callback(psckt_t *sock, void *ctx)
 {
   ys_data_t *s = ctx;
-  void *task = 0;
   if (ys_icallback < 0) ys_icallback = yfind_global("_socket_callback",0);
   if (ys_isocket < 0) ys_isocket = yfind_global("_socket_socket",0);
   if (ys_icaller < 0) ys_icaller = yfind_global("_socket_caller",0);
