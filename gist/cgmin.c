@@ -663,7 +663,7 @@ n_fread(void *ptr, unsigned long nbytes, CGM *cgm)
     }
   } else {
     return n_fskip(ptr, nbytes, cgm);
-  }           
+  }
 }
 
 static int
@@ -1335,7 +1335,7 @@ static void GSetClip(int on)
     } else {
       gistT.viewport.xmin= gistT.window.xmin= xbox[1];
       gistT.viewport.xmax= gistT.window.xmax= xbox[0];
-    }    
+    }
     if (ybox[0]<ybox[1]) {
       gistT.viewport.ymin= gistT.window.ymin= ybox[0];
       gistT.viewport.ymax= gistT.window.ymax= ybox[1];
@@ -2354,10 +2354,8 @@ static int DoClass5(int id, long nOctets)
   case 31:  /* FILL REFERENCE POINT */
     nOctets= ReadParameters(nOctets, (void *)0, 0L);
     if (!vdcIllegible && nOctets==4) {
-      short refp[2];
-      refp[0]= Snarf16(paramList);
-      refp[1]= Snarf16(paramList+2);
-      /* ConvertPoints(1L, refp, &gistA.f.refpX, &gistA.f.refpY); */
+      (void)Snarf16(paramList);
+      (void)Snarf16(paramList+2);
     }
     break;
 
@@ -2368,7 +2366,6 @@ static int DoClass5(int id, long nOctets)
   case 33:  /* PATTERN SIZE */
     nOctets= ReadParameters(nOctets, (void *)0, 0L);
     if (!vdcIllegible && nOctets==8) {
-      short hw[2];
       short hx= Snarf16(paramList);
       short hy= Snarf16(paramList+2);
       short wx= Snarf16(paramList+4);
@@ -2377,11 +2374,6 @@ static int DoClass5(int id, long nOctets)
       if (hy<0) hy= -hy;
       if (wx<0) wx= -wx;
       if (wy<0) wy= -wy;
-      if (wx<hx) hw[0]= hx;
-      else hw[0]= wx;
-      if (hy<wy) hw[1]= wy;
-      else hw[1]= hy;
-      /* ConvertPoints(1L, hw, &gistA.f.sizeX, &gistA.f.sizeY); */
     }
     break;
 
