@@ -134,7 +134,7 @@ p_palette(p_win *w, p_col_t *colors, int n)
        *     important permanent apps (window manager) started first
        *     -- allocate colors at bottom same as in default cmap */
       for (i=0 ; i<map_size ; i++) used[i] = 0;
-      for (i=0 ; i<16 ; i++)
+      for (i=0 ; i<14 ; i++)
         if (s->colors[i].pixel<map_size) used[s->colors[i].pixel] = 1;
       for (p=map_size-1,i=0 ; p>=0 && i<n ; p--) {
         if (used[p]) continue;
