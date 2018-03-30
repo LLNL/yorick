@@ -202,7 +202,7 @@ psckt_accept(psckt_t *listener, char **ppeer, void *ctx, psckt_cb_t *callback)
   struct sockaddr *psad = (struct sockaddr *)&sad;
   char host[NI_MAXHOST];
   psckt_t *sock = p_malloc(sizeof(psckt_t));
-  int sfd, lfd = sock->fd;
+  int sfd;
 
   *ppeer = 0;
   if (listener->peer || !sock) {  /* listeners have no peer */
@@ -263,7 +263,7 @@ psckt_recv(psckt_t *sock, void *msg, long len)
     if (n == 0) {  /* socket closed */
       /* socket may close for recv but not for send, not full shutdown yet */
       if (sock->callback) { /* ...but remove from event sources immediately */
-        sock->callback = 0; 
+        sock->callback = 0;
         u_event_src(sock->fd, 0, sock);
       }
       break;
