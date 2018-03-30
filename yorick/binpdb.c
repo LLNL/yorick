@@ -33,7 +33,7 @@ int yPDBopen= 010;  /* option bits to alter PDB behavior on open:
                        if either of bits 001 or 002 is set, when a
                        PDB file is opened, its Major-Order: extra
                        may be altered as follows:
-                       001  Major-Order:102 always 
+                       001  Major-Order:102 always
                        002  Major-Order:  opposite from what file says
                        003  Major-Order:101 always
 
@@ -768,7 +768,7 @@ static void RDextras(IOStream *file, long address)
 
     } else if (strncmp(line, "Struct-Align:", 13L)==0 ||
                strncmp(line, "Struct-Alignment:", 17L)==0) {
-      long structAlign;
+      long structAlign = 0;
       TokenAsLong(line[13]!='e'? &line[13]:&line[17], &structAlign);
       if (structAlign<=0) structAlign= 1;
       file->structAlign= (int)structAlign;
@@ -2843,7 +2843,7 @@ static int BlocksVerify(void)
 {
   char *line;
   int illegal=0, skip=0, hadBlocks=0;
-  long i, n, count, addr, minAddr=0, delAddr=0, nGoofs=0;
+  long i, n=0, count, addr=0, minAddr=0, delAddr=0, nGoofs=0;
   long have=0, need= blocksTable.nItems;
 
   if (need) {
