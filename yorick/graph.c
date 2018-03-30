@@ -4095,7 +4095,7 @@ my_rgb_read(Engine *eng, GpColor *rgb, long *nx, long *ny)
 /*--------------------------------------------------------------------------*/
 
 void
-Y_current_mouse(argc)
+Y_current_mouse(int argc)
 {
 #ifdef NO_XLIB
   PushDataBlock(RefNC(&nilDB));
