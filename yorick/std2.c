@@ -512,7 +512,7 @@ void Y_set_filesize(int nArgs)
 }
 
 static long y_legal_blksz(long nbytes);
-static long 
+static long
 y_legal_blksz(long nbytes)
 {
   long size = 4096;
@@ -815,7 +815,6 @@ Y_fd_close(int argc)
   if (argc == 1) {
     int i = yfd_find(ygets_l(0), 0);
     if (i >= 0) {
-      p_file *f = yfd_list[i].f;
       yfd_list[i].f = 0;
       for (i++ ; i<16 && yfd_list[i].f ; i++) {
         yfd_list[i-1].fd = yfd_list[i].fd;

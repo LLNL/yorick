@@ -664,9 +664,9 @@ int ClipFilled(const GpReal* xx, const GpReal* yy, int nn)
       goto chkcls;
     }
     nwork= 1;
-    wind0= wind; /* save for closure calculation */
-    side0= side;
   }
+  wind0= wind; /* save for closure calculation */
+  side0= side;
 
   for (;;) {
     /* Find the next exit point. */

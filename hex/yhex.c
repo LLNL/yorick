@@ -105,19 +105,19 @@ YHX_mesh *new_YHX(double *xyz, long *bound, long nbnds, HX_blkbnd *bnds,
   mesh->mesh.start= start;
   if (xyz) {
     ary= Pointee(xyz);
-    Ref(ary);
+    (void)Ref(ary);
   }
   if (bound) {
     ary= Pointee(bound);
-    Ref(ary);
+    (void)Ref(ary);
   }
   if (bnds) {
     ary= Pointee(bnds);
-    Ref(ary);
+    (void)Ref(ary);
   }
   if (blks) {
     ary= Pointee(blks);
-    Ref(ary);
+    (void)Ref(ary);
   }
   return mesh;
 }
