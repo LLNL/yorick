@@ -838,6 +838,8 @@ ygeta_array(int iarg, Operations **pops, Member **ptype)
   }
 
   y_error("expecting array argument");
+  *pops = NULL;
+  *ptype = NULL;
   return 0;
 }
 
@@ -1283,7 +1285,7 @@ void *ypush_obj(y_userobj_t *uo_type, unsigned long size)
     Operations *ops = p_malloc(sizeof(Operations));
     memcpy(ops, &y_uo_ops, sizeof(Operations));
     ops->typeName = uo_type->type_name;
-    uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
+    uo_type->uo_ops = ops; /* AFTER ops properly initialized */
   }
   uo = p_malloc(sizeof(y_uo_t) - sizeof(union y_uo_body_t) + size);
   memset(uo, 0, sizeof(y_uo_t) - sizeof(union y_uo_body_t) + size);
@@ -1311,7 +1313,7 @@ yfunc_obj(y_userobj_t *uo_type)
     memcpy(ops, &y_uo_ops, sizeof(Operations));
     ops->Setup = y_setup_func_hack;
     ops->typeName = uo_type->type_name;
-    uo_type->uo_ops = ops; /* AFTER ops properly initialized */ 
+    uo_type->uo_ops = ops; /* AFTER ops properly initialized */
   }
   return uo_type;
 }
