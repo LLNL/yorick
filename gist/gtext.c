@@ -9,8 +9,7 @@
  */
 
 #include "gtext.h"
-
-extern long strcspn(const char *, const char *);
+#include <string.h>
 
 int gtDoEscapes= 1;
 
