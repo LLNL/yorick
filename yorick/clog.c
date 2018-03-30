@@ -654,8 +654,8 @@ static int CLdimension(CLbuffer *clBuffer, long *length,
 static int CLdims(CLbuffer *clBuffer)
 {
   /* fetch a dimension_spec -- a sequence of dimension specifiers */
-  long origin, length;
-  int tokType, flag;
+  long origin=0, length=0;
+  int tokType, flag=0;
   Dimension *prev, *dims= tmpDims;
 
   /* clear any previous temporary dimension */
@@ -682,7 +682,7 @@ static int CLfile(CLbuffer *clBuffer, IOStream *file)
   int tokType= CLnextToken(clBuffer);
 
   while (tokType>0) {
-    
+
     if ((tokType=='+' || tokType=='-') &&
         CLnextToken(clBuffer)==TOK_IDENTIFIER) {
       if (tokType=='+') {
@@ -728,7 +728,7 @@ static int CLhistory(CLbuffer *clBuffer, HistoryInfo *history)
   int tokType= CLnextToken(clBuffer);
 
   while (tokType>0) {
-    
+
     if (tokType=='+' && CLnextToken(clBuffer)==TOK_IDENTIFIER &&
         CLidMatch("record", clBuffer)) {
       /* +record */
@@ -903,7 +903,7 @@ static int CLdefine(CLbuffer *clBuffer, IOStream *file)
         +define string standard
         +define pointer standard
    */
-  long size, alignment, order;
+  long size=0, alignment=0, order;
   int replacing, flag, tokType, seqFlag;
   StructDef *base;
   FPLayout fpLayout;
@@ -1058,7 +1058,7 @@ static int CLalign(CLbuffer *clBuffer, IOStream *file)
         +align ("variables" | "structs") [alignment]
    */
   int flag;
-  long alignment;
+  long alignment=0;
 
   if (CLnextToken(clBuffer)!=TOK_IDENTIFIER) return -500;
   if (CLidMatch("variables", clBuffer)) flag= 1;
