@@ -811,7 +811,7 @@ Y_strfind(int argc)
 {
   void (*searcher)(ys_state_t *state, char *str);
   int keys[YS_MAX_KEYS];
-  long i, nstr, *o;
+  long i, nstr, *o=NULL;
   char *str, **s=0;
   int iarg;
   ys_iter_t iter;
@@ -987,7 +987,7 @@ void
 Y_strgrep(int argc)
 {
   int keys[YS_MAX_KEYS-1];
-  long i, j, is, ntot, nstr, nsub=1, *sub=0, *o;
+  long i, j, is, ntot, nstr, nsub=1, *sub=0, *o=NULL;
   long default_sub[1];
   char *str, **s=0;
   int iarg;
