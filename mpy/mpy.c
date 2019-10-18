@@ -290,7 +290,7 @@ mpy_get_next(int block)
 {
   MPI_Status status;
   int/*sic*/ n;
-  int type, ready;
+  int type, ready, source;
   long dims[2];
   void *buf;
   /* block=0  do not block
@@ -320,12 +320,13 @@ mpy_get_next(int block)
         mperr_fatal("MPI_Probe failed in mpy_get_next");
     }
     type = status.MPI_TAG;
+    source = status.MPI_SOURCE;
     if (type == MPY_CONTROL) {
-      if (MPI_Recv(mperr_msg, MAX_ERR_MSG, MPI_BYTE, MPI_ANY_SOURCE,
-                   MPI_ANY_TAG, mpy_world, &status) != MPI_SUCCESS)
+      if (MPI_Recv(mperr_msg, MAX_ERR_MSG, MPI_BYTE, source, type,
+                   mpy_world, &status) != MPI_SUCCESS)
         mperr_fatal("MPI_Recv failed in mpy_get_next");
-      mperr_from = status.MPI_SOURCE;
-      DBG_MSG1(0, "recv control msg from %d\n", status.MPI_SOURCE);
+      mperr_from = source;
+      DBG_MSG1(0, "recv control msg from %d\n", source);
       if (block < 3) {
         mpy_errquiet();
       }
@@ -350,16 +351,16 @@ mpy_get_next(int block)
           mpy_queue[i].data = 0;
         }
       }
-      mpy_queue[mpy_queue_n].from = status.MPI_SOURCE;
+      mpy_queue[mpy_queue_n].from = source;
       mpy_queue[mpy_queue_n++].data = yget_use(0);
       buf = ygeta_any(0, (long*)0, (long*)0, (int*)0);
       if (type == MPY_STRING) buf = ((char **)buf)[0] = p_malloc((long)n);
       block = 0;
     }
 
-    DBG_MSG3(1, "recv msg from %d, type %d count %d\n", status.MPI_SOURCE,
+    DBG_MSG3(1, "recv msg from %d, type %d count %d\n", source,
              type, n);
-    if (MPI_Recv(buf, n, mpi_types[type], MPI_ANY_SOURCE, MPI_ANY_TAG,
+    if (MPI_Recv(buf, n, mpi_types[type], source, type,
                  mpy_world, &status) != MPI_SUCCESS)
       mperr_fatal("MPI_Recv failed in mpy_get_next");
     mpy_net--;
