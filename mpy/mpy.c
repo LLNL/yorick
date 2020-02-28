@@ -12,6 +12,12 @@
 #define MPY_MPI_H 1
 #include "mpy.h"
 
+#if defined(MPI_VERSION) && MPI_VERSION > 1
+# define MPY_Comm_set_errhandler MPI_Comm_set_errhandler
+#else
+# define MPY_Comm_set_errhandler MPI_Errhandler_set
+#endif /* defined(MPI_VERSION) && MPI_VERSION > 1 */
+
 #include "yapi.h"
 #include "pstdlib.h"
 #include <string.h>
@@ -166,7 +172,7 @@ mpy_initialize(int *pargc, char **pargv[])
         || mpy_size < 2
         || MPI_Comm_dup(MPI_COMM_WORLD, &mpy_world) != MPI_SUCCESS
         || MPI_Comm_rank(mpy_world, &mpy_rank) != MPI_SUCCESS
-        || MPI_Errhandler_set(mpy_world, MPI_ERRORS_RETURN) != MPI_SUCCESS) {
+        || MPY_Comm_set_errhandler(mpy_world, MPI_ERRORS_RETURN) != MPI_SUCCESS) {
       if (mpy_initdone) MPI_Finalize(); /* may be a mistake - no return? */
       mpy_world = MPI_COMM_NULL;
       mpy_size = mpy_rank = 0;
