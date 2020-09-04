@@ -1144,7 +1144,7 @@ current line, or any previous line."
           window)
       (pop-to-buffer (let ((find-file-existing-other-name t))
                        (find-file-noselect file)))
-      (goto-line (string-to-int line)))))
+      (goto-line (string-to-number line)))))
 
 (defun yofile-default-expander (name context)
   "The default yofile-expander expands NAME according to the CONTEXT.  If
