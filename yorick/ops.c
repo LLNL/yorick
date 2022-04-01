@@ -580,9 +580,11 @@ void CallShell(void)
 void Y_system(int nArgs)
 {
   char *line;
+  int  retval;
   if (nArgs!=1) YError("system function takes exactly one argument");
   line= YGetString(sp);
-  if (line && line[0]) p_system(line);
+  if (line && line[0]) retval = p_system(line);
+  PushIntValue(retval);
 }
 
 /* ------------------------------------------------------------------------ */
