@@ -10,7 +10,7 @@ Yorick is open source software, under a
 Yorick runs under UNIX, MacOS X (X windows), and MS Windows.  You can
 find many yorick resources online:
 
-* Home pages at [yorick.github.com][] and [yorick.sourceforge.net][],
+* Home page at [yorick.sourceforge.net][],
   including the user manual and extensive documentation.
 * User forums at [yorick.sourceforge.net][].
 * Browse or download sourcecode at [github.com/dhmunro/yorick][].
