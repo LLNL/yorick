@@ -13,7 +13,7 @@ find many yorick resources online:
 * Home page at [yorick.sourceforge.net][],
   including the user manual and extensive documentation.
 * User forums at [yorick.sourceforge.net][].
-* Browse or download sourcecode at [github.com/dhmunro/yorick][].
+* Browse or download sourcecode at [github.com/LLNL/yorick][].
 * Read end of Quick start section below on running yorick demo programs.
 
 [yorick.github.com]:         http://yorick.github.com
