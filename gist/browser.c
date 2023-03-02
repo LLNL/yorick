@@ -792,7 +792,7 @@ static int MakeX(int help)
       p_stderr("gist: (SYNTAX) dpi unintelligble in display command\n");
       return 0;
     }
-    if (dpi<40 && dpi>200) {
+    if (dpi<40 || dpi>200) {
       p_stderr(
         "gist: (SYNTAX) dpi not between 40 and 200 in display command\n");
       return 0;
