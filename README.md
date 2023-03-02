@@ -6,19 +6,18 @@ that includes scientific visualization functions, and text and binary
 I/O functions geared to millions of numbers.
 
 Yorick is open source software, under a
-[BSD license](https://github.com/dhmunro/yorick/blob/master/LICENSE.md).
+[BSD license](https://github.com/LLNL/yorick/blob/master/LICENSE.md).
 Yorick runs under UNIX, MacOS X (X windows), and MS Windows.  You can
 find many yorick resources online:
 
-* Home pages at [yorick.github.com][] and [yorick.sourceforge.net][],
+* Home page at [yorick.sourceforge.net][],
   including the user manual and extensive documentation.
 * User forums at [yorick.sourceforge.net][].
-* Browse or download sourcecode at [github.com/dhmunro/yorick][].
+* Browse or download sourcecode at [github.com/LLNL/yorick][].
 * Read end of Quick start section below on running yorick demo programs.
 
-[yorick.github.com]:         http://yorick.github.com
-[yorick.sourceforge.net]:    http://yorick.sourceforge.net
-[github.com/dhmunro/yorick]: http://github.com/dhmunro/yorick
+[yorick.sourceforge.net]:    https://yorick.sourceforge.net
+[github.com/LLNL/yorick]:    https://github.com/LLNL/yorick
 
 Files in the regexp/ subdirectory are the work of Guido van Rossum and
 Henry Spencer; read the files for details.  The latter is Copyright
@@ -27,7 +26,7 @@ Henry Spencer; read the files for details.  The latter is Copyright
 Files in the fft directory are C translations of the Swarztrauber
 fortran FFTPACK routines.  Files in the matrix directory are C
 translations of the fortran LAPACK routines.  The original fortran is
-available from [netlib.org](http://netlib.org/).
+available from [netlib.org](https://netlib.org/).
 
 
 Quick start
