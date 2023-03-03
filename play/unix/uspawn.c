@@ -86,7 +86,7 @@ p_spawn(char *name, char **argv, void (*callback)(void *ctx, int err),
 
   /* spawn the process */
   pid = fork();
-  if (pid) {
+  if (pid > 0) {
     /* parent, program that called p_spawn */
     p_spawn_t *proc = p_malloc(sizeof(p_spawn_t));
 

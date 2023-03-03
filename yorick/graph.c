@@ -1939,10 +1939,10 @@ static char *GetHCPname(int n)
 }
 
 #undef N_KEYWORDS
-#define N_KEYWORDS 14
+#define N_KEYWORDS 15
 static char *windowKeys[N_KEYWORDS+1]= {
   "display", "dpi", "private", "hcp", "legends", "dump", "style", "wait",
-  "width", "height", "rgb", "parent", "xpos", "ypos", 0 };
+  "width", "height", "rgb", "parent", "xpos", "ypos", "title", 0 };
 
 static Instruction *yg_pc_resume = 0;
 extern void yg_got_expose(void);
@@ -1961,6 +1961,7 @@ void Y_window(int nArgs)
   int wait_for_expose = 0;
   int rgb = 0;
   int n0 = GhGetPlotter();
+  const char* title = NULL;
 
   if (stack<=sp && YNotNil(stack++)) {
     n= (int)YGetInteger(stack-1);
@@ -2007,6 +2008,12 @@ void Y_window(int nArgs)
   }
 #endif
 
+  if (YNotNil(keySymbols[14])) {
+    title = YGetString(keySymbols[14]);
+  } else {
+    title = window_name(n);
+  }
+
   if (nGiven || keySymbols[0] || keySymbols[1] || keySymbols[2]) {
     /* display= and/or dpi= keywords */
     char *display= 0;
@@ -2046,7 +2053,7 @@ void Y_window(int nArgs)
 #ifndef NO_XLIB
       gist_private_map = privmap;
       gist_rgb_hint = rgb;
-      engine= DISPLAY_ENGINE(window_name(n), 0, dpi, display);
+      engine= DISPLAY_ENGINE(title, 0, dpi, display);
       if (!engine) YError("failed to open X display or create X window");
       else wait_for_expose = 1;
       ghDevices[n].display= engine;
@@ -2072,10 +2079,10 @@ void Y_window(int nArgs)
     if (hcp && hcp[0]) {
       long len= strlen(hcp);
       if (len>3 && strcmp(&hcp[len-3], ".ps")==0) {
-        engine= GpPSEngine(window_name(n), 0, hcpDump, SetHCPname(n, hcp));
+        engine= GpPSEngine(title, 0, hcpDump, SetHCPname(n, hcp));
         if (!engine) YError("failed to create PostScript file");
       } else {
-        engine= GpCGMEngine(window_name(n), 0, hcpDump, SetHCPname(n, hcp));
+        engine= GpCGMEngine(title, 0, hcpDump, SetHCPname(n, hcp));
         if (!engine) YError("failed to create binary CGM file");
       }
       ghDevices[n].hcp= engine;

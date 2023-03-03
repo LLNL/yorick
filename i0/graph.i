@@ -15,7 +15,8 @@ extern window;
                        private=0/1, hcp="hcp_filename", dump=0/1,
                        legends=1/0, style="style_sheet_filename",
                        width=wpixels,height=hpixels,rgb=1,
-                       parent=id,xpos=x_in_parent,ypos=y_in_parent
+                       parent=id,xpos=x_in_parent,ypos=y_in_parent,
+                       title="Yorick $n"
 
      select window N as the current graphics output window.  N may
      range from 0 to 63, inclusive.  Each graphics window corresponds to
@@ -39,6 +40,9 @@ extern window;
      landscape=0 window, width=638,height=825 displays the entire sheet
      of hardcopy paper.  Supplying these keywords will not change the
      size of an existing window; only newly created windows.
+
+     By default, the X xindow title is "Yorick $n" with $n the window
+     number.  Keyword title can be used to specify any other name.
 
      By default, an X window will attempt to use shared colors, which
      permits several Yorick graphics windows (including windows from
@@ -302,7 +306,7 @@ func no_window(name, style=)
      As a convenience, no_window accepts a style= keyword, which it will
      pass along to the window command.  If you need to set other window
      properties, call the window function after no_window.
-     
+
      Additionally, the no_window function changes the behavior of the
      single picture commands hcps, eps, pdf, png, jpeg (and other functions
      based on the hcps command) to write the current drawing to the specified
