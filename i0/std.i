@@ -1695,7 +1695,7 @@ func median(x, which)
   if (is_void(which)) which= 1;
   list= sort(x, which);
   dims= dimsof(x);
-  if (which<1) which= dims(1)-which;
+  if (which<1) which= dims(1)+which;
   n= dims(1+which);
   odd= n%2;
   n/= 2;         /* index with half above, half below... */
