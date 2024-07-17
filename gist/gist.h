@@ -57,10 +57,10 @@ PLUG_API char *gistPathDefault;  /* set in Makefile or gread.c, can be
  */
 
 typedef struct Engine Engine;
-PLUG_API Engine *GpPSEngine(char *name, int landscape, int mode, char *file);
-PLUG_API Engine *GpCGMEngine(char *name, int landscape, int mode, char *file);
-PLUG_API Engine *GpBXEngine(char *name, int landscape, int dpi, char *display);
-PLUG_API Engine *GpFXEngine(char *name, int landscape, int dpi, char *display);
+PLUG_API Engine *GpPSEngine(const char *name, int landscape, int mode, char *file);
+PLUG_API Engine *GpCGMEngine(const char *name, int landscape, int mode, char *file);
+PLUG_API Engine *GpBXEngine(const char *name, int landscape, int dpi, char *display);
+PLUG_API Engine *GpFXEngine(const char *name, int landscape, int dpi, char *display);
 
 PLUG_API void GpKillEngine(Engine *engine);
 

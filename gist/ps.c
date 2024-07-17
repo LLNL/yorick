@@ -1357,7 +1357,7 @@ static int DrawDisjoint(Engine *engine, long n, const GpReal *px,
 
 /* ------------------------------------------------------------------------ */
 
-Engine *GpPSEngine(char *name, int landscape, int mode, char *file)
+Engine *GpPSEngine(const char *name, int landscape, int mode, char *file)
 {
   PSEngine *psEngine;
   long flen= file? strlen(file) : 0;

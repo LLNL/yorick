@@ -136,7 +136,7 @@ PLUG_API int p_wincount(p_scr *s);
 PLUG_API void p_winloc(p_win *w, int *x, int *y);
 
 /* screen graphics window and pixmap management */
-PLUG_API p_win *p_window(p_scr *s, int width, int height, char *title,
+PLUG_API p_win *p_window(p_scr *s, int width, int height, const char *title,
                          p_col_t bg, int hints, void *ctx);
 PLUG_API p_win *p_subwindow(p_scr *s, int width, int height,
                             unsigned long parent_id, int x, int y,

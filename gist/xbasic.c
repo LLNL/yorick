@@ -1339,7 +1339,7 @@ g_disconnect(p_scr *s)
 }
 
 XEngine *
-GxEngine(p_scr *s, char *name, GpTransform *toPixels,
+GxEngine(p_scr *s, const char *name, GpTransform *toPixels,
          int x, int y, int topMargin, int leftMargin, long engineSize)
 {
   XEngine *xEngine;
@@ -1424,7 +1424,7 @@ int gist_input_hint = 0;
 int gist_rgb_hint = 0;
 
 Engine *
-GpBXEngine(char *name, int landscape, int dpi, char *displayName)
+GpBXEngine(const char *name, int landscape, int dpi, char *displayName)
 {
   p_scr *s = g_connect(displayName);
   int topWidth = DefaultTopWidth(dpi);

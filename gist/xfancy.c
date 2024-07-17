@@ -73,7 +73,7 @@ static void DrawRubber(FXEngine *fxe, int x, int y);
 /* ------------------------------------------------------------------------ */
 
 Engine *
-GpFXEngine(char *name, int landscape, int dpi, char *displayName)
+GpFXEngine(const char *name, int landscape, int dpi, char *displayName)
 {
   p_scr *s = g_connect(displayName);
   int topWidth= DefaultTopWidth(dpi);   /* not including button, message */
