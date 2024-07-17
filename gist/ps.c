@@ -752,7 +752,7 @@ static int DrawMarkers(Engine *engine, long n, const GpReal *px,
   int type, markEnd= 0;
   GpPoint *points;
   int size;
-  char typeString[8];
+  char typeString[16];
 
   if (n<1 || gistA.m.type<=0) return 0;
   if (CheckClip(psEngine)) return 1;

@@ -452,7 +452,7 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
 {
   int iSystem = fxe->iSystem;
   int locked, logX = 0, logY = 0;
-  char format[24];  /* e.g.- "%s%2d (%11.3e, %11.3e)" */
+  char format[48];  /* e.g.- "%s%2d (%11.3e, %11.3e)" */
   char xFormat[16], yFormat[16], *f1, *f2;
   GpReal xWC, yWC;
   GeSystem *system;

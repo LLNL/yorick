@@ -60,7 +60,7 @@ int yAutoDebug= 0;
 int yDebugLevel= 0;
 
 /* most recent error message was built in yErrorMsg */
-char yErrorMsg[192+12];
+char yErrorMsg[192+24];
 char yWarningMsg[192];
 
 static int inYError= 0;
@@ -1748,9 +1748,9 @@ YError(const char *msg)
     strcpy(yErrorMsg, "Up to (");
   strncat(yErrorMsg, name, 40);
   if (func && (yerror_flags&2)!=0) {
-    char relpc[32];
+    char relpc[24];// 64-bit integer takes 20 char max in decimal format
     sprintf(relpc, "[%ld]", (long)(pcDebug-func->code));
-    strncat(yErrorMsg, relpc, 12);
+    strncat(yErrorMsg, relpc, 24);
   }
   strcat(yErrorMsg, ") ");
   if (!pcUp || recursing)
