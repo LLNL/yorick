@@ -68,7 +68,7 @@ PLUG_API int gist_input_hint, gist_private_map, gist_rgb_hint;
 PLUG_API void g_initializer(int *pargc, char *argv[]);
 PLUG_API char *g_set_path(char *gpath);
 PLUG_API void (*g_on_keyline)(char *msg);
-PLUG_API void (*g_stdout)(char *output_line);
+PLUG_API void (*g_stdout)(const char *output_line);
 
 typedef struct g_callbacks g_callbacks;
 struct g_callbacks {

@@ -69,7 +69,7 @@ extern void y_on_stdin(char *input_line);
 extern void y_on_exception(int signal, char *errmsg);
 extern int y_on_quit(void);
 extern void (*g_on_keyline)(char *);
-extern void (*g_stdout)(char *);
+extern void (*g_stdout)(const char *);
 
 extern int yBatchMode;  /* may be set with -batch, see std0.c */
 
