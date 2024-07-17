@@ -158,14 +158,14 @@ func _s_12(b, list)
   if (numberof(list)) {
     /* 1e-13 rational fit to 2/5(-x+2/7(x-2/9(x+2/11(x-2/13 x ...)))) */
     bs = b(list);
-    bs = 1. - 
+    bs = 1. -
       0.4*bs*(1.+bs*(0.022623753252252726+0.0035112573452158458*bs)) /
       (1.+bs*(0.3083380389584768+0.028115777703514408*bs));
   }
   list= where(!small);
   if (numberof(list)) {
     bl = b(list);
-    b = sqrt(bl); 
+    b = sqrt(bl);
     bl = 1.5*(1.-dawson(b)/b)/bl;
   }
   return merge(bs,bl, small);

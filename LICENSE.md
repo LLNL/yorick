@@ -2,8 +2,8 @@
 
 Copyright (c) 2005, The Regents of the University of California.
 Produced at the Lawrence Livermore National Laboratory.
-Written by [David H. Munro](http://github.com/dhmunro).  
-UCRL-CODE-155996  
+Written by [David H. Munro](http://github.com/dhmunro).
+UCRL-CODE-155996
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

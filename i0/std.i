@@ -5331,7 +5331,7 @@ extern lsdir;
 extern mkdir;
 extern rmdir;
 /* DOCUMENT mkdir, directory_name
-         or rmdir, directory_name 
+         or rmdir, directory_name
      Create DIRECTORY_NAME with mkdir, or remove it with rmdir.  The rmdir
      function only works if the directory is empty.  An error is raised if
      DIRECTORY_NAME is not a non-nil scalar string.  If mkdir or rmdir are
@@ -5341,7 +5341,7 @@ extern rmdir;
      DIRECTORY_NAME is a non-nil scalar string and if mkdir and rmdir are
      called as a function, they return an integer: 0 to indicate success and
      -1 to indicate failure.
-     
+
    SEE ALSO: mkdirp, cd, lsdir, get_cwd, get_home, filepath
  */
 
@@ -5932,7 +5932,7 @@ extern crc_on;
        crc_def = [16, 0x1021, 0, 1, 0]                        ("kermit")
      The default is "pkzip".  You can pass any of these five strings
      instead of an array of five numbers as CRC_DEF.
-     
+
      To use a CRC algorithm other than "pkzip", you must first generate
      a CRC_TABLE by calling crc_on(crc_def,-), then pass the CRC_TABLE
      as the second argument with X as the first to compute the CRC.
@@ -6185,7 +6185,7 @@ extern _len;
               list= _cdr(list, i)
               _cdr, list, i, new_list_i
 
-     **** DEPRECATED, object extensions in new code, see help,oxy 
+     **** DEPRECATED, object extensions in new code, see help,oxy
 
      implement rudimentary Lisp-like list handling in Yorick.
      However, in Yorick, a list must have a simple tree structure

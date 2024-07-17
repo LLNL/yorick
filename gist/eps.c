@@ -277,7 +277,7 @@ static void ScaleFont(GpReal ndcHeight)
    character codes 0x21 through 0x7e (33 through 126) inclusive.
  */
 
-static short c01[]= { 2,2,0,0,  21,9, 5,5 };                 /* ! ASCII 33 */ 
+static short c01[]= { 2,2,0,0,  21,9, 5,5 };                 /* ! ASCII 33 */
 static short c02[]= { 2,2,0,0,  21,17, 22,18 };
 static short c03[]= { 2,2,2,2,  21,4, 22,5, 16,18, 8,10 };
 static short c04[]= { 2,6,0,0,  21,5, 18,16,12,14,10,8 };

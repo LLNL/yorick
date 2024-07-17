@@ -39,7 +39,7 @@ extern long SeekValue(double value, double *list, long n);
  *              (zone-1)-------<--------(zone)
  *                  |         side         |
  *                  |          0           |
- *                  |                      |    
+ *                  |                      |
  *                  |                      |    ^
  *                  |side              side|    |
  *                  V  1     (zone)     3  ^    |

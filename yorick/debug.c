@@ -106,7 +106,7 @@ struct {
   { 0, "(branch offset)", "", CATEGORY(0, PC_DISPLACE, IS_DATA) },
   { 0, "(range function)", "", CATEGORY(0, PC_RF, IS_DATA) },
 
-  { 0, "Halt-Virtual-Machine", "%4ld sp==%-4d %s", 0 }, 
+  { 0, "Halt-Virtual-Machine", "%4ld sp==%-4d %s", 0 },
 
   { &PushChar, "PushChar", "%4ld sp->%-4d %s(0x%02lx)",
       CATEGORY(STACK_INC, PC_INTEGER, 0) },

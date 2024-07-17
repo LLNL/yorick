@@ -76,7 +76,7 @@ func calendar(&y, &m, &d, n, julian=, noabbrev=)
  *   returns the Julian Day Number, JDN, associated with year Y,
  *   month M (1=Jan, 2=Feb, ..., 12=Dec) and day of month D in the
  *   first form.  In the second form, JDN is the input, and Y, M,
- *   and D are outputs.  
+ *   and D are outputs.
  *
  *   The Julian Day Number is a day count used by astronomers, which
  *   is by definition independent of any calendar; each passing day

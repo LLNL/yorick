@@ -330,7 +330,7 @@ reg(int paren, int *flagp)
   }
 
   /* Make a closing node, and hook it on the end. */
-  ender = regnode((char)((paren) ? CLOSE+parno : END));	
+  ender = regnode((char)((paren) ? CLOSE+parno : END));
   regtail(ret, ender);
 
   /* Hook the tails of the branches to the closing node. */
@@ -1070,7 +1070,7 @@ regdump(regexp *r)
     next = regnext(s);
     if (next == NULL)		/* Next ptr. */
       printf("(0)");
-    else 
+    else
       printf("(%d)", (s-r->program)+(next-s));
     s += 3;
     if (op == ANYOF || op == ANYBUT || op == EXACTLY) {

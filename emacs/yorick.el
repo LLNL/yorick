@@ -497,7 +497,7 @@ Key bindings:
 ")
         (t
          "/* DOCUMENT ?
-     
+
    SEE ALSO:
  */
 "))
@@ -1674,7 +1674,7 @@ mechanism of yoterm-mode.  See shell command for more help."
                (prog (or explicit-shell-file-name
                          (getenv "ESHELL")
                          (getenv "SHELL")
-                         "/bin/sh"))                 
+                         "/bin/sh"))
                (sname (file-name-nondirectory prog))
                (startfile (concat "~/.emacs_" sname))
                (xargs-name (intern-soft (concat "explicit-" sname "-args"))))
@@ -1714,10 +1714,10 @@ mechanism of yoterm-mode.  See shell command for more help."
         (delete-region p (point))))
   (process-send-string nil "\C-c"))
 
-(defun ysh-watch-for-password-prompt (string) 
+(defun ysh-watch-for-password-prompt (string)
   "Prompt in the minibuffer for password and send without echoing.
 This function uses `send-invisible' to read and send a password to the buffer's
-process if STRING contains a password prompt defined by 
+process if STRING contains a password prompt defined by
 `comint-password-prompt-regexp'.
 
 This function could be in the list `comint-output-filter-functions'."

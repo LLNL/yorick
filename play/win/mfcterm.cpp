@@ -255,7 +255,7 @@ mfc_edit_child::~mfc_edit_child()
 }
 
 void
-mfc_edit_child::OnClose() 
+mfc_edit_child::OnClose()
 {
   if (this == term_view->GetParent())
     AfxGetApp()->m_pMainWnd->SendMessage(WM_COMMAND, ID_VIEW_TERM, 0);
@@ -339,7 +339,7 @@ mfc_edit_doc::OnNewDocument()
 }
 
 BOOL
-mfc_edit_doc::OnOpenDocument(LPCTSTR lpszPathName) 
+mfc_edit_doc::OnOpenDocument(LPCTSTR lpszPathName)
 {
   if (!CRichEditDoc::OnOpenDocument(lpszPathName))
     return FALSE;
@@ -350,7 +350,7 @@ mfc_edit_doc::OnOpenDocument(LPCTSTR lpszPathName)
 }
 
 BOOL
-mfc_edit_doc::SaveModified() 
+mfc_edit_doc::SaveModified()
 {
   mfc_edit_view *view = (mfc_edit_view *)GetView();
   if (view==term_view || view==hist_view)
@@ -360,7 +360,7 @@ mfc_edit_doc::SaveModified()
 }
 
 void
-mfc_edit_doc::OnFileClose() 
+mfc_edit_doc::OnFileClose()
 {
   mfc_edit_view *view = (mfc_edit_view *)GetView();
   if (view == term_view)
@@ -402,7 +402,7 @@ mfc_term_view::OnInitialUpdate()
 }
 
 LRESULT
-mfc_term_view::WindowProc(UINT message, WPARAM wParam, LPARAM lParam) 
+mfc_term_view::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   LRESULT result = 0;
   int key_unshifted = 0;

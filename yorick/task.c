@@ -1428,7 +1428,7 @@ Y_plug_in(int nArgs)
   int i;
   if (nArgs!=1) YError("plug_in function takes exactly one argument");
   pkgname = YGetString(sp-nArgs+1);
-  if (!pkgname || !pkgname[0]) 
+  if (!pkgname || !pkgname[0])
     YError("plug_in: package name argument is null");
   for (i=1 ; pkgname[i] ; i++);
   for (pname=pkgname+i-1 ; pname>pkgname ; pname--)

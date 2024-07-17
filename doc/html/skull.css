@@ -39,8 +39,8 @@ a {
 }
 
 a:hover {
-  color:#ffffff; 
-  background-color:#44a;  
+  color:#ffffff;
+  background-color:#44a;
   text-decoration: none;
 }
 
@@ -65,7 +65,7 @@ a:hover {
 
 
 
-#links { 
+#links {
   padding: 0px 0px 0px 5px;
   background: none;
 }
@@ -80,16 +80,16 @@ a:hover {
   font-weight:normal;
 }
 
-#links .nav1 a { 
-  margin:0px 0px 0px 3px; 
+#links .nav1 a {
+  margin:0px 0px 0px 3px;
   padding: 2px 3px 2px 0px;
   line-height: 180%;
   background: none;
 }
 
 
-#links .nav2 a { 
-  margin:0px 0px 0px 9px; 
+#links .nav2 a {
+  margin:0px 0px 0px 9px;
   padding: 0px 0px 0px 0px;
   line-height: 145%;
   font-size: 90%;
@@ -112,7 +112,7 @@ a:hover {
   width: 650px;
 }
 
-pre { 
+pre {
   color: #000000;
 }
 

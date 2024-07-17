@@ -81,7 +81,7 @@ readline wrapper like [rlwrap](http://freshmeat.net/projects/rlwrap/).
 If you need some test programs to run, you can try the demos.  Start
 yorick and type:
 
-    include, "demo3.i"  
+    include, "demo3.i"
     demo3
 
 The demo3 runs a simulation of a chaotic pendulum (it will stop after
@@ -142,7 +142,7 @@ you might reasonably omit.  Here's a quick roadmap:
       documentation: yorick user manual, quick reference cards
     emacs/
       GNU Emacs lisp code for running yorick and editing yorick source
-  
+
     distribs/
       files for creating RedHat RPM, FreeBSD, and other distributions
     debian/
@@ -169,28 +169,28 @@ yorick.  In order, the four separate commands are:
  can either fix your system or edit the files Make.cfg and
  play/unix/config.h by hand to repair any errors or oversights of "make
  config".
- 
+
  The "make config" step creates the file Make.cfg (in this top-level
  directory).  By default, the compiler and loader flags are just "-O".
  If you want fancier options, you can edit Make.cfg before you build;
  just modify the Y_CFLAGS and/or Y_LDFLAGS variable.  Optimization flags
  like -g or -O are handled separately; use the COPT_DEFAULT variable
  to set those.
- 
+
  Instead of editing Make.cfg by hand after the "make config" step, you
  can also set a variety of environment variables to control the
  configuration process.  You can read the configuration scripts --
  configure, play/unix/config.sh, play/x11/xconfig.sh, and
  yorick/yconfig.sh -- to find out precisely what they do.  Here they
  are, with sample non-default values:
- 
+
     CC='xlc -q64'      # C compiler name plus overall mode switch
     CFLAGS=-g          # compile flags (-O is default)
     LDFLAGS=-g         # load flags (optimization CFLAGS is default)
     AR='ar -X 64'      # ar archive program
     RANLIB='ranlib -X 64'  # ranlib archive indexer
     MATHLIB=-lmcompat      # math library (-lm is default)
- 
+
     FPU_IGNORE=yes  # give up trying to catch floating point exceptions
     NO_PLUGINS=yes  # build yorick with no plugin support
     LD_STATIC=yes   # force hex and drat packages to be statically loaded
@@ -200,7 +200,7 @@ yorick.  In order, the four separate commands are:
                       (catamount) - this cripples yorick event handling
     NO_POLL=yes     # forces use of select when poll present but broken
                       (Mac OS X uses this by default)
- 
+
     NO_XLIB=yes     # build yorick with no onscreen graphics
     X11BASE=/weird/X11root         # try -I/weird/X11root/include, and
                                          -L/weird/X11root/lib

@@ -98,7 +98,7 @@ func fil_delay(filt, hz)
          or fil_delay(filt, 1)
 
      return the group delay d(phase)/dw at w=0 (zero frequency) for
-     filter FILT.  By default, FILT is assumed to be normalized 
+     filter FILT.  By default, FILT is assumed to be normalized
      to an angular frequency (e.g.- radians per second), but if
      the 2nd parameter is non-nil and non-0 FILT is assumed to be
      normalized to a circular frequency (e.g.- Hz or GHz).

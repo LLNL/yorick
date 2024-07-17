@@ -214,7 +214,7 @@ GhGetMouse(int *sys, double *x, double *y)
   if (sys) *sys = -1;
   if (x) *x = 0.0;
   if (y) *y = 0.0;
-  return -1;  
+  return -1;
 #else
   int j, win = -1;
   if (gxCurrentEngine != NULL) {

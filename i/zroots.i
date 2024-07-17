@@ -10,7 +10,7 @@
 
 func zroots(a, imsort=)
 /* DOCUMENT zroots(a)
-     returns the vector of (complex) roots of the (complex) 
+     returns the vector of (complex) roots of the (complex)
      polynomial: Sum(a(i)*x^(i-1)) using Laguerre's method.
      The roots are sorted in order of increasing real parts.  Call with
      non-zero imsort keyword to sort into increasing imaginary parts.
@@ -123,6 +123,6 @@ func laguerre(a,x)
   write, "WARNING: too many iterations in laguerre";
   return x;
 }
-      
+
 
 

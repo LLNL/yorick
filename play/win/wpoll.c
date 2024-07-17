@@ -48,7 +48,7 @@ w_initialize(HINSTANCE i, HWND w, void (*wquit)(void),
   w_main_window = w;
   w_quit = wquit;
   w_stdinit = wstdinit;
-  w_parent = wparent;  
+  w_parent = wparent;
 }
 
 void

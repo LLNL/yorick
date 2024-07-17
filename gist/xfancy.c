@@ -492,7 +492,7 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
     gxCurrentY = yWC;
     gxCurrentSys = iSystem;
     gxCurrentEngine = (Engine *)fxe;
-    
+
     RedrawMessage(fxe);
   }
   if (rubberBanding) DrawRubber(fxe, x, y);
@@ -751,12 +751,12 @@ static int FindSystem(FXEngine *fxe, Drauing *drawing, int x, int y,
         /* be sure system has been scanned if limits extreme */
         ((sys->rescan || sys->unscanned>=0) &&
          GdScan(sys))) continue;
-    box= &sys->trans.viewport; 
+    box= &sys->trans.viewport;
     if (xn>=box->xmin && xn<=box->xmax && yn>=box->ymin && yn<=box->ymax)
-      { 
+      {
         tmp= (box->xmax-box->xmin)*(box->ymax-box->ymin);
         if(tmp<0) tmp= -tmp;
-        if(tmp<min) { 
+        if(tmp<min) {
           min= tmp;
           iSystem= i;
           thesys= sys;

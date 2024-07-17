@@ -353,7 +353,7 @@ func fake_mesh2(xyz,bndy)
   i = long(random()*numberof(starts)) + 1;
   return hex_mesh(xyz, bound, numberof(mbnds), &mbnds,
                   numberof(blks), &blks, starts(i));
-  
+
 }
 
 _orig_hex_mesh2 = hex_mesh2;

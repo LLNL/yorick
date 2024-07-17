@@ -1,6 +1,6 @@
 /* mdigest.c
  * md5 and sha1 message digest functions from public domain starting points:
- * md5 - Alexander Peslyak 
+ * md5 - Alexander Peslyak
  * http://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
  * sha1 - Steve Reid
  * ftp://ftp.funet.fi/pub/crypt/hash/sha/sha1.c
@@ -259,7 +259,7 @@ sha1_update(md_state *ctx, void *data, unsigned long nbytes)
 #define PUTLE(a,i,v) (a)[i]=(v); (a)[i+1]=(v)>>8; \
   (a)[i+2]=(v)>>16; (a)[i+3]=(v)>>24;
 #define PUTBE(a,i,v) (a)[i]=(v)>>24; (a)[i+1]=(v)>>16; \
-  (a)[i+2]=(v)>>8; (a)[i+3]=(v) 
+  (a)[i+2]=(v)>>8; (a)[i+3]=(v)
 
 void
 md5_final(void *rslt, md_state *ctx)

@@ -31,14 +31,14 @@ struct p_file_ops {
   unsigned long (*v_fsize)(p_file *file);
   unsigned long (*v_ftell)(p_file *file);
   int (*v_fseek)(p_file *file, unsigned long addr);
- 
+
   char *(*v_fgets)(p_file *file, char *buf, int buflen);
   int (*v_fputs)(p_file *file, const char *buf);
   unsigned long (*v_fread)(p_file *file,
                            void *buf, unsigned long nbytes);
   unsigned long (*v_fwrite)(p_file *file,
                             const void *buf, unsigned long nbytes);
- 
+
   int (*v_feof)(p_file *file);
   int (*v_ferror)(p_file *file);
   int (*v_fflush)(p_file *file);

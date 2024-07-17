@@ -443,7 +443,7 @@ Y_mp_exec(int argc)
       }
     }
     if (mpy_size > 1)
-      mpy_bcast(1);  /* make sure everybody has char command on stack */ 
+      mpy_bcast(1);  /* make sure everybody has char command on stack */
     /* invoke interpreted include,char_array */
     if (mpy_rank) {
       char *cmsg = (yarg_typeid(0)==Y_CHAR)? ygeta_c(0,0,0) : 0;

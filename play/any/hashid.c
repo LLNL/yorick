@@ -30,7 +30,7 @@ struct id_name {
 static p_hashtab *id_table = 0;
 static id_name *id_freelist = 0;
 static id_name id_null;
-extern int p_id_collisions; 
+extern int p_id_collisions;
 int p_id_collisions = 0;  /* expect to be tiny */
 
 static p_hashkey id_hash(const char *name, int len);

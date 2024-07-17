@@ -155,7 +155,7 @@ GistPrimitives begin
 } bind def
 /Helv { % bi Helv    return Helvetica font dictionary
         % bi= 0 roman, 1 bold, 2 italic, 3 bold italic
-  [ /L-Helvetica /L-Helvetica-Bold 
+  [ /L-Helvetica /L-Helvetica-Bold
     /L-Helvetica-Oblique /L-Helvetica-BoldOblique ]
   exch get FindLatin
 } bind def
@@ -241,7 +241,7 @@ currentdict end def
 
 % modify stringwidth and show operators to handle
 % escape sequences for superscripts and subscripts
-% DC1DC2superscriptDC1 
+% DC1DC2superscriptDC1
 % DC1DC3subscriptDC1
 /SSscale 0.75000 def  % scale factor for super or sub scripts
 /SSdown -0.11111 def  % fraction of PtSz to drop subscripts
@@ -698,7 +698,7 @@ GistPrimitives begin /PG save def GI
 } {    % this is level 2 PostScript
     (PostScript is level 2) 1000 12000 T
 } ifelse
-( \() show version show (\)) show 
+( \() show version show (\)) show
 /languagelevel where { pop languagelevel } { 1 } ifelse
 1 gt {
   (  product: ) show product show

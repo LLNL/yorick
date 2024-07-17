@@ -139,7 +139,7 @@ geninit(int argc, char *argv[])
       }
       if (strcmp(argv[0], "yor")) {  /* skip repeats and yor */
         for (i=0 ; i<npkgs ; i++) if (!strcmp(argv[0], pkgs[i])) break;
-        if (i>=npkgs) 
+        if (i>=npkgs)
           pkgs[npkgs++] = argv[0];
       }
     }
@@ -1120,7 +1120,7 @@ handle_procomm(FILE *out, FILE *in, char *pos, int fort)
 
   /* finally, generate the Y_ wrapper definition itself */
   fprintf(out, "void\nY_%s(int n)\n{\n", var_last->name);
-  if (nargs==1 && (c_modes[(unsigned char)proto[0]&63]&2) && 
+  if (nargs==1 && (c_modes[(unsigned char)proto[0]&63]&2) &&
       (c_modes[ret]&2)) nargs=0;
   if (nargs==1 && (c_modes[(unsigned char)proto[0]&63]&2)) {
     fprintf(out, "  if (n>1) YError(\"%s takes void argument\");\n",

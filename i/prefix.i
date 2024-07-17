@@ -115,7 +115,7 @@ func prefix_unD(text)
 func prefix_write(f, prefix, values, ndigits=, width=)
 /* DOCUMENT prefix_read, f, prefix, value_array
      writes lines of text file F which begin with the prefix PREFIX:
-     
+
        prefix N1 N2 N3 N4 N5
        prefix N6 N7 N8 N9 N10
        prefix N11 N12

@@ -790,7 +790,7 @@ PLUG_API int GdSetPort(void);
    can be "reverted" to return the limits to the state at the time
    of the last save operation.  (gistD plays no role in this operation.)
    This is used by the fancy X Engine to save the limits prior to
-   a series of mouse-driven zoom or pan operations. 
+   a series of mouse-driven zoom or pan operations.
    GdRevertLimits(1) reverts to the save limits only if the current
    limits are marked D_ZOOMED, while GdRevertLimits(0) reverts
    unconditionally.  GdSaveLimits(1) assures that D_ZOOMED is not

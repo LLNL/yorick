@@ -336,15 +336,15 @@
     <ClInclude Include="..\regexp\yregexp.h" />
     <ClInclude Include="..\yorick\bcast.h" />
     <CustomBuild Include="..\yorick\binio.h">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)numfmt numfmt.h 
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)numfmt numfmt.h
 move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)numfmt numfmt.h 
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)numfmt numfmt.h
 move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)numfmt numfmt.h 
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)numfmt numfmt.h
 move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)numfmt numfmt.h 
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)numfmt numfmt.h
 move/y numfmt.h %(RootDir)%(Directory)\prmtyp.h </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(InputDir)prmtyp.h;%(Outputs)</Outputs>

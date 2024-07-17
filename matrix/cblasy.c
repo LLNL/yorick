@@ -624,7 +624,7 @@ cblas_dgemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANSPOSE transa,
 void
 cblas_dtrmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
             const enum CBLAS_TRANSPOSE transa, const enum CBLAS_DIAG diag,
-            INT_IN n, const double *a, INT_IN lda, 
+            INT_IN n, const double *a, INT_IN lda,
             double *x, INT_IN incx)
 {
   /*

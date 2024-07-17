@@ -18,7 +18,7 @@ func plc_label(z,y,x, levs, ndivs=, opaque=, lmgrid=, height=)
      or range functions, or zooming or panning with the mouse), do so
      before calling plc_label, since it reads the current plot limits.
 
-     finds points where numeric contours labels can be drawn 
+     finds points where numeric contours labels can be drawn
      input
       z  : array to be contoured
       y: y coords of array to be contoured
@@ -48,12 +48,12 @@ func plc_label(z,y,x, levs, ndivs=, opaque=, lmgrid=, height=)
    *   npz= corresponding list of contour numbers
    * Mnemonic: zp= zone-point, pz= point-zone */
   dims = dimsof(z);                 /* shape of array */
-  nx = dims(2);                     
+  nx = dims(2);
   ny = dims(3);
   nc = numberof(levs);
 
   iar = indgen(nx)(,-:1:ny);  /* used to keep track of original indices */
-  jar = indgen(ny)(-:1:nx,); 
+  jar = indgen(ny)(-:1:nx,);
 
   /* Loop over contour levels - note that this is almost guaranteed
    * to be a much shorter loop than the number of zones in the mesh,
@@ -170,7 +170,7 @@ func plc_label(z,y,x, levs, ndivs=, opaque=, lmgrid=, height=)
   }
 
   /* choose the best of the available contour indices
-   * store the low density mesh index containing 
+   * store the low density mesh index containing
    * the best label within that subregion
    * and the index of that label */
   ip1= min(iar+1,nx);
@@ -214,7 +214,7 @@ func plc_label(z,y,x, levs, ndivs=, opaque=, lmgrid=, height=)
       plt, pr1(levs(nc(k))), xc(k),yc(k),
            height=height, tosys=1, justify="CH",opaque=opaque;
       grow, xlab, xc(k);
-      grow, ylab, yc(k); 
+      grow, ylab, yc(k);
     }
   }
 }

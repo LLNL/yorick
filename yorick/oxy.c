@@ -954,7 +954,7 @@ Y_save(int argc)
           } else if (ma.mndx) {
             if (ops->set_i(obj, ma.mndx, argc))
               y_errorn("unable to save to member %ld", ma.mndx);
-          } else { 
+          } else {
             /* string(0) means append anonymously */
             if (ops->set_q(obj, 0, -1, argc))
               y_error("unable to save by appending anonymous member");
@@ -980,7 +980,7 @@ Y_save(int argc)
             if (!ma.range) j = ma.mndxs[i];
             if (ops->set_i(obj, j, 0))
               y_errorn("unable to save member %ld", ma.mndxs[i]);
-            if (ma.range) j += ma.range[2]; 
+            if (ma.range) j += ma.range[2];
           }
           yarg_drop(1);
         }
@@ -1480,7 +1480,7 @@ static yo_ops_t yo_globtab_ops = {
   "oxy_globtab", yo_gt_dealloc, yo_gt_count, yo_gt_findm, yo_gt_findn,
   yo_gt_geti, yo_gt_getq, yo_gt_seti, yo_gt_setq, 0, 0, 0 };
 
-static void 
+static void
 yo_new_globobj(void)
 {
   yo_push(&yo_globtab_ops, yo_globtab_ops.type_name);

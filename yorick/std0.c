@@ -33,7 +33,7 @@ char *yVersion= Y_VERSION;
 extern BuiltIn Y_yorick_init, Y_set_path, Y_reshape, Y_array, Y_structof,
   Y_dimsof, Y_orgsof, Y_sizeof, Y_numberof, Y_typeof, Y_nameof, Y_identof,
   Y_is_array, Y_is_scalar, Y_is_vector, Y_is_matrix, Y_is_func, Y_is_void,
-  Y_is_range, Y_is_struct, Y_is_stream, Y_is_integer, Y_is_real, Y_is_complex, 
+  Y_is_range, Y_is_struct, Y_is_stream, Y_is_integer, Y_is_real, Y_is_complex,
   Y_is_numerical, Y_is_string, Y_is_pointer, Y_am_subroutine, Y_unref, Y_swap,
   Y_sin, Y_cos, Y_tan, Y_asin, Y_acos, Y_atan, Y_sinh, Y_cosh, Y_tanh,
   Y_exp, Y_log, Y_log10, Y_sqrt, Y_ceil, Y_floor, Y_abs, Y_sign, Y_conj,

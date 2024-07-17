@@ -109,7 +109,7 @@ test_dlopen(void)
   NSObjectFileImage file_image;
   if (NSCreateObjectFileImageFromFile("./udltest" PLUG_SUFFIX, &file_image) ==
       NSObjectFileImageSuccess) {
-    handle = (void *)NSLinkModule(file_image, "./udltest" PLUG_SUFFIX, 
+    handle = (void *)NSLinkModule(file_image, "./udltest" PLUG_SUFFIX,
                                   NSLINKMODULE_OPTION_RETURN_ON_ERROR
                                   | NSLINKMODULE_OPTION_PRIVATE);
     NSDestroyObjectFileImage(file_image);

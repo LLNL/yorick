@@ -114,7 +114,7 @@ p_dlopen(const char *dlname)
     NSObjectFileImage file_image;
     if (NSCreateObjectFileImageFromFile(name, &file_image) ==
         NSObjectFileImageSuccess) {
-      handle = (void *)NSLinkModule(file_image, name, 
+      handle = (void *)NSLinkModule(file_image, name,
                                     NSLINKMODULE_OPTION_RETURN_ON_ERROR
                                     | NSLINKMODULE_OPTION_PRIVATE);
       NSDestroyObjectFileImage(file_image);

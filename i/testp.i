@@ -935,28 +935,28 @@ if (x(1,2,3,4,5,6)!=54321 || x(1,2,1,1,3,4)!=32001) {
 
 y= [];
 grow, y, -2;
-if (anyof(y!=-2)) { 
+if (anyof(y!=-2)) {
   goofs++;
   "**FAILURE** of grow test 1";
 }
 grow, y, [1,2,3];
-if (anyof(y!=[-2,1,2,3])) { 
+if (anyof(y!=[-2,1,2,3])) {
   goofs++;
   "**FAILURE** of grow test 2";
 }
 grow, y, [6,5,4];
-if (anyof(y!=[-2,1,2,3,6,5,4])) { 
+if (anyof(y!=[-2,1,2,3,6,5,4])) {
   goofs++;
   "**FAILURE** of grow test 3";
 }
 y= [[1,2,3],[4,5,6]];
 grow, y, -1;
-if (anyof(y!=[[1,2,3],[4,5,6],[-1,-1,-1]])) { 
+if (anyof(y!=[[1,2,3],[4,5,6],[-1,-1,-1]])) {
   goofs++;
   "**FAILURE** of grow test 4";
 }
 grow, y, [6,5,4];
-if (anyof(y!=[[1,2,3],[4,5,6],[-1,-1,-1],[6,5,4]])) { 
+if (anyof(y!=[[1,2,3],[4,5,6],[-1,-1,-1],[6,5,4]])) {
   goofs++;
   "**FAILURE** of grow test 5";
 }

@@ -132,7 +132,7 @@ func ylm_lm(y, l, m, v)
  *   (See help,ylm for a complete description of the indexing of Y.)
  *   Note that for real spherical harmonics, M>0 are the cosine
  *   components and M<0 are the sin components.
- 
+
  *   The first argument to ylm_lm can be either a scalar LMAX, or an
  *   array Y returned by ylm, whose first two dimensions, 1+lmax by
  *   1+lmax, determine lmax.

@@ -83,7 +83,7 @@ TrimBoundary(Boundary *trimmed,   /* Resulting trimmed boundary */
              long *rmlist,        /* rmlist[nsegs][2][2]= [[k1,l1],[k2,l2]]
                                    * are nsegs logical line segments, where
                                    * (k,l) are point coordinates and either
-                                   * k1=k2 or l1=l2 */ 
+                                   * k1=k2 or l1=l2 */
              long nsegs,
              int *work);          /* work[2][klmax] */
 

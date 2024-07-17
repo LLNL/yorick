@@ -203,7 +203,7 @@ func to_ecliptic(orbit,time,full=)
                -san*dsar-dsan*sar+can*cn*dcar+can*dcn*car+dcan*cn*car,
                 sn*dcar+dsn*car],
               [ san*dsn+dsan*sn,
-               -can*dsn-dcan*sn, 
+               -can*dsn-dcan*sn,
                dcn]];
     rotdot = transpose(rotdot, 3);
   }
@@ -415,7 +415,7 @@ func solar_system(time)
        +6.68*sin(p) +6.90*cos(p)
        -1.18*sin(2.*p) -0.03*cos(2.*p)
        +0.15*sin(3.*p) -0.14*cos(3.*p));
-  
+
   xyz(1,9,..) = r*cos(lon)*cos(lat);
   xyz(2,9,..) = r*sin(lon)*cos(lat);
   xyz(3,9,..) = r*sin(lat);
