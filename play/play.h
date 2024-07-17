@@ -22,8 +22,8 @@ extern int on_launch(int argc, char *argv[]);
 PLUG_API void p_quit(void);
 PLUG_API void p_abort(void);               /* never returns to caller */
 PLUG_API void p_qclear(void);              /* clears event queue */
-PLUG_API void p_stdout(char *output_line); /* only after p_stdinit */
-PLUG_API void p_stderr(char *output_line); /* only after p_stdinit */
+PLUG_API void p_stdout(const char *output_line); /* only after p_stdinit */
+PLUG_API void p_stderr(const char *output_line); /* only after p_stdinit */
 PLUG_API double p_wall_secs(void);         /* must interoperate with on_poll */
 PLUG_API double p_cpu_secs(double *sys);
 /* p_getenv and p_getuser return pointers to static memory */
