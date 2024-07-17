@@ -986,8 +986,10 @@ extern pli;
      If X1 and Y1 are given, they represent the coordinates of the
      upper right corner of the image.  If X0, and Y0 are given, they
      represent the coordinates of the lower left corner, which is at
-     (0,0) by default.  If only the Z array is given, each cell will be
-     a 1x1 unit square, with the lower left corner of the image at (0,0).
+     (0.5,0.5) by default.  If only the Z array is given, each cell will
+     be a 1x1 unit square with central coordinates corresponding to the
+     cell indices in Z.
+
      The following keywords are legal (each has a separate help entry):
    KEYWORDS: legend, hide, top, cmin, cmax
    SEE ALSO: plg, plm, plc, plv, plf, pli, plt, pldj, plfp,

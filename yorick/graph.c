@@ -1347,14 +1347,14 @@ void Y_pli(int nArgs)
       YError("pli needs either 0, 1, or 2 corner (x,y) points");
   if (iPass==2) {
     /* no corners specified */
-    x0= y0= 0.0;
-    x1= (double)iMax;
-    y1= (double)jMax;
+    x0 = y0 = 0.5;
+    x1 = (double)iMax + 0.5;
+    y1 = (double)jMax + 0.5;
   } else if (iPass==4) {
-    /* two corners specified */
-    x1= x0;
-    y1= y0;
-    x0= y0= 0.0;
+    /* upper right corner specified */
+    x1 = x0;
+    y1 = y0;
+    x0 = y0 = 0.5;
   }
 
   /* set legend and hide in gistD */
