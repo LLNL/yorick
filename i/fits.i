@@ -2334,8 +2334,8 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   }
 
   /* Find the format. */
-  tform3 = "%d%1[LXBIJAEDCMP]%s";
-  tform2 =   "%1[LXBIJAEDCMP]%s";
+  tform3 = "%d%1[LXBIJKAEDCMP]%s";
+  tform2 =   "%1[LXBIJKAEDCMP]%s";
   ncols = numberof(ptr);
   mult = size = array(long, ncols);
   nrows = -1;
@@ -2426,74 +2426,38 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
         arr = [];
       } else if (m != ncells) {
         error, ("bad number of elements for "  + fits_nth(i) + " column");
-      } else if (t == 'B' && (type == long || type == int ||
-                              type == short || type == char)) {
+      } else if (t == 'B' && is_integer(arr)) {
         s = 1;
-        if (min(arr) < 0 || max(arr) > 255) {
-          _fits_warn, ("truncation of input values in "
-                       + fits_nth(i) + " column");
-        }
-        if (type != char) {
-          ptr(i) = &char(arr);
-          arr = [];
-        }
-      } else if (t == 'I' && (type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, char, ptr, i;
+      } else if (t == 'I' && is_integer(arr)) {
         s = 2;
-        if (min(arr) < -32768 || max(arr) > 32767) {
-          _fits_warn, ("truncation of input values in "
-                       + fits_nth(i) + " column");
-        }
-        if (type != short) {
-          ptr(i) = &short(arr);
-          arr = [];
-        }
-      } else if (t == 'J' && (type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, short, ptr, i;
+      } else if (t == 'J' &&is_integer(arr)) {
         s = 4;
-        if (min(arr) < -2147483648.0 || max(arr) > 2147483647.0) {
-          _fits_warn, ("truncation of input values in "
-                       + fits_nth(i) + " column");
-        }
-        if (type != long || type != int) {
-          ptr(i) = &long(arr);
-          arr = [];
-        }
-      } else if (t == 'E' && (type == double || type == float ||
-                              type == long || type == int ||
-                              type == short || type == char)) {
-        s = 4;
-        if (type != float) {
-          ptr(i) = &float(arr);
-          arr = [];
-        }
-      } else if (t == 'D' && (type == double || type == float ||
-                              type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, int, ptr, i;
+      } else if (t == 'K' && is_integer(arr)) {
         s = 8;
-        if (type != double) {
-          ptr(i) = &double(arr);
-          arr = [];
-        }
-      } else if (t == 'C' && (type == complex || type == double ||
-                              type == float || type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, long, ptr, i;
+      } else if (t == 'E' && (is_real(arr) || is_integer(arr))) {
+        s = 4;
+        _fits_fix_input_column_data, arr, float, ptr, i;
+      } else if (t == 'D' && (is_real(arr) || is_integer(arr))) {
+        s = 8;
+        _fits_fix_input_column_data, arr, double, ptr, i;
+      } else if (t == 'C' && (is_complex(arr) || is_real(arr) || is_integer(arr))) {
         s = 8;
         tmp = array(float, nrows, 2, other_dims);
         tmp(,1,) = float(arr);
         if (type == complex) tmp(,2,) = arr.im;
         ptr(i) = &tmp;
         arr = [];
-      } else if (t == 'M' && (type == complex || type == double ||
-                              type == float || type == long || type == int ||
-                              type == short || type == char)) {
+      } else if (t == 'M' && (is_complex(arr) || is_real(arr) || is_integer(arr))) {
         s = 16;
         if (type != complex) {
-          ptr(i) = &complex(arr);
-          arr = [];
+          arr = complex(unref(arr));
+          ptr(i) = &arr;
         }
-      } else if (t == 'L' && (type == long || type == int ||
-                              type == short || type == char)) {
+      } else if (t == 'L' && is_integer(arr)) {
         s = 1;
         if (type != char) {
           tmp = array('T', nrows, ncells);
@@ -2541,8 +2505,8 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           s = 4;
         }
       } else if (type == long) {
-        t = 'J';
-        s = 4;
+        t = 'K';
+        s = 8;
       } else if (type == float) {
         t = 'E';
         s = 4;
@@ -2657,6 +2621,30 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   /* Update FITS handle. */
   offset(4) = address;
   return fh;
+}
+
+func _fits_fix_input_column_data(&arr, T, ptr, i)
+{
+  one = T(1);
+  if (is_integer(one)) {
+    if (T == char) {
+      tmin = 0;
+      tmax = 255;
+    } else {
+      /* signed integer */
+      two = T(2);
+      big = one << (8*sizeof(T) - 2);
+      tmin = (-big)*two;
+      tmax = (big - one)*two + one;
+    }
+    if (min(arr) < tmin || max(arr) > tmax) {
+      _fits_warn, ("truncation of input values in " + fits_nth(i) + " column");
+    }
+  }
+  if (structof(arr) != T) {
+    arr = T(unref(arr));
+    ptr(i) = &arr;
+  }
 }
 
 func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
@@ -3297,21 +3285,23 @@ func fits_index_of_table_field(fh, name)
 _FITS_TFORM_LOGICAL        =  1; /* L: Logical value */
 _FITS_TFORM_BYTE           =  2; /* B: unsigned 8-bit integer */
 _FITS_TFORM_SHORT          =  3; /* I: signed 16-bit integer */
-_FITS_TFORM_LONG           =  4; /* J: signed 32-bit integer */
-_FITS_TFORM_FLOAT          =  5; /* E: 32-bit single precision IEEE floating point */
-_FITS_TFORM_DOUBLE         =  6; /* D: 64-bit double precision IEEE floating point */
-_FITS_TFORM_FLOAT_COMPLEX  =  7; /* C: complex pair of single precision reals */
-_FITS_TFORM_DOUBLE_COMPLEX =  8; /* M: complex pair of double precision reals */
-_FITS_TFORM_STRING         =  9; /* A: Character array */
-_FITS_TFORM_POINTER        = 10; /* P: 64-bit descriptor of variable length array */
-_FITS_TFORM_BIT            = 11; /* X: bit array */
+_FITS_TFORM_INT            =  4; /* J: signed 32-bit integer */
+_FITS_TFORM_LONG           =  5; /* K: signed 64-bit integer */
+_FITS_TFORM_FLOAT          =  6; /* E: 32-bit single precision IEEE floating point */
+_FITS_TFORM_DOUBLE         =  7; /* D: 64-bit double precision IEEE floating point */
+_FITS_TFORM_FLOAT_COMPLEX  =  8; /* C: complex pair of single precision reals */
+_FITS_TFORM_DOUBLE_COMPLEX =  9; /* M: complex pair of double precision reals */
+_FITS_TFORM_STRING         = 10; /* A: Character array */
+_FITS_TFORM_POINTER        = 11; /* P: 64-bit descriptor of variable length array */
+_FITS_TFORM_BIT            = 12; /* X: bit array */
 _FITS_TFORM_IDENTOF = array(long, 256);
-_FITS_TFORM_TYPEOF = array(pointer, 11);
-_FITS_TFORM_SIZEOF = array(long, 11);
+_FITS_TFORM_TYPEOF = array(pointer, 12);
+_FITS_TFORM_SIZEOF = array(long, 12);
 _fits_bintable_setup, 'L', _FITS_TFORM_LOGICAL, char, 1;
 _fits_bintable_setup, 'B', _FITS_TFORM_BYTE, char, 1;
 _fits_bintable_setup, 'I', _FITS_TFORM_SHORT, short, 2;
-_fits_bintable_setup, 'J', _FITS_TFORM_LONG, long, 4;
+_fits_bintable_setup, 'J', _FITS_TFORM_INT, int, 4;
+_fits_bintable_setup, 'K', _FITS_TFORM_LONG, long, 8;
 _fits_bintable_setup, 'E', _FITS_TFORM_FLOAT, float, 4;
 _fits_bintable_setup, 'D', _FITS_TFORM_DOUBLE, double, 8;
 _fits_bintable_setup, 'C', _FITS_TFORM_FLOAT_COMPLEX, float, 8; /* read as 2 float's */
