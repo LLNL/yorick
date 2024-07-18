@@ -5,7 +5,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- * Copyright (C) 2000-2015, Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>
+ * Copyright (c) 2000-2024, Ã‰ric ThiÃ©baut <eric.thiebaut@univ-lyon1.fr>
  *
  * This file is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License version 2 as published by the
@@ -61,7 +61,7 @@
  *    if not).
  *
  * Revision 1.25  2006/11/03 12:09:18  eric
- *  - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for discovering
+ *  - Fixed bug in fits_pack_bintable (thanks to Ariane LanÃ§on for discovering
  *    this bug).
  *  - Slightly change the calling sequence of fits_pack_bintable (no side
  *    effects w.r.t. previous version).
@@ -71,7 +71,7 @@
  *    to Christophe Pichon for discovering this bug).
  *
  * Revision 1.23  2006/09/07 07:20:31  eric
- *  - Fixed documentation (thanks to Ariane Lançon).
+ *  - Fixed documentation (thanks to Ariane LanÃ§on).
  *
  * Revision 1.22  2006/09/02 12:39:04  eric
  *  - Minor changes to make the code portable with different versions of
@@ -97,14 +97,14 @@
  *
  * Revision 1.17  2004/10/22 15:19:29  eric
  *  - fits_write_bintable takes into account existing "TFORM#" FITS cards to
- *    format the columns (thanks to Clémentine Béchet).
+ *    format the columns (thanks to ClÃ©mentine BÃ©chet).
  *  - New function: fits_strcmp.
  *
  * Revision 1.16  2004/09/03 09:13:27  eric
  *  - New function fits_pad_hdu to round up file size to a multiple
  *    of FITS blocking factor.
  *  - fits_new_hdu: fix offset of data part by calling fits_pad_hdu
- *    (thanks to Antoine Mérand for pointing this bug).
+ *    (thanks to Antoine MÃ©rand for pointing this bug).
  *  - fits_close: call fits_pad_hdu to finalize stream open for
  *    writing.
  *  - fits_new_image: bitpix and dimension list can be guessed from
@@ -136,11 +136,11 @@
  *
  * Revision 1.12  2004/07/09 09:30:37  eric
  *  - Fixed bug in fits_move and typo in error message for fits_create (thanks
- *    to Clémentine Béchet).
+ *    to ClÃ©mentine BÃ©chet).
  *
  * Revision 1.11  2004/06/22 16:22:49  eric
  *  - Fix a bug in fits_write_bintable which prevents writing strings in a
- *    binary table (thanks to Clémentine Béchet).
+ *    binary table (thanks to ClÃ©mentine BÃ©chet).
  *
  * Revision 1.10  2004/03/19 18:28:45  eric
  *  - New functions: fits_current_hdu, fits_info, fits_eof, fits_list.
@@ -4800,6 +4800,6 @@ fitsOldHeaderKeywords = fits_toupper(fitsOldHeaderMembers);
  * tab-width: 8
  * fill-column: 78
  * c-basic-offset: 2
- * coding: latin-1
+ * coding: utf-8
  * End:
  */
