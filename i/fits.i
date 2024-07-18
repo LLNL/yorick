@@ -181,7 +181,7 @@
  * Initial revision
  */
 
-fits = "Version: 2.0";
+fits = "Version: 2.1";
 local fits;
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
@@ -2373,9 +2373,10 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
     }
     type = structof(arr);
 
-    /* Parse TFORMn card or guess format specification form the current
-       column data.  T is the type code in the TFORMn card, M is the repeat
-       count, and S is the size (in bytes) of an element. */
+    /* Parse TFORMn card or guess format specification form the current column
+       data. T is the type code in the TFORMn card, M is the repeat count, and
+       S is the size (in bytes) of an element. See doc. of `fits_bitpix_of`
+       for the assumed equivalence of Yorick's and FITS (XDR64) types. */
     key = swrite(format="TFORM%d", i);
     tform = fits_get(fh, key);
     write_tform = is_void(tform);
@@ -3386,7 +3387,7 @@ func fits_read_group(fh, fix)
 
   /* Read all the values (parameters and group data). */
   bitpix = fits_get_bitpix(fh, fix);
-  type = fits_bitpix_type(bitpix, native=0);
+  type = fits_bitpix_type(bitpix);
   buffer = array(type, pcount + ndata, gcount);
   address = _car(fh, 3)(3);
   stream = _car(fh, 4);
@@ -3402,7 +3403,6 @@ func fits_read_group(fh, fix)
   fmt = "bad data type for keyword %s in HDU %d";
 
   /* Get parameters and properly scale their values. */
-  type = fits_bitpix_type(bitpix, native=1);
   if (pcount >= 1) {
     param = type(buffer(1:pcount, ..));
     ptype = array(string, pcount);
@@ -3750,11 +3750,19 @@ func fits_bitpix_info(bitpix)
   error, "invalid BITPIX value";
 }
 
-func fits_bitpix_type(bitpix, native=)
-/* DOCUMENT fits_bitpix_type(bitpix)
-         or fits_bitpix_type(bitpix, native=)
-     The function fits_bitpix_type returns Yorick  data type given by the fits
-     bits-per-pixel value BITPIX according to the following table:
+local fits_bitpix_type, fits_bitpix_of;
+/* DOCUMENT T = fits_bitpix_type(bitpix);
+         or bitpix = fits_bitpix_of(arr);
+         or bitpix = fits_bitpix_of(T);
+
+     `fits_bitpix_type` yields Yorick's data type corresponding to the FITS
+     bits-per-pixel value BITPIX.
+
+     `fits_bitpix_of` yields the FITS bits-per-pixel value given an array
+     `arr` or Yorick's type `T`.
+
+     The assumed rules are given in the following table (for 64-bit IEEE
+     compliant machines, the equivalence is exact):
 
          +----------------------------------------------------------------+
          | Bitpix  Type    Description (in FITS file)                     |
@@ -3767,79 +3775,42 @@ func fits_bitpix_type(bitpix, native=)
          |    -64  double  IEEE 64-bit floating point                     |
          +----------------------------------------------------------------+
 
-      If  keyword NATIVE  is  true, then  the  functions tries  to return  the
-      closest data Yorick type (with no loss of accuracy).
+   SEE ALSO: fits, fits_bitpix_info, fits_check_bitpix. */
 
-
-   SEE ALSO: fits, fits_bitpix_of, fits_bitpix_info, fits_check_bitpix. */
+func fits_bitpix_type(bitpix)
 {
-  if (native) {
-    /* Figure out native type matching BITPIX. */
-    if (bitpix > 0) {
-      if (bitpix ==  8*sizeof(long))   return long;
-      if (bitpix ==  8*sizeof(int))    return int;
-      if (bitpix ==  8*sizeof(short))  return short;
-      if (bitpix ==  8*sizeof(char))   return char;
-    } else {
-      if (bitpix == -8*sizeof(double)) return double;
-      if (bitpix == -8*sizeof(float))  return float;
-    }
+  /* To encode the FITS file in XDR64 format (see _FITS_XDR64), Yorick's
+     `char`, `short`, `int`, `long`, `float`, and `double` are respectively
+     used for XDR `uint8`, `int16`, `int32`, `int64`, `float32`, and
+     `float64`. In modern machines, this equivalence is exact. */
+  if (bitpix > 8) {
+    if (bitpix ==  16) return short;
+    if (bitpix ==  32) return int;
+    if (bitpix ==  64) return long;
   } else {
-    /* Assume XDR type. */
-    if (bitpix > 8) {
-      if (bitpix ==  16) return short;
-      if (bitpix ==  32) return int;
-      if (bitpix ==  64) return long;
-    } else {
-      if (bitpix ==   8) return char;
-      if (bitpix == -32) return float;
-      if (bitpix == -64) return double;
-    }
+    if (bitpix ==   8) return char;
+    if (bitpix == -32) return float;
+    if (bitpix == -64) return double;
   }
   error, "invalid/unsupported BITPIX value";
 }
 
-func fits_bitpix_of(x, native=)
-/* DOCUMENT fits_bitpix_of(x)
-         or fits_bitpix_of(x, native=1)
-     Return FITS bits-per-pixel value BITPIX for binary data X which can be an
-     array or a data type  (structure definition).  If keyword NATIVE is true,
-     the routine assumes that binary data will be read/write to/from FITS file
-     using native machine  data representation.  The default is  to conform to
-     FITS standard and  to assume that XDR binary format will  be used in FITS
-     file.
-
-   SEE ALSO: fits, fits_bitpix_type, fits_check_bitpix. */
+func fits_bitpix_of(x)
 {
   if (is_array(x)) {
-    x = structof(x);
-  } else if (typeof(x) != "struct_definition") {
+    T = structof(x);
+  } else if (identof(x) == Y_STRUCTDEF) {
+    T = x;
+  } else {
     error, "expecting array or data type argument";
   }
-  if (native) {
-    /* Compute BITPIX. */
-    bpb = 8; /* assume 8 bits per byte */
-    if (x == char || x == short || x == int || x == long) {
-      bitpix = bpb*sizeof(x);
-      if (bitpix == 8 || bitpix == 16 || bitpix == 32 || bitpix == 64) {
-        return bitpix;
-      }
-    } else if (x == float || x == double) {
-      bitpix = -bpb*sizeof(x);
-      if (bitpix == -32 || bitpix == -64) {
-        return bitpix;
-      }
-    }
-  } else {
-    /* Assume data will be read/written as XDR. */
-    if (x == char)   return   8;
-    if (x == short)  return  16;
-    if (x == int)    return  32;
-    if (x == long)   return  64;
-    if (x == float)  return -32;
-    if (x == double) return -64;
-  }
-  error, "unsupported data type \""+nameof(x)+"\"";
+  if (T == char)   return   8;
+  if (T == short)  return  16;
+  if (T == int)    return  32;
+  if (T == long)   return  64;
+  if (T == float)  return -32;
+  if (T == double) return -64;
+  error, "unsupported data type \""+nameof(T)+"\"";
 }
 
 local fits_is_image, fits_is_bintable;
@@ -4458,7 +4429,8 @@ func _fits_set_primitives(stream)
      Set binary format of data stream to XDR (eXternal Data Representation)
      which is the same as IEEE format with 32-bits (int) and 64-bits (long)
      integers and big-endian byte order.
-   SEE ALSO: open, set_primitives, fits_open, _fits_vopen.
+   SEE ALSO: open, set_primitives, fits_open, _fits_vopen, fits_bitpix_type,
+     fits_bitpix_of.
  */
 {
   set_primitives, stream, _FITS_XDR64;
