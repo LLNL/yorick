@@ -25,7 +25,7 @@ Most of these will probably be postponed...
 (4) Investigate sort algorithm -- can performance for big numerical
     sorts be improved by actually moving the data during the sort?
 
-(5) Work on new binary file model. 
+(5) Work on new binary file model.
     (a) Directories?  (dictionaries?)
     (b) Interpreted close hooks?  Other hooks?
         -- should there be a destroy hook for any interpreted variable?

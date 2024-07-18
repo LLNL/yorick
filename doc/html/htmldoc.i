@@ -2,10 +2,10 @@
 // $Id: htmldoc.i,v 1.8 2007-12-11 10:22:19 paumard Exp $
 
 /* DOCUMENT htmldoc.i
-   
-   html documentation tools. By default the function mkhtmldoc constructs 
-   html pages from the installed i0 and i directories. 
-   Document comments are extracted, and cross-referenced to each other and to 
+
+   html documentation tools. By default the function mkhtmldoc constructs
+   html pages from the installed i0 and i directories.
+   Document comments are extracted, and cross-referenced to each other and to
    the original function definitions. Crude indexing is performed by matching
    a list of keywords to the document comments.
 
@@ -14,7 +14,7 @@
       [--from=dir1:dir2,...] [--to=destdir] [--xref-dir=html_xref] \
       [--keywords=keywords.txt] [--packinfo=packinfo.txt] \
       [--aliases=aliases.txt] [--template=template.html] [--warn=warnfile]
-   
+
    In batch mode, mkhtmldoc() is automatically called. Each
    mkhtmldoc() keyword has an equivalent long option form. The boolean
    options also have a short option form.
@@ -37,74 +37,74 @@ func mkhtmldoc(from=, to=, xref_dir=,
                keywords=, packinfo=, template=, aliases=, warn=,
                nosrc=, nofunc=, quiet=)
 /* DOCUMENT mkhtmldoc         generate html documentation tree
-    
+
             mkhtmldoc, from=, to=, xref_dir=,
                        keywords=, packinfo=, aliases=, template=,
                        nosrc=, nofunc=, quiet=,
                        warn=
    generates html documentation from yorick files in selected directories.
    Without any arguments the subdirectories i0 and i
-   of Y_SITE are scanned for function definitions, and the documentation is 
+   of Y_SITE are scanned for function definitions, and the documentation is
    created in subdirectories of the current directory.
-   
+
    The page layout is defined in a template file, which defaults to
    "template.html" if this file exists. A builtin fallback is used if
    no file is provided. The template can also be set using
    hdoc_read_template.
 
-   If specified, the  'from' keyword should be a string array of 
-   directories to scan. The 'to' keyword can be used to set a 
+   If specified, the  'from' keyword should be a string array of
+   directories to scan. The 'to' keyword can be used to set a
    destination directory other than the current directory.
    The cross-reference DOCUMENT comments are extracted into
    TO/XREF_DIR, where XREF_DIR defaults to "html_xref".
 
-   A keyword keywords= can be used to specify a file containing a list 
-   of keywords from which to create a crude index. If not specified, and 
-   if there is a file keywords.txt in the current directory, then that is 
-   used. Likewise, the packinfo= can be used to specify a file containing 
+   A keyword keywords= can be used to specify a file containing a list
+   of keywords from which to create a crude index. If not specified, and
+   if there is a file keywords.txt in the current directory, then that is
+   used. Likewise, the packinfo= can be used to specify a file containing
    further information on some or all of the files in the source directories.
    It defaults to packinfo.txt if not specified. An "aliases" file can  also be
    specified to merge the functions from several .i files in a single .html
    file. It defaults to aliases.txt in the current directory if this file
    exists.
-   
-   The keywords nosrc and nofunc, if non null cut out the slowest parts 
-   of the document creation process - crossreferencing the source files, 
-   and creating function pages. They can be useful when checking the 
+
+   The keywords nosrc and nofunc, if non null cut out the slowest parts
+   of the document creation process - crossreferencing the source files,
+   and creating function pages. They can be useful when checking the
    format of a source file without recreating the whole document set.
-   When source files do not match the formats mkhtmldoc is expecting, 
+   When source files do not match the formats mkhtmldoc is expecting,
    warnings are printed to standard output, or to a file specified by
    the warn keyword. Note that non-compliance with the expected format
    is not necessarily an indication of errors in the source files - simply
-   that mkhtmldoc can't make sense of them. Generally, however, it is 
-   far easier to make one's own files follow the format of the 
-   yorick i0 files more closely than it is to modify mkhtmldoc 
+   that mkhtmldoc can't make sense of them. Generally, however, it is
+   far easier to make one's own files follow the format of the
+   yorick i0 files more closely than it is to modify mkhtmldoc
    to cope with them.
 
 
    The documentation tree is generated in five stages.
-   1 - read through all the source files, extracting function names 
+   1 - read through all the source files, extracting function names
        extern declarations of builtin functions, and document comments
-   2 - for each source file, compile a series of html pages of the document 
-       comments for the functions in that file. One html file is generated 
-       for each first letter.  
+   2 - for each source file, compile a series of html pages of the document
+       comments for the functions in that file. One html file is generated
+       for each first letter.
    3 - compile a series of html pages for all the functions together, again
        grouped into pages according to first letters.
-   4 - if a keywords file is available, match keywords in the document 
-       comments, and compile a keyword index pointing to all the matched 
+   4 - if a keywords file is available, match keywords in the document
+       comments, and compile a keyword index pointing to all the matched
        functions.
-   5 - if a packinfo file is available, match source file names with 
-       the packinfo file and compile a package list with the corresponding 
-       descriptions. Alternatively, if a document comments appears near 
+   5 - if a packinfo file is available, match source file names with
+       the packinfo file and compile a package list with the corresponding
+       descriptions. Alternatively, if a document comments appears near
        the top of a source files, unattached to a function, this will be used
-       instead. 
+       instead.
 
 
    Unless QUIET is set to 1, mkhtmldoc outputs a lot of information,
    including warnings. These warnings can be redirected to a file
    using the WARN keyword (it is the only way to get them if QUIET is
    set).
-   
+
    KEYWORDS: keywords, packinfo, aliases, template, from, to, nosrc, nofunc,
              quiet, warn, xref_dir
 
@@ -132,7 +132,7 @@ func mkhtmldoc(from=, to=, xref_dir=,
    nwarn = 0;
    if (warn) {
       fwarn = open (warn, "w");
-   } 
+   }
 
    if (is_void(template)) template="template.html";
    if (open(template,"r",1)) hdoc_read_template,template;
@@ -141,8 +141,8 @@ func mkhtmldoc(from=, to=, xref_dir=,
       listings, create the directories manual and refcard to hold the
       manual and reference cards.  (for now will put simple
       placeholder files in them)
-      */ 
-   
+      */
+
    dnames = [xref_dir];
    // make these directories under the 'to' directory if they don't exist;
    for (i = 1; i <= numberof (dnames); i++) {
@@ -153,12 +153,12 @@ func mkhtmldoc(from=, to=, xref_dir=,
       }
    }
 
-   // the _lsm1 function is unix xpecific - it gets a list of the files 
+   // the _lsm1 function is unix xpecific - it gets a list of the files
    // in its arguement;
    ifiles = _lsm1 (from, ext = ".i", to=to);
 
 
-   /* STAGE 1 - get a list of all function declarations, their names, 
+   /* STAGE 1 - get a list of all function declarations, their names,
     file, directory, document comment and line in the file
     based on the MKDOC function in mkdoc.i
     */
@@ -189,9 +189,9 @@ func mkhtmldoc(from=, to=, xref_dir=,
    }
    if (!quiet) write, "";
 
-   /* STAGE 2 - copy the files name.i to tmp_name_i.html in the directories 
+   /* STAGE 2 - copy the files name.i to tmp_name_i.html in the directories
       under 'to', html quoting the characters "<" and ">" and adding
-      anchors and cross references.  
+      anchors and cross references.
       */
    // this part is slow - set nosrc to 1 to skip it;
    if (never_do && !nosrc) {
@@ -204,10 +204,10 @@ func mkhtmldoc(from=, to=, xref_dir=,
 	    name= strtok(name(2), "/\:");
          } while (name(2));
 	 if (strpart(rtname, -1:0)==".i") rtname= strpart(rtname, 1:-2);
-	 
+
 	 dest = to + "html_i/tmp_" + rtname +"_i.html";
 	 finaldest = to + "html_i/" + rtname +"_i.html";
-	 if (!quiet) write, format = "%s           \n", ifiles(i) ;      
+	 if (!quiet) write, format = "%s           \n", ifiles(i) ;
 	 srcanchor, ifiles(i), dest, tags, quiet=quiet, xref_dir=xref_dir;
 
 	 hdoc_headtail, dest, finaldest, title = rtdir + "/" + rtname;
@@ -274,7 +274,7 @@ func mkhtmldoc(from=, to=, xref_dir=,
       tags = tags(,sort(strcase(0,tags(1,))));
       for (i=1;i<=numberof(rtx);i++) rtname = rtname(where(rtname!=rtx(i)));
       for (i = 1; i <= numberof(rtname); i++) {
-	 if (!quiet) write, format = "writing index and doc pages for %s      \n", 
+	 if (!quiet) write, format = "writing index and doc pages for %s      \n",
            rtname(i);
          w = where(tags(3,)==rtname(i));
          hdoc_funcindex, rtname(i), tags(,w), to, xref_dir;
@@ -310,7 +310,7 @@ func mkhtmldoc(from=, to=, xref_dir=,
 
    // put a default background image in the images directory;
    // f = open (to + "images/ydocbg.gif", "wb");
-   // a = 
+   // a =
 // [0x47,0x49,0x46,0x38,0x37,0x61,0xb7,0x04,0x01,0x00,0xf0,0x00,0x00,0x00,0x56,
 //  0x00,0xff,0xea,0xc2,0x2c,0x00,0x00,0x00,0x00,0xb7,0x04,0x01,0x00,0x00,0x02,
 //  0x2b,0x84,0x8f,0xa9,0xcb,0xed,0x0f,0xa3,0x9c,0x31,0xd8,0x8b,0xb3,0xde,0xbc,
@@ -351,13 +351,13 @@ func _lsm1 (from, ext=, to=) {
 
 
 func tagscan (fnm) {
-  /* DOCUMENT  
+  /* DOCUMENT
             tags = tagscan, filename
-    scan file filename for function declarations/definitions.       
+    scan file filename for function declarations/definitions.
     Returns a (6, nfunc) string array containing, for each function,
     the function name, then the directory name, file name, and line
-    where it appears, its DOCUMENT comment and type. As with the mkdoc 
-    function, if subsequent extern lines precede the DOCUMENT 
+    where it appears, its DOCUMENT comment and type. As with the mkdoc
+    function, if subsequent extern lines precede the DOCUMENT
     comment, generate a cross-reference SEE ... to the first extern
     of the group.
     based on the mkdoc function in mkdoc.i
@@ -385,8 +385,8 @@ func tagscan (fnm) {
       split= strtok(line);
       doctext= "";
       gottag = 0;
-      if (pfunclev == 0 && (split(1)=="func" || 
-			    split(1)=="extern" || 
+      if (pfunclev == 0 && (split(1)=="func" ||
+			    split(1)=="extern" ||
 			    split(1) == "local")) {
 	 gottag = 1;
 	 mytype = split(1);
@@ -459,13 +459,13 @@ func tagscan (fnm) {
 
 func _myrdline(f) {
   /* keep a record of whether we are between curly braces or not
-    so as to avoid picking up extern declarations of variables at 
+    so as to avoid picking up extern declarations of variables at
     the top level.
     */
    iline++;
    line = rdline(f);
    extern pfunclev;
-   pfunclev = funclev; 
+   pfunclev = funclev;
    if (strmatch (line, "{")) funclev++;
    if (strmatch (line, "}")) funclev--;
    if (strpart (line, 1:1) == "}") funclev = 0;
@@ -491,15 +491,15 @@ func _hdoc_cross(loc, names, crossref)
 
 
 func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
-  /* DOCUMENT  
+  /* DOCUMENT
             srcanchor, infile, outfile, tags
     convert yorick source to html
-    Copy infile to outfile quoting any html special characters, inserting 
+    Copy infile to outfile quoting any html special characters, inserting
     anchors at function definitions/declarations, and cross-referencing
-    function calls to definitions.  Tags should be a two dimensional string 
+    function calls to definitions.  Tags should be a two dimensional string
     array containing in tags (1,) the function names, and in tags(2,),
-    tags(3,) and tags(4,) the directory, file, and line where each functions 
-    is defined/declared. 
+    tags(3,) and tags(4,) the directory, file, and line where each functions
+    is defined/declared.
 
     SEE ALSO: mkhtmldoc, tagscan, mkdoc
    */
@@ -532,10 +532,10 @@ func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
 
       split = strtok (line);
       type = split(1);
-      if (funclev == 0 && (type=="func" || 
-			   type=="extern" || 
+      if (funclev == 0 && (type=="func" ||
+			   type=="extern" ||
 			   type=="local") ) {
-	 name = (strtok(split(2), " \t(,;"))(1); 
+	 name = (strtok(split(2), " \t(,;"))(1);
 	 rest = strpart (split(2), strlen(name)+1:);
 
 	 w = where (tnamesttypes == name + type);
@@ -544,7 +544,7 @@ func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
 	       // silently ignore failed one character matches;
 	       if (nwsf == 0 & !quiet) write, format = "\n %s", "";
 	       nwsf++;
-	       if (!quiet|!is_void(warn)) write, fwarn, format = 
+	       if (!quiet|!is_void(warn)) write, fwarn, format =
 		      "warning: %i tag matches for %s \n",
 	               numberof(w), name;
 	       nwarn++;
@@ -552,18 +552,18 @@ func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
             wryte, g, line;
 	 } else {
 	    tagdat = tags(,w(1));
-	    
-	    /* for the definition/declaration itself, put in an anchor and 
+
+	    /* for the definition/declaration itself, put in an anchor and
                a link back to the documentation tree */
-	    wryte, g, ("<b>" + split(1) + " <a name = " + tagdat(1) + 
-		       " href = ../" + xref_dir + tagdat(3) + 
-		       "-doc.html" + "#" + tagdat(1) + 
-		       ">" + tagdat(1) + "</a></b> " + rest);  
+	    wryte, g, ("<b>" + split(1) + " <a name = " + tagdat(1) +
+		       " href = ../" + xref_dir + tagdat(3) +
+		       "-doc.html" + "#" + tagdat(1) +
+		       ">" + tagdat(1) + "</a></b> " + rest);
 	 }
       } else {
 	 /* look for tags within this line and put in links to the
             source tree */
-	 
+
 	 // this is going to be pretty slow....;
 	 rest = line;
 	 newline = "";
@@ -582,9 +582,9 @@ func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
 	       w = where (tnames == tok);
 	       if (numberof (w) == 1) {
 		  tagdat = tags (,w(1));
-		  
+
 		  newline += ("<A HREF = ../html_i/" + tagdat(3) +
-			      "_i.html#" + tagdat(1) +">" + tagdat(1) + 
+			      "_i.html#" + tagdat(1) +">" + tagdat(1) +
 			      "</A>");
 	       } else {
 		  newline += tok;
@@ -610,12 +610,12 @@ func srcanchor (infile, outfile, tags, quiet=, xref_dir=) {
 
 
 func _alphabsuffix (name) {
-  /* make a suffix from the first letter of  name. 
-     to cope with case insensitive systems, map eg "A" to "ac" and 
+  /* make a suffix from the first letter of  name.
+     to cope with case insensitive systems, map eg "A" to "ac" and
      "a" to "as" (for capital and small);
-     */  
+     */
   if (strpart(name, 1:1) == "_") {
-     suf = "-uscr"; 
+     suf = "-uscr";
   } else {
      ia = int (*pointer("a"))(1);
      iA = int (*pointer("A"))(1);
@@ -656,7 +656,7 @@ func hdoc_funcindex(rtname, tags, to, xref_dir) {
 
    if (rtname == "global") title="Yorick routines defined in all files";
    else title="Yorick routines defined in file " + rtname + ".i";
-   hdoc_head, f, title, table=1, doc=doc; 
+   hdoc_head, f, title, table=1, doc=doc;
    wryte, f, "<center><h1>";
    if (rtname == "global") wryte, f,  "all routines";
    else wryte, f,  title;
@@ -679,13 +679,13 @@ func hdoc_funcindex(rtname, tags, to, xref_dir) {
 
 	 if (lab) {
 	    wryte, f, "<td BGCOLOR=" + idxbg2 + ">";
-	    wryte, f, "<font color=" + idxfg + "> " + 
+	    wryte, f, "<font color=" + idxfg + "> " +
 		          strpart(s,1:1) + " </font>";
-	    wryte, f, "</td>"; 
+	    wryte, f, "</td>";
 	 } else {
 	    wryte, f, "<td></td>";
 	 }
-	 wryte, f, "<td>"; 
+	 wryte, f, "<td>";
 	 if (ok && !lab) {
 	    wryte, f, "<a href = " + modnl(ielt) + "-doc.html\#" +
                       s + ">" + s + "</a>";
@@ -705,7 +705,7 @@ func hdoc_funcindex(rtname, tags, to, xref_dir) {
 
 
 func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
-   if (is_void (to)) to = "./"; 
+   if (is_void (to)) to = "./";
    name_list =tags(1,);
    doc_list = tags(6,);
    anames = atags(1,);
@@ -736,7 +736,7 @@ func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
       wryte, f, "<a name = " + name_list(i) + ">" + name_list(i) + "</a> <p>";
 //      wryte, f, name_list(i);
       wryte, f, "</b></big>";
-      wryte, f, "</td>";     
+      wryte, f, "</td>";
 
       dd = *(doc_def(i));
       db = *(doc_body(i));
@@ -760,8 +760,8 @@ func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
 	 }
 
 	 sdef = (sdef  + atags(2, igl) + "/" +
-		 atags(3, igl) + ".i  <a href = ../html_i/" + 
-		 atags(3, igl) + "_i.html#" + myname + ">" + 
+		 atags(3, igl) + ".i  <a href = ../html_i/" +
+		 atags(3, igl) + "_i.html#" + myname + ">" +
 		 " line " + strtrim (swrite(atags(4, igl))) + "</a>");
 	 /* grow, db, sdef; */
       } else {
@@ -771,7 +771,7 @@ func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
       }
 
       if (!is_void (dd) || !is_void (db)) {
-	 
+
 	 wryte, f, "<td colspan = 2>";
 	 wryte, f, "<pre>";
 	 wryte, f, ("<font SIZE=2 color=\"#000000\">");
@@ -790,15 +790,15 @@ func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
       if (!is_void (dsa)) {
 	 nsa = numberof (dsa);
 	 nsac = 5;
-	 nsar = (nsa - 1 + nsac-1) / nsac;  
+	 nsar = (nsa - 1 + nsac-1) / nsac;
 
 	 wryte, f, "<tr>";
 	 wryte, f, "<td  width = 100 >";
 	 wryte, f, ("<font SIZE=2 color=\"#00000\">");
 	 wryte, f, dsa(1);
 	 wryte, f, "</font>";
-	 wryte, f, "</td>";     
-	 
+	 wryte, f, "</td>";
+
 	 wryte, f, "<td width = 300>";
 	 wryte, f, ("<font SIZE=3 color=\"#000000\">");
 	 nchar = 0;
@@ -817,17 +817,17 @@ func hdoc_funcdocs (rtname, tags, atags, to, xref_dir, quiet=) {
 	       defroot = "../" + xref_dir + atags(3, igl);
 	    } else {
 	       if (nwsf == 0 & !quiet) write, format = "\n %s", "";
-	       if (!quiet|!is_void(warn)) write, fwarn, format = " warning: %i tag matches for  %s \n", 
+	       if (!quiet|!is_void(warn)) write, fwarn, format = " warning: %i tag matches for  %s \n",
 	             numberof (w), ssa;
 	       nwsf++;
 	    }
 	    if (defroot != "") {
 	       aaa = strpart (ssa, 1:1);
-	       write, f, (" <a href = " + defroot + 
-			   "-doc.html#"+ssa + ">" + ssa + "</a>"+ 
-			  ((k < nsa) ? ", &nbsp; " : " &nbsp; ")); 
+	       write, f, (" <a href = " + defroot +
+			   "-doc.html#"+ssa + ">" + ssa + "</a>"+
+			  ((k < nsa) ? ", &nbsp; " : " &nbsp; "));
 	    } else {
-	       write, f, (ssa + ((k < nsa) ? ", &nbsp; " : " &nbsp; ")); 
+	       write, f, (ssa + ((k < nsa) ? ", &nbsp; " : " &nbsp; "));
 	    }
 	 }
 	 wryte, f, "</td>";
@@ -869,7 +869,7 @@ func split_doc_list (name_list, doc_list, &doc_def, &doc_body, &doc_see)
 	   fl = doc(k);
            ta = strtok(fl);
            if (ta(1)=="*") ta = strtok((fl = "  "+ta(2)));
-	   while (k <= nl && (ta(1) == "or" || 
+	   while (k <= nl && (ta(1) == "or" ||
 			      strpart(fl,1:11) == "           ")) {
 	      grow, dd, fl;
 	      k++;
@@ -889,20 +889,20 @@ func split_doc_list (name_list, doc_list, &doc_def, &doc_body, &doc_see)
 	       }
 	       ta = strtok (fl, " .,\n\t*");
 	       while (ta(1) != string(0)) {
-		  if (ta(1) != "SEE" && ta(1) != "ALSO:" &&  
+		  if (ta(1) != "SEE" && ta(1) != "ALSO:" &&
 		      ta(1) != "/*" && ta(1) != "*/" && ta(1) != "*") {
                     if (strpart(ta(1),1:1)!="(" && strpart(ta(1),0:0)!=")")
                       grow, dsa, ta(1);
 		  }
 		  ta = strtok (ta(2), " .,\n\t");
 	       }
-	       k = nl+1;	       
+	       k = nl+1;
 
 	    } else if (strmatch (fl, " SEE ")) {
 	       dsa = ["SEE"];
 	       ta = strtok (fl, " .,\n\t");
 	       while (ta(1) != string(0)) {
-		  if (ta(1) != "SEE" && ta(1) != "/*" && 
+		  if (ta(1) != "SEE" && ta(1) != "/*" &&
                       ta(1) != "*/" && ta(1) != "*") {
 		     grow, dsa, ta(1);
 		  }
@@ -956,8 +956,8 @@ func hdoc_toptemplate (to) {
    _hdoc_skip, f, 2;
    wryte, f, "for a complete local copy of this documentation tree, download one of ";
    wryte, f, "<pre>";
-   wryte, f, "        <a href = ../../ydoc.tgz>ydoc.tgz</a>"; 
-   wryte, f, "        <a href = ../../ydoc.zip>ydoc.zip</a>"; 
+   wryte, f, "        <a href = ../../ydoc.tgz>ydoc.tgz</a>";
+   wryte, f, "        <a href = ../../ydoc.zip>ydoc.zip</a>";
    wryte, f, "</pre>";
 
    _hdoc_skip, f, 2;
@@ -1007,10 +1007,10 @@ func hdoc_packagelist (from, tags, packinfo=, to=, xref_dir=) {
 
    ifiles = _lsm1 (from, ext=".i", to=to);
 
-   /* read the first few lines from each file to extract any package 
-     description comments - DOCUMENT comments preceding the first 
-     function definition */ 
-    
+   /* read the first few lines from each file to extract any package
+     description comments - DOCUMENT comments preceding the first
+     function definition */
+
    n = numberof (ifiles);
    filedoc = array (string, 3, n);
    for (i = 1; i <= n; i++) {
@@ -1036,12 +1036,12 @@ func hdoc_packagelist (from, tags, packinfo=, to=, xref_dir=) {
 	    while ((line = rdline(f)) && !done) {
 	       if (strmatch(line, "*/")) {
 		  done = 1;
-	       }  else { 
+	       }  else {
 		  doc += line + "<br>";
 	       }
 	    }
 	 }
-      }      
+      }
       filedoc(3,i) = doc;
       close, f;
    }
@@ -1102,14 +1102,14 @@ func hdoc_packagelist (from, tags, packinfo=, to=, xref_dir=) {
      } else if (pkey(i)=="newsubsection") {
        af = ptext(i);
        if (was_entry) af = "&nbsp;<br>&nbsp;<br>"+af;
-       wryte, f, ("<tr><td colspan = 2><em>" +  af + 
+       wryte, f, ("<tr><td colspan = 2><em>" +  af +
                   "</em></td></tr>");
        continue;
      }
        was_entry = 1;
 
        af = pkey(i);
-       fstr = ("<tr><td valign = top>" + 
+       fstr = ("<tr><td valign = top>" +
                "<a href = %s-index.html> %s</a> </td>\n");
        write, f, format = fstr, af, af;
 
@@ -1128,7 +1128,7 @@ func hdoc_packagelist (from, tags, packinfo=, to=, xref_dir=) {
 
 func hdoc_extract_embedded (template_file,to=) {
   /* DOCUMENT hdoc_extract_embedded [,template_file, to=to]
-     
+
       extract documents embedded in the HTML documentation template.
 
       If TEMPLATE_FILE is specified, load this file as a template
@@ -1147,7 +1147,7 @@ func hdoc_extract_embedded (template_file,to=) {
         %embedded:file_name:doc:toroot%Nice Long Title
       and finishes with the beginning of the next embedded file or
       with the last %content% line.
-        
+
       The first '%' character must be the first character of the
       line. FILE_NAME is the actual filename to which the file will be
       extracted (as usual, TO is prepended to FILE_NAME. DOC is used
@@ -1191,7 +1191,7 @@ func hdoc_extract_embedded (template_file,to=) {
 
 func hdoc_keywordindex (tags, keywords, to, xref_dir) {
 
-   // read the list if keywords - assumed to be one per line, with 
+   // read the list if keywords - assumed to be one per line, with
    // nothing else in the file
    f = open (keywords);
    kwl = [];
@@ -1214,9 +1214,9 @@ func hdoc_keywordindex (tags, keywords, to, xref_dir) {
       ch = string (&(char('a' + i)));
       w = where (strpart (kwl, 1:1) == ch);
       if (!numberof(w)) continue;
-      wryte, f, "<td>"; 
+      wryte, f, "<td>";
       wryte, f, "<a href = ../"+xref_dir+"keywords-"+ch+".html>"+ch+"</a>";
-      wryte, f, "</td>" 
+      wryte, f, "</td>"
    }
    wryte, f, "</tr></table>";
    _hdoc_skip, f, 2;
@@ -1267,16 +1267,16 @@ func hdoc_keywordref (fnm, kwl, tags, xref_dir) {
 
    f = open (fnm, "w");
    doc="xref";
-   hdoc_head, f, fnm, table=1, doc=doc; 
+   hdoc_head, f, fnm, table=1, doc=doc;
 
    wryte, f, ("<table cellspacing=2 border=0" +
 		  " cellpadding=2 width=100\%>");
    wryte, f, "<tr>";
    for (i = 0; i < 26; i++) {
       ch = string (&(char(int(*pointer ("a"))(1) + i)));
-      wryte, f, "<td>"; 
+      wryte, f, "<td>";
       wryte, f, "<a href = ../"+xref_dir+"keywords-" + ch + ".html>"+ch+"</a>";
-      wryte, f, "</td>" 
+      wryte, f, "</td>"
    }
    wryte, f, "</td></tr></table>";
    _hdoc_skip, f, 2;
@@ -1287,7 +1287,7 @@ func hdoc_keywordref (fnm, kwl, tags, xref_dir) {
    for (i = 1; i <= nr; i++) {
       myk = kwl(i);
       wryte, f, "<tr>";
-      wryte, f, "<td valign=top width=150><FONT face=\"Arial,Helvetica\"><b>"; 
+      wryte, f, "<td valign=top width=150><FONT face=\"Arial,Helvetica\"><b>";
       wryte, f, "<a name=\""+strcomp(myk)+"\"></a>" +  myk;
       wryte, f, "</b></FONT></td><td>";
 
@@ -1295,7 +1295,7 @@ func hdoc_keywordref (fnm, kwl, tags, xref_dir) {
       if (numberof (w) > 0) {
 	 defroot = "../"+xref_dir + file_list(w(1));
 	 wryte, f, (" <b><a href=\"" + defroot +
-		    "-doc.html#"+myk + "\">" + 
+		    "-doc.html#"+myk + "\">" +
 		    myk + "</a></b> &nbsp;&nbsp;&nbsp;");
       }
 
@@ -1312,8 +1312,8 @@ func hdoc_keywordref (fnm, kwl, tags, xref_dir) {
 	    ssa = name_list(w(j));
 	    defroot = "../" + xref_dir + file_list(w(j));
 	    wryte, f, (" <a href=\"" + defroot +
-		        "-doc.html#"+ssa + "\">" + ssa + "</a>"+ 
-		       ((j < nsa) ? ", &nbsp; " : " &nbsp; ")); 
+		        "-doc.html#"+ssa + "\">" + ssa + "</a>"+
+		       ((j < nsa) ? ", &nbsp; " : " &nbsp; "));
 	 }
       }
 
@@ -1344,7 +1344,7 @@ func _hdoc_startbody (f)
 }
 
 
-/* a simple page can be made with 
+/* a simple page can be made with
        hdoc_head, f, title;
        ... write some html;
        hdoc_tail, f, title;
@@ -1381,7 +1381,7 @@ func hdoc_read_template(fname) {
       The functions in htmldoc.i treat certain strings in the template
       in a special way. The first few of them must e alone on the
       line, wihtout heading or trailing blank:
-            
+
         Either one or two lines must contain exactly the text
         "%content%". The content of each page will be placed there,
         replacing anything between the first and last line equal to
@@ -1417,13 +1417,13 @@ func hdoc_read_template(fname) {
 
         %toroot% is replaced with the path from the current file to
         the HTML root. It is often "../" and sometimes empty.
-      
+
      SEE ALSO: hdoc_extract_embedded, mktexi2html_init
   */
   extern _hdoc_template;
   _hdoc_template=hdoc_read_file(fname);
 }
- 
+
 extern _hdoc_template;
 _hdoc_template=
 ["<html> <head> <title>",
@@ -1530,7 +1530,7 @@ func hdoc_headtail (src, dest, rm, title= , toroot=, doc=) {
       Adds HTML header and footer specified by currently loaded
       template to file SRC. Saves the result to DEST. Removes SRC
       unless "rm=0" is specified.
-     
+
    */
   if (is_void(rm)) rm=1;
    g = open (dest, "w");
@@ -1559,8 +1559,8 @@ func _hdoc_indexbartags (&htags, &hfiles, toroot=) {
   // this (obsolete) routine should be customized.
   if (is_void(toroot)) toroot="../";
    htags = ["home", "manual",  "packages", "index", "keywords"];
-   hfiles = toroot+["index.html", "manual/yorick.html", 
-	     "html_xref/packages.html", 
+   hfiles = toroot+["index.html", "manual/yorick.html",
+	     "html_xref/packages.html",
 	     "html_xref/global-index.html", "html_xref/keywords.html"];
 }
 
@@ -1573,7 +1573,7 @@ func _hdoc_indexbar(f) {
    _hdoc_margintable, f;
 
    for (i = 1; i <= numberof (htags); i++) {
-      wryte, f, "<td valign=\"TOP\" width=\"150\" bgcolor=" +  hbg1 + ">";   
+      wryte, f, "<td valign=\"TOP\" width=\"150\" bgcolor=" +  hbg1 + ">";
       wryte, f, "<center>";
       wryte, f, "<a href = " + hfiles(i) + ">" + htags(i) + "</a>";
       wryte, f, "</center>";
@@ -1585,8 +1585,8 @@ func _hdoc_indexbar(f) {
 
 
 func _hdoc_margintable (f) {
-  /* the best way to make a cell in a table of a particular width, which 
-     doesn't stretch or shrink depending on the size of the browser 
+  /* the best way to make a cell in a table of a particular width, which
+     doesn't stretch or shrink depending on the size of the browser
      window seems to be to put a table inside the cell */
    wryte, f, "<td><table width = 150><tr>"+
      "<td valign=\"TOP\" width=\"150\" bgcolor=\"#bbddff\">";
@@ -1623,9 +1623,9 @@ func hdoc_wrap (dir, quiet=) {
       if (!gotbody) {
 	 if (!quiet) write, format = "html file %s contains no <BODY> statement ", fnm;
 	 if (!quiet) write, "- nothing done";
-	 
+
       } else {
-	 hdoc_headtail, tmpfile, fnms(i); 
+	 hdoc_headtail, tmpfile, fnms(i);
       }
    }
 }
@@ -1643,7 +1643,7 @@ func _hdoc_copyright (f) {
    wryte, f, "and in all copies of the supporting documentation for such ";
    wryte, f, "  software.";
    wryte, f, "<br><p>";
-   
+
    wryte, f, "This work was produced at the University of California, ";
    wryte, f, "Lawrence Livermore National Laboratory under contract ";
    wryte, f, "no. W-7405-ENG-48 between the U.S. Department of Energy ";
@@ -1669,7 +1669,7 @@ func _hdoc_copyright (f) {
    wryte, f, "authors expressed herein do not necessarily state or reflect those of ";
    wryte, f, "the United States Government or the University of California, and ";
    wryte, f, "shall not be used for advertising or product endorsement purposes. ";
-   
+
 }
 
 func mktexi2html_init (infile,outfile) {
@@ -1703,7 +1703,7 @@ func mktexi2html_init (infile,outfile) {
       template.
 
         EXTRA_HEAD is everything between </TITLE> and </HEAD>
-      
+
         AFTER_BODY_OPEN is everything between either %startbody% or
         <BODY ...>and %content%
 

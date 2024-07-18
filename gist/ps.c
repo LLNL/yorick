@@ -752,7 +752,7 @@ static int DrawMarkers(Engine *engine, long n, const GpReal *px,
   int type, markEnd= 0;
   GpPoint *points;
   int size;
-  char typeString[8];
+  char typeString[16];
 
   if (n<1 || gistA.m.type<=0) return 0;
   if (CheckClip(psEngine)) return 1;
@@ -1357,7 +1357,7 @@ static int DrawDisjoint(Engine *engine, long n, const GpReal *px,
 
 /* ------------------------------------------------------------------------ */
 
-Engine *GpPSEngine(char *name, int landscape, int mode, char *file)
+Engine *GpPSEngine(const char *name, int landscape, int mode, char *file)
 {
   PSEngine *psEngine;
   long flen= file? strlen(file) : 0;

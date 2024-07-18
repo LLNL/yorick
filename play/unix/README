@@ -72,7 +72,7 @@ Required headers not part of ANSI C standard:
   chdir rmdir getcwd (in dir.c)
   getlogin getuid (to implement cuserid in usernm.c)
 <sys/types.h>   dir.c usernm.c
-<sys/stat.h>    
+<sys/stat.h>
   stat S_IFDIR (in dir.c)
 <dirent.h>      dir.c
   or one of: <sys/dir.h>, <sys/ndir.h>, or <ndir.h>

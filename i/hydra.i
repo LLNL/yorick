@@ -931,7 +931,7 @@ func h_array(f, ublk, name)
               ...
               eq_nocopy, name_arrayN, *pname_arrays(N)
 
-     reads variable array NAME for user block UBLK from the hydra file F.  
+     reads variable array NAME for user block UBLK from the hydra file F.
      If NAME=="matlist", you get the "Materials_matlist" array.
      Coordinates can be obtained using the names x, y or z.
 
@@ -940,7 +940,7 @@ func h_array(f, ublk, name)
      user block.
 
      Note that here zone centered arrays are given using the hydra convention
-     so that i=imax, j=jmax, k=kmax are missing.  Thus in order to use the 
+     so that i=imax, j=jmax, k=kmax are missing.  Thus in order to use the
      Yorick plc and plf functions correctly you should index the plotted
      variable i.e. for a 2D array.
      plf, den(1:-1,1:-1), y, x

@@ -147,7 +147,7 @@ func text_csv(f, .., tab=,fmt=,head=)
      nil, in which case the default delimiter is tab.  You can force tab
      delimited columns using the tab=1 keyword, and comma delimited columns
      using tab=0.
-  
+
      Each COLi may be nil to leave an empty column, a 1D array to
      produce a single column, or a 2D array to produce several columns.
      For 2D arrays, the first index is the row index, and the second is

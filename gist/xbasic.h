@@ -69,7 +69,7 @@ PLUG_API Engine *gxCurrentEngine;
    scrolling of the graphics window relative to the top window, although
    the initial location is passed in via (x, y).  The size argument is
    sizeof(XEngine), or sizeof some derived engine class.  */
-PLUG_API XEngine *GxEngine(p_scr *s, char *name, GpTransform *toPixels,
+PLUG_API XEngine *GxEngine(p_scr *s, const char *name, GpTransform *toPixels,
                            int x, int y,
                            int topMargin, int leftMargin, long size);
 

@@ -13,7 +13,7 @@
 
 func EllipticK(k)
 /* DOCUMENT EllipticK(k)
-   return E(k), the complete Elliptic Function 
+   return E(k), the complete Elliptic Function
    integral from 0 to pi/2 of  1/sqrt(1-k^2 *(sin(x))^2) dx
    uses the arithmetic/geometric mean method. (Abramowitz & Stegun p598)
    k must lie in   -1 < k <1.
@@ -45,7 +45,7 @@ func EllipticE(k)
      integral from 0 to pi/2 of  sqrt(1-k^2 *(sin(x))^2) dx
      k must lie in -1<= k <=1
 
-     Uses the arithmetic/geometric mean method. (Abramowitz & Stegun p598) 
+     Uses the arithmetic/geometric mean method. (Abramowitz & Stegun p598)
 
    SEE ALSO: EllipticK
  */

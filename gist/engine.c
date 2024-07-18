@@ -34,7 +34,7 @@ static void DefaultClearArea(Engine *engine, GpBox *box)
   engine->damaged= engine->inhibit= 0;
 }
 
-Engine *GpNewEngine(long size, char *name, g_callbacks *on,
+Engine *GpNewEngine(long size, const char *name, g_callbacks *on,
                     GpTransform *transform, int landscape,
   void (*Kill)(Engine*), int (*Clear)(Engine*,int), int (*Flush)(Engine*),
   void (*ChangeMap)(Engine*), int (*ChangePalette)(Engine*),

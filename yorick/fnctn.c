@@ -28,7 +28,7 @@
     On entry to EvalFN, the Yorick program stack might look as follows:
 
     .. sample  p1  kB  pB  p2  p3  kA  pA  p4  kD  pD  p5
-         *     *   pB  *   *   *   pA  *   *   pD  *   *  
+         *     *   pB  *   *   *   pA  *   *   pD  *   *
 
     where 3 keywords and 2 extra positional parameters have been supplied.
     The second line shows where the Symbol->index pointers point; on input

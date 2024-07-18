@@ -33,7 +33,7 @@ p_stdinit(void (*on_stdin)(char *input_line))
 }
 
 void
-p_stdout(char *output_line)
+p_stdout(const char *output_line)
 {
   if (!p_signalling) {
     fputs(output_line, stdout);
@@ -42,7 +42,7 @@ p_stdout(char *output_line)
 }
 
 void
-p_stderr(char *output_line)
+p_stderr(const char *output_line)
 {
   if (!p_signalling) {
     fputs(output_line, stderr);

@@ -44,7 +44,7 @@ static int currentCn;          /* level selected by GdGetContour */
 
 /* Saved state information used by GdSetDrawing */
 static Drauing *saveDr= 0;
-static GeSystem *saveSy; 
+static GeSystem *saveSy;
 static GdElement *saveEl;
 static int saveCn;
 

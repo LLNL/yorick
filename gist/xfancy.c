@@ -73,7 +73,7 @@ static void DrawRubber(FXEngine *fxe, int x, int y);
 /* ------------------------------------------------------------------------ */
 
 Engine *
-GpFXEngine(char *name, int landscape, int dpi, char *displayName)
+GpFXEngine(const char *name, int landscape, int dpi, char *displayName)
 {
   p_scr *s = g_connect(displayName);
   int topWidth= DefaultTopWidth(dpi);   /* not including button, message */
@@ -452,7 +452,7 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
 {
   int iSystem = fxe->iSystem;
   int locked, logX = 0, logY = 0;
-  char format[24];  /* e.g.- "%s%2d (%11.3e, %11.3e)" */
+  char format[48];  /* e.g.- "%s%2d (%11.3e, %11.3e)" */
   char xFormat[16], yFormat[16], *f1, *f2;
   GpReal xWC, yWC;
   GeSystem *system;
@@ -492,7 +492,7 @@ MovePointer(FXEngine *fxe, Drauing *drawing,
     gxCurrentY = yWC;
     gxCurrentSys = iSystem;
     gxCurrentEngine = (Engine *)fxe;
-    
+
     RedrawMessage(fxe);
   }
   if (rubberBanding) DrawRubber(fxe, x, y);
@@ -751,12 +751,12 @@ static int FindSystem(FXEngine *fxe, Drauing *drawing, int x, int y,
         /* be sure system has been scanned if limits extreme */
         ((sys->rescan || sys->unscanned>=0) &&
          GdScan(sys))) continue;
-    box= &sys->trans.viewport; 
+    box= &sys->trans.viewport;
     if (xn>=box->xmin && xn<=box->xmax && yn>=box->ymin && yn<=box->ymax)
-      { 
+      {
         tmp= (box->xmax-box->xmin)*(box->ymax-box->ymin);
         if(tmp<0) tmp= -tmp;
-        if(tmp<min) { 
+        if(tmp<min) {
           min= tmp;
           iSystem= i;
           thesys= sys;

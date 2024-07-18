@@ -12,13 +12,13 @@
 ; by the IDL End User License Agreement (EULA). All IDL users are
 ; required to read and agree to the terms of the IDL EULA at the time
 ; that they install IDL.
-; 
+;
 ; The CMSVLIB software, written by Craig Markwardt, embodies
 ; unpublished proprietary information about the IDL Save file
 ; format. Research Systems grants to the author of this software, and
 ; to all IDL users, a license to use and redistribute this software in
 ; source or binary form, subject to the following conditions:
-; 
+;
 ; 1. The author, and any users of this software must be in full
 ;    compliance with the IDL End User License Agreement (EULA).
 ; 2. Redistributions of source code must retain the complete and
@@ -46,7 +46,7 @@
 ; 7. This software is not a product of Research Systems Inc. Research
 ;    Systems Inc disclaims any responsibility for its development or
 ;    maintenance.
-; 
+;
 ; THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 ; IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 ; OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.

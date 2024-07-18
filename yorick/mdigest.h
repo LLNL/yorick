@@ -1,6 +1,6 @@
 /* mdigest.h
  * md5 and sha1 message digest functions from public domain starting points:
- * md5 - Alexander Peslyak 
+ * md5 - Alexander Peslyak
  * http://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
  * sha1 - Steve Reid
  * ftp://ftp.funet.fi/pub/crypt/hash/sha/sha1.c

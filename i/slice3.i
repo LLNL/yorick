@@ -1156,7 +1156,7 @@ func pl3tree(nverts, xyzverts, values, plane, cmin=, cmax=)
      current 3D lighting model; the isosurfaces are at the leaves of
      the b-tree, sliced by all of the planes.  If PLANE is specified,
      the XYZVERTS must all lie in that plane, and that plane becomes
-     a new slicing plane in the b-tree.  
+     a new slicing plane in the b-tree.
 
      Each leaf of the b-tree consists of a set of sliced isosurfaces.
      A node of the b-tree consists of some polygons in one of the

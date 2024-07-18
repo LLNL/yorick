@@ -38,13 +38,13 @@ p_stdinit(void (*on_stdin)(char *input_line))
   w_on_stdin = on_stdin;
 }
 
-void p_stdout(char *output_line)
+void p_stdout(const char *output_line)
 {
   if (!w_stdout) w_stdout = con_stdout;
   w_formout(output_line, w_stdout);
 }
 
-void p_stderr(char *output_line)
+void p_stderr(const char *output_line)
 {
   if (!w_stderr) w_stderr = con_stderr;
   w_formout(output_line, w_stderr);
@@ -82,7 +82,7 @@ w_deliver(char *buf)
 }
 
 static void
-w_formout(char *line, void (*func)(char *, long))
+w_formout(const char *line, void (*func)(char *, long))
 {
   if (!p_signalling && line) {
     static char *buf = 0;

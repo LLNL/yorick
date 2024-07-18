@@ -140,13 +140,13 @@ func add_y_home(y_home,y_site) {
        - the main path for .i files (see set_path(), get_path();
        - the plug_dir path for compiled add-ons (see plug_dir());
        - GISTPATH (.gp and .gs files).
-       
+
      In addition, we perform an include_all (which see) on y_home/i-start and
      y_site/i-start (unless we are not in batch mode and y_home or y_site is
      "~/yorick" or "~/Yorick", in which case this is done by i0/stdx.i).
 
      "add_y_home, y_both" is the same as setting y_site=y_home.
-     
+
      See pkg_mngr.i for more.
  */
   if (!y_home) return;
@@ -190,7 +190,7 @@ func add_y_home(y_home,y_site) {
   if (strpart(test_y_site,1:2) == "~/") streplace,test_y_site,[0,2],get_home();
   if (batch() | test_y_home!=test_y_user)
     include_all, y_home+"i-start/";
-  
+
   if ((y_site!=y_home) &
       (batch() | test_y_site!=test_y_user))
     include_all, y_site+"i-start/";
@@ -253,7 +253,7 @@ func find_in_path(filename,takefirst=,path=) {
       the result of get_path(), i.e. a single string with ":" delimiters
       between the directories (and entries MUST end with a "/"), e.g.:
       path="/usr/local/share/yao/:/home/frigaut/Yorick/"
-     
+
    SEE ALSO: get_path, dirname, basename
  */
   local lpath,valid;

@@ -455,7 +455,7 @@ long *BuildMeshBndy(double *x, double *y, int *reg,
      boundary segments */
   CheckStack(1);
   nedges*= 2;
-  barray= 
+  barray=
     PushDataBlock(NewArray(&longStruct,
                            NewDimension(nedges, 1L, (Dimension *)0)));
   barray->type.dims->references--;

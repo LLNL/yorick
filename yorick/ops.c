@@ -583,7 +583,7 @@ void Y_system(int nArgs)
   int  retval;
   if (nArgs!=1) YError("system function takes exactly one argument");
   line= YGetString(sp);
-  if (line && line[0]) retval = p_system(line);
+  retval = (line && line[0]) ? p_system(line) : 0;
   PushIntValue(retval);
 }
 

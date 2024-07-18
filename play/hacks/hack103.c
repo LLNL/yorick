@@ -50,7 +50,7 @@ sqrt0_hack(double x)
     int *i;
   } u;
   u.f = &sqrt;
-  /* 0xfc20082c is "fsqrt f1,f1" instruction, want to use it */ 
+  /* 0xfc20082c is "fsqrt f1,f1" instruction, want to use it */
   sqrt_phack = (u.i[0]==0xfc20082c)? u.f : __sqrt_hack;
   return sqrt_phack(x);
 }
@@ -67,16 +67,16 @@ sqrt0_hack(double x)
  * Copyright (c) 2002 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_LICENSE_HEADER_START@
- * 
+ *
  * Copyright (c) 1999-2003 Apple Computer, Inc.  All Rights Reserved.
- * 
+ *
  * This file contains Original Code and/or Modifications of Original Code
  * as defined in and that are subject to the Apple Public Source License
  * Version 2.0 (the 'License'). You may not use this file except in
  * compliance with the License. Please obtain a copy of the License at
  * http://www.opensource.apple.com/apsl/ and read it before using this
  * file.
- * 
+ *
  * The Original Code and all software distributed under the License are
  * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
  * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
@@ -84,7 +84,7 @@ sqrt0_hack(double x)
  * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
  * Please see the License for the specific language governing rights and
  * limitations under the License.
- * 
+ *
  * @APPLE_LICENSE_HEADER_END@
  */
 
@@ -105,23 +105,23 @@ extern double expm1(double);
 #ifndef _PPC_INTRINSICS_H_
 static inline double
  __fmadd (double a, double c, double b) __attribute__((always_inline));
-static inline double 
+static inline double
 __fmadd (double  a, double c, double b)
 {
   double result;
-  __asm__ ("fmadd %0, %1, %2, %3" 
-           /* outputs:  */ : "=f" (result) 
+  __asm__ ("fmadd %0, %1, %2, %3"
+           /* outputs:  */ : "=f" (result)
            /* inputs:   */ : "f" (a), "f" (c), "f" (b));
   return result;
 }
 static inline double
  __fnmsub (double a, double c, double b) __attribute__((always_inline));
-static inline double 
+static inline double
 __fnmsub (double  a, double c, double b)
 {
   double result;
-  __asm__ ("fnmsub %0, %1, %2, %3" 
-           /* outputs:  */ : "=f" (result) 
+  __asm__ ("fnmsub %0, %1, %2, %3"
+           /* outputs:  */ : "=f" (result)
            /* inputs:   */ : "f" (a), "f" (c), "f" (b));
   return result;
 }
@@ -146,7 +146,7 @@ double   nan  ( const char *string );
     asm volatile ("fmadd %0,%1,%2,%3" : "=f" (__value): "f" (__argx), "f" (__argy), "f" (__argz)); \
     __value; \
 })
- 
+
 #define __PROD(x, y) \
 ({ \
     double __value, __argx = (x), __argy = (y); \
@@ -189,7 +189,7 @@ typedef union {
 #endif
 /* ------------------------------------------------------ end fp_private.h */
 
-#define      twoTo512           1.34078079299425971e154  
+#define      twoTo512           1.34078079299425971e154
 #define      twoToMinus256      8.636168555094444625e-78
 #define      upHalfOfAnULP      0.500000000000000111
 
@@ -232,23 +232,23 @@ __sqrt_hack(double x)
   hexdouble xInHex, yInHex, gInHex;
   register double OldEnvironment, g, y, y2, d, e;
   register unsigned long int xhead, ghead, yhead;
-      
+
   register double FPR_z, FPR_Two911, FPR_TwoM128, FPR_Two128,
     FPR_inf, FPR_HalfULP;
-      
+
   xInHex.d = x;					FPR_z = 0.0;
   FPR_inf = infinity.d;				FPR_Two911 = Two911.d;
   FPR_TwoM128 = twoToM128;			FPR_Two128 = twoTo128;
   gInHex.i.lo = 0UL;				yInHex.i.lo = 0UL;
   FPR_HalfULP = upHalfOfAnULP;
-      
+
   FEGETENVD( OldEnvironment );
   FESETENVD( FPR_z );    /* FIXED SIGFPE BUG */
-      
+
   __ORI_NOOP;
   __ENSURE( FPR_z, FPR_inf, FPR_Two911 );
   __ENSURE( FPR_TwoM128, FPR_Two128, FPR_HalfULP );
-      
+
   FESETENVD( FPR_z );
 
   __ORI_NOOP;
@@ -268,7 +268,7 @@ __sqrt_hack(double x)
     g = GInHex.fval;
 
     yhead = 0x7e000000UL - ghead;
-    YInHex.lval = yhead + ( ( 0xffUL & GPR_t ) << 15 ); 
+    YInHex.lval = yhead + ( ( 0xffUL & GPR_t ) << 15 );
 
     asm volatile ( "add %0, %1, %2" : "=r" (GPR_foo) : "b" (&GInHex), "b" (&YInHex) : "memory" );
     __ORI_NOOP;
@@ -285,13 +285,13 @@ __sqrt_hack(double x)
     y2 = y + y;                  		g = __FMADD(y, d, g );
     e = __FNMSUB( y, g, FPR_HalfULP );	d = __FNMSUB( g, g, x );
     y = __FMADD( e, y2, y );
-            
+
     FESETENVD( OldEnvironment );
-            
+
     __ORI_NOOP;
     return (  __FMADD( y, d, g ) );
   }
-        
+
   if ( FPR_z < x && x < FPR_inf ) {
     if ( FPR_Two911 < x ) {
       register unsigned long GPR_t;
@@ -306,13 +306,13 @@ __sqrt_hack(double x)
       gInHex.i.hi = ghead + ( ( 0xff00UL & GPR_t ) << 4 );
       g = gInHex.d;
 
-      yInHex.i.hi = yhead + ( ( 0xffUL & GPR_t ) << 12 ); 
+      yInHex.i.hi = yhead + ( ( 0xffUL & GPR_t ) << 12 );
       y = yInHex.d;
 
       d = __FNMSUB( g, g, x );			y2 = y + y;
       g = __FMADD(y, d, g );
       e = __FNMSUB( y, g, FPR_HalfULP );	d = __FNMSUB( g, g, x );
-                  
+
       y = __FMADD( e, y2, y );
       y2 = y + y;				g = __FMADD(y, d, g);
       e = __FNMSUB( y, g, FPR_HalfULP );	d = __FNMSUB( g, g, x );
@@ -320,11 +320,11 @@ __sqrt_hack(double x)
       y2 = y + y;                  		g = __FMADD(y, d, g );
       e = __FNMSUB( y, g, FPR_HalfULP );	d = __FNMSUB( g, g, x );
       y = __FMADD( e, y2, y );
-                  
+
       FESETENVD( OldEnvironment );
       return ( __FMADD( y, d, g ) );
 
-    } else { 
+    } else {
       xInHex.d = x * twoTo512;
       xhead = xInHex.i.hi;
 
@@ -348,7 +348,7 @@ __sqrt_hack(double x)
       e = __FNMSUB( y, g, FPR_HalfULP );	d = __FNMSUB( g, g, x );
       d *= twoToMinus256;			g *= twoToMinus256;
       y = __FMADD( e, y2, y );
-                  
+
       FESETENVD( OldEnvironment );
       return ( __FMADD( y, d, g ) );
     }
@@ -368,7 +368,7 @@ __sqrt_hack(double x)
   }
 }
 
-static const hexdouble SqrtNegEps = HEXDOUBLE(0x3e400000, 0x00000000); 
+static const hexdouble SqrtNegEps = HEXDOUBLE(0x3e400000, 0x00000000);
 static const hexdouble Huge       = HEXDOUBLE(0x7ff00000, 0x00000000);
 static const double kMinNormal = 2.2250738585072014e-308;
 
@@ -380,16 +380,16 @@ double
 sinh_hack(double x)
 {
   register double PositiveX;
-      
-  register double result, FPR_env, FPR_z, FPR_kMinNormal, FPR_half, FPR_one, 
+
+  register double result, FPR_env, FPR_z, FPR_kMinNormal, FPR_half, FPR_one,
     FPR_ln2, FPR_sqreps, FPR_kMaxNormal, FPR_inf;
-      
+
   PositiveX = __FABS ( x );
   FPR_z = 0.0;				FPR_half = 0.5;
   FPR_one = 1.0;			FPR_sqreps = SqrtNegEps.d;
   FPR_inf = Huge.d;			FPR_kMinNormal = kMinNormal;
   FPR_ln2 = Log2.d;			FPR_kMaxNormal = kMaxNormal;
-      
+
   FEGETENVD ( FPR_env);
   FESETENVD ( FPR_z );    /* FIXED SIGFPE BUG */
   __ENSURE( FPR_z, FPR_one, FPR_inf );
@@ -397,7 +397,7 @@ sinh_hack(double x)
   __ENSURE( FPR_z, FPR_kMaxNormal, FPR_ln2 );
   FESETENVD ( FPR_z );
 
-  if ( PositiveX > FPR_sqreps ) {                  
+  if ( PositiveX > FPR_sqreps ) {
     result = expm1 ( PositiveX );
     if ( result != FPR_inf )
       result = FPR_half * ( result + result / ( FPR_one + result ) );
@@ -406,7 +406,7 @@ sinh_hack(double x)
   }
 
   FESETENVD ( FPR_env );
-      
+
   if ( result != result)
     ; /* NOTHING */
   else if ( result == FPR_z )
@@ -417,10 +417,10 @@ sinh_hack(double x)
     __PROG_INEXACT( FPR_ln2 );
   else if ( PositiveX < FPR_inf )
     __PROG_OF_INEXACT( FPR_kMaxNormal );
-      
+
   if ( x < FPR_z)
     result = -result;
-      
+
   return result;
 }
 
@@ -429,15 +429,15 @@ tanh_hack(double x)
 {
   register double PositiveX;
 
-  register double result, FPR_env, FPR_z, FPR_kMinNormal, FPR_two, FPR_negTwo, 
+  register double result, FPR_env, FPR_z, FPR_kMinNormal, FPR_two, FPR_negTwo,
     FPR_ln2, FPR_sqreps, FPR_kMaxNormal, FPR_inf, FPR_t;
-      
+
   PositiveX = __FABS ( x );
   FPR_z = 0.0;				FPR_inf = Huge.d;
   FPR_two = 2.0;			FPR_negTwo = -2.0;
   FPR_sqreps = SqrtNegEps.d;		FPR_kMinNormal = kMinNormal;
   FPR_ln2 = Log2.d;			FPR_kMaxNormal = kMaxNormal;
-      
+
   if ( PositiveX == FPR_inf )
     return (x >= FPR_z ? 1.0 : -1.0);
 
@@ -448,7 +448,7 @@ tanh_hack(double x)
   __ENSURE( FPR_z, FPR_kMaxNormal, FPR_ln2 );
   FESETENVD ( FPR_z );
 
-  if ( PositiveX > FPR_sqreps) {                  
+  if ( PositiveX > FPR_sqreps) {
     FPR_t = expm1 ( FPR_negTwo * PositiveX ); /* call exp1 once   */
     result = - FPR_t / ( FPR_two + FPR_t );
   } else {
@@ -456,7 +456,7 @@ tanh_hack(double x)
   }
 
   FESETENVD ( FPR_env );
-      
+
   if ( result != result)
     ; /* NOTHING */
   else if ( result == FPR_z )
@@ -467,10 +467,10 @@ tanh_hack(double x)
     __PROG_INEXACT( FPR_ln2 );
   else if ( PositiveX < FPR_inf )
     __PROG_OF_INEXACT( FPR_kMaxNormal );
-      
+
   if ( x < FPR_z)
     result = -result;
-      
+
   return result;
 }
 

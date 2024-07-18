@@ -998,7 +998,7 @@ int AddNextFile(HistoryInfo *history, char *filename, int create)
   }
 
   if (!create) {
-    if (!file->permissions&1) stream= 0;
+    if (!(file->permissions&1)) stream= 0;
     else if (file->permissions&2) stream= p_fopen(filename, "r+b");
     else stream= p_fopen(filename, "rb");
 

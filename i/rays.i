@@ -149,7 +149,7 @@ func dirt_rays(rays)
     z= rays(4,..);
     x= rays(5,..);
     /* NOTE SIGN CHANGE IN THETA */
-    return form_rays([x*cost-z*sint, y, -atan(sint, cost)]);  
+    return form_rays([x*cost-z*sint, y, -atan(sint, cost)]);
   }
 
   return [];

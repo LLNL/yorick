@@ -1438,7 +1438,7 @@ static void IncrementName(char *filename)
 GpReal gCGMScale= 25545.24;   /* default CGM scale is 2400 dpi (round up) */
 long gCGMFileSize= 100000000; /* default max file size is about 100 Meg */
 
-Engine *GpCGMEngine(char *name, int landscape, int mode, char *file)
+Engine *GpCGMEngine(const char *name, int landscape, int mode, char *file)
 {
   CGMEngine *cgmEngine;
   long flen= file? strlen(file) : 0;

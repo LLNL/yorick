@@ -319,7 +319,7 @@ func freap(n, rhand)
 {
   local x, ok;
   /* idiotic in real freap -- would pick either vunpack or restore */
-  v = is_stream(rhand);  
+  v = is_stream(rhand);
   if (v) restore, rhand, x, ok;
   else vunpack, rhand, x, ok;
   /* nbad local to testmpool */

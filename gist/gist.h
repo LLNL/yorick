@@ -57,10 +57,10 @@ PLUG_API char *gistPathDefault;  /* set in Makefile or gread.c, can be
  */
 
 typedef struct Engine Engine;
-PLUG_API Engine *GpPSEngine(char *name, int landscape, int mode, char *file);
-PLUG_API Engine *GpCGMEngine(char *name, int landscape, int mode, char *file);
-PLUG_API Engine *GpBXEngine(char *name, int landscape, int dpi, char *display);
-PLUG_API Engine *GpFXEngine(char *name, int landscape, int dpi, char *display);
+PLUG_API Engine *GpPSEngine(const char *name, int landscape, int mode, char *file);
+PLUG_API Engine *GpCGMEngine(const char *name, int landscape, int mode, char *file);
+PLUG_API Engine *GpBXEngine(const char *name, int landscape, int dpi, char *display);
+PLUG_API Engine *GpFXEngine(const char *name, int landscape, int dpi, char *display);
 
 PLUG_API void GpKillEngine(Engine *engine);
 
@@ -68,7 +68,7 @@ PLUG_API int gist_input_hint, gist_private_map, gist_rgb_hint;
 PLUG_API void g_initializer(int *pargc, char *argv[]);
 PLUG_API char *g_set_path(char *gpath);
 PLUG_API void (*g_on_keyline)(char *msg);
-PLUG_API void (*g_stdout)(char *output_line);
+PLUG_API void (*g_stdout)(const char *output_line);
 
 typedef struct g_callbacks g_callbacks;
 struct g_callbacks {
@@ -790,7 +790,7 @@ PLUG_API int GdSetPort(void);
    can be "reverted" to return the limits to the state at the time
    of the last save operation.  (gistD plays no role in this operation.)
    This is used by the fancy X Engine to save the limits prior to
-   a series of mouse-driven zoom or pan operations. 
+   a series of mouse-driven zoom or pan operations.
    GdRevertLimits(1) reverts to the save limits only if the current
    limits are marked D_ZOOMED, while GdRevertLimits(0) reverts
    unconditionally.  GdSaveLimits(1) assures that D_ZOOMED is not

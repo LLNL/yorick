@@ -22,8 +22,8 @@ extern int on_launch(int argc, char *argv[]);
 PLUG_API void p_quit(void);
 PLUG_API void p_abort(void);               /* never returns to caller */
 PLUG_API void p_qclear(void);              /* clears event queue */
-PLUG_API void p_stdout(char *output_line); /* only after p_stdinit */
-PLUG_API void p_stderr(char *output_line); /* only after p_stdinit */
+PLUG_API void p_stdout(const char *output_line); /* only after p_stdinit */
+PLUG_API void p_stderr(const char *output_line); /* only after p_stdinit */
 PLUG_API double p_wall_secs(void);         /* must interoperate with on_poll */
 PLUG_API double p_cpu_secs(double *sys);
 /* p_getenv and p_getuser return pointers to static memory */
@@ -136,7 +136,7 @@ PLUG_API int p_wincount(p_scr *s);
 PLUG_API void p_winloc(p_win *w, int *x, int *y);
 
 /* screen graphics window and pixmap management */
-PLUG_API p_win *p_window(p_scr *s, int width, int height, char *title,
+PLUG_API p_win *p_window(p_scr *s, int width, int height, const char *title,
                          p_col_t bg, int hints, void *ctx);
 PLUG_API p_win *p_subwindow(p_scr *s, int width, int height,
                             unsigned long parent_id, int x, int y,

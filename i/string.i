@@ -75,7 +75,7 @@ func strtolower(s) { return strcase(0, s); }
 /* DHM removed strtrim, now in i0/ystr.i */
 
 func strchr(s, c, last=)
-/* DOCUMENT strchr -- get first/last index of a character in a string 
+/* DOCUMENT strchr -- get first/last index of a character in a string
  *
  * SYNOPSIS: i = strchr(s, c)
  *           i = strchr(s, c, last=1)

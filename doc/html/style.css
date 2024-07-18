@@ -7,8 +7,8 @@ body {
 }
 
 #banner {
-  padding: 0; 
-  margin: 0; 
+  padding: 0;
+  margin: 0;
 }
 
 #content {
@@ -22,19 +22,19 @@ table {
 }
 
 /* ie5 hack starts \*/
-p { 
+p {
   padding: 5px 0px 0px 4px;
   margin: 0;
   font: Verdana;
 }
 /* end of hack */
-p { 
+p {
   text-align:justify;
 }
 
-ul { 
-  margin:0; 
-  margin-left: 10px; 
+ul {
+  margin:0;
+  margin-left: 10px;
   padding: 3px 3px 5px 15px;
   list-style-position: outside;
   /* list-style-image: url(images/star-bullet-s1.png) ; */
@@ -65,7 +65,7 @@ ul {
   vertical-align: middle;
 }
 
-#links { 
+#links {
   margin: 0px;
 }
 
@@ -76,13 +76,13 @@ ul {
   font-size: 90%;
 }
 
-pre { 
+pre {
   font: 100% Monaco, Courier, Helvetica;
   padding: 0;
   margin: 0;
 }
 
-.funcname { 
+.funcname {
   font: 110% Courier, Helvetica;
   font-weight: bold;
   color: #a0aa30;
@@ -108,9 +108,9 @@ table .alphaHead {
   padding: 8px 10px 8px 10px;
 }
 
-table ul { 
-  margin:0; 
-  margin-left: 10px; 
+table ul {
+  margin:0;
+  margin-left: 10px;
   padding: 1px 3px 1px 5px;
   list-style-position: outside;
   list-style-image: url(images/triangle2.jpg) ;

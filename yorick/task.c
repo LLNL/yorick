@@ -60,7 +60,7 @@ int yAutoDebug= 0;
 int yDebugLevel= 0;
 
 /* most recent error message was built in yErrorMsg */
-char yErrorMsg[192+12];
+char yErrorMsg[192+24];
 char yWarningMsg[192];
 
 static int inYError= 0;
@@ -1428,7 +1428,7 @@ Y_plug_in(int nArgs)
   int i;
   if (nArgs!=1) YError("plug_in function takes exactly one argument");
   pkgname = YGetString(sp-nArgs+1);
-  if (!pkgname || !pkgname[0]) 
+  if (!pkgname || !pkgname[0])
     YError("plug_in: package name argument is null");
   for (i=1 ; pkgname[i] ; i++);
   for (pname=pkgname+i-1 ; pname>pkgname ; pname--)
@@ -1748,9 +1748,9 @@ YError(const char *msg)
     strcpy(yErrorMsg, "Up to (");
   strncat(yErrorMsg, name, 40);
   if (func && (yerror_flags&2)!=0) {
-    char relpc[32];
+    char relpc[24];// 64-bit integer takes 20 char max in decimal format
     sprintf(relpc, "[%ld]", (long)(pcDebug-func->code));
-    strncat(yErrorMsg, relpc, 12);
+    strncat(yErrorMsg, relpc, 24);
   }
   strcat(yErrorMsg, ") ");
   if (!pcUp || recursing)

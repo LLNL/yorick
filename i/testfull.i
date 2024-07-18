@@ -1,6 +1,6 @@
 /*
  * $Id: testfull.i,v 1.1 2005-09-18 22:06:11 dhmunro Exp $
- * This file runs a full set of tests on the Macintosh version 
+ * This file runs a full set of tests on the Macintosh version
  * of yorick, although it should be also useful for any other version.
  */
 /* Copyright (c) 2005, The Regents of the University of California.

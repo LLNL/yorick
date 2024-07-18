@@ -318,7 +318,7 @@ func multi_streak_save(outname, mf, rays, slimits, gb=)
 /* DOCUMENT multi_streak_save, outname, mf, rays, slimits, gb=common_bins
          or multi_streak_save, outfile, mf, rays, slimits, gb=common_bins
      like the streak function, but allows opacity to be built up from
-     "slave files", in addition to the "master file" MF(1) and 
+     "slave files", in addition to the "master file" MF(1) and
      saves the streak in a PDB history file.  The MF parameter
      is an array of MultiFiles, each created by multif.
      The master file MF(1) contains the mesh, and the master list of dump
@@ -359,7 +359,7 @@ func multi_streak_save(outname, mf, rays, slimits, gb=)
        emissivities for all zones.  Family "pp_h00" contains post
        processed opacities and emissivities on a much finer spectral
        mesh, but only for zones in regions 1 and 2 of the original
-       problem.  File "prob_strk" contains the streak history. 
+       problem.  File "prob_strk" contains the streak history.
        You want to transport the emission from the
        inner regions 1 and 2 through the overlying material:
 

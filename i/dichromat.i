@@ -88,7 +88,7 @@ func dichromap(type)
   if (is_void(map)) error, "no current colormap";
   if (numberof(map)==numberof(_dichro_map))
     match = allof(map==_dichro_map) | (allof(map==_dichro_orig)<<1);
-  if (is_void(type)) { 
+  if (is_void(type)) {
     if (!match) error, "current map not installed by dichromap";
   } else {
     if (match == 1) map = _dichro_orig;

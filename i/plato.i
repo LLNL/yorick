@@ -12,8 +12,8 @@ local plato;
      Contains routines to generate points related to Platonic
      solids and other pleasing or simple 3D geometrical objects.
 
-     pt_tet       All these return points of the solid imbedded in 
-     pt_cube      a pleasing way inside the cube with corners +-1. 
+     pt_tet       All these return points of the solid imbedded in
+     pt_cube      a pleasing way inside the cube with corners +-1.
      pt_oct       With a non-zero parameter, the points are instead
      pt_dodec     normalized to unit length.
      pt_ico

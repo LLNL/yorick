@@ -24,7 +24,7 @@ extern char *strcpy(char *, const char *);
 
 void (*GdFree)(void *)= 0;
 
-void (*g_stdout)(char *msg) = 0;
+void (*g_stdout)(const char *msg) = 0;
 void (*g_on_keyline)(char *msg) = 0;
 
 /* Font for character occasional markers on curves */

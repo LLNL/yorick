@@ -52,7 +52,7 @@
 #define select fake_select
 static int fake_select(int mx, int *rd, int *wr, int *er, void *tv);
 /* ARGSUSED */
-static int 
+static int
 fake_select(int mx, int *rd, int *wr, int *er, void *tv)
 {
   int ready = (!tv && rd[0]&1);

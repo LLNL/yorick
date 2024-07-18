@@ -150,7 +150,7 @@ p_win *p_subwindow(p_scr *s, int width, int height,
 }
 
 p_win *
-p_window(p_scr *s, int width, int height, char *title,
+p_window(p_scr *s, int width, int height, const char *title,
          p_col_t bg, int hints, void *ctx)
 {
   p_win *w = x_create(s, s->root, hints, ctx,

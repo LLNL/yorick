@@ -74,10 +74,10 @@ func demo2(which, time_limit)
   cmin= -cmin;
   level= cmax/4.;
   movie, display_plf, time_limit;
-  write,format="%f frames of filled mesh drumhead completed in %f sec\n", 
+  write,format="%f frames of filled mesh drumhead completed in %f sec\n",
         movie_timing(4), movie_timing(3);
   write,format="Rate for filled mesh is %f frames/(CPU sec), %f frames(wall sec)\n",
-    movie_timing(4)/(movie_timing(1)-movie_timing(5)+1.0e-4), 
+    movie_timing(4)/(movie_timing(1)-movie_timing(5)+1.0e-4),
     movie_timing(4)/(movie_timing(3)-movie_timing(5)+1.0e-4);
 
   /* roll the perspective movie */
@@ -85,10 +85,10 @@ func demo2(which, time_limit)
   f= f0;
   limits, -1, 1, -1, 1;
   movie, display_plm, time_limit;
-  write,format="%f frames of wireframe surface drumhead completed in %f sec\n", 
+  write,format="%f frames of wireframe surface drumhead completed in %f sec\n",
         movie_timing(4), movie_timing(3);
   write,format="Rate for filled mesh is %f frames/(CPU sec), %f frames(wall sec)\n",
-    movie_timing(4)/(movie_timing(1)-movie_timing(5)+1.0e-4), 
+    movie_timing(4)/(movie_timing(1)-movie_timing(5)+1.0e-4),
     movie_timing(4)/(movie_timing(3)-movie_timing(5)+1.0e-4);
 
   /* roll the shaded movie */
@@ -96,10 +96,10 @@ func demo2(which, time_limit)
   f= f0;
   limits, -1, 1, -1, 1;
   movie, display_pl3, time_limit;
-  write,format="%f frames of filled surface drumhead completed in %f sec\n", 
+  write,format="%f frames of filled surface drumhead completed in %f sec\n",
         movie_timing(4), movie_timing(3);
   write,format="Rate for filled mesh is %f frames/(CPU sec), %f frames(wall sec)\n",
-    movie_timing(4)/(movie_timing(1)-movie_timing(5)+1.0e-4), 
+    movie_timing(4)/(movie_timing(1)-movie_timing(5)+1.0e-4),
     movie_timing(4)/(movie_timing(3)-movie_timing(5)+1.0e-4);
 
   fma;

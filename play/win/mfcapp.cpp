@@ -90,7 +90,7 @@ mfc_frame_wnd::mfc_frame_wnd()
 }
 static int oops = 0;
 LRESULT
-mfc_frame_wnd::WindowProc(UINT message, WPARAM wParam, LPARAM lParam) 
+mfc_frame_wnd::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   LRESULT result = 0;
   if (message==ID_CALL_FUNC) {
@@ -492,7 +492,7 @@ mfc_child::PreCreateWindow(CREATESTRUCT& cs)
 }
 
 void
-mfc_child::OnDestroy() 
+mfc_child::OnDestroy()
 {
   CMDIChildWnd::OnDestroy();
   CMDIFrameWnd *fw = (CMDIFrameWnd *)the_boss.m_pMainWnd;
@@ -500,7 +500,7 @@ mfc_child::OnDestroy()
 }
 
 void
-mfc_child::OnSetFocus(CWnd *w) 
+mfc_child::OnSetFocus(CWnd *w)
 {
   /* first call to OnSetFocus occurs before child is created */
   if (child) {

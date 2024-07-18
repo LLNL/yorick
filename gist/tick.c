@@ -758,7 +758,7 @@ static void DrawOrigin(GpReal x0, GpReal x1, GpReal y0, GpReal y1,
 /* ------------------------------------------------------------------------ */
 
 static char overflow[32];
-static char fixedFormat[16];   /* e.g.- " %+05.0f" */
+static char fixedFormat[24];   /* e.g.- " %+05.0f" */
 static int decimalPoint;
 static int niceDecades;
 static char *niceDecs[]=

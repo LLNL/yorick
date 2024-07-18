@@ -11,7 +11,7 @@
 #include "playw.h"
 #include "pstdlib.h"
 
-HWND (*w_parent)(int width, int height, char *title, int hints)= 0;
+HWND (*w_parent)(int width, int height, const char *title, int hints)= 0;
 
 static p_win *w_pwin(void *ctx, p_scr *s, HDC dc, HBITMAP bm,
                      unsigned long bg);
@@ -68,7 +68,7 @@ p_win *p_subwindow(p_scr *s, int width, int height,
 }
 
 p_win *
-p_window(p_scr *s, int width, int height, char *title,
+p_window(p_scr *s, int width, int height, const char *title,
          unsigned long bg, int hints, void *ctx)
 {
   p_win *pw = w_pwin(ctx, s, 0, 0, bg);
