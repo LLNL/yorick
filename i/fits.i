@@ -670,7 +670,7 @@ func fits_open(filename, filemode, overwrite=)
 
    SEE ALSO: fits, fits_read_header, fits_write_header,
              fits_get, fits_set, fits_read_array, fits_write_array,
-             fits_next_hdu, fits_new_hdu, fits_rewind, __sun. */
+             fits_next_hdu, fits_new_hdu, fits_rewind, fits_set_primitives. */
 {
   /* Open stream. */
   if (is_void(filemode) || filemode == 'r' || filemode == "r") {
@@ -691,7 +691,7 @@ func fits_open(filename, filemode, overwrite=)
   }
 
   /* Set data primitives. */
-  _fits_set_primitives, stream;
+  fits_set_primitives, stream;
 
   /* Create handle. */
   fh = _lst([], [], [1, 0, 0, 0, filemode], stream);
@@ -4413,14 +4413,15 @@ func fits_get_list(fh, key)
 /*---------------------------------------------------------------------------*/
 /* READING/WRITING OF BINARY DATA */
 
-local _FITS_XDR64, _FITS_INTEL32, _FITS_INTEL64;
-func _fits_set_primitives(stream)
-/* DOCUMENT _fits_set_primitives, stream;
+local _FITS_XDR64;
+func fits_set_primitives(stream)
+/* DOCUMENT fits_set_primitives, stream;
+
      Set binary format of data stream to XDR (eXternal Data Representation)
      which is the same as IEEE format with 32-bits (int) and 64-bits (long)
      integers and big-endian byte order.
-   SEE ALSO: open, set_primitives, fits_open, _fits_vopen, fits_bitpix_type,
-     fits_bitpix_of.
+
+   SEE ALSO: open, set_primitives, fits_open, fits_bitpix_type, fits_bitpix_of.
  */
 {
   set_primitives, stream, _FITS_XDR64;
@@ -4494,11 +4495,11 @@ _fits_false = 'F';
 func fits_init(sloopy=, allow=, blank=)
 /* DOCUMENT fits_init;
 
-     (Re)initializes FITS private data.  Normally you do not have to call this
-     routine  because this routine  is automatically  called when  "fits.i" is
-     parsed by Yorick.  You may  however need to explicitely call fits_init if
-     you suspect that  some FITS private data get corrupted or  if you want to
-     tune FITS strict/sloopy behaviour.
+     (Re)initializes FITS private data. Normally you  do not have to call this
+     routine because  it is  automatically called when  "fits.i" is  parsed by
+     Yorick. You may however need to explicitely call fits_init if you suspect
+     that some  FITS private data  get corrupted or if  you want to  tune FITS
+     strict/sloopy behaviour.
 
      If  keyword SLOOPY  is true  (non-nil and  non-zero) some  discrepancy is
      allowed (for reading FITS file only); otherwise strict FITS compliance is
