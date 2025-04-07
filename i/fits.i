@@ -2227,6 +2227,9 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
      used to guess the bits per  pixel and the dimension list if not specified
      by the keywords BITPIX and DIMSLIST respectively.
 
+     Keywords PCOUNT=0 and GCOUNT=1 are automatically set right after the
+     last NAXISn keyword.
+
    SEE ALSO: fits, fits_write_array. */
 {
   fits_new_hdu, fh, "IMAGE", "this HDU contains FITS image extension";
@@ -2236,6 +2239,8 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
   }
   fits_set, fh, "BITPIX", bitpix, fits_bitpix_info(bitpix);
   fits_set_dims, fh, dimlist;
+  fits_set, fh, "PCOUNT", 0, "always 0 for image extensions";
+  fits_set, fh, "GCOUNT", 1, "always 1 for image extensions";
   if (! is_void(bzero)) fits_set, fh, "BZERO", bzero,
                           "data_value = BZERO + BSCALE*file_value";
   if (! is_void(bscale)) fits_set, fh, "BSCALE", bscale,
