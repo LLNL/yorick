@@ -5,7 +5,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- * Copyright (C) 2000-2015, Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>
+ * Copyright (c) 2000-2024, Ã‰ric ThiÃ©baut <eric.thiebaut@univ-lyon1.fr>
  *
  * This file is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License version 2 as published by the
@@ -61,7 +61,7 @@
  *    if not).
  *
  * Revision 1.25  2006/11/03 12:09:18  eric
- *  - Fixed bug in fits_pack_bintable (thanks to Ariane Lançon for discovering
+ *  - Fixed bug in fits_pack_bintable (thanks to Ariane LanÃ§on for discovering
  *    this bug).
  *  - Slightly change the calling sequence of fits_pack_bintable (no side
  *    effects w.r.t. previous version).
@@ -71,7 +71,7 @@
  *    to Christophe Pichon for discovering this bug).
  *
  * Revision 1.23  2006/09/07 07:20:31  eric
- *  - Fixed documentation (thanks to Ariane Lançon).
+ *  - Fixed documentation (thanks to Ariane LanÃ§on).
  *
  * Revision 1.22  2006/09/02 12:39:04  eric
  *  - Minor changes to make the code portable with different versions of
@@ -97,14 +97,14 @@
  *
  * Revision 1.17  2004/10/22 15:19:29  eric
  *  - fits_write_bintable takes into account existing "TFORM#" FITS cards to
- *    format the columns (thanks to Clémentine Béchet).
+ *    format the columns (thanks to ClÃ©mentine BÃ©chet).
  *  - New function: fits_strcmp.
  *
  * Revision 1.16  2004/09/03 09:13:27  eric
  *  - New function fits_pad_hdu to round up file size to a multiple
  *    of FITS blocking factor.
  *  - fits_new_hdu: fix offset of data part by calling fits_pad_hdu
- *    (thanks to Antoine Mérand for pointing this bug).
+ *    (thanks to Antoine MÃ©rand for pointing this bug).
  *  - fits_close: call fits_pad_hdu to finalize stream open for
  *    writing.
  *  - fits_new_image: bitpix and dimension list can be guessed from
@@ -136,11 +136,11 @@
  *
  * Revision 1.12  2004/07/09 09:30:37  eric
  *  - Fixed bug in fits_move and typo in error message for fits_create (thanks
- *    to Clémentine Béchet).
+ *    to ClÃ©mentine BÃ©chet).
  *
  * Revision 1.11  2004/06/22 16:22:49  eric
  *  - Fix a bug in fits_write_bintable which prevents writing strings in a
- *    binary table (thanks to Clémentine Béchet).
+ *    binary table (thanks to ClÃ©mentine BÃ©chet).
  *
  * Revision 1.10  2004/03/19 18:28:45  eric
  *  - New functions: fits_current_hdu, fits_info, fits_eof, fits_list.
@@ -181,7 +181,7 @@
  * Initial revision
  */
 
-fits = "Version: 2.0";
+fits = "Version: 2.1";
 local fits;
 /* DOCUMENT fits - an introduction to Yorick interface to FITS files.
 
@@ -670,7 +670,7 @@ func fits_open(filename, filemode, overwrite=)
 
    SEE ALSO: fits, fits_read_header, fits_write_header,
              fits_get, fits_set, fits_read_array, fits_write_array,
-             fits_next_hdu, fits_new_hdu, fits_rewind, __sun. */
+             fits_next_hdu, fits_new_hdu, fits_rewind, fits_set_primitives. */
 {
   /* Open stream. */
   if (is_void(filemode) || filemode == 'r' || filemode == "r") {
@@ -691,7 +691,7 @@ func fits_open(filename, filemode, overwrite=)
   }
 
   /* Set data primitives. */
-  _fits_set_primitives, stream;
+  fits_set_primitives, stream;
 
   /* Create handle. */
   fh = _lst([], [], [1, 0, 0, 0, filemode], stream);
@@ -2227,6 +2227,9 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
      used to guess the bits per  pixel and the dimension list if not specified
      by the keywords BITPIX and DIMSLIST respectively.
 
+     Keywords PCOUNT=0 and GCOUNT=1 are automatically set right after the
+     last NAXISn keyword.
+
    SEE ALSO: fits, fits_write_array. */
 {
   fits_new_hdu, fh, "IMAGE", "this HDU contains FITS image extension";
@@ -2236,6 +2239,8 @@ func fits_new_image(fh, data, bitpix=, dimlist=, bzero=, bscale=)
   }
   fits_set, fh, "BITPIX", bitpix, fits_bitpix_info(bitpix);
   fits_set_dims, fh, dimlist;
+  fits_set, fh, "PCOUNT", 0, "always 0 for image extensions";
+  fits_set, fh, "GCOUNT", 1, "always 1 for image extensions";
   if (! is_void(bzero)) fits_set, fh, "BZERO", bzero,
                           "data_value = BZERO + BSCALE*file_value";
   if (! is_void(bscale)) fits_set, fh, "BSCALE", bscale,
@@ -2334,8 +2339,8 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   }
 
   /* Find the format. */
-  tform3 = "%d%1[LXBIJAEDCMP]%s";
-  tform2 =   "%1[LXBIJAEDCMP]%s";
+  tform3 = "%d%1[LXBIJKAEDCMP]%s";
+  tform2 =   "%1[LXBIJKAEDCMP]%s";
   ncols = numberof(ptr);
   mult = size = array(long, ncols);
   nrows = -1;
@@ -2373,9 +2378,10 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
     }
     type = structof(arr);
 
-    /* Parse TFORMn card or guess format specification form the current
-       column data.  T is the type code in the TFORMn card, M is the repeat
-       count, and S is the size (in bytes) of an element. */
+    /* Parse TFORMn card or guess format specification form the current column
+       data. T is the type code in the TFORMn card, M is the repeat count, and
+       S is the size (in bytes) of an element. See doc. of `fits_bitpix_of`
+       for the assumed equivalence of Yorick's and FITS (XDR64) types. */
     key = swrite(format="TFORM%d", i);
     tform = fits_get(fh, key);
     write_tform = is_void(tform);
@@ -2425,74 +2431,38 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
         arr = [];
       } else if (m != ncells) {
         error, ("bad number of elements for "  + fits_nth(i) + " column");
-      } else if (t == 'B' && (type == long || type == int ||
-                              type == short || type == char)) {
+      } else if (t == 'B' && is_integer(arr)) {
         s = 1;
-        if (min(arr) < 0 || max(arr) > 255) {
-          _fits_warn, ("truncation of input values in "
-                       + fits_nth(i) + " column");
-        }
-        if (type != char) {
-          ptr(i) = &char(arr);
-          arr = [];
-        }
-      } else if (t == 'I' && (type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, char, ptr, i;
+      } else if (t == 'I' && is_integer(arr)) {
         s = 2;
-        if (min(arr) < -32768 || max(arr) > 32767) {
-          _fits_warn, ("truncation of input values in "
-                       + fits_nth(i) + " column");
-        }
-        if (type != short) {
-          ptr(i) = &short(arr);
-          arr = [];
-        }
-      } else if (t == 'J' && (type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, short, ptr, i;
+      } else if (t == 'J' &&is_integer(arr)) {
         s = 4;
-        if (min(arr) < -2147483648.0 || max(arr) > 2147483647.0) {
-          _fits_warn, ("truncation of input values in "
-                       + fits_nth(i) + " column");
-        }
-        if (type != long || type != int) {
-          ptr(i) = &long(arr);
-          arr = [];
-        }
-      } else if (t == 'E' && (type == double || type == float ||
-                              type == long || type == int ||
-                              type == short || type == char)) {
-        s = 4;
-        if (type != float) {
-          ptr(i) = &float(arr);
-          arr = [];
-        }
-      } else if (t == 'D' && (type == double || type == float ||
-                              type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, int, ptr, i;
+      } else if (t == 'K' && is_integer(arr)) {
         s = 8;
-        if (type != double) {
-          ptr(i) = &double(arr);
-          arr = [];
-        }
-      } else if (t == 'C' && (type == complex || type == double ||
-                              type == float || type == long || type == int ||
-                              type == short || type == char)) {
+        _fits_fix_input_column_data, arr, long, ptr, i;
+      } else if (t == 'E' && (is_real(arr) || is_integer(arr))) {
+        s = 4;
+        _fits_fix_input_column_data, arr, float, ptr, i;
+      } else if (t == 'D' && (is_real(arr) || is_integer(arr))) {
+        s = 8;
+        _fits_fix_input_column_data, arr, double, ptr, i;
+      } else if (t == 'C' && (is_complex(arr) || is_real(arr) || is_integer(arr))) {
         s = 8;
         tmp = array(float, nrows, 2, other_dims);
         tmp(,1,) = float(arr);
         if (type == complex) tmp(,2,) = arr.im;
         ptr(i) = &tmp;
         arr = [];
-      } else if (t == 'M' && (type == complex || type == double ||
-                              type == float || type == long || type == int ||
-                              type == short || type == char)) {
+      } else if (t == 'M' && (is_complex(arr) || is_real(arr) || is_integer(arr))) {
         s = 16;
         if (type != complex) {
-          ptr(i) = &complex(arr);
-          arr = [];
+          arr = complex(unref(arr));
+          ptr(i) = &arr;
         }
-      } else if (t == 'L' && (type == long || type == int ||
-                              type == short || type == char)) {
+      } else if (t == 'L' && is_integer(arr)) {
         s = 1;
         if (type != char) {
           tmp = array('T', nrows, ncells);
@@ -2540,8 +2510,8 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
           s = 4;
         }
       } else if (type == long) {
-        t = 'J';
-        s = 4;
+        t = 'K';
+        s = 8;
       } else if (type == float) {
         t = 'E';
         s = 4;
@@ -2656,6 +2626,30 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   /* Update FITS handle. */
   offset(4) = address;
   return fh;
+}
+
+func _fits_fix_input_column_data(&arr, T, ptr, i)
+{
+  one = T(1);
+  if (is_integer(one)) {
+    if (T == char) {
+      tmin = 0;
+      tmax = 255;
+    } else {
+      /* signed integer */
+      two = T(2);
+      big = one << (8*sizeof(T) - 2);
+      tmin = (-big)*two;
+      tmax = (big - one)*two + one;
+    }
+    if (min(arr) < tmin || max(arr) > tmax) {
+      _fits_warn, ("truncation of input values in " + fits_nth(i) + " column");
+    }
+  }
+  if (structof(arr) != T) {
+    arr = T(unref(arr));
+    ptr(i) = &arr;
+  }
 }
 
 func fits_read_bintable(fh, pack=, select=, raw_string=, raw_logical=,
@@ -3296,21 +3290,23 @@ func fits_index_of_table_field(fh, name)
 _FITS_TFORM_LOGICAL        =  1; /* L: Logical value */
 _FITS_TFORM_BYTE           =  2; /* B: unsigned 8-bit integer */
 _FITS_TFORM_SHORT          =  3; /* I: signed 16-bit integer */
-_FITS_TFORM_LONG           =  4; /* J: signed 32-bit integer */
-_FITS_TFORM_FLOAT          =  5; /* E: 32-bit single precision IEEE floating point */
-_FITS_TFORM_DOUBLE         =  6; /* D: 64-bit double precision IEEE floating point */
-_FITS_TFORM_FLOAT_COMPLEX  =  7; /* C: complex pair of single precision reals */
-_FITS_TFORM_DOUBLE_COMPLEX =  8; /* M: complex pair of double precision reals */
-_FITS_TFORM_STRING         =  9; /* A: Character array */
-_FITS_TFORM_POINTER        = 10; /* P: 64-bit descriptor of variable length array */
-_FITS_TFORM_BIT            = 11; /* X: bit array */
+_FITS_TFORM_INT            =  4; /* J: signed 32-bit integer */
+_FITS_TFORM_LONG           =  5; /* K: signed 64-bit integer */
+_FITS_TFORM_FLOAT          =  6; /* E: 32-bit single precision IEEE floating point */
+_FITS_TFORM_DOUBLE         =  7; /* D: 64-bit double precision IEEE floating point */
+_FITS_TFORM_FLOAT_COMPLEX  =  8; /* C: complex pair of single precision reals */
+_FITS_TFORM_DOUBLE_COMPLEX =  9; /* M: complex pair of double precision reals */
+_FITS_TFORM_STRING         = 10; /* A: Character array */
+_FITS_TFORM_POINTER        = 11; /* P: 64-bit descriptor of variable length array */
+_FITS_TFORM_BIT            = 12; /* X: bit array */
 _FITS_TFORM_IDENTOF = array(long, 256);
-_FITS_TFORM_TYPEOF = array(pointer, 11);
-_FITS_TFORM_SIZEOF = array(long, 11);
+_FITS_TFORM_TYPEOF = array(pointer, 12);
+_FITS_TFORM_SIZEOF = array(long, 12);
 _fits_bintable_setup, 'L', _FITS_TFORM_LOGICAL, char, 1;
 _fits_bintable_setup, 'B', _FITS_TFORM_BYTE, char, 1;
 _fits_bintable_setup, 'I', _FITS_TFORM_SHORT, short, 2;
-_fits_bintable_setup, 'J', _FITS_TFORM_LONG, long, 4;
+_fits_bintable_setup, 'J', _FITS_TFORM_INT, int, 4;
+_fits_bintable_setup, 'K', _FITS_TFORM_LONG, long, 8;
 _fits_bintable_setup, 'E', _FITS_TFORM_FLOAT, float, 4;
 _fits_bintable_setup, 'D', _FITS_TFORM_DOUBLE, double, 8;
 _fits_bintable_setup, 'C', _FITS_TFORM_FLOAT_COMPLEX, float, 8; /* read as 2 float's */
@@ -3386,7 +3382,7 @@ func fits_read_group(fh, fix)
 
   /* Read all the values (parameters and group data). */
   bitpix = fits_get_bitpix(fh, fix);
-  type = fits_bitpix_type(bitpix, native=0);
+  type = fits_bitpix_type(bitpix);
   buffer = array(type, pcount + ndata, gcount);
   address = _car(fh, 3)(3);
   stream = _car(fh, 4);
@@ -3402,7 +3398,6 @@ func fits_read_group(fh, fix)
   fmt = "bad data type for keyword %s in HDU %d";
 
   /* Get parameters and properly scale their values. */
-  type = fits_bitpix_type(bitpix, native=1);
   if (pcount >= 1) {
     param = type(buffer(1:pcount, ..));
     ptype = array(string, pcount);
@@ -3750,11 +3745,19 @@ func fits_bitpix_info(bitpix)
   error, "invalid BITPIX value";
 }
 
-func fits_bitpix_type(bitpix, native=)
-/* DOCUMENT fits_bitpix_type(bitpix)
-         or fits_bitpix_type(bitpix, native=)
-     The function fits_bitpix_type returns Yorick  data type given by the fits
-     bits-per-pixel value BITPIX according to the following table:
+local fits_bitpix_type, fits_bitpix_of;
+/* DOCUMENT T = fits_bitpix_type(bitpix);
+         or bitpix = fits_bitpix_of(arr);
+         or bitpix = fits_bitpix_of(T);
+
+     `fits_bitpix_type` yields Yorick's data type corresponding to the FITS
+     bits-per-pixel value BITPIX.
+
+     `fits_bitpix_of` yields the FITS bits-per-pixel value given an array
+     `arr` or Yorick's type `T`.
+
+     The assumed rules are given in the following table (for 64-bit IEEE
+     compliant machines, the equivalence is exact):
 
          +----------------------------------------------------------------+
          | Bitpix  Type    Description (in FITS file)                     |
@@ -3767,79 +3770,42 @@ func fits_bitpix_type(bitpix, native=)
          |    -64  double  IEEE 64-bit floating point                     |
          +----------------------------------------------------------------+
 
-      If  keyword NATIVE  is  true, then  the  functions tries  to return  the
-      closest data Yorick type (with no loss of accuracy).
+   SEE ALSO: fits, fits_bitpix_info, fits_check_bitpix. */
 
-
-   SEE ALSO: fits, fits_bitpix_of, fits_bitpix_info, fits_check_bitpix. */
+func fits_bitpix_type(bitpix)
 {
-  if (native) {
-    /* Figure out native type matching BITPIX. */
-    if (bitpix > 0) {
-      if (bitpix ==  8*sizeof(long))   return long;
-      if (bitpix ==  8*sizeof(int))    return int;
-      if (bitpix ==  8*sizeof(short))  return short;
-      if (bitpix ==  8*sizeof(char))   return char;
-    } else {
-      if (bitpix == -8*sizeof(double)) return double;
-      if (bitpix == -8*sizeof(float))  return float;
-    }
+  /* To encode the FITS file in XDR64 format (see _FITS_XDR64), Yorick's
+     `char`, `short`, `int`, `long`, `float`, and `double` are respectively
+     used for XDR `uint8`, `int16`, `int32`, `int64`, `float32`, and
+     `float64`. In modern machines, this equivalence is exact. */
+  if (bitpix > 8) {
+    if (bitpix ==  16) return short;
+    if (bitpix ==  32) return int;
+    if (bitpix ==  64) return long;
   } else {
-    /* Assume XDR type. */
-    if (bitpix > 8) {
-      if (bitpix ==  16) return short;
-      if (bitpix ==  32) return int;
-      if (bitpix ==  64) return long;
-    } else {
-      if (bitpix ==   8) return char;
-      if (bitpix == -32) return float;
-      if (bitpix == -64) return double;
-    }
+    if (bitpix ==   8) return char;
+    if (bitpix == -32) return float;
+    if (bitpix == -64) return double;
   }
   error, "invalid/unsupported BITPIX value";
 }
 
-func fits_bitpix_of(x, native=)
-/* DOCUMENT fits_bitpix_of(x)
-         or fits_bitpix_of(x, native=1)
-     Return FITS bits-per-pixel value BITPIX for binary data X which can be an
-     array or a data type  (structure definition).  If keyword NATIVE is true,
-     the routine assumes that binary data will be read/write to/from FITS file
-     using native machine  data representation.  The default is  to conform to
-     FITS standard and  to assume that XDR binary format will  be used in FITS
-     file.
-
-   SEE ALSO: fits, fits_bitpix_type, fits_check_bitpix. */
+func fits_bitpix_of(x)
 {
   if (is_array(x)) {
-    x = structof(x);
-  } else if (typeof(x) != "struct_definition") {
+    T = structof(x);
+  } else if (identof(x) == Y_STRUCTDEF) {
+    T = x;
+  } else {
     error, "expecting array or data type argument";
   }
-  if (native) {
-    /* Compute BITPIX. */
-    bpb = 8; /* assume 8 bits per byte */
-    if (x == char || x == short || x == int || x == long) {
-      bitpix = bpb*sizeof(x);
-      if (bitpix == 8 || bitpix == 16 || bitpix == 32 || bitpix == 64) {
-        return bitpix;
-      }
-    } else if (x == float || x == double) {
-      bitpix = -bpb*sizeof(x);
-      if (bitpix == -32 || bitpix == -64) {
-        return bitpix;
-      }
-    }
-  } else {
-    /* Assume data will be read/written as XDR. */
-    if (x == char)   return   8;
-    if (x == short)  return  16;
-    if (x == int)    return  32;
-    if (x == long)   return  64;
-    if (x == float)  return -32;
-    if (x == double) return -64;
-  }
-  error, "unsupported data type \""+nameof(x)+"\"";
+  if (T == char)   return   8;
+  if (T == short)  return  16;
+  if (T == int)    return  32;
+  if (T == long)   return  64;
+  if (T == float)  return -32;
+  if (T == double) return -64;
+  error, "unsupported data type \""+nameof(T)+"\"";
 }
 
 local fits_is_image, fits_is_bintable;
@@ -4452,13 +4418,15 @@ func fits_get_list(fh, key)
 /*---------------------------------------------------------------------------*/
 /* READING/WRITING OF BINARY DATA */
 
-local _FITS_XDR64, _FITS_INTEL32, _FITS_INTEL64;
-func _fits_set_primitives(stream)
-/* DOCUMENT _fits_set_primitives, stream;
+local _FITS_XDR64;
+func fits_set_primitives(stream)
+/* DOCUMENT fits_set_primitives, stream;
+
      Set binary format of data stream to XDR (eXternal Data Representation)
      which is the same as IEEE format with 32-bits (int) and 64-bits (long)
      integers and big-endian byte order.
-   SEE ALSO: open, set_primitives, fits_open, _fits_vopen.
+
+   SEE ALSO: open, set_primitives, fits_open, fits_bitpix_type, fits_bitpix_of.
  */
 {
   set_primitives, stream, _FITS_XDR64;
@@ -4532,11 +4500,11 @@ _fits_false = 'F';
 func fits_init(sloopy=, allow=, blank=)
 /* DOCUMENT fits_init;
 
-     (Re)initializes FITS private data.  Normally you do not have to call this
-     routine  because this routine  is automatically  called when  "fits.i" is
-     parsed by Yorick.  You may  however need to explicitely call fits_init if
-     you suspect that  some FITS private data get corrupted or  if you want to
-     tune FITS strict/sloopy behaviour.
+     (Re)initializes FITS private data. Normally you  do not have to call this
+     routine because  it is  automatically called when  "fits.i" is  parsed by
+     Yorick. You may however need to explicitely call fits_init if you suspect
+     that some  FITS private data  get corrupted or if  you want to  tune FITS
+     strict/sloopy behaviour.
 
      If  keyword SLOOPY  is true  (non-nil and  non-zero) some  discrepancy is
      allowed (for reading FITS file only); otherwise strict FITS compliance is
@@ -4838,6 +4806,6 @@ fitsOldHeaderKeywords = fits_toupper(fitsOldHeaderMembers);
  * tab-width: 8
  * fill-column: 78
  * c-basic-offset: 2
- * coding: latin-1
+ * coding: utf-8
  * End:
  */
