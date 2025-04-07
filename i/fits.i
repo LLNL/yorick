@@ -2587,7 +2587,7 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   /* Update header information then write header. */
   size *= mult; /* number of bytes per rows for each field */
   nbytes = sum(size);
-  pcount = _fits_bintable_header(fh, nbytes, nrows, ncols);
+  _fits_bintable_header, fh, nbytes, nrows, ncols;
   fits_write_header, fh;
 
   /* Write data. */
@@ -2618,9 +2618,12 @@ func fits_write_bintable(fh, ptr, logical=, fixdims=)
   }
 
   /* Pad with null's to have an integer number of FITS blocks. */
-  if (pcount) {
-    _write, stream, address, array(char, pcount);
-    address += pcount;
+  block = 2880; /* FITS blocking factor */
+  datasize = nbytes*nrows;
+  pad = ((datasize + block - 1)/block)*block - datasize;
+  if (pad != 0) {
+    _write, stream, address, array(char, pad);
+    address += pad;
   }
 
   /* Update FITS handle. */
@@ -3113,29 +3116,24 @@ func fits_pack_bintable(ptr, list)
 }
 
 /* PRIVATE */ func _fits_bintable_header(fh, nbytes, nrows, tfields)
-/* DOCUMENT pcount = _fits_bintable_header(fh, nbytes, nrows, tfields)
-     Set/update  header information  in  FITS  handle FH  for  a binary  table
-     extension.  NBYTES is the number of  bytes per row of the table, NROWS is
-     the number  of table  rows and TFIELDS  is the  number of columns  in the
-     table.  FITS card "XTENSION" with value "BINTABLE" must already exists in
-     the  header  (this  is  not  checked).   FITS  cards  "BITPIX",  "NAXIS",
-     "NAXIS1", "NAXIS2", "PCOUNT", "GCOUNT", and "TFIELDS" get created/updated
-     by this  routine.  The  value of  PCOUNT is computed  by the  routine and
-     returned to the caller.
+/* DOCUMENT _fits_bintable_header, fh, nbytes, nrows, tfields;
+     Set/update header information in FITS handle FH for a binary table
+     extension. NBYTES is the number of bytes per row of the table, NROWS is
+     the number of table rows and TFIELDS is the number of columns in the
+     table. FITS card "XTENSION" with value "BINTABLE" must already exists in
+     the header (this is not checked). FITS cards "BITPIX", "NAXIS", "NAXIS1",
+     "NAXIS2", "PCOUNT", "GCOUNT", and "TFIELDS" get created/updated by this
+     routine.
 
    SEE ALSO: fits, fits_new_bintable, fits_write_bintable. */
 {
-  block = 2880;
-  pcount = ((nbytes*nrows + block - 1)/block)*block - nbytes*nrows;
   fits_set, fh, "BITPIX", 8, "data contains array of bytes";
   fits_set, fh, "NAXIS", 2, "two-dimensional binary table";
   fits_set, fh, "NAXIS1", nbytes, "number of 8-bit bytes in a table row";
   fits_set, fh, "NAXIS2", nrows, "number of rows in the table";
-  fits_set, fh, "PCOUNT", pcount,
-    "total number of bytes is PCOUNT + NAXIS1*NAXIS2";
+  fits_set, fh, "PCOUNT", 0, "table heap size";
   fits_set, fh, "GCOUNT", 1, "always 1 for binary table extensions";
   fits_set, fh, "TFIELDS", tfields, "number of fields in each row";
-  return pcount;
 }
 
 func fits_read_bintable_as_hashtable(fh, h, format=,
@@ -4302,22 +4300,29 @@ local fits_get_groups, fits_get_gcount, fits_get_pcount;
 /* DOCUMENT fits_get_groups(fh)
          or fits_get_gcount(fh)
          or fits_get_pcount(fh)
-     Get GROUPS, PCOUNT or GCOUNT values  for FITS handle FH.  GROUPS shall be
-     a logical value:  'T' (true), if the current HDU  contains a random group
-     extension; 'F' (false),  otherwise.  The default value for  GROUPS is 'F'
-     (false).  PCOUNT shall  be an integer equals to  the number of parameters
-     preceding each group (default value 0).  GCOUNT shall be an integer equal
-     to the number of random groups present (default value 1).  When GROUPS is
-     false, the total number of bits in the data array (exclusive of fill that
-     is needed  after the data  to complete the  last record) is given  by the
-     following expression:
 
-         NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS1*NAXIS2*...*NAXISm)
+     Get GROUPS, PCOUNT or GCOUNT values for FITS handle FH. These keywords
+     can only appear in FITX extensions.
 
-     where NAXISm  is the length  of the last  axis; for a random  group (i.e.
-     when GROUPS is true), NAXIS1=0 and the total number of bits is:
+     GROUPS (default value is 'F', that is false) shall be a logical value:
+     'T' (true), if the current HDU contains a random group extension; 'F'
+     (false), otherwise. Random groups are deprecated by FITS Standard v4.0
+     and should no longer be used.
 
-         NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS2*...*NAXISm)
+     PCOUNT (default value is 0) shall be an integer. Its value shall be 0 for
+     IMAGE and TABLE extensions. For BINTABLE, its value is the number of
+     bytes in the heap following the table to store variable length arrays.
+     Otherwise,
+
+     GCOUNT (default value is 1) shall be an integer equal to 1 for IMAGE,
+     BINTABLE, and TABLE extensions. For random groups extensions, this
+     keyword is the number of random groups present.
+
+     The total number of bits in the extension data array (exclusive of fill
+     that is needed after the data to complete the last 2880-byte data block)
+     is given by the following expression (n is the number of axes):
+
+         NBITS = abs(BITPIX)*GCOUNT*(PCOUNT + NAXIS1*NAXIS2*...*NAXISn)
 
    SEE ALSO: fits, fits_get, fits_get_bitpix,
              fits_read_array, fits_write_array.
